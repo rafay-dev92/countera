@@ -27,9 +27,6 @@ module.exports= (sequelize) => {
             as: 'Product',
             through: 'Invoice_Product'
         })
-
-
-    Invoice.associate = (models) => {
         Invoice.belongsTo(models.Customer, {
             as: 'Customer'
         })

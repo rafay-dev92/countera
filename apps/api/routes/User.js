@@ -176,6 +176,4 @@ router.delete('/delete_permission', async (req, res) => {
     }
 })
 
-
-
 module.exports = router;

@@ -23,7 +23,7 @@ app.use('/api/quotation', require('./routes/Quotation'));
 app.use('/api/workorder', require('./routes/WorkOrder'));
 
 
-db.sequelize.sync().then( () => {
+// db.sequelize.sync().then( () => {
     app.listen(5000, (error) =>{ 
         if(!error) 
             console.log(`Server is Successfully Running, and App is listening on http://localhost:${5000}`) 
@@ -31,4 +31,4 @@ db.sequelize.sync().then( () => {
             console.log("Error occurred, server can't start", error); 
         } 
     ); 
-})
+// })

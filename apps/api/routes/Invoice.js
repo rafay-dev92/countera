@@ -1,11 +1,13 @@
 const express = require('express');
 const router = express.Router();
-const { Invoice } = require('../models');
+const { Invoice, Product } = require('../models');
 require('dotenv').config();
 
 router.get('/', async (req, res) => {
     try {
-        const invoices = await Invoice.findAll();
+        const invoices = await Invoice.findAll({
+            include: ['Customer', 'Vehicle', 'Product']
+        });
         res.json(invoices);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -15,7 +17,7 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
     try {
         const invoice = await Invoice.findByPk(req.params.id, {
-            include: ['Customer', 'Vehicle']
+            include: ['Customer', 'Vehicle', 'Product']
         });
 
         if (!invoice) {
@@ -30,9 +32,17 @@ router.get('/:id', async (req, res) => {
 
 router.post('/create', async (req, res) => {
     try {
-        const invoiceData = req.body;
+        const invoiceData = req.body.invoiceData;
        
         const newInvoice = await Invoice.create(invoiceData);
+
+        if (req.body.products.length !== 0) {
+            console.log(req.body.products)
+            req.body.products.map(async (item) => {
+                const product = await Product.findByPk(item);
+                newInvoice.addProduct(product)
+            })
+        }
         res.json(newInvoice);
 
     } catch (error) {

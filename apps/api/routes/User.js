@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { User, Permission, Business } = require('../models');
+const { User, Permission } = require('../models');
 const { body, validationResult } = require('express-validator');
 const bcryptjs = require('bcryptjs');
 const jwt = require('jsonwebtoken');
@@ -84,10 +84,12 @@ router.post('/add_permission', async (req, res) => {
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
-        req.body.permissions.map( async (item) => {
-            const permission = await Permission.findByPk(item);
-            user.addPermission(permission);
-        })
+        if (req.body.permission.length !== 0) {
+            req.body.permissions.map( async (item) => {
+                const permission = await Permission.findByPk(item);
+                user.addPermission(permission);
+            })
+        }
 
         res.json({ message: 'permissions added to user successfully' })
 

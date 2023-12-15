@@ -14,23 +14,20 @@ module.exports= (sequelize) => {
         },
         paymentMethod: {
             type: DataTypes.STRING,
-            allowNull: false,
+            allowNull: true,
         },
         paymentStatus: {
             type: DataTypes.STRING,
-            allowNull: false,
+            allowNull: true,
         },
-        products: {
-            type: DataTypes.STRING,
-            allowNull: false,
-            get() {
-                return this.getDataValue('products').split(';')
-            },
-            set(val) {
-               this.setDataValue('products',val.join(';'));
-            },
-        }
     })
+
+    Invoice.associate = (models) => {
+        Invoice.belongsToMany(models.Product, {
+            as: 'Product',
+            through: 'Invoice_Product'
+        })
+
 
     Invoice.associate = (models) => {
         Invoice.belongsTo(models.Customer, {

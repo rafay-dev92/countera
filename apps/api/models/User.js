@@ -37,7 +37,8 @@ module.exports= (sequelize) => {
     User.associate = (models) => {
         User.belongsToMany(models.Permission, {
             as: 'Permission',
-            through : 'UserPermission',
+            through : 'User_Permission',
+
         });
 
         User.belongsTo(models.Business, {

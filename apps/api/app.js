@@ -4,8 +4,6 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-const db = require("./models");
-
 app.get('/', (req, res)=>{ 
     res.status(200); 
     res.send("Home"); 
@@ -23,12 +21,10 @@ app.use('/api/quotation', require('./routes/Quotation'));
 app.use('/api/workorder', require('./routes/WorkOrder'));
 
 
-// db.sequelize.sync().then( () => {
-    app.listen(5000, (error) =>{ 
-        if(!error) 
-            console.log(`Server is Successfully Running, and App is listening on http://localhost:${5000}`) 
-        else 
-            console.log("Error occurred, server can't start", error); 
-        } 
-    ); 
-// })
+app.listen(5000, (error) =>{ 
+    if(!error) 
+        console.log(`Server is Successfully Running, and App is listening on http://localhost:${5000}`) 
+    else 
+        console.log("Error occurred, server can't start", error); 
+    } 
+); 

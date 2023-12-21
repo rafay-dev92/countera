@@ -80,7 +80,6 @@ router.post('/signup', [
 router.post('/add_permission', async (req, res) => {
     try {
         const user = await User.findByPk(req.body.userId);
-        console.log(req.body)
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }

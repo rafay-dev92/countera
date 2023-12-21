@@ -28,5 +28,3 @@ app.listen(5000, (error) =>{
         console.log("Error occurred, server can't start", error); 
     } 
 ); 
-
-module.exports = app;

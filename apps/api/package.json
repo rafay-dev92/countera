@@ -6,8 +6,7 @@
   "scripts": {
     "start": "nodemon app.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "db:makemigrations": "node ./node_modules/sequelize-auto-migrations/bin/makemigration.js",
-    "vercel-build": "echo test"
+    "db:makemigrations": "node ./node_modules/sequelize-auto-migrations/bin/makemigration.js"
   },
   "author": "",
   "license": "ISC",

@@ -19,6 +19,7 @@ app.use('/api/appointment', require('./routes/Appointment'));
 app.use('/api/invoice', require('./routes/Invoice'));
 app.use('/api/quotation', require('./routes/Quotation'));
 app.use('/api/workorder', require('./routes/WorkOrder'));
+app.use('/api/address', require('./routes/Address'));
 
 
 app.listen(5000, (error) =>{ 

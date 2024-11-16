@@ -1,20 +1,35 @@
 const express = require('express');
 const router = express.Router();
-const { WorkOrder } = require('../models');
+const { WorkOrder, User } = require('../models');
+const fetchUser = require('../middlewares/fetchUser');
+const { Op } = require('sequelize');
 require('dotenv').config();
 
-router.get('/', async (req, res) => {
+router.get('/', fetchUser, async (req, res) => {
     try {
+        const userId = req.user.id;
+        const user = await User.findOne({
+            where: { id: userId,  role: {[Op.ne]: 'super_admin'}, BusinessId: {[Op.ne]: null} },
+        })
+
+        if (user) {
+            const workorders = await WorkOrder.findAll({
+                where: {BusinessId: user.dataValues.BusinessId},
+                include: ['Customer', 'Vehicle', 'Business']
+            });
+            return res.json(workorders);
+        }
+
         const workorders = await WorkOrder.findAll({
-            include: ['Customer', 'Vehicle']
+            include: ['Customer', 'Vehicle', 'Business']
         });
-        res.json(workorders);
+        return res.json(workorders);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 })
 
-router.get('/:id', async (req, res) => {
+router.get('/:id', fetchUser, async (req, res) => {
     try {
         const workorder = await WorkOrder.findByPk(req.params.id,{
             include: ['Customer', 'Vehicle']
@@ -30,7 +45,7 @@ router.get('/:id', async (req, res) => {
     }
 })
 
-router.post('/create', async (req, res) => {
+router.post('/create', fetchUser, async (req, res) => {
     try {
         const workorderData = req.body;
        
@@ -43,7 +58,7 @@ router.post('/create', async (req, res) => {
     }
 })
 
-router.put('/update/:id', async (req, res) => {
+router.put('/update/:id', fetchUser, async (req, res) => {
     try {
         const workorder = await WorkOrder.findByPk(req.params.id);
 
@@ -60,7 +75,7 @@ router.put('/update/:id', async (req, res) => {
     }
 })
 
-router.delete('/delete/:id', async (req, res) => {
+router.delete('/delete/:id', fetchUser, async (req, res) => {
     try {
         const workorder = await WorkOrder.findByPk(req.params.id);
 

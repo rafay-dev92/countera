@@ -21,6 +21,8 @@ module.exports= (sequelize) => {
             type: DataTypes.INTEGER,
             allowNull: false,
         }
+    },{
+        tableName: 'vehicles'
     })
 
     Vehicle.associate = (models) => {
@@ -34,7 +36,13 @@ module.exports= (sequelize) => {
 
         Vehicle.hasMany(models.WorkOrder, {
             as: 'WorkOrder'
-        })        
+        })
+        
+        Vehicle.belongsToMany(models.Customer, {
+            through: 'CustomerVehicles',
+            foreignKey: 'VehicleId',
+            otherKey: 'CustomerId',
+        })
     } 
     
     return Vehicle;

@@ -1,9 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const { Permission } = require('../models');
+const fetchUser = require('../middlewares/fetchUser');
 require('dotenv').config();
 
-router.get('/', async (req, res) => {
+router.get('/', fetchUser, async (req, res) => {
     try {
         const permission = await Permission.findAll();
         res.json(permission);
@@ -12,7 +13,7 @@ router.get('/', async (req, res) => {
     }
 })
 
-router.get('/:id', async (req, res) => {
+router.get('/:id', fetchUser, async (req, res) => {
     try {
         const permission = await Permission.findByPk(req.params.id);
 

@@ -1,24 +1,37 @@
 const express = require('express');
 const router = express.Router();
-const { Customer } = require('../models');
-const { body, validationResult } = require('express-validator');
+const { Customer, User } = require('../models');
+const fetchUser = require('../middlewares/fetchUser');
+const { Op } = require('sequelize');
 require('dotenv').config();
 
-router.get('/', async (req, res) => {
+
+router.get('/', fetchUser, async (req, res) => {
     try {
+        const userId = req.user.id;
+        const user = await User.findOne({
+            where: { id: userId,  role: {[Op.ne]: 'super_admin'}, BusinessId: {[Op.ne]: null} },
+        })
+        if (user) {
+            const customer = await Customer.findAll({
+                where: {BusinessId: user.dataValues.BusinessId},
+                include: ['Business', 'Address']
+            });
+            return res.json(customer);
+        }
         const customer = await Customer.findAll({
-            include: ['Business']
+            include: ['Business', 'Address']
         });
-        res.json(customer);
+        return res.json(customer);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 })
 
-router.get('/:id', async (req, res) => {
+router.get('/:id', fetchUser, async (req, res) => {
     try {
         const customer = await Customer.findByPk(req.params.id, {
-            include: ['Business']
+            include: ['Business', 'Address']
         });
 
         if (!customer) {
@@ -30,29 +43,20 @@ router.get('/:id', async (req, res) => {
     }
 })
 
-router.post('/create', [
-    body('email', 'Enter a valid email').isEmail(),
-],
-    async (req, res) => {
-    //Checking whether request is normal
-    const errors = validationResult(req);
-
-    if (!errors.isEmpty()) {
-        return res.status(400).json({ "errors": errors.array() })
-    }
-
+router.post('/create', fetchUser,  async (req, res) => {
     try {
         const customerData = req.body;
         const existingCustomer = await Customer.findOne({
-            where: { email: customerData.email }
+            where: { firstName: customerData.firstName, lastName: customerData.lastName, email: customerData.email }
         });
 
         if (existingCustomer) {
-            res.status(409).json({ message: 'Email already exists' });
+            return res.status(409).json({ message: 'Customer already exists with this email and name' });
         } 
 
-        const newCustomer = await Customer.create(customerData);
-        res.json(newCustomer);
+        const customer = await Customer.create(customerData);
+        console.log(customer)
+        return res.status(200).json({message: "Customer added successfully", data: customer});
 
     } catch (error) {
         console.error(error);
@@ -62,9 +66,11 @@ router.post('/create', [
 
 
 
-router.put('/update/:id', async (req, res) => {
+router.put('/update/:id', fetchUser, async (req, res) => {
     try {
-        const customer = await Customer.findByPk(req.params.id);
+        const customer = await Customer.findByPk(req.params.id, {
+            include: ['Address']
+        });
 
         if (!customer) {
             return res.status(404).json({ message: 'Customer not found' });
@@ -72,14 +78,14 @@ router.put('/update/:id', async (req, res) => {
 
         await customer.update(req.body);
 
-        res.json({ message: 'Customer updated successfully' });
+        return res.status(200).json({ message: 'Customer updated successfully', data: customer });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Error updating customer' });
     }
 })
 
-router.delete('/delete/:id', async (req, res) => {
+router.delete('/delete/:id', fetchUser, async (req, res) => {
     try {
         const customer = await Customer.findByPk(req.params.id);
 
@@ -88,9 +94,8 @@ router.delete('/delete/:id', async (req, res) => {
         }
 
         await customer.destroy();
-        res.json({ message: 'Customer deleted successfully' });
+        return res.status(200).json({ message: 'Customer deleted successfully' });
     } catch (error) {
-        console.error(error);
         res.status(500).json({ message: 'Error deleting customer' });
     }
 })

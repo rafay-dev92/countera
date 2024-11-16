@@ -1,30 +1,44 @@
 const { DataTypes } = require('sequelize');
 
-module.exports= (sequelize) => {
+module.exports = (sequelize) => {
     const Quotation = sequelize.define('Quotation', {
         id: {
             type: DataTypes.UUID,
-            defaultValue: DataTypes.UUIDV4, 
+            defaultValue: DataTypes.UUIDV4,
             primaryKey: true,
             allowNull: false
-        },
-        products: {
-            type: DataTypes.STRING,
-            allowNull: false,
-            get() {
-                return this.getDataValue('products').split(';')
-            },
-            set(val) {
-               this.setDataValue('products',val.join(';'));
-            },
         },
         totalAmount: {
             type: DataTypes.FLOAT,
             allowNull: false
+        },
+        CustomerId: {
+            type: DataTypes.UUID,
+            allowNull: false,
+            onDelete: "RESTRICT",
+            onUpdate: "CASCADE",
+        },
+        VehicleId: {
+            type: DataTypes.UUID,
+            allowNull: false,
+            onDelete: "RESTRICT",
+            onUpdate: "CASCADE",
+        },
+        BusinessId: {
+            type: DataTypes.UUID,
+            allowNull: false,
+            onDelete: "RESTRICT",
+            onUpdate: "CASCADE",
         }
+    }, {
+        tableName: 'quotations'
     })
 
     Quotation.associate = (models) => {
+        Quotation.belongsToMany(models.Product, {
+            as: 'Product',
+            through: 'quotation_product'
+        })
         Quotation.belongsTo(models.Customer, {
             as: 'Customer'
         })
@@ -32,7 +46,11 @@ module.exports= (sequelize) => {
         Quotation.belongsTo(models.Vehicle, {
             as: 'Vehicle'
         })
+
+        Quotation.belongsTo(models.Business, {
+            as: 'Business'
+        })
     }
-    
+
     return Quotation;
 }

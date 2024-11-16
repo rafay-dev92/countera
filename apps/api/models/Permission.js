@@ -16,12 +16,14 @@ module.exports= (sequelize) => {
             type: DataTypes.STRING,
             allowNull: true,
         }
+    },{
+        tableName: 'permissions'
     })
 
     Permission.associate = (models) => {
         Permission.belongsToMany(models.User, {
             as: 'User',
-            through: 'User_Permission'
+            through: 'user_permission'
         });
     };
     

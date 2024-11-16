@@ -1,4 +1,5 @@
 const { DataTypes } = require('sequelize');
+const InvoiceProduct = require('./Invoice_Product');
 
 module.exports= (sequelize) => {
     const Product = sequelize.define('Product', {
@@ -11,6 +12,10 @@ module.exports= (sequelize) => {
         name: {
             type: DataTypes.STRING,
             allowNull: false,
+        },
+        image: {
+            type: DataTypes.STRING,
+            allowNull: true
         },
         price: {
             type: DataTypes.FLOAT,
@@ -27,7 +32,6 @@ module.exports= (sequelize) => {
         itemCode:{
             type: DataTypes.STRING,
             allowNull: true,
-
         },
         type: {
             type: DataTypes.STRING,
@@ -37,12 +41,22 @@ module.exports= (sequelize) => {
             type: DataTypes.BOOLEAN,
             allowNull: false,
         },
+    },{
+        tableName: 'products'
     })
 
     Product.associate = (models) => {
         Product.belongsToMany(models.Invoice, {
             as: 'Invoice',
-            through: 'Invoice_Product'
+            through: 'invoice_product'
+        })
+        Product.belongsToMany(models.Quotation, {
+            as: 'Quotation',
+            through: 'quotation_product'
+        })
+        Product.belongsToMany(models.Tax, {
+            as: 'Tax',
+            through: 'product_tax'
         })
     }
 

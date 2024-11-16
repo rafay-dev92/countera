@@ -18,6 +18,8 @@ module.exports= (sequelize) => {
                this.setDataValue('products',val.join(';'));
             },
         }
+    },{
+        tableName: 'workorders'
     })
 
     WorkOrder.associate = (models) => {

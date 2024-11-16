@@ -1,23 +1,41 @@
 const express = require('express');
 const router = express.Router();
-const { Quotation } = require('../models');
+const { Quotation, Product, quotation_product, User } = require('../models');
+const fetchUser = require('../middlewares/fetchUser');
+const { Op } = require('sequelize');
 require('dotenv').config();
 
-router.get('/', async (req, res) => {
+router.get('/', fetchUser, async (req, res) => {
     try {
+        const userId = req.user.id;
+        const user = await User.findOne({
+            where: { id: userId, role: { [Op.ne]: 'super_admin' }, BusinessId: { [Op.ne]: null } },
+        })
+
+        if (user) {
+            console.log("Business: ", user.dataValues.BusinessId);
+
+            const quotataions = await Quotation.findAll({
+                where: { BusinessId: user.dataValues.BusinessId },
+                include: ['Customer', 'Vehicle', 'Business']
+            });
+            console.log(quotataions);
+            return res.json(quotataions);
+        }
+
         const quotataions = await Quotation.findAll({
-            include: ['Customer', 'Vehicle']
+            include: ['Customer', 'Vehicle', 'Product', 'Business']
         });
-        res.json(quotataions);
+        return res.json(quotataions);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 })
 
-router.get('/:id', async (req, res) => {
+router.get('/:id', fetchUser, async (req, res) => {
     try {
         const quotataion = await Quotation.findByPk(req.params.id, {
-            include: ['Customer', 'Vehicle']
+            include: ['Customer', 'Vehicle', 'Product']
         });
 
         if (!quotataion) {
@@ -30,37 +48,97 @@ router.get('/:id', async (req, res) => {
     }
 })
 
-router.post('/create', async (req, res) => {
+router.post('/create', fetchUser, async (req, res) => {
     try {
-        const quotataionData = req.body;
-       
-        const newQuotation = await Quotation.create(quotataionData);
-        res.json(newQuotation);
-
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: error.message });
-    }
-})
-
-router.put('/update/:id', async (req, res) => {
-    try {
-        const quotataion = await Quotation.findByPk(req.params.id);
-
-        if (!quotataion) {
-            return res.status(404).json({ message: 'quotataion not found' });
+        const quotationData = req.body.quotationData;
+        console.log(quotationData);
+        if (!('CustomerId' in quotationData) || !("VehicleId" in quotationData)) {
+            return res.status(409).json({ message: "Customer Id and Vehicle Id is mandatory" })
         }
 
-        await quotataion.update(req.body);
+        const newQuotation = await Quotation.create(quotationData);
+        if (req.body.products.length !== 0) {
+            req.body.products.map(async (item) => {
+                const product = await Product.findByPk(item.split(':')[0]);
+                await newQuotation.addProduct(product, { through: { quantity: item.split(':')[1] } });
+            })
+        }
+        res.status(200).json({ message: "Quotation created successfully" });
 
-        res.json({ message: 'Quotation updated successfully' });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: error.message });
     }
 })
 
-router.delete('/delete/:id', async (req, res) => {
+router.put('/update/:id', fetchUser, async (req, res) => {
+    try {
+        const quotationData = req.body;
+        const quotation = await Quotation.findByPk(req.params.id, {
+            include: ['Product']
+        });
+
+        if (!quotation) {
+            return res.status(404).json({ message: 'Quotataion not found' });
+        }
+        if (req.body.products.length !== 0) {
+
+            try {
+                quotationData.products.forEach(async (newProduct) => {
+                    const productId = newProduct.split(':')[0];
+                    const newQuantity = newProduct.split(':')[1];
+
+                    // Check if the product exists in the current products
+                    const existingProduct = quotation.Product.find((currentProduct) => currentProduct.dataValues.id === productId);
+
+                    if (existingProduct) {
+                        // If the product exists, update the quantity in the junction table
+                        const res = await quotation_product.update(
+                            { quantity: newQuantity },
+                            {
+                                where: {
+                                    QuotationId: quotation.id,
+                                    ProductId: productId,
+                                },
+                            }
+                        );
+                    } else {
+                        // If the product doesn't exist, add a new entry to the junction table
+                        const res = await quotation_product.create({
+                            QuotationId: quotation.id,
+                            ProductId: productId,
+                            quantity: newQuantity,
+                        });
+                    }
+                })
+
+            } catch (error) {
+                return res.status(500).json({ message: "Internel Server Error" })
+            }
+
+            const deletedItems = quotation.Product.filter(orgProd =>
+                !req.body.products.some(item => item.split(':')[0] === orgProd.dataValues.id))
+                .map(changeItem => changeItem.dataValues.id);
+
+            if (deletedItems.length !== 0) {
+                deletedItems.forEach(async (item) => {
+                    const product = await Product.findByPk(item.split(':')[0]);
+                    await quotation.removeProduct(product);
+                });
+            }
+
+        }
+
+        await quotation.update(req.body.quotationData);
+
+        return res.status(200).json({ message: 'Quotation updated successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: error.message });
+    }
+})
+
+router.delete('/delete/:id', fetchUser, async (req, res) => {
     try {
         const quotataion = await Quotation.findByPk(req.params.id);
 
@@ -70,7 +148,7 @@ router.delete('/delete/:id', async (req, res) => {
 
         await quotataion.destroy();
 
-        res.json({ message: 'Quotation deleted successfully' });
+        return res.status(200).json({ message: 'Quotation deleted successfully' });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Error deleting quotataion' });

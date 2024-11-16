@@ -1,9 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const { Business, User } = require('../models');
+const fetchUser = require('../middlewares/fetchUser');
 require('dotenv').config();
 
-router.get('/', async (req, res) => {
+router.get('/', fetchUser, async (req, res) => {
     try {
         const business = await Business.findAll({ include : ['User', 'Customer'] });
         res.json(business);
@@ -13,7 +14,7 @@ router.get('/', async (req, res) => {
     }
 })
 
-router.get('/:id', async (req, res) => {
+router.get('/:id', fetchUser, async (req, res) => {
     try {
         const business = await Business.findByPk(req.params.id, {
             include: ['User', 'Customer']

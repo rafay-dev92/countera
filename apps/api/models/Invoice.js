@@ -1,12 +1,21 @@
 const { DataTypes } = require('sequelize');
 
-module.exports= (sequelize) => {
+module.exports = (sequelize) => {
     const Invoice = sequelize.define('Invoice', {
         id: {
             type: DataTypes.UUID,
-            defaultValue: DataTypes.UUIDV4, 
+            defaultValue: DataTypes.UUIDV4,
             primaryKey: true,
             allowNull: false
+        },
+        invoiceNumber: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            unique: true,
+        },
+        current: {
+            type: DataTypes.BOOLEAN,
+            defaultValue: true,
         },
         totalAmount: {
             type: DataTypes.FLOAT,
@@ -14,20 +23,48 @@ module.exports= (sequelize) => {
         },
         paymentMethod: {
             type: DataTypes.STRING,
-            allowNull: true,
+            allowNull: false,
         },
         paymentStatus: {
             type: DataTypes.STRING,
-            allowNull: true,
+            allowNull: false,
         },
+        odometer: {
+            type: DataTypes.STRING,
+            allowNull: false,
+        },
+        licenseNo: {
+            type: DataTypes.STRING,
+            allowNull: false,
+        },
+        CustomerId: {
+            type: DataTypes.UUID,
+            allowNull: false,
+            onDelete: "RESTRICT",
+            onUpdate: "CASCADE",
+        },
+        VehicleId: {
+            type: DataTypes.UUID,
+            allowNull: false,
+            onDelete: "RESTRICT",
+            onUpdate: "CASCADE",
+        },
+        BusinessId: {
+            type: DataTypes.UUID,
+            allowNull: false,
+            onDelete: "RESTRICT",
+            onUpdate: "CASCADE",
+        }
+    }, {
+        tableName: 'invoices'
     })
 
     Invoice.associate = (models) => {
         Invoice.belongsToMany(models.Product, {
             as: 'Product',
-            through: 'Invoice_Product'
+            through: 'invoice_product'
         })
-   
+
         Invoice.belongsTo(models.Customer, {
             as: 'Customer'
         })
@@ -35,7 +72,27 @@ module.exports= (sequelize) => {
         Invoice.belongsTo(models.Vehicle, {
             as: 'Vehicle'
         })
+
+        Invoice.belongsTo(models.Business, {
+            as: 'Business'
+        })
+
+        Invoice.belongsTo(Invoice, { as: 'realInvoice' });
     }
-    
+
+    // Define a hook to set the invoiceNumber before creating a new invoice
+    Invoice.beforeCreate(async (invoice, options) => {
+        const latestInvoice = await findLatestInvoice();
+        const nextInvoiceNumber = latestInvoice ? latestInvoice.invoiceNumber + 1 : 1;
+        invoice.invoiceNumber = nextInvoiceNumber;
+    });
+
+    // Method to find the latest invoice number
+    async function findLatestInvoice() {
+        return Invoice.findOne({
+            order: [['createdAt', 'DESC']], // Assuming you have a createdAt field
+        });
+    }
+
     return Invoice;
 }

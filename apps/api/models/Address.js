@@ -1,52 +1,45 @@
 const { DataTypes } = require('sequelize');
 
 module.exports= (sequelize) => {
-    const Appointment = sequelize.define('Appointment', {
+    const Address = sequelize.define('Address', {
         id: {
             type: DataTypes.UUID,
             defaultValue: DataTypes.UUIDV4, 
             primaryKey: true,
             allowNull: false
         },
-        customerName: {
+        street: {
             type: DataTypes.STRING,
             allowNull: false,
         },
-        customerEmail: {
+        city: {
             type: DataTypes.STRING,
-            allowNull: true,
-        },
-        description: {
-            type: DataTypes.STRING,
-            allowNull: true,
-        },
-        startDateTime: {
-            type: DataTypes.DATE,
             allowNull: false,
         },
-        endDateTime: {
-            type: DataTypes.DATE,
+        state: {
+            type: DataTypes.STRING,
             allowNull: false,
         },
-        sendEmail: {
-            type: DataTypes.BOOLEAN,
-            allowNull: false
+        zipcode: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
         },
-        BusinessId: {
+        CustomerId: {
             type: DataTypes.UUID,
             allowNull: false,
             onDelete: "RESTRICT",
             onUpdate: "CASCADE",
-        }
+        },
     },{
-        tableName: 'appointments'
+        tableName: 'addresses'
     })
 
-    Appointment.associate = (models) => {
-        Appointment.belongsTo(models.Business, {
-            as: 'Business'
+    Address.associate = (models) => {
+        Address.belongsTo(models.Customer, {
+            foreignKey: 'CustomerId',
+            as: 'Customer',
         });
     }
 
-    return Appointment;
+    return Address;
 }

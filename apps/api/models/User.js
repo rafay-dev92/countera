@@ -31,13 +31,21 @@ module.exports= (sequelize) => {
         dob: {
             type: DataTypes.DATEONLY,
             allowNull: true,
+        },
+        BusinessId: {
+            type: DataTypes.UUID,
+            allowNull: true,
+            onDelete: "RESTRICT",
+            onUpdate: "CASCADE",
         }
+    },{
+        tableName: 'users'
     })
 
     User.associate = (models) => {
         User.belongsToMany(models.Permission, {
             as: 'Permission',
-            through : 'User_Permission',
+            through : 'user_permission',
 
         });
 

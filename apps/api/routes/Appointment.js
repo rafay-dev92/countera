@@ -1,18 +1,36 @@
 const express = require('express');
 const router = express.Router();
-const { Appointment } = require('../models');
+const { Appointment, User } = require('../models');
 require('dotenv').config();
+const { Op } = require('sequelize');
+const nodemailer = require('nodemailer');
+const fetchUser = require('../middlewares/fetchUser');
 
-router.get('/', async (req, res) => {
+router.get('/', fetchUser, async (req, res) => {
     try {
-        const appointments = await Appointment.findAll();
-        res.json(appointments);
+        const userId = req.user.id;
+        const user = await User.findOne({
+            where: { id: userId, role: { [Op.ne]: 'super_admin' }, BusinessId: { [Op.ne]: null } },
+        })
+
+        if (user) {
+            const appointments = await Appointment.findAll({
+                where: { BusinessId: user.dataValues.BusinessId },
+                include: ['Business']
+            });
+            return res.status(200).json(appointments);
+        }
+
+        const appointments = await Appointment.findAll({
+            include: ['Business']
+        });
+        return res.status(200).json(appointments);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 })
 
-router.get('/:id', async (req, res) => {
+router.get('/:id', fetchUser, async (req, res) => {
     try {
         const appointment = await Appointment.findByPk(req.params.id);
 
@@ -20,24 +38,79 @@ router.get('/:id', async (req, res) => {
             return res.status(404).json({ message: 'Appointment not found' });
         }
 
-        res.json(appointment);
+        res.status(200).json(appointment);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 })
 
-router.post('/create', async (req, res) => {
+router.post('/create', fetchUser, async (req, res) => {
     try {
         const appointmentData = req.body;
+        console.log(appointmentData);
         const existingAppointment = await Appointment.findOne({
-            where: { date: appointmentData.date }
+            where: {
+                [Op.or]: [
+                    {
+                        [Op.and]: [
+                            { startDateTime: { [Op.between]: [req.body.startDateTime, req.body.endDateTime] } },
+                            { BusinessId: { [Op.eq]: req.body.BusinessId } },
+                        ]
+                    },
+                    {
+                        [Op.and]: [
+                            { endDateTime: { [Op.between]: [req.body.startDateTime, req.body.endDateTime] } },
+                            { BusinessId: { [Op.eq]: req.body.BusinessId } },
+                        ]
+                    },
+                    {
+                        [Op.and]: [
+                            { startDateTime: { [Op.gt]: req.body.startDateTime } },
+                            { endDateTime: { [Op.lt]: req.body.endDateTime } },
+                            { BusinessId: { [Op.eq]: req.body.BusinessId } }
+                        ]
+                    }
+                ]
+            }
         });
 
         if (existingAppointment) {
-            res.status(409).json({ message: 'Appointment with this name already exists' });
-        } 
-        const newAppointment = await Appointment.create(appointmentData);
-        res.json(newAppointment);
+            return res.status(409).json({ message: 'Appointment with this schedule already exists' });
+        }
+
+        if (req.body.customerName !== '' && req.body.startDateTime !== '' && req.body.endTime !== '') {
+            const newAppointment = await Appointment.create(appointmentData);
+            if (newAppointment.sendEmail) {
+                const transporter = nodemailer.createTransport({
+                    host: 'smtp.ethereal.email',
+                    port: 587,
+                    auth: {
+                        user: 'jovan.schuppe37@ethereal.email',
+                        pass: 'Xc69yzNz9pvRb6RxEU'
+                    }
+                });
+
+                const mailOptions = {
+                    from: 'krafay92@gmail.com',
+                    to: appointmentData.customerEmail,
+                    subject: 'Appointment Confirmed',
+                    text: `${appointmentData.customerName} your appointment has been scheduled on ${appointmentData.startDateTime.split('T')[0]} at ${appointmentData.startDateTime.split('T')[1]} 
+                    Thanks and Have a nice day!`,
+                    html: "<b>Appointment Confirmed</b>",
+                };
+
+                transporter.sendMail(mailOptions, (error, info) => {
+                    if (error) {
+                        console.error('Error sending email:', error);
+                    } else {
+                        console.log('Email sent:', info.response);
+                    }
+                });
+            }
+            return res.status(200).json({ message: 'Appointment has been scheduled successfully' });
+        }
+
+        res.status(400).json({ message: 'All fields are required except description' });
 
     } catch (error) {
         console.error(error);
@@ -45,7 +118,7 @@ router.post('/create', async (req, res) => {
     }
 })
 
-router.put('/update/:id', async (req, res) => {
+router.put('/update/:id', fetchUser, async (req, res) => {
     try {
         const appointment = await Appointment.findByPk(req.params.id);
 
@@ -53,16 +126,39 @@ router.put('/update/:id', async (req, res) => {
             return res.status(404).json({ message: 'appointment not found' });
         }
 
+        const existingAppointment = await Appointment.findOne({
+            where: {
+                [Op.and]: [
+                    { id: { [Op.ne]: req.params.id } },
+                    {
+                        [Op.or]: [
+                            {
+                                startDateTime: { [Op.between]: [req.body.startDateTime, req.body.endDateTime] }
+                            },
+                            {
+                                endDateTime: { [Op.between]: [req.body.startDateTime, req.body.endDateTime] }
+                            }
+                        ]
+                    }
+                ]
+
+            }
+        });
+
+        if (existingAppointment) {
+            return res.status(409).json({ message: 'Appointment with this schedule already exists' });
+        }
+
         await appointment.update(req.body);
 
-        res.json({ message: 'Appointment updated successfully' });
+        res.status(200).json({ message: 'Appointment updated successfully' });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: error.message });
     }
 })
 
-router.delete('/delete/:id', async (req, res) => {
+router.delete('/delete/:id', fetchUser, async (req, res) => {
     try {
         const appointment = await Appointment.findByPk(req.params.id);
 
@@ -72,7 +168,7 @@ router.delete('/delete/:id', async (req, res) => {
 
         await appointment.destroy();
 
-        res.json({ message: 'Appointment deleted successfully' });
+        res.status(200).json({ message: 'Appointment deleted successfully' });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Error deleting appointment' });

@@ -1,18 +1,19 @@
 const express = require('express');
 const router = express.Router();
 const { Vehicle } = require('../models');
+const fetchUser = require('../middlewares/fetchUser');
 require('dotenv').config();
 
-router.get('/', async (req, res) => {
+router.get('/', fetchUser, async (req, res) => {
     try {
         const vehicles = await Vehicle.findAll();
-        res.json(vehicles);
+        res.status(200).json(vehicles);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 })
 
-router.get('/:id', async (req, res) => {
+router.get('/:id', fetchUser, async (req, res) => {
     try {
         const vehicle = await Vehicle.findByPk(req.params.id, {
             include: ['Customer', 'Vehicle']
@@ -21,32 +22,31 @@ router.get('/:id', async (req, res) => {
             return res.status(404).json({ message: 'Vehicle not found' });
         }
 
-        res.json(vehicle);
+        res.status(200).json(vehicle);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 })
 
-router.post('/create', async (req, res) => {
+router.post('/create', fetchUser, async (req, res) => {
     try {
         const vehicleData = req.body;
         const existingVehicle = await Vehicle.findOne({
-            where: { model: vehicleData.model }
+            where: { make: vehicleData.make, model: vehicleData.model, year: vehicleData.year }
         });
 
         if (existingVehicle) {
-            res.status(409).json({ message: 'Vehicle with this name already exists' });
+            return res.status(409).json({ message: 'Vehicle already exists' });
         } 
-        const newVehicle = await Vehicle.create(vehicleData);
-        res.json(newVehicle);
-
+        await Vehicle.create(vehicleData);
+        return res.status(200).json({message: 'Vehicle added successfully'});
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: error.message });
     }
 })
 
-router.put('/update/:id', async (req, res) => {
+router.put('/update/:id', fetchUser, async (req, res) => {
     try {
         const vehicle = await Vehicle.findByPk(req.params.id);
 
@@ -56,14 +56,14 @@ router.put('/update/:id', async (req, res) => {
 
         await vehicle.update(req.body);
 
-        res.json({ message: 'Vehicle updated successfully' });
+        return res.status(200).json({ message: 'Vehicle updated successfully' });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: error.message });
     }
 })
 
-router.delete('/delete/:id', async (req, res) => {
+router.delete('/delete/:id', fetchUser, async (req, res) => {
     try {
         const vehicle = await Vehicle.findByPk(req.params.id);
 
@@ -72,8 +72,7 @@ router.delete('/delete/:id', async (req, res) => {
         }
 
         await vehicle.destroy();
-
-        res.json({ message: 'Vehicle deleted successfully' });
+        return res.status(200).json({ message: 'Vehicle deleted successfully' });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Error deleting vehicle' });

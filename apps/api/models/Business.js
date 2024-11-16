@@ -16,6 +16,8 @@ module.exports= (sequelize) => {
             type: DataTypes.STRING,
             allowNull: false,
         }
+    },{
+        tableName: 'businesses'
     })
 
     Business.associate = (models) => {
@@ -25,6 +27,22 @@ module.exports= (sequelize) => {
 
         Business.hasMany(models.Customer, {
             as: 'Customer'
+        });
+
+        Business.hasMany(models.Appointment, {
+            as: 'Appointment'
+        });
+
+        Business.hasMany(models.Invoice, {
+            as: 'Invoice'
+        });
+
+        Business.hasMany(models.Quotation, {
+            as: 'Quotation'
+        });
+
+        Business.hasMany(models.Tax, {
+            as: 'Tax'
         });
     };
 

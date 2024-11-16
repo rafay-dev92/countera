@@ -4,23 +4,37 @@ const { User, Permission } = require('../models');
 const { body, validationResult } = require('express-validator');
 const bcryptjs = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const fetchUser = require('../middlewares/fetchUser');
+const { Op } = require('sequelize');
 require('dotenv').config();
 
-router.get('/', async (req, res) => {
+router.get('/', fetchUser, async (req, res) => {
     try {
+        const userId = req.user.id;
+        const loggedInUser = await User.findOne({
+            where: { id: userId, role: { [Op.ne]: 'super_admin' }, BusinessId: { [Op.ne]: null } },
+        })
+
+        if (loggedInUser) {
+            const user = await User.findAll({
+                where: { BusinessId: loggedInUser.dataValues.BusinessId },
+                include: ['Permission']
+            });
+            return res.json(user);
+        }
         const user = await User.findAll({
-            include: ['Permission', 'Business']
+            include: ['Permission']
         });
-        res.json(user);
+        return res.json(user);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 })
 
-router.get('/:id', async (req, res) => {
+router.get('/:id', fetchUser, async (req, res) => {
     try {
         const user = await User.findByPk(req.params.id, {
-            include: ['Permission', 'Business']
+            include: ['Permission']
         });
 
         if (!user) {
@@ -36,46 +50,43 @@ router.post('/signup', [
     body('user.email', 'Enter a valid email').isEmail(),
     body('user.password', 'Password must be atleast 5 characters long').isLength({ min: 5 }),
 ],
-    async (req, res) => {
+fetchUser,
+async (req, res) => {
     //Checking whether request is normal
     const errors = validationResult(req);
-
+    
     if (!errors.isEmpty()) {
-        return res.status(400).json({ "errors": errors.array() })
+        return res.status(400).json({message: 'User not created. Enter a valid email address'})
     }
-
+    
     try {
-        const userData = req.body.user;
-        const existingUser = await User.findOne({
-            where: { email: userData.email }
-        });
-
-        if (existingUser) {
-            res.status(409).json({ message: 'Email already exists' });
-        } else {
-            const salt = await bcryptjs.genSalt(10);
-            const secPass = await bcryptjs.hash(userData.password, salt);
-
-            const newUser = await User.create({
-                ...userData,
-                password: secPass
+        console.log(req.body);
+            const userData = req.body.user;
+            
+            const existingUser = await User.findOne({
+                where: { email: userData.email}
             });
 
-            if (req.body.permissions.length !== 0) {
-                console.log(req.body.permissions)
-                req.body.permissions.map(async (item) => {
-                    const permission = await Permission.findByPk(item);
-                    newUser.addPermission(permission)
-                })
-            }
+            if (existingUser) {
+                res.status(409).json({ message: 'User already exist' });
+            } else {
+                const salt = await bcryptjs.genSalt(10);
+                const secPass = await bcryptjs.hash(userData.password, salt);
 
-            res.json(newUser);
+                const newUser = await User.create({
+                    ...userData,
+                    password: secPass
+                });
+
+                await newUser.setPermission(req.body.permissions);
+
+                res.status(200).json({ message: "User created successfully" });
+            }
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ message: error.message });
         }
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: error.message });
-    }
-})
+    })
 
 router.post('/add_permission', async (req, res) => {
     try {
@@ -84,7 +95,7 @@ router.post('/add_permission', async (req, res) => {
             return res.status(404).json({ message: 'User not found' });
         }
         if (req.body.permission.length !== 0) {
-            req.body.permissions.map( async (item) => {
+            req.body.permissions.map(async (item) => {
                 const permission = await Permission.findByPk(item);
                 user.addPermission(permission);
             })
@@ -103,13 +114,13 @@ router.post('/login', async (req, res) => {
         const user = await User.findOne({ where: { email: req.body.email } });
 
         if (!user) {
-            return res.status(404).json({ "error": "Please provide correct credentials" });
+            return res.status(404).json({ message: "User not found" });
         }
 
         const passMatch = await bcryptjs.compare(req.body.password, user.password);
 
         if (!passMatch) {
-            return res.status(404).send("Please provide correct credentials");
+            return res.status(404).json({ message: "Please provide correct credentials" });
         }
 
         const data = {
@@ -118,9 +129,9 @@ router.post('/login', async (req, res) => {
             }
         }
 
-        const token = jwt.sign(data, process.env.JWT_SECRET, { expiresIn: 30 * 60 });
+        const token = jwt.sign(data, process.env.JWT_SECRET, { expiresIn: 12 * 60 * 60 });
 
-        res.send({ token: token, sessionExpire: Date.now() + (30 * 60 * 1000) });
+        res.send({ token: token, sessionExpire: Date.now() + (12 * 60 * 60 * 1000) });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Error login user' });
@@ -128,24 +139,72 @@ router.post('/login', async (req, res) => {
 
 })
 
-router.put('/update/:id', async (req, res) => {
+router.post('/getuser', fetchUser, async (req, res) => {
     try {
-        const user = await User.findByPk(req.params.id);
+        const userId = req.user.id;
+        const user = await User.findOne({
+            where: { id: userId },
+            attributes: { exclude: ['password'] },
+            include: ['Permission', 'Business']
+        });
+
+        res.send(user);
+    }
+    catch (error) {
+        console.error(error.message);
+        res.status(500).send("Internal Server Error");
+    }
+});
+
+router.put('/update/:id', fetchUser, async (req, res) => {
+    try {
+        const user = await User.findByPk(req.params.id, {
+            include: ['Permission']
+        });
 
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        await user.update(req.body);
+        if (req.body.user.password) {
+            const salt = await bcryptjs.genSalt(10);
+            const secPass = await bcryptjs.hash(req.body.user.password, salt);
+            req.body.user.password = secPass;
+        }
+        else {
+            req.body.user.password = user.password;
+        }
+        await user.update(req.body.user);
 
-        res.json({ message: 'User updated successfully' });
+        const deletedItems = user.Permission.filter(orgPerm =>
+            !req.body.permissions.some(item => item === orgPerm.dataValues.id))
+            .map(changeItem => changeItem.dataValues.id);
+
+        const addItems = req.body.permissions.filter(perm =>
+            !user.Permission.some(item => item.dataValues.id === perm));
+
+        if (addItems.length !== 0) {
+            addItems.forEach(async (item) => {
+                const permission = await Permission.findByPk(item);
+                await user.addPermission(permission);
+            });
+        }
+
+        if (deletedItems.length !== 0) {
+            deletedItems.forEach(async (item) => {
+                const permission = await Permission.findByPk(item);
+                await user.removePermission(permission);
+            });
+        }
+
+        res.status(200).json({ message: 'User updated successfully' });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Error updating user' });
     }
 })
 
-router.delete('/delete/:id', async (req, res) => {
+router.delete('/delete/:id', fetchUser, async (req, res) => {
     try {
         const user = await User.findByPk(req.params.id);
 
@@ -154,7 +213,7 @@ router.delete('/delete/:id', async (req, res) => {
         }
 
         await user.destroy();
-        res.json({ message: 'User deleted successfully' });
+        res.status(200).json({ message: 'User deleted successfully' });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Error deleting user' });

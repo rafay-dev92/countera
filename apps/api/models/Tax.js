@@ -1,4 +1,4 @@
-const { DataTypes } = require('sequelize');
+const { DataTypes, Model } = require('sequelize');
 
 module.exports= (sequelize) => {
     const Tax = sequelize.define('Tax', {
@@ -16,11 +16,28 @@ module.exports= (sequelize) => {
             type: DataTypes.STRING,
             allowNull: false,
         },
-        value: {
+        rate: {
             type: DataTypes.FLOAT,
             allowNull: false,
         },
+        default: {
+            type: DataTypes.BOOLEAN,
+            allowNull: false
+        }
+    },{
+        tableName: 'taxes'
     })
+
+    Tax.associate = (models) => {
+        Tax.belongsToMany(models.Product, {
+            as: 'Product',
+            through: 'product_tax'
+        });
+
+        Tax.belongsTo(models.Business, {
+            as: 'Business'
+        })
+    }
 
     return Tax;
 }

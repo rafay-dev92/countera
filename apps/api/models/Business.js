@@ -12,10 +12,46 @@ module.exports= (sequelize) => {
             type: DataTypes.STRING,
             allowNull: false,
         },
-        location: {
+        logo: {
+            type: DataTypes.STRING,
+            allowNull: true
+        },
+        address: {
             type: DataTypes.STRING,
             allowNull: false,
-        }
+        },
+        city: {
+            type: DataTypes.STRING,
+            allowNull: false,
+        },
+        state: {
+            type: DataTypes.STRING,
+            allowNull: false,
+        },
+        zipcode: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+        },
+        licenseNumber: {
+            type: DataTypes.STRING,
+            allowNull: true,
+        },
+        permitNumber: {
+            type: DataTypes.STRING,
+            allowNull: true,
+        },
+        tel: {
+            type: DataTypes.STRING,
+            allowNull: false,
+        },
+        fax: {
+            type: DataTypes.STRING,
+            allowNull: true,
+        },
+        defaultMargin: {
+            type: DataTypes.FLOAT,
+            allowNull: true,
+        },
     },{
         tableName: 'businesses'
     })
@@ -44,6 +80,7 @@ module.exports= (sequelize) => {
         Business.hasMany(models.Tax, {
             as: 'Tax'
         });
+
     };
 
     return Business;

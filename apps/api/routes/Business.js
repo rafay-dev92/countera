@@ -9,7 +9,6 @@ router.get('/', fetchUser, async (req, res) => {
         const business = await Business.findAll({ include : ['User', 'Customer'] });
         res.json(business);
     } catch (error) {
-        console.log("here")
         res.status(500).json({ message: error.message });
     }
 })

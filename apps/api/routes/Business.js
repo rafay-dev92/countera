@@ -24,7 +24,7 @@ router.get('/:id', fetchUser, async (req, res) => {
             return res.status(404).json({ message: 'Business not found' });
         }
 
-        res.json(business);
+        res.json({message: "business fetched", data: business});
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -59,7 +59,7 @@ router.put('/update/:id', async (req, res) => {
 
         await business.update(req.body);
 
-        res.json({ message: 'Business updated successfully' });
+        res.json({ message: 'Business updated successfully', data: await Business.findByPk(req.params.id) });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: error.message });

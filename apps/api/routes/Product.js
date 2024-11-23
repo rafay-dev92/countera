@@ -68,10 +68,12 @@ router.post("/create", fetchUser, upload.single("image"), async (req, res) => {
         .status(409)
         .json({ message: "Product with this name already exists" });
     }
-    const imageUrl = `${req.protocol}://${req.get("host")}/uploads/${
-      req.file.filename
-    }`;
-    productData.image = imageUrl;
+    if (req.file) {
+      const imageUrl = `${req.protocol}://${req.get("host")}/uploads/products${
+        req.file.filename
+      }`;
+      productData.image = imageUrl;
+    }
 
     productTaxes = JSON.parse(productData.taxes);
     delete productData.taxes;

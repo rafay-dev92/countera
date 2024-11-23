@@ -1,17 +1,22 @@
 const express = require("express");
 const cors = require("cors");
 const app = express();
-const fs = require('fs');
+const fs = require("fs");
 
 const path = require("path");
 
-const uploadsDir = path.join(__dirname, "uploads");
+const productDir = path.join(__dirname, "uploads/products");
+const businessDir = path.join(__dirname, "uploads/business");
 // Check if uploads directory exists, and create it if it doesn't
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-  console.log("Uploads directory created");
+if (!fs.existsSync(productDir)) {
+  fs.mkdirSync(productDir, { recursive: true });
+  console.log("Products images directory created");
+}
+if (!fs.existsSync(businessDir)) {
+  fs.mkdirSync(businessDir, { recursive: true });
+  console.log("Business images directory created");
 } else {
-  console.log("Uploads directory already exists");
+  console.log("Images directory already exists");
 }
 
 app.use(express.json());

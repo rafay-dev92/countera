@@ -77,10 +77,10 @@ module.exports = (sequelize) => {
       as: "WorkOrder",
     });
 
-    Customer.belongsToMany(models.Vehicle, {
-        through: 'CustomerVehicles',
+    Customer.hasMany(models.Customer_Vehicle, {
+        onDelete: 'CASCADE',
         foreignKey: 'CustomerId',
-        otherKey: 'VehicleId',
+        as: 'Vehicle',
     });
   };
 

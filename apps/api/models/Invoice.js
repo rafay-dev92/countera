@@ -31,24 +31,18 @@ module.exports = (sequelize) => {
         },
         odometer: {
             type: DataTypes.STRING,
-            allowNull: false,
+            allowNull: true,
         },
         licenseNo: {
             type: DataTypes.STRING,
-            allowNull: false,
+            allowNull: true,
         },
         CustomerId: {
             type: DataTypes.UUID,
             allowNull: false,
             onDelete: "RESTRICT",
             onUpdate: "CASCADE",
-        },
-        VehicleId: {
-            type: DataTypes.UUID,
-            allowNull: false,
-            onDelete: "RESTRICT",
-            onUpdate: "CASCADE",
-        },
+        },        
         BusinessId: {
             type: DataTypes.UUID,
             allowNull: false,
@@ -67,10 +61,6 @@ module.exports = (sequelize) => {
 
         Invoice.belongsTo(models.Customer, {
             as: 'Customer'
-        })
-
-        Invoice.belongsTo(models.Vehicle, {
-            as: 'Vehicle'
         })
 
         Invoice.belongsTo(models.Business, {

@@ -15,15 +15,15 @@ router.get('/', fetchUser, async (req, res) => {
         if (user) {
             const invoices = await Invoice.findAll({
                 where: {BusinessId: user.dataValues.BusinessId},
-                include: ['Customer', 'Vehicle', 'Product', 'Business']
+                include: ['Customer', 'Product', 'Business']
             });
-            return res.json(invoices);
+            return res.json({message: 'Invoices fetched successfully' ,data: invoices});
         }
         
         const invoices = await Invoice.findAll({
-            include: ['Customer', 'Vehicle', 'Product', 'Business']
+            include: ['Customer', 'Product', 'Business']
         });
-        return res.json(invoices);
+        return res.json({message: 'Invoices fetched successfully' ,data: invoices});
         
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -33,14 +33,15 @@ router.get('/', fetchUser, async (req, res) => {
 router.get('/:id', fetchUser, async (req, res) => {
     try {
         const invoice = await Invoice.findByPk(req.params.id, {
-            include: ['Customer', 'Vehicle', 'Product']
+            include: ['Customer', 'Product']
         });
 
         if (!invoice) {
             return res.status(404).json({ message: 'Invoice not found' });
         }
 
-        res.json(invoice);
+        return res.json({message: 'Invoices fetched successfully' ,data: invoice});
+
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -50,8 +51,8 @@ router.post('/create', fetchUser, async (req, res) => {
     try {
         const invoiceData = req.body.invoiceData;
 
-        if (!('CustomerId' in invoiceData) || !("VehicleId" in invoiceData)) {
-            return res.status(409).json({ message: "Customer Id and Vehicle Id is mandatory" })
+        if (!('CustomerId' in invoiceData)) {
+            return res.status(409).json({ message: "Customer Id is mandatory" })
         }
 
         const newInvoice = await Invoice.create(invoiceData);

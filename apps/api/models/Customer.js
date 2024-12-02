@@ -77,7 +77,7 @@ module.exports = (sequelize) => {
       as: "WorkOrder",
     });
 
-    Customer.hasMany(models.Customer_Vehicle, {
+    Customer.hasMany(models.CustomerVehicle, {
         onDelete: 'CASCADE',
         foreignKey: 'CustomerId',
         as: 'Vehicle',

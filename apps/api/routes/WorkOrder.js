@@ -15,13 +15,13 @@ router.get('/', fetchUser, async (req, res) => {
         if (user) {
             const workorders = await WorkOrder.findAll({
                 where: {BusinessId: user.dataValues.BusinessId},
-                include: ['Customer', 'Vehicle', 'Business']
+                include: ['Customer', 'Business']
             });
             return res.json(workorders);
         }
 
         const workorders = await WorkOrder.findAll({
-            include: ['Customer', 'Vehicle', 'Business']
+            include: ['Customer', 'Business']
         });
         return res.json(workorders);
     } catch (error) {
@@ -32,7 +32,7 @@ router.get('/', fetchUser, async (req, res) => {
 router.get('/:id', fetchUser, async (req, res) => {
     try {
         const workorder = await WorkOrder.findByPk(req.params.id,{
-            include: ['Customer', 'Vehicle']
+            include: ['Customer', 'Business']
         });
 
         if (!workorder) {

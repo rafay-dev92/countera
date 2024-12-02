@@ -1,8 +1,7 @@
 const { DataTypes } = require('sequelize');
-const models = require('.');
 
 module.exports= (sequelize) => {
-    const Customer_Vehicle = sequelize.define('customer_vehicles', {
+    const CustomerVehicle = sequelize.define('CustomerVehicle', {
         id: {
             type: DataTypes.UUID,
             defaultValue: DataTypes.UUIDV4, 
@@ -51,12 +50,12 @@ module.exports= (sequelize) => {
         tableName: 'customer_vehicles'
     })
 
-    Customer_Vehicle.associate = (models) => {
-        Customer_Vehicle.belongsTo(models.Customer, {
+    CustomerVehicle.associate = (models) => {
+        CustomerVehicle.belongsTo(models.Customer, {
             foreignKey: 'CustomerId',
             as: 'Customer',
         });
     } 
     
-    return Customer_Vehicle;
+    return CustomerVehicle;
 }

@@ -13,18 +13,15 @@ router.get('/', fetchUser, async (req, res) => {
         })
 
         if (user) {
-            console.log("Business: ", user.dataValues.BusinessId);
-
             const quotataions = await Quotation.findAll({
                 where: { BusinessId: user.dataValues.BusinessId },
-                include: ['Customer', 'Vehicle', 'Business']
+                include: ['Customer', 'Business']
             });
-            console.log(quotataions);
             return res.json(quotataions);
         }
 
         const quotataions = await Quotation.findAll({
-            include: ['Customer', 'Vehicle', 'Product', 'Business']
+            include: ['Customer', 'Product', 'Business']
         });
         return res.json(quotataions);
     } catch (error) {
@@ -35,7 +32,7 @@ router.get('/', fetchUser, async (req, res) => {
 router.get('/:id', fetchUser, async (req, res) => {
     try {
         const quotataion = await Quotation.findByPk(req.params.id, {
-            include: ['Customer', 'Vehicle', 'Product']
+            include: ['Customer', 'Product']
         });
 
         if (!quotataion) {
@@ -51,8 +48,7 @@ router.get('/:id', fetchUser, async (req, res) => {
 router.post('/create', fetchUser, async (req, res) => {
     try {
         const quotationData = req.body.quotationData;
-        console.log(quotationData);
-        if (!('CustomerId' in quotationData) || !("VehicleId" in quotationData)) {
+        if (!('CustomerId' in quotationData)) {
             return res.status(409).json({ message: "Customer Id and Vehicle Id is mandatory" })
         }
 

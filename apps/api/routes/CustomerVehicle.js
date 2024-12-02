@@ -1,12 +1,14 @@
 const express = require("express");
 const router = express.Router();
-const { Vehicle } = require("../models");
+const { CustomerVehicle } = require("../models");
 const fetchUser = require("../middlewares/fetchUser");
 require("dotenv").config();
 
-router.get("/", fetchUser, async (req, res) => {
+router.get("/customer/:id", fetchUser, async (req, res) => {
   try {
-    const vehicles = await Vehicle.findAll();
+    const vehicles = await CustomerVehicle.findAll({
+      where: { CustomerId: req.params.id },
+    });
     res.status(200).json(vehicles);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -15,7 +17,7 @@ router.get("/", fetchUser, async (req, res) => {
 
 router.get("/:id", fetchUser, async (req, res) => {
   try {
-    const vehicle = await Vehicle.findByPk(req.params.id);
+    const vehicle = await CustomerVehicle.findByPk(req.params.id);
     if (!vehicle) {
       return res.status(404).json({ message: "Vehicle not found" });
     }
@@ -28,17 +30,21 @@ router.get("/:id", fetchUser, async (req, res) => {
 
 router.post("/create", fetchUser, async (req, res) => {
   try {
-    let { make, model } = req.body;
-    make=make.toUpperCase();
-    model=model.toUpperCase();
-    const existingVehicle = await Vehicle.findOne({
-      where: { make: make, model: model },
+    let data = req.body;  
+    const { vehicle, CustomerId } = req.body;
+    let [make, model] = vehicle.split(" ");
+    make = make.trim();
+    model = model.trim();
+    const existingVehicle = await CustomerVehicle.findOne({
+      where: { make: make, model: model, CustomerId: CustomerId },
     });
-
     if (existingVehicle) {
       return res.status(409).json({ message: "Vehicle already exists" });
     }
-    await Vehicle.create({make, model});
+
+    data = { ...data, make, model };
+    delete data.vehicle;
+    await CustomerVehicle.create(data);
     return res.status(200).json({ message: "Vehicle added successfully" });
   } catch (error) {
     console.error(error);
@@ -48,7 +54,7 @@ router.post("/create", fetchUser, async (req, res) => {
 
 router.put("/update/:id", fetchUser, async (req, res) => {
   try {
-    const vehicle = await Vehicle.findByPk(req.params.id);
+    const vehicle = await CustomerVehicle.findByPk(req.params.id);
 
     if (!vehicle) {
       return res.status(404).json({ message: "vehicle not found" });
@@ -65,7 +71,7 @@ router.put("/update/:id", fetchUser, async (req, res) => {
 
 router.delete("/delete/:id", fetchUser, async (req, res) => {
   try {
-    const vehicle = await Vehicle.findByPk(req.params.id);
+    const vehicle = await CustomerVehicle.findByPk(req.params.id);
 
     if (!vehicle) {
       return res.status(404).json({ message: "vehicle not found" });

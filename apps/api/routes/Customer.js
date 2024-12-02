@@ -15,12 +15,12 @@ router.get('/', fetchUser, async (req, res) => {
         if (user) {
             const customer = await Customer.findAll({
                 where: {BusinessId: user.dataValues.BusinessId},
-                include: ['Business', 'Address']
+                include: ['Business', 'Address', 'Vehicle']
             });
             return res.json(customer);
         }
         const customer = await Customer.findAll({
-            include: ['Business', 'Address']
+            include: ['Business', 'Address', 'Vehicle']
         });
         return res.json(customer);
     } catch (error) {
@@ -31,7 +31,7 @@ router.get('/', fetchUser, async (req, res) => {
 router.get('/:id', fetchUser, async (req, res) => {
     try {
         const customer = await Customer.findByPk(req.params.id, {
-            include: ['Business', 'Address']
+            include: ['Business', 'Address', 'Vehicle']
         });
 
         if (!customer) {
@@ -55,7 +55,6 @@ router.post('/create', fetchUser,  async (req, res) => {
         } 
 
         const customer = await Customer.create(customerData);
-        console.log(customer)
         return res.status(200).json({message: "Customer added successfully", data: customer});
 
     } catch (error) {

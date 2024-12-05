@@ -10,6 +10,7 @@ module.exports = (sequelize) => {
         },
         invoiceNumber: {
             type: DataTypes.INTEGER,
+            defaultValue: 0,
             allowNull: false,
             unique: true,
         },
@@ -29,20 +30,18 @@ module.exports = (sequelize) => {
             type: DataTypes.STRING,
             allowNull: false,
         },
-        odometer: {
-            type: DataTypes.STRING,
-            allowNull: true,
-        },
-        licenseNo: {
-            type: DataTypes.STRING,
-            allowNull: true,
-        },
         CustomerId: {
             type: DataTypes.UUID,
             allowNull: false,
             onDelete: "RESTRICT",
             onUpdate: "CASCADE",
-        },        
+        },   
+        CustomerVehicleId: {
+            type: DataTypes.UUID,
+            allowNull: false,
+            onDelete: "RESTRICT",
+            onUpdate: "CASCADE",
+        },       
         BusinessId: {
             type: DataTypes.UUID,
             allowNull: false,
@@ -63,6 +62,10 @@ module.exports = (sequelize) => {
             as: 'Customer'
         })
 
+        Invoice.belongsTo(models.CustomerVehicle, {
+            as: 'CustomerVehicle'
+        })
+
         Invoice.belongsTo(models.Business, {
             as: 'Business'
         })
@@ -73,6 +76,7 @@ module.exports = (sequelize) => {
     // Define a hook to set the invoiceNumber before creating a new invoice
     Invoice.beforeCreate(async (invoice, options) => {
         const latestInvoice = await findLatestInvoice();
+        console.log('latestInvoice', latestInvoice);
         const nextInvoiceNumber = latestInvoice ? latestInvoice.invoiceNumber + 1 : 1;
         invoice.invoiceNumber = nextInvoiceNumber;
     });

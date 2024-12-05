@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { Invoice, Product, invoice_product, User } = require('../models');
+const { Invoice, Product, invoice_product, User, Customer, CustomerVehicle, Business, Tax } = require('../models');
 const fetchUser = require('../middlewares/fetchUser');
 const { Op } = require('sequelize');
 require('dotenv').config();
@@ -15,13 +15,36 @@ router.get('/', fetchUser, async (req, res) => {
         if (user) {
             const invoices = await Invoice.findAll({
                 where: {BusinessId: user.dataValues.BusinessId},
-                include: ['Customer', 'Product', 'Business']
+                include: [
+                    {
+                        model: Customer,
+                        as: 'Customer',
+                        include: ['Address', 'Vehicle']
+                    },
+                    {
+                        model: CustomerVehicle,
+                        as: 'CustomerVehicle'
+                    },
+                    {
+                        model: Product,
+                        as: 'Product',
+                        through: 'invoice_product',
+                        include: [
+                            'Tax'
+                        ]
+                    },
+                    {
+                        model: Business,
+                        as: 'Business'
+                    }
+                ]
+                // include: ['Customer', 'CustomerVehicle', 'Product', 'Business']
             });
             return res.json({message: 'Invoices fetched successfully' ,data: invoices});
         }
         
         const invoices = await Invoice.findAll({
-            include: ['Customer', 'Product', 'Business']
+            include: ['Customer', 'CustomerVehicle', 'Product', 'Business']
         });
         return res.json({message: 'Invoices fetched successfully' ,data: invoices});
         
@@ -33,7 +56,7 @@ router.get('/', fetchUser, async (req, res) => {
 router.get('/:id', fetchUser, async (req, res) => {
     try {
         const invoice = await Invoice.findByPk(req.params.id, {
-            include: ['Customer', 'Product']
+            include: ['Customer', 'CustomerVehicle' , 'Product']
         });
 
         if (!invoice) {

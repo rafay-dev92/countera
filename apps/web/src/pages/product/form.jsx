@@ -19,11 +19,11 @@ const schema = Yup.object().shape({
   itemCode: Yup.string(),
   description: Yup.string(),
   taxable: Yup.boolean(true).required("Field is required"),
-  image: Yup.mixed().test(
+  image: Yup.mixed().notRequired().test(
       'fileType',
       'Only image files are allowed',
       (value) => {
-        if (!value) return true;
+        if (value == null || value === '') return true;
         if (typeof value === 'string') return true;
         return (
           !value ||
@@ -63,10 +63,9 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
 
   useEffect(() => {
     if (selectedItem) {
-      console.log(selectedItem)
       // separating image from product data
       const { image, ...restItemData } = selectedItem;
-      setProductPreviewPic(image);
+      if (image !== 'null') setProductPreviewPic(image);
       formikProps.setValues(selectedItem);
       setSelectedTaxes(selectedItem.Tax.map((tax) => (tax.id)))
       setEdit(true);
@@ -255,6 +254,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
                       type="file"
                       accept="image/*"
                       onChange={(e) => {
+                        console.log(e.target.files[0])
                         setProductPreviewPic(URL.createObjectURL(e.target.files[0]))
                         setFieldValue('image', e.target.files[0]);
                       }}

@@ -63,7 +63,7 @@ export function Home() {
 
             const newArray = [...cardsData];
 
-            newArray[0].value = `$${money}`;
+            newArray[0].value = `$${money.toFixed(2)}`;
             newArray[1].value = invoicesWithCurrentDate.length;
             setCardsData(newArray)
 

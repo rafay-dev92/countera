@@ -24,6 +24,8 @@ app.use(express.urlencoded({ extended: false }));
 
 const corsOptions = {
   origin: ['http://example.com', 'http://localhost:5173'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'], 
 };
 app.use(cors(corsOptions));
 

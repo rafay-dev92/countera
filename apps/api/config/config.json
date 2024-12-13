@@ -5,7 +5,8 @@
     "database": "defaultdb",
     "host": "mysql-361e9fc0-krafay92-99d8.i.aivencloud.com",
     "port": 12200,
-    "dialect": "mysql"
+    "dialect": "mysql",
+    "logging": false
   },
   "test": {
     "username": "root",

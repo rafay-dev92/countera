@@ -95,6 +95,7 @@ router.delete('/delete/:id', fetchUser, async (req, res) => {
         await customer.destroy();
         return res.status(200).json({ message: 'Customer deleted successfully' });
     } catch (error) {
+        console.error('Error deleting customer:', error); 
         res.status(500).json({ message: 'Error deleting customer' });
     }
 })

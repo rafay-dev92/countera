@@ -20,8 +20,12 @@ if (!fs.existsSync(businessDir)) {
 }
 
 app.use(express.json());
-app.use(cors());
 app.use(express.urlencoded({ extended: false }));
+
+const corsOptions = {
+  origin: ['http://example.com', 'http://localhost:5173'],
+};
+app.use(cors(corsOptions));
 
 app.get("/", (req, res) => {
   res.status(200);

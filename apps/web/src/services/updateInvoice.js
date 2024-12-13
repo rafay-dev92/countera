@@ -1,6 +1,6 @@
 export async function updateInvoice(id, data, token){
     try {
-        const invoice = await fetch(`http://localhost:5000/api/invoice/update/${id}`, {
+        const invoice = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/invoice/update/${id}`, {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",

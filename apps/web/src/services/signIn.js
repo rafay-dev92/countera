@@ -1,6 +1,6 @@
 export async function signIn(data){
     try {
-        const user = await fetch("http://localhost:5000/api/user/login", {
+        const user = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/user/login`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"

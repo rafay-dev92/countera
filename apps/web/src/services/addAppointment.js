@@ -1,6 +1,6 @@
 export async function addAppointment(data, token){
     try {
-        const tax = await fetch("http://localhost:5000/api/appointment/create", {
+        const tax = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/appointment/create`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",

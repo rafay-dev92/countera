@@ -1,6 +1,6 @@
 export async function delQuotation(id, token){
     try {
-        const quotation = await fetch(`http://localhost:5000/api/quotation/delete/${id}`, {
+        const quotation = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/quotation/delete/${id}`, {
             method: "DELETE",
             headers: {
                 "Content-Type": "application/json",

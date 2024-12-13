@@ -1,6 +1,6 @@
 export async function addUser(data, token){
     try {
-        const user = await fetch("http://localhost:5000/api/user/signup", {
+        const user = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/user/signup`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",

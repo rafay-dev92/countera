@@ -1,6 +1,6 @@
 export async function fetchVehicles(token){
     try {
-        const vehicles = await fetch("http://localhost:5000/api/vehicle/", {
+        const vehicles = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/vehicle/`, {
             method: "GET",
             headers: {
                 "auth-token": token

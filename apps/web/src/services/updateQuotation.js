@@ -1,6 +1,6 @@
 export async function updateQuotation(id, data, token){
     try {
-        const quotation = await fetch(`http://localhost:5000/api/quotation/update/${id}`, {
+        const quotation = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/quotation/update/${id}`, {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",

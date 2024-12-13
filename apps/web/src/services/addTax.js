@@ -1,6 +1,6 @@
 export async function addTax(data, token){
     try {
-        const tax = await fetch("http://localhost:5000/api/tax/create", {
+        const tax = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/tax/create`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",

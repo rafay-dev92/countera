@@ -1,6 +1,6 @@
 export async function updateBusiness(id, data, token){
     try {
-        const business = await fetch(`http://localhost:5000/api/business/update/${id}`, {
+        const business = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/business/update/${id}`, {
             method: "PUT",
             headers: {
                 // "Content-Type": "application/json",

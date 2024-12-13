@@ -1,7 +1,7 @@
 export async function addInvoice(data, token){
     console.log(data);
     try {
-        const invoice = await fetch("http://localhost:5000/api/invoice/create", {
+        const invoice = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/invoice/create`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",

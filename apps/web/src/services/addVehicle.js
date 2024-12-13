@@ -1,6 +1,6 @@
 export async function addVehicle(data, token){
     try {
-        const vehicle = await fetch("http://localhost:5000/api/vehicle/create", {
+        const vehicle = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/vehicle/create`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",

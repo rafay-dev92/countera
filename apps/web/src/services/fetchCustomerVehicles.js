@@ -1,6 +1,6 @@
 export async function fetchCustomerVehicles(customerId, token){
     try {
-        const customerVehicles = await fetch(`http://localhost:5000/api/customervehicle/customer/${customerId}`, {
+        const customerVehicles = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/customervehicle/customer/${customerId}`, {
             method: "GET",
             headers: {
                 "auth-token": token

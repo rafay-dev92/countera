@@ -1,6 +1,6 @@
 export async function addProduct(data, token){
     try {
-        const product = await fetch("http://localhost:5000/api/product/create", {
+        const product = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/product/create`, {
             method: "POST",
             headers: {
                 // "Content-Type": "application/json",

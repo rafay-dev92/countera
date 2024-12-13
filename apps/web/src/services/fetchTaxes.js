@@ -1,6 +1,6 @@
 export async function fetchTaxes(token){
     try {
-        const taxes = await fetch("http://localhost:5000/api/tax/", {
+        const taxes = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/tax/`, {
             method: "GET",
             headers: {
                 "auth-token": token

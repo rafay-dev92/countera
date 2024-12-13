@@ -1,6 +1,6 @@
 export async function fetchAppointments(token){
     try {
-        const appointments = await fetch("http://localhost:5000/api/appointment/", {
+        const appointments = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/appointment/`, {
             method: "GET",
             headers: {
                 "auth-token": token

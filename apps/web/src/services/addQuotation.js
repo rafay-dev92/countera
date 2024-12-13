@@ -1,6 +1,6 @@
 export async function addQuotaion(data, token){
     try {
-        const quotation = await fetch("http://localhost:5000/api/quotation/create", {
+        const quotation = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/quotation/create`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",

@@ -1,6 +1,6 @@
 export async function updateUser(id, data, token){
     try {
-        const user = await fetch(`http://localhost:5000/api/user/update/${id}`, {
+        const user = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/user/update/${id}`, {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",

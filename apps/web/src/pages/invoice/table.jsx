@@ -50,6 +50,7 @@ export function Invoice() {
     try {
       const fetchedInvoices = await fetchInvoices(state.userToken);
       const totalInvoices = await fetchedInvoices.json();
+      console.log(totalInvoices);
       if (state.Settings.General.invoice === 'all') {
         setInvoices(totalInvoices);
       }

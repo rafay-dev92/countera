@@ -1,6 +1,6 @@
 export async function delTax(id, token){
     try {
-        const tax = await fetch(`http://localhost:5000/api/tax/delete/${id}`, {
+        const tax = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/tax/delete/${id}`, {
             method: "DELETE",
             headers: {
                 "Content-Type": "application/json",

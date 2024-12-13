@@ -1,6 +1,6 @@
 export async function fetchPermissions(token){
     try {
-        const permissions = await fetch("http://localhost:5000/api/permission/", {
+        const permissions = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/permission/`, {
             method: "GET",
             headers: {
                 "auth-token": token

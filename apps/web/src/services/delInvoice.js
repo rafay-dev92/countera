@@ -1,6 +1,6 @@
 export async function delInvoice(id, token){
     try {
-        const invoice = await fetch(`http://localhost:5000/api/invoice/delete/${id}`, {
+        const invoice = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/invoice/delete/${id}`, {
             method: "DELETE",
             headers: {
                 "Content-Type": "application/json",

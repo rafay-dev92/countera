@@ -8,16 +8,14 @@ import {
 import { useNavigate } from "react-router-dom";
 import { signIn } from "@/services/signIn";
 import { toast } from 'react-toastify';
-import { State } from "@/state/Context";
 
 export function SignIn() {
 
-  const {state} = State();
-  
+  const [showPassword, setShowPassword] = useState(false);
+
   useEffect(() => {
     try {
       const token = JSON.parse(localStorage.getItem('Token'));
-      console.log(token)
       if (token) navigate('/dashboard');
     } catch (error) {
       console.log(error)
@@ -28,7 +26,7 @@ export function SignIn() {
   const navigate = useNavigate();
 
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState(''); 
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
   const showToastMessage = (type, message) => {
@@ -44,7 +42,6 @@ export function SignIn() {
   };
 
   async function handleSignIn() {
-
     setLoading(true);
     const data = {
       email: email,
@@ -54,9 +51,9 @@ export function SignIn() {
       const res = await signIn(data);
       const user = await res.json();
       if (res.ok) {
-        console.log(res)
         setEmail('');
         setPassword('');
+        setShowPassword(false);
         setLoading(false);
         localStorage.setItem('Token', JSON.stringify(user.token));
         localStorage.setItem('sessionExp', JSON.stringify(user.sessionExpire));
@@ -101,17 +98,25 @@ export function SignIn() {
           <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
             Password
           </Typography>
-          <Input
-            type="password"
-            size="lg"
-            placeholder="********"
-            className=" !border-t-blue-gray-200 focus:!border-t-gray-900"
-            labelProps={{
-              className: "before:content-none after:content-none",
-            }}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
+          <div className="relative w-full">
+            <Input
+              type={showPassword ? "text" : "password"}
+              size="lg"
+              placeholder="********"
+              className="!border-t-blue-gray-200 focus:!border-t-gray-900 pr-10"
+              labelProps={{
+                className: "before:content-none after:content-none",
+              }}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+            <span
+              className="absolute top-1/2 right-3 transform -translate-y-1/2 cursor-pointer text-gray-600"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? "hide" : "show"}
+            </span>
+          </div>
         </div>
 
         <Button onClick={handleSignIn} className="mt-6" fullWidth>

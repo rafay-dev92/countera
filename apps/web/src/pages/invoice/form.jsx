@@ -135,9 +135,11 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
           taxable: prod.taxable
         }
         selectedProd = [aProd, ...selectedProd];
-        prod.Tax?.forEach(productTax => {
-          productTaxes.some(tax => tax.id === productTax.id) ? null : productTaxes.push(productTax);
-        })
+        if (selectedInvoice?.Customer?.taxable) {
+          prod.Tax?.forEach(productTax => {
+            productTaxes.some(tax => tax.id === productTax.id) ? null : productTaxes.push(productTax);
+          })
+        }
       })
       setAppliedTaxes(productTaxes);
       setSelectedProducts(selectedProd);
@@ -230,12 +232,14 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
       );
 
       // adding taxes
-      const productTaxes = [];
-      selectedProductDetails.Tax?.forEach(productTax => {
-        appliedTaxes.some(tax => tax.id === productTax.id) ? null : productTaxes.push(productTax);
-      })
+      if (selectedCustomer?.taxable) {
+        const productTaxes = [];
+        selectedProductDetails.Tax?.forEach(productTax => {
+          appliedTaxes.some(tax => tax.id === productTax.id) ? null : productTaxes.push(productTax);
+        })
 
-      setAppliedTaxes([...productTaxes, ...appliedTaxes]);
+        setAppliedTaxes([...productTaxes, ...appliedTaxes]);
+      }
 
       if (selectedProductDetails) {
         updatedItems[index].id = selectedProductDetails.id; // Assign the selected product's ID
@@ -539,7 +543,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
                           </div>
                         ) : (<div></div>)} */}
                         {showCustomerSuggestions && (
-                          <ul className="d-block absolute z-50 bg-white border border-slate-700 w-full mt-1 overflow-y-auto min-h-24 max-h-48">
+                          <ul className="d-block absolute z-50 bg-white border border-slate-700 w-[70%] mt-1 ml-2 overflow-y-auto min-h-24 max-h-48 ">
                             {customers.length > 0 ?
                               customers.filter(customer => `${customer.firstName.toLowerCase()} ${customer.lastName.toLowerCase()}`.includes(values.customer.trim().toLowerCase())).map((customer) => (
                                 <li key={customer.id} className="cursor-pointer px-2 py-1 rounded-sm hover:bg-gray-200" onClick={() => { handleCustomerChange(customer) }}>

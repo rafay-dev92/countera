@@ -17,7 +17,7 @@ import {
 import { State } from "@/state/Context";
 
 export function DashboardNavbar() {
-  const { dispatch } = State();
+  const { state, dispatch } = State();
   const navigate = useNavigate()
   const [controller, dispatcher] = useMaterialTailwindController();
   const { fixedNavbar, openSidenav } = controller;
@@ -48,7 +48,12 @@ export function DashboardNavbar() {
           <Bars3Icon strokeWidth={3} className="h-6 w-6 text-blue-gray-500" />
         </IconButton>
 
-        <div className="flex w-full flex-row justify-end">
+        <div className="flex w-full flex-row justify-end items-center">
+          <div>
+            <h3 className="font-medium text-sm text-gray-600 uppercase">
+              {state.userInfo?.first_name} {state.userInfo?.last_name} {`(${state.userInfo?.role})`}
+            </h3>
+          </div>
           <Button
             variant="text"
             color="blue-gray"

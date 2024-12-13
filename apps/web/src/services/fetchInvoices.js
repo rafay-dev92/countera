@@ -1,5 +1,4 @@
 export async function fetchInvoices(token){
-    console.log(`${import.meta.env.VITE_BACKEND_URL}/api/invoice/`);
     try {
         const invoices = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/invoice/`, {
             method: "GET",

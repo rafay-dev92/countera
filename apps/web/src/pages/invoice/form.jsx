@@ -232,7 +232,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
       // adding taxes
       const productTaxes = [];
       selectedProductDetails.Tax?.forEach(productTax => {
-        productTaxes.some(tax => tax.id === productTax.id) ? null : productTaxes.push(productTax);
+        appliedTaxes.some(tax => tax.id === productTax.id) ? null : productTaxes.push(productTax);
       })
 
       setAppliedTaxes([...productTaxes, ...appliedTaxes]);
@@ -296,7 +296,20 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
       const updatedItems = [...selectedProducts];
       updatedItems.splice(index, 1);
       setSelectedProducts(updatedItems);
+
       setAppliedTaxes([]);
+
+      updatedItems.forEach((product, ind) => {
+        products.forEach((prod) => {
+          if (product.id === prod.id) {
+            const productTaxes = [];
+            prod.Tax?.forEach(productTax => {
+              appliedTaxes.some(tax => tax.id === productTax.id) ? null : productTaxes.push(productTax);
+            })
+            setAppliedTaxes([...productTaxes, ...appliedTaxes]);
+          }
+        })
+      })
     }
   };
 
@@ -513,7 +526,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
                           id="customer"
                           name="customer"
                           type="text"
-                          value={selectedCustomer? `${selectedCustomer.firstName} ${selectedCustomer.lastName}` : ''}
+                          value={selectedCustomer ? `${selectedCustomer.firstName} ${selectedCustomer.lastName}` : ''}
                           onClick={() => setShowCustomerSuggestions(true)}
                           onChange={handleChange}
                           onBlur={handleBlur}
@@ -529,7 +542,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
                           <ul className="d-block absolute z-50 bg-white border border-slate-700 w-full mt-1 overflow-y-auto min-h-24 max-h-48">
                             {customers.length > 0 ?
                               customers.filter(customer => `${customer.firstName.toLowerCase()} ${customer.lastName.toLowerCase()}`.includes(values.customer.trim().toLowerCase())).map((customer) => (
-                                <li key={customer.id} className="cursor-pointer px-2 py-1 rounded-sm hover:bg-gray-200" onClick={() => { handleCustomerChange(customer)}}>
+                                <li key={customer.id} className="cursor-pointer px-2 py-1 rounded-sm hover:bg-gray-200" onClick={() => { handleCustomerChange(customer) }}>
                                   {customer.firstName} {customer.lastName}
                                 </li>
                               ))

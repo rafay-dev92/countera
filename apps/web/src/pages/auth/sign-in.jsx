@@ -53,7 +53,8 @@ export function SignIn() {
     try {
       const res = await signIn(data);
       const user = await res.json();
-      if (res.status !== 404) {
+      if (res.ok) {
+        console.log(res)
         setEmail('');
         setPassword('');
         setLoading(false);
@@ -117,14 +118,14 @@ export function SignIn() {
           Sign In
         </Button>
 
-        <div className="flex items-center justify-end gap-2 mt-6">
+        {/* <div className="flex items-center justify-end gap-2 mt-6">
 
           <Typography variant="small" className="font-medium text-gray-900">
             <a href="#">
               Forgot Password
             </a>
           </Typography>
-        </div>
+        </div> */}
       </form>
     </section>
   );

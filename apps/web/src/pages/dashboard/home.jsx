@@ -9,7 +9,6 @@ import {
 } from "@material-tailwind/react";
 import { StatisticsCard } from "@/widgets/cards";
 import { StatisticsChart } from "@/widgets/charts";
-import { ClockIcon } from "@heroicons/react/24/solid";
 import {
     statisticsCardsData,
     statisticsChartsData,
@@ -17,7 +16,6 @@ import {
 import { toast } from 'react-toastify';
 import { fetchInvoices } from '@/services/fetchInvoices';
 import { State } from '@/state/Context';
-import { fetchAppointments } from '@/services/fetchAppointments';
 import { fetchCustomers } from '@/services/fetchCustomers';
 import { fetchProducts } from '@/services/fetchProducts';
 
@@ -34,6 +32,18 @@ export function Home() {
 
         setLoading(false);
     }, [])
+
+    const showToastMessage = (type, message) => {
+        if (type === 'success') {
+            toast.success(message)
+        }
+        else if (type === 'info') {
+            toast.info(message)
+        }
+        else {
+            toast.error(message)
+        }
+    };
 
     const getInvoices = async () => {
         try {
@@ -82,7 +92,7 @@ export function Home() {
         try {
             const res = await fetchProducts(state.userToken);
             const products = await res.json();
-            
+
             const newArray = [...cardsData];
             newArray[3].value = products.length
             setCardsData(newArray)

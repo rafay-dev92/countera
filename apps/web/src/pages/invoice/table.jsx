@@ -46,15 +46,10 @@ export function Invoice() {
     }
   };
 
-  useEffect(() => {
-    getInvoices();
-  }, [refresh]);
-
   const getInvoices = async () => {
     try {
       const fetchedInvoices = await fetchInvoices(state.userToken);
       const totalInvoices = await fetchedInvoices.json();
-      
       if (state.Settings.General.invoice === 'all') {
         setInvoices(totalInvoices);
       }
@@ -68,6 +63,10 @@ export function Invoice() {
       showToastMessage('error', "Something went wrong");
     }
   };
+
+  useEffect(() => {
+    getInvoices();
+  }, [refresh]);
 
   const handleEditInvoice = (index) => {
     // Assuming currentItems holds the filtered rows for display

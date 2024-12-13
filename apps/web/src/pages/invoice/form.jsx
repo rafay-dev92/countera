@@ -40,6 +40,7 @@ const schema = Yup.object().shape({
 
 const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSelectedInvoice }) => {
   const componentRef = useRef();
+  const customerInputRef = useRef();
   const { state } = State();
   const [customers, setCustomers] = useState([]);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
@@ -59,6 +60,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
   const [businesses, setBusinesses] = useState([]);
   const [business, setBusiness] = useState(null);
   const [appliedTaxes, setAppliedTaxes] = useState([]);
+  const [showCustomerSuggestions, setShowCustomerSuggestions] = useState(false);
 
   const showToastMessage = (type, message) => {
     if (type === 'success') {
@@ -87,6 +89,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
     clearForm(formikProps);
     setEdit(false)
     setBusiness(null);
+    setRefresh(!refresh);
     close();
   };
 
@@ -133,7 +136,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
         }
         selectedProd = [aProd, ...selectedProd];
         prod.Tax?.forEach(productTax => {
-          productTaxes.some(tax => tax.id === productTax.id)? null : productTaxes.push(productTax);
+          productTaxes.some(tax => tax.id === productTax.id) ? null : productTaxes.push(productTax);
         })
       })
       setAppliedTaxes(productTaxes);
@@ -148,9 +151,9 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
 
     const selectedProductIds = selectedProducts.map((product) => `${product.id}:${product.quantity}`);
     selectedProductIds.pop();
-   
+
     const data = {
-      invoiceData: {        
+      invoiceData: {
         totalAmount: calculateTotalAmountWithTax(),
         paymentMethod: values.paymentMethod,
         paymentStatus: "Paid",
@@ -192,7 +195,6 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
         showToastMessage('error', invoice.message)
       }
     }
-    setRefresh(!refresh);
     handleClose();
   };
 
@@ -230,10 +232,11 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
       // adding taxes
       const productTaxes = [];
       selectedProductDetails.Tax?.forEach(productTax => {
-        productTaxes.some(tax => tax.id === productTax.id)? null : productTaxes.push(productTax);
+        productTaxes.some(tax => tax.id === productTax.id) ? null : productTaxes.push(productTax);
       })
-      setAppliedTaxes(productTaxes);
-      
+
+      setAppliedTaxes([...productTaxes, ...appliedTaxes]);
+
       if (selectedProductDetails) {
         updatedItems[index].id = selectedProductDetails.id; // Assign the selected product's ID
         updatedItems[index].name = selectedProductDetails.name;
@@ -305,16 +308,13 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
   };
 
   // handle customer change
-  const handleCustomerChange = (customerId) => {
-    const foundCustomer = customers.find(
-      (customer) => `${customer.id}` === customerId
-    );
-    setSelectedCustomer(foundCustomer);
-    if (foundCustomer && foundCustomer.Vehicle.length > 0) {
-      setSelectedVehicle(foundCustomer.Vehicle[0]);
-      setValues({ ...values, ['customer']: customerId, ['vehicle']: foundCustomer.Vehicle[0].id })
+  const handleCustomerChange = (customer) => {
+    setSelectedCustomer(customer);
+    if (customer && customer.Vehicle.length > 0) {
+      setSelectedVehicle(customer.Vehicle[0]);
+      setValues({ ...values, ['customer']: `${customer.firstName} ${customer.lastName}`, ['vehicle']: customer.Vehicle[0].id })
     };
-    // setValues({ ...values, ['customer']: customerId })
+    setShowCustomerSuggestions(false);
   };
 
   // handle vehicle change
@@ -340,29 +340,29 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
       if (tax.type === '$') {
         return tax.rate;
       } else if (tax.type === '%') {
-          const taxableProducts = selectedProducts.filter(product => product.taxable === true);
-          const totalTaxableAmount = taxableProducts.reduce((acc, product) => {
-            return acc + (product.price * product.quantity);
-          }, 0);
-          return ((totalTaxableAmount * tax.rate) / 100).toFixed(2);
-        }
-      };
+        const taxableProducts = selectedProducts.filter(product => product.taxable === true);
+        const totalTaxableAmount = taxableProducts.reduce((acc, product) => {
+          return acc + (product.price * product.quantity);
+        }, 0);
+        return ((totalTaxableAmount * tax.rate) / 100).toFixed(2);
+      }
+    };
   }
 
   // calculate tax amount
   const calculateTotalTaxAmount = () => {
-    let totalTaxAmount=0;
+    let totalTaxAmount = 0;
     if (appliedTaxes.length > 0) {
       appliedTaxes.forEach((tax) => {
         if (tax.type === '$') {
-          totalTaxAmount+=tax.rate;
+          totalTaxAmount += tax.rate;
         } else if (tax.type === '%') {
           const taxableProducts = selectedProducts.filter(product => product.taxable === true);
           const totalTaxableAmount = taxableProducts.reduce((acc, product) => {
             return acc + (product.price * product.quantity);
           }, 0);
 
-          totalTaxAmount+=(totalTaxableAmount * tax.rate) / 100;
+          totalTaxAmount += (totalTaxableAmount * tax.rate) / 100;
         }
       });
       return totalTaxAmount;
@@ -412,6 +412,20 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
     }
   }, [taxes]);
 
+  // handle customer suggestions
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (customerInputRef.current && !customerInputRef.current.contains(event.target)) {
+        setShowCustomerSuggestions(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   const clearForm = (formikProps) => {
     formikProps.resetForm({
       values: {
@@ -450,6 +464,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
     errors,
     touched,
     handleBlur,
+    handleChange,
     handleSubmit,
     setValues,
   } = formikProps;
@@ -491,7 +506,40 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
                 <div className="overflow-y-auto h-[80vh] overflow-x-hidden p-2">
                   <div className="flex gap-4">
                     <div className="basis-[40%] max-w-[40%]">
-                      <label className="p-2 font-bold">Customer</label> <br />
+                      <div className="relative mb-7" ref={customerInputRef}>
+                        <label className="font-bold p-2">Customer</label> <br />
+                        <input
+                          className="w-[70%] h-[95%] m-2 p-2 border border-gray-300 rounded-md text-gray-600 font-small"
+                          id="customer"
+                          name="customer"
+                          type="text"
+                          value={selectedCustomer? `${selectedCustomer.firstName} ${selectedCustomer.lastName}` : ''}
+                          onClick={() => setShowCustomerSuggestions(true)}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          autoComplete="off"
+                        />
+
+                        {/* {(touched.customer && errors.customer) ? (
+                          <div className="text-red-500">
+                            {errors.customer}
+                          </div>
+                        ) : (<div></div>)} */}
+                        {showCustomerSuggestions && (
+                          <ul className="d-block absolute z-50 bg-white border border-slate-700 w-full mt-1 overflow-y-auto min-h-24 max-h-48">
+                            {customers.length > 0 ?
+                              customers.filter(customer => `${customer.firstName.toLowerCase()} ${customer.lastName.toLowerCase()}`.includes(values.customer.trim().toLowerCase())).map((customer) => (
+                                <li key={customer.id} className="cursor-pointer px-2 py-1 rounded-sm hover:bg-gray-200" onClick={() => { handleCustomerChange(customer)}}>
+                                  {customer.firstName} {customer.lastName}
+                                </li>
+                              ))
+                              :
+                              <Spinner className="mx-auto my-auto h-6 w-6 text-blue-900/50" />
+                            }
+                          </ul>
+                        )}
+                      </div>
+                      {/* <label className="p-2 font-bold">Customer</label> <br />
                       <select
                         id="customer"
                         name="customer"
@@ -516,7 +564,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
                         <div className="text-red-500">
                           {errors.customer}
                         </div>
-                      ) : (<div></div>)} <br />
+                      ) : (<div></div>)} <br /> */}
 
                       <label className="p-2 font-bold">Name</label> <br />
                       <input
@@ -561,7 +609,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
                           disabled
                         />
                       </div>
-                    </div>                    
+                    </div>
 
                     <div className="basis-[60%] max-w-[60%]">
                       <label className="p-2 font-bold">Vehicle</label> <br />
@@ -576,7 +624,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
                         onBlur={handleBlur}
                       >
 
-                        {selectedCustomer && selectedCustomer.Vehicle.length > 0? selectedCustomer.Vehicle.map((vehicle) => (
+                        {selectedCustomer && selectedCustomer.Vehicle.length > 0 ? selectedCustomer.Vehicle.map((vehicle) => (
                           <option
                             key={vehicle.id}
                             value={vehicle.id}
@@ -584,7 +632,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
                             {vehicle.make} {vehicle.model}
                           </option>
                         ))
-                        :
+                          :
                           <option value="">Select Vehicle</option>
                         }
                       </select>
@@ -596,52 +644,52 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
                       <div className="flex gap-5">
                         <div className="flex flex-col">
                           <div>
-                          <label className="p-2 font-bold">Make</label> <br />
-                          <input
-                            className="w-48 lg:w-72 m-2 p-2 border border-gray-300 rounded-md text-black"
-                            id="make"
-                            name="make"
-                            type="text"
-                            value={selectedVehicle ? selectedVehicle.make : ''}
-                            disabled
-                          /> <br />
+                            <label className="p-2 font-bold">Make</label> <br />
+                            <input
+                              className="w-48 lg:w-72 m-2 p-2 border border-gray-300 rounded-md text-black"
+                              id="make"
+                              name="make"
+                              type="text"
+                              value={selectedVehicle ? selectedVehicle.make : ''}
+                              disabled
+                            /> <br />
                           </div>
 
                           <div>
-                          <label className="p-2 font-bold">Model</label> <br /> 
-                          <input
-                            className="w-48 lg:w-72 m-2 p-2 border border-gray-300 rounded-md text-black"
-                            id="model"
-                            name="model"
-                            type="text"
-                            value={selectedVehicle ? selectedVehicle.model : ''}
-                            disabled
-                          /> <br />
+                            <label className="p-2 font-bold">Model</label> <br />
+                            <input
+                              className="w-48 lg:w-72 m-2 p-2 border border-gray-300 rounded-md text-black"
+                              id="model"
+                              name="model"
+                              type="text"
+                              value={selectedVehicle ? selectedVehicle.model : ''}
+                              disabled
+                            /> <br />
                           </div>
                         </div>
                         <div className="flex flex-col" >
                           <div>
-                          <label className="p-2 font-bold">Year</label> <br /> 
-                          <input
-                            className="w-48 lg:w-72 m-2 p-2 border border-gray-300 rounded-md text-black"
-                            id="year"
-                            name="year"
-                            type="number"
-                            value={selectedVehicle ? selectedVehicle.year : ''}
-                            disabled
-                          /> <br /> 
+                            <label className="p-2 font-bold">Year</label> <br />
+                            <input
+                              className="w-48 lg:w-72 m-2 p-2 border border-gray-300 rounded-md text-black"
+                              id="year"
+                              name="year"
+                              type="number"
+                              value={selectedVehicle ? selectedVehicle.year : ''}
+                              disabled
+                            /> <br />
                           </div>
 
                           <div>
-                          <label className="p-2 font-bold">Color</label> <br /> 
-                          <input
-                            className="w-48 lg:w-72 m-2 p-2 border border-gray-300 rounded-md text-black"
-                            id="color"
-                            name="color"
-                            type="text"
-                            value={selectedVehicle ? selectedVehicle.color : ''}
-                            disabled
-                          /> <br />
+                            <label className="p-2 font-bold">Color</label> <br />
+                            <input
+                              className="w-48 lg:w-72 m-2 p-2 border border-gray-300 rounded-md text-black"
+                              id="color"
+                              name="color"
+                              type="text"
+                              value={selectedVehicle ? selectedVehicle.color : ''}
+                              disabled
+                            /> <br />
                           </div>
                         </div>
                       </div>
@@ -649,27 +697,27 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
                       <div className="flex gap-5">
                         <div className="flex flex-col" >
                           <div>
-                          <label className="p-2 font-bold">Odometer</label> <br /> 
-                          <input
-                            className="w-48 lg:w-72 m-2 p-2 border border-gray-300 rounded-md text-black"
-                            id="year"
-                            name="year"
-                            type="number"
-                            value={selectedVehicle ? selectedVehicle.odometer : ''}
-                            disabled
-                          /> <br /> 
+                            <label className="p-2 font-bold">Odometer</label> <br />
+                            <input
+                              className="w-48 lg:w-72 m-2 p-2 border border-gray-300 rounded-md text-black"
+                              id="year"
+                              name="year"
+                              type="number"
+                              value={selectedVehicle ? selectedVehicle.odometer : ''}
+                              disabled
+                            /> <br />
                           </div>
 
                           <div>
-                          <label className="p-2 font-bold">License No.</label> <br /> 
-                          <input
-                            className="w-48 lg:w-72 m-2 p-2 border border-gray-300 rounded-md text-black"
-                            id="color"
-                            name="color"
-                            type="text"
-                            value={selectedVehicle ? selectedVehicle.licenseNo : ''}
-                            disabled
-                          /> <br />
+                            <label className="p-2 font-bold">License No.</label> <br />
+                            <input
+                              className="w-48 lg:w-72 m-2 p-2 border border-gray-300 rounded-md text-black"
+                              id="color"
+                              name="color"
+                              type="text"
+                              value={selectedVehicle ? selectedVehicle.licenseNo : ''}
+                              disabled
+                            /> <br />
                           </div>
                         </div>
                         <div className="flex flex-col ml-3 place-self-end">
@@ -733,8 +781,8 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
                           </div>
                         </div>
                       </div>
-                                                                  
-                    </div>                  
+
+                    </div>
                   </div>
 
                   <Card className=" w-full">
@@ -851,13 +899,13 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
                           <h1>{totalAmount} $</h1>
                         </div>
                       </div>
-                      
+
                       <div className="flex flex-col gap-2 mx-10 my-2">
-                        {appliedTaxes.map((tax) => (
-                          <div className="flex justify-between">
+                        {appliedTaxes.map((tax, ind) => (
+                          <div key={ind} className="flex justify-between">
                             <span className="rounded border w-min p-2 whitespace-nowrap self-center" >{tax.name}</span>
                             <span className="w-fit p-2 border border-gray-300 rounded-md text-black self-center" >{tax.rate} {tax.type}</span>
-                            <div className="flex items-center justify-center">                              
+                            <div className="flex items-center justify-center">
                               {/* <p className="w-9 p-2 text-black" >{tax.type}</p> */}
                               <div className="text-1xl mt-2">
                                 <h1>{calculateTaxAmount(tax)} $</h1>
@@ -867,7 +915,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
                         ))}
                       </div>
 
-                      <div className="flex justify-between mx-10">
+                      {/* <div className="flex justify-between mx-10">
                         <div className="w-min" >
                           <select
                             className="w-min p-2 border border-gray-300 bg-inherit rounded-md outline-none"
@@ -888,24 +936,8 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
                           </select>
                         </div>
                         
-                        <div></div>
-                        {/* <div className="flex items-center justify-between mx-10">
-                          <div className="flex items-center ">
-                            <input
-                              className="w-9 p-2 border border-gray-300 rounded-md text-black"
-                              id="phone"
-                              name="phone"
-                              type="text"
-                              value={selectedTax && selectedTax.rate}
-                              disabled
-                            />
-                            <p className="w-9 p-2  text-black" >{selectedTax && selectedTax.type}</p>
-                          </div>
-                          <div className="text-1xl mt-2">
-                            <h1>{calculateTaxAmount()}</h1>
-                          </div>
-                        </div> */}
-                      </div>
+                        <div></div>                        
+                      </div> */}
 
                       <div className="flex items-center justify-between mx-10">
                         <div className="text-1xl mt-2 px-1">
@@ -917,8 +949,8 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
                       </div>
 
                     </div>
-                              
-                    
+
+
                   </div>
                 </div>
                 <div className="flex items-center justify-end space-x-2 sticky bg-gradient-to-br from-gray-800 to-gray-700">
@@ -955,7 +987,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
 
         )}
       </Dialog>
-      <PrintView business={state.business} printInvoice={printInvoice} componentRef={componentRef} appliedTaxes={appliedTaxes} calculateTaxAmount={calculateTaxAmount} totalAmountWithTax={calculateTotalAmountWithTax()} />
+      <PrintView printInvoice={printInvoice} componentRef={componentRef} appliedTaxes={appliedTaxes} calculateTaxAmount={calculateTaxAmount} totalAmountWithTax={calculateTotalAmountWithTax()} />
     </>
   );
 };

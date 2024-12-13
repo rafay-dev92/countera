@@ -22,7 +22,7 @@ export function Sidenav({ routes }) {
       <div
         className={`relative`}
       >
-        <div className="flex items-center space-x-2 p-2">
+        <div className="flex items-center space-x-2 py-2 px-1">
           <img className="rounded-xl h-[60px] w-[60px]" src={state.business?.logo} alt="Business logo" width={60} height={60} />
           <Link to="/" className="w-full text-center">
             <Typography
@@ -31,7 +31,7 @@ export function Sidenav({ routes }) {
               className="flex flex-col items-start justify-center"
             // color={sidenavType === "dark" ? "white" : "blue-gray"}
             >
-              <span>Sales4x</span> <span className="text-xs font-normal whitespace-nowrap">({state.business?.name})</span>
+            <span className="text-xs font-medium">{state.business?.name}</span>
             </Typography>
           </Link>
         </div>

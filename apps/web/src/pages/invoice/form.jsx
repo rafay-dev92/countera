@@ -22,6 +22,9 @@ import ReactToPrint from "react-to-print";
 import { toast } from "react-toastify";
 import { State } from "@/state/Context";
 import { fetchBusinesses } from "@/services/fetchBusinesses";
+import CustomerVehicleForm from "../customer/customerVehicleForm";
+import { fetchCustomer } from "@/services/fetchCustomer";
+import { PlusCircleIcon } from "@heroicons/react/24/outline";
 
 const TABLE_HEAD = [
   "Product",
@@ -62,6 +65,13 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
   const [appliedTaxes, setAppliedTaxes] = useState([]);
   const [showCustomerSuggestions, setShowCustomerSuggestions] = useState(false);
 
+  // customer vehicle form
+  const [isOpen, setIsOpen] = useState(false);
+
+  const closePopup = () => {
+    setIsOpen(false);
+  };
+
   const showToastMessage = (type, message) => {
     if (type === 'success') {
       toast.success(message)
@@ -93,6 +103,21 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
     close();
   };
 
+  // get customer details
+  const getCustomerDetails = async () => {
+    try {
+      const customer = await (await fetchCustomer(selectedCustomer?.id, state.userToken)).json();
+      setSelectedCustomer(customer);
+      await getCustomers();
+      if (customer.Vehicle.length > 0) {
+        setSelectedVehicle(customer.Vehicle[0]);
+        setValues({ ...values, ['customer']: `${customer.firstName} ${customer.lastName}`, ['vehicle']: customer.Vehicle[0]?.id });
+      }
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
   // get businesses
   const getBusinesses = async () => {
     try {
@@ -118,7 +143,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
       setInvoiceId(selectedInvoice.id)
       setSelectedCustomer(selectedInvoice.Customer)
       setSelectedVehicle(selectedInvoice.CustomerVehicle)
-      setProducts(selectedInvoice.Product)
+      // setProducts(selectedInvoice.Product)
       setValues({ ...values, ['customer']: selectedInvoice.CustomerId, ['vehicle']: selectedInvoice.CustomerVehicleId, ['paymentMethod']: selectedInvoice.paymentMethod })
       setEdit(true)
       setBusiness(selectedInvoice.BusinessId);
@@ -150,7 +175,6 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
 
   // handle submit
   const onSubmit = async (values) => {
-
     const selectedProductIds = selectedProducts.map((product) => `${product.id}:${product.quantity}`);
     selectedProductIds.pop();
 
@@ -323,6 +347,12 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
     const customersData = await fetchedCustomers.json();
     setCustomers(customersData);
   };
+
+  useEffect(() => {
+    if (selectedCustomer) {
+      getCustomerDetails();
+    }
+  }, [refresh]);
 
   // handle customer change
   const handleCustomerChange = (customer) => {
@@ -530,9 +560,9 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
                           id="customer"
                           name="customer"
                           type="text"
-                          value={selectedCustomer ? `${selectedCustomer.firstName} ${selectedCustomer.lastName}` : ''}
+                          value={selectedCustomer? `${selectedCustomer.firstName} ${selectedCustomer.lastName}` : values.customer}
                           onClick={() => setShowCustomerSuggestions(true)}
-                          onChange={handleChange}
+                          onChange={(e) => {setSelectedCustomer(null); setSelectedVehicle(null); handleChange(e)}}
                           onBlur={handleBlur}
                           autoComplete="off"
                         />
@@ -629,7 +659,10 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
                     </div>
 
                     <div className="basis-[60%] max-w-[60%]">
-                      <label className="p-2 font-bold">Vehicle</label> <br />
+                      <div className="flex items-center gap-2 pl-2">
+                        <label className="font-bold">Vehicle</label>
+                        <PlusCircleIcon onClick={() => setIsOpen(true)} className="h-5 w-5 text-blue-600 cursor-pointer" /> 
+                      </div>
                       <select
                         id="vehicle"
                         name="vehicle"
@@ -1001,9 +1034,9 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
             </div>
 
           </form>
-
         )}
       </Dialog>
+      {selectedCustomer ?  <CustomerVehicleForm open={isOpen} close={closePopup} refresh={refresh} setRefresh={setRefresh} CustomerId={selectedCustomer?.id} getCustomerDetails={getCustomerDetails} /> : null}
       <PrintView printInvoice={printInvoice} componentRef={componentRef} appliedTaxes={appliedTaxes} calculateTaxAmount={calculateTaxAmount} totalAmountWithTax={calculateTotalAmountWithTax()} />
     </>
   );

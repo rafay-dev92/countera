@@ -170,7 +170,7 @@ const CustomerVehicleForm = ({ open, close, refresh, setRefresh, CustomerId, get
     const startYear = import.meta.env.VITE_START_YEAR;
     const endYear = import.meta.env.VITE_END_YEAR;
     const years = [];
-    for (let year = startYear; year <= endYear; year++) {
+    for (let year = endYear; year >= startYear; year--) {
         years.push(year);
     }
 

@@ -1,7 +1,7 @@
-export async function addInvoice(data, token){
+export async function updateCustomerVehicle(id, data, token){
     try {
-        const invoice = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/invoice/create`, {
-            method: "POST",
+        const customerVehicle = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/customervehicle/update/${id}`, {
+            method: "PUT",
             headers: {
                 "Content-Type": "application/json",
                 "auth-token": token
@@ -9,7 +9,7 @@ export async function addInvoice(data, token){
             body: JSON.stringify(data)
         })
        
-        return invoice;
+        return customerVehicle;
 
     } catch (error) {
         console.log(error);

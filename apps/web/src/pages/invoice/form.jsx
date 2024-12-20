@@ -15,7 +15,6 @@ import { fetchProducts } from "@/services/fetchProducts";
 import { fetchCustomers } from "@/services/fetchCustomers";
 import { fetchTaxes } from "@/services/fetchTaxes";
 import { addInvoice } from "@/services/addInvoice";
-import { fetchVehicles } from "@/services/fetchVehicles";
 import { updateInvoice } from "@/services/updateInvoice";
 import PrintView from "./printView";
 import ReactToPrint from "react-to-print";
@@ -25,6 +24,8 @@ import { fetchBusinesses } from "@/services/fetchBusinesses";
 import CustomerVehicleForm from "../customer/customerVehicleForm";
 import { fetchCustomer } from "@/services/fetchCustomer";
 import { PlusCircleIcon } from "@heroicons/react/24/outline";
+import CustomerForm from "./customerForm";
+import { updateCustomerVehicle } from "@/services/updateCustomerVehicle";
 
 const TABLE_HEAD = [
   "Product",
@@ -64,12 +65,18 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
   const [business, setBusiness] = useState(null);
   const [appliedTaxes, setAppliedTaxes] = useState([]);
   const [showCustomerSuggestions, setShowCustomerSuggestions] = useState(false);
+  const [vehicleOdometer, setVehicleOdometer] = useState('');
 
   // customer vehicle form
-  const [isOpen, setIsOpen] = useState(false);
+  const [isCustomerVehicleFormOpen, setIsCustomerVehicleFormOpen] = useState(false);
+  const [isCustomerFormOpen, setIsCustomerFormOpen] = useState(false);
 
-  const closePopup = () => {
-    setIsOpen(false);
+  const closeCustomerVehicleForm = () => {
+    setIsCustomerVehicleFormOpen(false);
+  };
+
+  const closeCustomerForm = () => {
+    setIsCustomerFormOpen(false);
   };
 
   const showToastMessage = (type, message) => {
@@ -111,6 +118,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
       await getCustomers();
       if (customer.Vehicle.length > 0) {
         setSelectedVehicle(customer.Vehicle[0]);
+        setVehicleOdometer(customer.Vehicle[0]?.odometer);
         setValues({ ...values, ['customer']: `${customer.firstName} ${customer.lastName}`, ['vehicle']: customer.Vehicle[0]?.id });
       }
     } catch (error) {
@@ -135,7 +143,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
     getProducts();
     getCustomers();
     getTaxes();
-  }, []);
+  }, [refresh]);
 
   useEffect(() => {
     if (selectedInvoice) {
@@ -143,6 +151,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
       setInvoiceId(selectedInvoice.id)
       setSelectedCustomer(selectedInvoice.Customer)
       setSelectedVehicle(selectedInvoice.CustomerVehicle)
+      setVehicleOdometer(selectedInvoice.CustomerVehicle?.odometer)
       // setProducts(selectedInvoice.Product)
       setValues({ ...values, ['customer']: selectedInvoice.CustomerId, ['vehicle']: selectedInvoice.CustomerVehicleId, ['paymentMethod']: selectedInvoice.paymentMethod })
       setEdit(true)
@@ -178,6 +187,16 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
     const selectedProductIds = selectedProducts.map((product) => `${product.id}:${product.quantity}`);
     selectedProductIds.pop();
 
+    if (selectedVehicle?.odometer < vehicleOdometer) {
+      try {
+        const customerVehicleUpdate = await updateCustomerVehicle(selectedVehicle.id, { odometer: vehicleOdometer }, state.userToken);
+        if (customerVehicleUpdate.status === 200) {
+          showToastMessage('success', 'Vehicle odometer updated successfully');
+        }
+      } catch (error) {
+        console.log(error)
+      }
+    }
     const data = {
       invoiceData: {
         totalAmount: calculateTotalAmountWithTax(),
@@ -359,6 +378,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
     setSelectedCustomer(customer);
     if (customer && customer.Vehicle.length > 0) {
       setSelectedVehicle(customer.Vehicle[0]);
+      setVehicleOdometer(customer.Vehicle[0]?.odometer);
       setValues({ ...values, ['customer']: `${customer.firstName} ${customer.lastName}`, ['vehicle']: customer.Vehicle[0].id })
     };
     setShowCustomerSuggestions(false);
@@ -370,6 +390,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
       (vehicle) => `${vehicle.id}` === vehicleId
     );
     setSelectedVehicle(foundVehicle);
+    setVehicleOdometer(foundVehicle.odometer);
     setValues({ ...values, ['vehicle']: vehicleId })
   };
 
@@ -488,6 +509,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
     });
     setSelectedCustomer(null);
     setSelectedVehicle(null);
+    setVehicleOdometer('');
     setSelectedProducts([{
       product: "",
       quantity: 1,
@@ -554,7 +576,10 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
                   <div className="flex gap-4">
                     <div className="basis-[40%] max-w-[40%]">
                       <div className="relative mb-7" ref={customerInputRef}>
-                        <label className="font-bold p-2">Customer</label> <br />
+                        <div className="flex items-center gap-2 pl-2">
+                          <label className="font-bold">Customer</label>
+                          <PlusCircleIcon onClick={() => setIsCustomerFormOpen(true)} className="h-5 w-5 text-blue-600 cursor-pointer" /> 
+                        </div>
                         <input
                           className="w-[70%] h-[95%] m-2 p-2 border border-gray-300 rounded-md text-gray-600 font-small"
                           id="customer"
@@ -562,7 +587,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
                           type="text"
                           value={selectedCustomer? `${selectedCustomer.firstName} ${selectedCustomer.lastName}` : values.customer}
                           onClick={() => setShowCustomerSuggestions(true)}
-                          onChange={(e) => {setSelectedCustomer(null); setSelectedVehicle(null); handleChange(e)}}
+                          onChange={(e) => {setSelectedCustomer(null); setSelectedVehicle(null); setVehicleOdometer(''), handleChange(e)}}
                           onBlur={handleBlur}
                           autoComplete="off"
                         />
@@ -652,7 +677,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
                           id="address"
                           name="address"
                           type="text"
-                          value={selectedCustomer ? `${selectedCustomer.Address.street}, ${selectedCustomer.Address.city}` : ''}
+                          value={selectedCustomer ? `${selectedCustomer.Address?.street}, ${selectedCustomer.Address?.city}` : ''}
                           disabled
                         />
                       </div>
@@ -661,7 +686,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
                     <div className="basis-[60%] max-w-[60%]">
                       <div className="flex items-center gap-2 pl-2">
                         <label className="font-bold">Vehicle</label>
-                        <PlusCircleIcon onClick={() => setIsOpen(true)} className="h-5 w-5 text-blue-600 cursor-pointer" /> 
+                        <PlusCircleIcon onClick={() => setIsCustomerVehicleFormOpen(true)} className="h-5 w-5 text-blue-600 cursor-pointer" /> 
                       </div>
                       <select
                         id="vehicle"
@@ -674,7 +699,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
                         onBlur={handleBlur}
                       >
 
-                        {selectedCustomer && selectedCustomer.Vehicle.length > 0 ? selectedCustomer.Vehicle.map((vehicle) => (
+                        {selectedCustomer && selectedCustomer.Vehicle?.length > 0 ? selectedCustomer.Vehicle?.map((vehicle) => (
                           <option
                             key={vehicle.id}
                             value={vehicle.id}
@@ -753,8 +778,8 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
                               id="year"
                               name="year"
                               type="number"
-                              value={selectedVehicle ? selectedVehicle.odometer : ''}
-                              disabled
+                              value={vehicleOdometer}
+                              onChange={(e) => setVehicleOdometer(e.target.value)}
                             /> <br />
                           </div>
 
@@ -1036,7 +1061,8 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
           </form>
         )}
       </Dialog>
-      {selectedCustomer ?  <CustomerVehicleForm open={isOpen} close={closePopup} refresh={refresh} setRefresh={setRefresh} CustomerId={selectedCustomer?.id} getCustomerDetails={getCustomerDetails} /> : null}
+      <CustomerForm open={isCustomerFormOpen} close={closeCustomerForm} refresh={refresh} setRefresh={setRefresh} setSelectedCustomer={setSelectedCustomer} />
+      {selectedCustomer ?  <CustomerVehicleForm open={isCustomerVehicleFormOpen} close={closeCustomerVehicleForm} refresh={refresh} setRefresh={setRefresh} CustomerId={selectedCustomer?.id} getCustomerDetails={getCustomerDetails} /> : null}
       <PrintView printInvoice={printInvoice} componentRef={componentRef} appliedTaxes={appliedTaxes} calculateTaxAmount={calculateTaxAmount} totalAmountWithTax={calculateTotalAmountWithTax()} />
     </>
   );

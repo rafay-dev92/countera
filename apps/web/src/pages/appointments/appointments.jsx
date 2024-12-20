@@ -183,11 +183,13 @@ export function Appointments() {
                         </div>
                         <h1 className="text-lg font-semibold text-gray-700 uppercase">{selected}</h1>
                         <div className="flex items-center mb-4">
+                        {(monthList.indexOf(selected.split(' ')[0]+1) !== (new Date()).getMonth() + 1 ) && (parseInt(selected.split(' ')[1]) > (new Date()).getFullYear()) && (
                             <Tooltip content="Prev">
                                 <IconButton variant="text" onClick={() => decreNumber()}>
                                     <ArrowLeftIcon className='h-8 w-8 text-gray-700 cursor-pointer' />
                                 </IconButton>
                             </Tooltip>
+                        )}
                             <Tooltip content="Next">
                                 <IconButton variant="text" onClick={() => increNumber()}>
                                     <ArrowRightIcon className='h-8 w-8 text-gray-700 cursor-pointer' />

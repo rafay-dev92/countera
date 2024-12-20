@@ -6,7 +6,8 @@ import {
   Card,
   Typography,
   CardBody,
-  Dialog
+  Dialog,
+  IconButton,
 } from "@material-tailwind/react";
 import {
   XCircleIcon
@@ -577,9 +578,11 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
                   <div className="flex gap-4">
                     <div className="basis-[40%] max-w-[40%]">
                       <div className="relative mb-7" ref={customerInputRef}>
-                        <div className="flex items-center gap-2 pl-2">
+                        <div className="flex items-center pl-2">
                           <label className="font-bold">Customer</label>
-                          <PlusCircleIcon onClick={() => setIsCustomerFormOpen(true)} className="h-5 w-5 text-blue-600 cursor-pointer" /> 
+                          <IconButton variant="text" onClick={() => setIsCustomerFormOpen(true)}>
+                            <PlusCircleIcon className="h-5 w-5 text-blue-600 cursor-pointer" /> 
+                          </IconButton>
                         </div>
                         <input
                           className="w-[70%] h-[97%] m-2 p-2 border border-gray-300 rounded-md text-gray-600 font-small"
@@ -658,9 +661,11 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
                     </div>
 
                     <div className="basis-[60%] max-w-[60%]">
-                      <div className="flex items-center gap-2 pl-2">
+                      <div className="flex items-center pl-2">
                         <label className="font-bold">Vehicle</label>
-                        <PlusCircleIcon onClick={() => setIsCustomerVehicleFormOpen(true)} className="h-5 w-5 text-blue-600 cursor-pointer" /> 
+                        <IconButton variant="text" onClick={() => selectedCustomer && setIsCustomerVehicleFormOpen(true)}>
+                          <PlusCircleIcon className="h-5 w-5 text-blue-600 cursor-pointer" /> 
+                        </IconButton>
                       </div>
                       <select
                         id="vehicle"
@@ -746,9 +751,11 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
                       <div className="flex gap-5">
                         <div className="flex flex-col" >
                           <div>
-                            <div className="flex items-center gap-1 pl-2">
+                            <div className="flex items-center pl-2">
                               <label className="font-bold">Odometer</label> <br />
-                              <ArrowUturnLeftIcon onClick={() => setVehicleOdometer(selectedVehicle?.odometer)} className="h-5 w-5 text-blue-600 cursor-pointer" />
+                              <IconButton variant='text' onClick={() => setVehicleOdometer(selectedVehicle?.odometer)}>
+                                <ArrowUturnLeftIcon className="h-5 w-5 text-blue-600 cursor-pointer" />
+                              </IconButton>
                             </div>
                             <input
                               className="w-48 lg:w-72 m-2 p-2 border border-gray-300 rounded-md text-black"

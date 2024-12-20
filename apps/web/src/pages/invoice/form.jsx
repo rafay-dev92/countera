@@ -24,6 +24,7 @@ import { fetchBusinesses } from "@/services/fetchBusinesses";
 import CustomerVehicleForm from "../customer/customerVehicleForm";
 import { fetchCustomer } from "@/services/fetchCustomer";
 import { PlusCircleIcon } from "@heroicons/react/24/outline";
+import { ArrowUturnLeftIcon } from "@heroicons/react/24/outline";
 import CustomerForm from "./customerForm";
 import { updateCustomerVehicle } from "@/services/updateCustomerVehicle";
 
@@ -497,7 +498,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
   const clearForm = (formikProps) => {
     formikProps.resetForm({
       values: {
-        customer: "",
+        customer: "Select Customer",
         vehicle: "",
         paymentMethod: "",
       },
@@ -520,7 +521,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
 
   const formikProps = useFormik({
     initialValues: {
-      customer: "",
+      customer: "Select Customer",
       vehicle: "",
       paymentMethod: "",
     },
@@ -581,12 +582,12 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
                           <PlusCircleIcon onClick={() => setIsCustomerFormOpen(true)} className="h-5 w-5 text-blue-600 cursor-pointer" /> 
                         </div>
                         <input
-                          className="w-[70%] h-[95%] m-2 p-2 border border-gray-300 rounded-md text-gray-600 font-small"
+                          className="w-[70%] h-[97%] m-2 p-2 border border-gray-300 rounded-md text-gray-600 font-small"
                           id="customer"
                           name="customer"
                           type="text"
                           value={selectedCustomer? `${selectedCustomer.firstName} ${selectedCustomer.lastName}` : values.customer}
-                          onClick={() => setShowCustomerSuggestions(true)}
+                          onClick={() => {setShowCustomerSuggestions(true); setValues({ ...values, ['customer']: '' })}}
                           onChange={(e) => {setSelectedCustomer(null); setSelectedVehicle(null); setVehicleOdometer(''), handleChange(e)}}
                           onBlur={handleBlur}
                           autoComplete="off"
@@ -610,33 +611,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
                             }
                           </ul>
                         )}
-                      </div>
-                      {/* <label className="p-2 font-bold">Customer</label> <br />
-                      <select
-                        id="customer"
-                        name="customer"
-                        className="w-48 lg:w-80 m-2 p-2 border border-gray-300 bg-inherit rounded-md"
-                        value={values.customer}
-                        onChange={(e) =>
-                          handleCustomerChange(e.target.value)
-                        }
-                        onBlur={handleBlur}
-                      >
-                        <option value="">Select Customer</option>
-                        {customers.map((customer) => (
-                          <option
-                            key={customer.id}
-                            value={customer.id}
-                          >
-                            {customer.firstName} {customer.lastName}
-                          </option>
-                        ))}
-                      </select>
-                      {touched.customer && errors.customer ? (
-                        <div className="text-red-500">
-                          {errors.customer}
-                        </div>
-                      ) : (<div></div>)} <br /> */}
+                      </div>                      
 
                       <label className="p-2 font-bold">Name</label> <br />
                       <input
@@ -668,7 +643,6 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
                         value={selectedCustomer ? selectedCustomer.phone : ''}
                         disabled
                       /> <br />
-
                       <div>
                         <label className="p-2 font-bold">Address</label> <br />
 
@@ -772,7 +746,10 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
                       <div className="flex gap-5">
                         <div className="flex flex-col" >
                           <div>
-                            <label className="p-2 font-bold">Odometer</label> <br />
+                            <div className="flex items-center gap-1 pl-2">
+                              <label className="font-bold">Odometer</label> <br />
+                              <ArrowUturnLeftIcon onClick={() => setVehicleOdometer(selectedVehicle?.odometer)} className="h-5 w-5 text-blue-600 cursor-pointer" />
+                            </div>
                             <input
                               className="w-48 lg:w-72 m-2 p-2 border border-gray-300 rounded-md text-black"
                               id="year"

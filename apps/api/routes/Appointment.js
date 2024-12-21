@@ -16,13 +16,15 @@ router.get('/', fetchUser, async (req, res) => {
         if (user) {
             const appointments = await Appointment.findAll({
                 where: { BusinessId: user.dataValues.BusinessId },
-                include: ['Business']
+                include: ['Business'],
+                order: [['createdAt', 'ASC']],
             });
             return res.status(200).json(appointments);
         }
 
         const appointments = await Appointment.findAll({
-            include: ['Business']
+            include: ['Business'],
+            order: [['createdAt', 'ASC']],
         });
         return res.status(200).json(appointments);
     } catch (error) {

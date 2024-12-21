@@ -76,7 +76,6 @@ module.exports = (sequelize) => {
     // Define a hook to set the invoiceNumber before creating a new invoice
     Invoice.beforeCreate(async (invoice, options) => {
         const latestInvoice = await findLatestInvoice();
-        console.log('latestInvoice', latestInvoice);
         const nextInvoiceNumber = latestInvoice ? latestInvoice.invoiceNumber + 1 : 1;
         invoice.invoiceNumber = nextInvoiceNumber;
     });

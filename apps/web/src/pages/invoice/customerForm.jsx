@@ -33,6 +33,7 @@ const schema = Yup.object().shape({
 const CustomerForm = ({ open, close, refresh, setRefresh, setSelectedCustomer }) => {
 
   const { state } = State();
+  const [isLoading, setIsLoading] = useState(false);
   const [businesses, setBusinesses] = useState([]);
   const [business, setBusiness] = useState(null);
 
@@ -70,6 +71,7 @@ const CustomerForm = ({ open, close, refresh, setRefresh, setSelectedCustomer })
   };
 
   const onSubmit = async (values) => {
+    setIsLoading(true);
     let updatedValues = {};
     // setting business id
     if (business !== '')
@@ -107,11 +109,13 @@ const CustomerForm = ({ open, close, refresh, setRefresh, setSelectedCustomer })
       console.log(customer.data)
       setSelectedCustomer(customer.data);
       setRefresh(!refresh);
+      setIsLoading(false);
       handleClose();
     } catch (error) {
       console.log(error)
       showToastMessage('error', 'Something went wrong')
       setRefresh(!refresh);
+      setIsLoading(false);
       handleClose();
     }
   };
@@ -491,7 +495,12 @@ const CustomerForm = ({ open, close, refresh, setRefresh, setSelectedCustomer })
                     className="w-32 bg-gray-600 hover:bg-gray-900 text-white font-bold py-2 px-4"
                     type="submit"
                   >
-                    Save
+                    {!isLoading? 
+                      <span>Save</span> : 
+                      <div className="flex items-center justify-center h-fit">
+                          <div className="w-6 h-6 border-4 border-gray-500 border-t-transparent rounded-full animate-spin"></div>
+                      </div>
+                    }
                   </button>
                 </div>
               </div>

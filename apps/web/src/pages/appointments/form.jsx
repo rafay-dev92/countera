@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import { Dialog } from "@material-tailwind/react";
 import { addAppointment } from "@/services/addAppointment";
 import { updateAppointment } from "@/services/updateAppointment";
@@ -18,22 +18,22 @@ const schema = Yup.object().shape({
     sendEmail: Yup.boolean()
 });
 
-function AppointmentForm({ selectedItem, setSelectedItem, open, handleOpen, refresh, setRefresh }) {
+function AppointmentForm({ selectedItem, setSelectedItem, open, close, refresh, setRefresh }) {
 
     const { state } = State();
     const [currentDate, setCurrentDate] = useState(getCurrentDateTimeForInput());
-    const [update, setUpdate] = useState(false);
+    const [edit, setEdit] = useState(false);
     const [error, setError] = useState(false);
     const [business, setBusiness] = useState(null);
     const [businesses, setBusinesses] = useState([]);
-
+    const [isLoading, setIsLoading] = useState(false);
 
     const handleClose = () => {
         setBusiness('');
         clearForm(formikProps);
-        setUpdate(false);
+        setEdit(false);
         setSelectedItem(null);
-        handleOpen();
+        close();
     };
 
     const showToastMessage = (type, message) => {
@@ -68,7 +68,7 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, handleOpen, refr
 
     useEffect(() => {
         if (selectedItem) {
-            setUpdate(true);
+            setEdit(true);
             formikProps.setValues({
                 customerName: selectedItem.customerName,
                 description: selectedItem.description,
@@ -133,7 +133,8 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, handleOpen, refr
     };
 
     const onSubmit = async (values) => {
-
+        console.log(values)
+        setIsLoading(true);
         const inputDate = values.startDateTime.split('T')[0];
         const inputStartTime = (parseInt(values.startDateTime.split('T')[1].split(':')[0], 10) * 60) + parseInt(values.startDateTime.split('T')[1].split(':')[1], 10);
         const inputEndTime = (parseInt(values.endDateTime.split(':')[0], 10) * 60) + parseInt(values.endDateTime.split(':')[1], 10);
@@ -171,7 +172,7 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, handleOpen, refr
 
         else {
             try {
-                if (!update) {
+                if (!edit) {
                     const res = await addAppointment(updatedValues, state.userToken);
                     const appointment = await res.json();
                     if (res.status === 200) {
@@ -203,9 +204,11 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, handleOpen, refr
                     }
                 }
                 setRefresh(!refresh);
+                setIsLoading(false);
                 handleClose();
             } catch (error) {
                 console.log(error)
+                setIsLoading(false);
                 showToastMessage('error', 'Something went wrong')
             }
         }
@@ -258,7 +261,7 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, handleOpen, refr
 
     return (
         <>
-            <Dialog size="sm" open={open} handler={handleOpen}>
+            <Dialog size="sm" open={open}>
                 {open && (
                     <form onSubmit={handleSubmit} autoComplete="new" >
                         <div className="fixed top-0 left-0 w-full h-full flex items-center justify-center">
@@ -266,7 +269,7 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, handleOpen, refr
                                 <div className="flex items-center justify-between sticky bg-gradient-to-br from-gray-800 to-gray-700">
                                     <div></div>
                                     <div className={error ? 'text-red-500 text-center text-lg' : 'text-white text-center text-lg'} >
-                                        {update ? "EDIT APPOINTMENT" : "NEW APPOINTMENT"}
+                                        {edit ? "EDIT APPOINTMENT" : "NEW APPOINTMENT"}
                                     </div>
                                     <button
                                         className=" bg-transparent hover:bg-gray-800 text-white font-bold py-2 px-4 rounded"
@@ -310,19 +313,19 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, handleOpen, refr
                                             )}
                                         </div>
                                         <div>
-                                            <label className="font-bold">Description</label> <br />
+                                            <label className="font-bold">Customer Email</label> <br />
                                             <input
                                                 className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
-                                                id="description"
-                                                name="description"
-                                                type="description"
-                                                value={values.description}
+                                                id="customerEmail"
+                                                name="customerEmail"
+                                                type="customerEmail"
+                                                value={values.customerEmail}
                                                 onChange={handleChange}
                                                 onBlur={handleBlur}
                                             />
-                                            {touched.description && errors.description && (
+                                            {touched.customerEmail && errors.customerEmail && (
                                                 <div className="text-red-500">
-                                                    {errors.description}
+                                                    {errors.customerEmail}
                                                 </div>
                                             )}
                                         </div>
@@ -348,7 +351,7 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, handleOpen, refr
                                             ) : (<div></div>)}
                                         </div>
                                         <div>
-                                            <label className="font-bold">End Date & Time</label> <br />
+                                            <label className="font-bold">End Time</label> <br />
                                             <input
                                                 className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
                                                 id="endDateTime"
@@ -365,20 +368,21 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, handleOpen, refr
                                             ) : (<div></div>)}
                                         </div>
                                     </div>
+                                    
                                     <div>
-                                        <label className="font-bold">Customer Email</label> <br />
-                                        <input
+                                        <label className="font-bold">Description</label> <br />
+                                        <textarea
                                             className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
-                                            id="customerEmail"
-                                            name="customerEmail"
-                                            type="customerEmail"
-                                            value={values.customerEmail}
+                                            id="description"
+                                            name="description"
+                                            type="description"
+                                            value={values.description}
                                             onChange={handleChange}
                                             onBlur={handleBlur}
                                         />
-                                        {touched.customerEmail && errors.customerEmail && (
+                                        {touched.description && errors.description && (
                                             <div className="text-red-500">
-                                                {errors.customerEmail}
+                                                {errors.description}
                                             </div>
                                         )}
                                     </div>
@@ -424,7 +428,12 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, handleOpen, refr
                                         className="w-32 bg-gray-600 hover:bg-gray-900 text-white font-bold py-2 px-4"
                                         type="submit"
                                     >
-                                        {update ? "Update" : "Save"}
+                                        {!isLoading? 
+                                            <span>{edit ? "Update" : "Save" }</span> : 
+                                            <div className="flex items-center justify-center h-fit">
+                                                <div className="w-6 h-6 border-4 border-gray-500 border-t-transparent rounded-full animate-spin"></div>
+                                            </div>
+                                        }
                                     </button>
                                 </div>
                             </div>

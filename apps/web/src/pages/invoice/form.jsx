@@ -48,6 +48,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
   const componentRef = useRef();
   const customerInputRef = useRef();
   const { state } = State();
+  const [isLoading, setIsLoading] = useState(false);
   const [customers, setCustomers] = useState([]);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [selectedVehicle, setSelectedVehicle] = useState(null);
@@ -186,6 +187,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
 
   // handle submit
   const onSubmit = async (values) => {
+    setIsLoading(true);
     const selectedProductIds = selectedProducts.map((product) => `${product.id}:${product.quantity}`);
     selectedProductIds.pop();
 
@@ -219,30 +221,36 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
       updatedData = { ...data, invoiceData: { ...data.invoiceData, BusinessId: state.business.id } };
     }
 
-    if (edit) {
-      const res = await updateInvoice(invoiceId, updatedData, state.userToken)
-      const invoice = await res.json();
-      if (res.status === 200) {
-        showToastMessage('success', invoice.message)
+    try {
+      if (edit) {
+        const res = await updateInvoice(invoiceId, updatedData, state.userToken)
+        const invoice = await res.json();
+        if (res.status === 200) {
+          showToastMessage('success', invoice.message)
+        }
+        else if (res.status === 404) {
+          showToastMessage('info', invoice.message)
+        }
+        else if (res.status === 409) {
+          showToastMessage('error', invoice.message)
+        }
       }
-      else if (res.status === 404) {
-        showToastMessage('info', invoice.message)
+      else {
+        const res = await addInvoice(updatedData, state.userToken)
+        const invoice = await res.json();
+        if (res.status === 200) {
+          showToastMessage('success', invoice.message)
+        }
+        else if (res.status === 409) {
+          showToastMessage('error', invoice.message)
+        }
       }
-      else if (res.status === 409) {
-        showToastMessage('error', invoice.message)
-      }
+      setIsLoading(false);
+      handleClose();
+    } catch (error) {
+      setIsLoading(false);
+      console.log(error);
     }
-    else {
-      const res = await addInvoice(updatedData, state.userToken)
-      const invoice = await res.json();
-      if (res.status === 200) {
-        showToastMessage('success', invoice.message)
-      }
-      else if (res.status === 409) {
-        showToastMessage('error', invoice.message)
-      }
-    }
-    handleClose();
   };
 
   // get products
@@ -1036,7 +1044,12 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
                     className="w-32 bg-gray-600 hover:bg-gray-900 text-white font-bold py-2 px-4"
                     type="submit"
                   >
-                    {edit ? 'Update' : 'Save'}
+                    {!isLoading?
+                      <span>{edit ? 'Update' : 'Save'}</span> :
+                      <div className="flex items-center justify-center h-fit">
+                          <div className="w-6 h-6 border-4 border-gray-500 border-t-transparent rounded-full animate-spin"></div>
+                      </div>
+                    }                 
                   </button>
                 </div>
               </div>

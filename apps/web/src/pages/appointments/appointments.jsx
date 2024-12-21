@@ -94,12 +94,16 @@ export function Appointments() {
 
     const handleOpen = () => {
         if (state.userInfo.Permission.some(obj => obj.name === "CAN_ADD_APPOINTMENT" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
-            setOpen(!open);
+            setOpen(true);
         }
         else {
             toast.error("You are not allowed to create an appointment");
         }
     }
+
+    const closePopup = () => {
+        setOpen(false);
+    };
 
     const handleEdit = (data) => {
         if (state.userInfo.Permission.some(obj => obj.name === "CAN_EDIT_APPOINTMENT" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
@@ -143,12 +147,12 @@ export function Appointments() {
         );
 
         return filteredAppointments.map((appointment, index) => (
-            <div key={index} className="mt-1 px-1 flex justify-center bg-blue-600 rounded-md">
-                <div className='text-white text-sm cursor-pointer' onClick={() => handleEdit(appointment)}>
-                    <div className='mr-1 w-min'>{format(parseISO(appointment.startDateTime), 'HH:mm')}</div>
-                    <span>{appointment.customerName.split(' ')[0]}</span>
+            <div key={index} className="mt-1 flex justify-center bg-blue-600 rounded-md w-[98%] h-max">
+                <div className='text-white text-sm cursor-pointer px-1 py-2 w-full' onClick={() => handleEdit(appointment)}>
+                    <div className='mb-1 w-min text-orange-500 font-semibold'>{format(parseISO(appointment.startDateTime), 'HH:mm')}</div>
+                    <span className='p-1 my-2 rounded-sm bg-orange-400'>Customer: {appointment.customerName.split(' ')[0]}</span>
                 </div>
-                <XMarkIcon onClick={() => handleDel(appointment.id)} className="h-4 w-4 text-white mb-auto ml-auto cursor-pointer" />
+                <XMarkIcon onClick={() => handleDel(appointment.id)} className="h-5 w-5 text-white mb-auto ml-auto cursor-pointer hover:text-red-500" />
             </div>
         ));
     };
@@ -176,9 +180,9 @@ export function Appointments() {
                 </div>
             </CardHeader>
             <CardBody className="p-4 px-0">
-                <div className="p-2">
+                <div className="">
                     <div className='flex justify-between'>
-                        <div className="flex items-center mb-4">
+                        <div className="flex items-center mb-4 mx-2">
                             <h2 className="text-lg font-semibold text-gray-700">Calendar</h2>
                         </div>
                         <h1 className="text-lg font-semibold text-gray-700 uppercase">{selected}</h1>
@@ -210,7 +214,7 @@ export function Appointments() {
                                     {i >= firstDay && i < firstDay + monthDays ?
                                         <>
                                             <div className=''>{i - (firstDay - 1)}</div>
-                                            <div className="mt-1">
+                                            <div className="mt-1 py-2 h-20 overflow-y-auto">
                                                 {renderAppointmentsForDate(format(new Date(currentYear, currentMonth, 0).setDate(i - (firstDay - 1)), 'yyyy-MM-dd'))}
                                             </div>
                                         </>
@@ -223,7 +227,7 @@ export function Appointments() {
                     </div>
                 </div>
             </CardBody>
-            <MyPopUpForm selectedItem={selectedItem} setSelectedItem={setSelectedItem} open={open} handleOpen={handleOpen} refresh={refresh} setRefresh={setRefresh} />
+            <MyPopUpForm selectedItem={selectedItem} setSelectedItem={setSelectedItem} open={open} close={closePopup} refresh={refresh} setRefresh={setRefresh} />
         </Card >
     );
 };

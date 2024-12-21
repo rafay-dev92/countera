@@ -22,6 +22,7 @@ const schema = Yup.object().shape({
 const CustomerVehicleForm = ({ open, close, refresh, setRefresh, CustomerId, getCustomerDetails, selectedVehicle }) => {
     const vehicleInputRef = useRef(null);
     const { state } = State();
+    const [isLoading, setIsLoading] = useState(false);
     const [edit, setEdit] = useState(false);
     const [vehicles, setVehicles] = useState([]);
     const [showVehicleSuggestions, setShowVehicleSuggestions] = useState(false);
@@ -69,6 +70,7 @@ const CustomerVehicleForm = ({ open, close, refresh, setRefresh, CustomerId, get
     }, [selectedVehicle]);
 
     const onSubmit = async (values) => {
+        setIsLoading(true);
         try {
             if (!edit) {
                 values = {...values, CustomerId}               
@@ -96,8 +98,10 @@ const CustomerVehicleForm = ({ open, close, refresh, setRefresh, CustomerId, get
             }
 
             setRefresh(!refresh);
+            setIsLoading(false);
             handleClose();
         } catch (error) {
+            setIsLoading(false);
             console.log(error)
         }
     };
@@ -413,7 +417,12 @@ const CustomerVehicleForm = ({ open, close, refresh, setRefresh, CustomerId, get
                                     className="w-32 bg-gray-600 hover:bg-gray-900 text-white font-bold py-2 px-4"
                                     type="submit"
                                 >
-                                    {edit ? "Update" : "Save"}
+                                    {!isLoading?
+                                        <span>{edit ? 'Update' : 'Save'}</span> :
+                                        <div className="flex items-center justify-center h-fit">
+                                            <div className="w-6 h-6 border-4 border-gray-500 border-t-transparent rounded-full animate-spin"></div>
+                                        </div>
+                                    }     
                                 </button>
                             </div>
                         </div>

@@ -35,6 +35,7 @@ const schema = Yup.object().shape({
 const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedItem, setSelectedItem }) => {
 
   const { state } = State();
+  const [isLoading, setIsLoading] = useState(false);
   const [edit, setEdit] = useState(false);
   const [taxes, setTaxes] = useState([]);
   const [selectedTaxes, setSelectedTaxes] = useState([]);
@@ -83,6 +84,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
   };
 
   const onSubmit = async (values) => {
+    setIsLoading(true);
     const productData = new FormData();
     productData.append('name', values.name);
     productData.append('cost', values.cost);
@@ -96,21 +98,6 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
     productData.append('taxes', JSON.stringify(selectedTaxes));
 
     try {
-      // const productData = {
-      //   name: values.name,
-      //   cost: values.cost,
-      //   price: values.price,
-      //   itemCode: values.itemCode, 
-      //   type: values.type,
-      //   description: values.description,
-      //   taxable: values.taxable,
-      //   taxes: selectedTaxes,
-      // }
-      // const data = {
-      //   productDetails: JSON.stringify(productData),
-      //   productImage: productImageFile
-      // }
-
       if (!edit) {
         const res = await addProduct(productData, state.userToken);
         const product = await res.json();
@@ -136,8 +123,10 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
       }
 
       setRefresh(!refresh);
+      setIsLoading(false);
       handleClose();
     } catch (error) {
+      setIsLoading(false);
       console.log(error)
     }
   };
@@ -448,7 +437,12 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
                   className="w-32 bg-gray-600 hover:bg-gray-900 text-white font-bold py-2 px-4"
                   type="submit"
                 >
-                  {edit ? "Update" : "Save"}
+                  {!isLoading? 
+                    <span>{edit ? "Update" : "Save" }</span> : 
+                    <div className="flex items-center justify-center h-fit">
+                        <div className="w-6 h-6 border-4 border-gray-500 border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                  }
                 </button>
               </div>
             </div>

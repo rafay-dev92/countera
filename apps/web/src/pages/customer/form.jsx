@@ -41,6 +41,7 @@ const schema = Yup.object().shape({
 const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setRefresh }) => {
 
   const { state } = State();
+  const [isLoading, setIsLoading] = useState(false);
   const [edit, setEdit] = useState(false);
   const [businesses, setBusinesses] = useState([]);
   const [business, setBusiness] = useState(null);
@@ -119,6 +120,7 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
   }
 
   const onSubmit = async (values) => {
+    setIsLoading(true);
     let updatedValues = {};
     // setting business id
     if (business !== '')
@@ -191,11 +193,13 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
       }
 
       setRefresh(!refresh);
+      setIsLoading(false);
       handleClose();
     } catch (error) {
       console.log(error)
       showToastMessage('error', 'Something went wrong')
       setRefresh(!refresh);
+      setIsLoading(false);
       handleClose();
     }
   };
@@ -646,7 +650,12 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
                     className="w-32 bg-gray-600 hover:bg-gray-900 text-white font-bold py-2 px-4"
                     type="submit"
                   >
-                    {edit ? "Update" : "Save"}
+                    {!isLoading? 
+                      <span>{edit ? "Update" : "Save" }</span> : 
+                      <div className="flex items-center justify-center h-fit">
+                          <div className="w-6 h-6 border-4 border-gray-500 border-t-transparent rounded-full animate-spin"></div>
+                      </div>
+                    }
                   </button>
                 </div>
               </div>

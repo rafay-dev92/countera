@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useEffect } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
-import { Dialog } from "@material-tailwind/react";
+import { Dialog, IconButton } from "@material-tailwind/react";
 import { addCustomer } from "@/services/addCustomer";
 import { updateCustomer } from "@/services/updateCustomer";
 import { toast } from "react-toastify";
@@ -14,6 +14,8 @@ import { PlusCircleIcon } from "@heroicons/react/24/outline";
 import CustomerVehicleForm from "./customerVehicleForm";
 import { fetchCustomerVehicles } from "@/services/fetchCustomerVehicles";
 import { fetchCustomer } from "@/services/fetchCustomer";
+import { TrashIcon } from "@heroicons/react/24/solid";
+import { delCustomerVehicle } from "@/services/delCustomerVehicle";
 
 const phoneRgex = /^((\+92)?(0092)?(92)?(0)?)(3)([0-9]{9})$/gm;
 
@@ -48,12 +50,10 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
   const [isOpen, setIsOpen] = useState(false);
 
   const openPopup = () => {
-    if (state.userInfo.Permission.some(obj => obj.name === "IS_CASHIER" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
+    if (state.userInfo.Permission.some(obj => obj.name === "IS_CASHIER" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) 
       setIsOpen(true);
-    }
-    else {
+    else 
       toast.error("You are not allowed to add a customer")
-    }
   };
 
   const closePopup = () => {
@@ -98,7 +98,6 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
   useEffect(() => {
     if (selectedItem) {
       formikProps.setValues(selectedItem);
-      setCurrentVehicle(selectedItem.Vehicle[0])
       setBusiness(selectedItem.BusinessId);
       setEdit(true);
     }
@@ -201,6 +200,33 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
     }
   };
 
+  // edit vehicle
+  const handleEditVehicle = (vehicle) => {
+    setCurrentVehicle(vehicle);
+    openPopup();
+  }
+
+  // delete vehicle
+  const deleteVehicle = async (vehicleId) => {
+    try {
+      const res = await delCustomerVehicle(vehicleId, state.userToken);
+      const vehicle = await res.json();
+      if (res.status === 200) {
+        showToastMessage('success', vehicle.message)
+        getCustomerDetails();
+      }
+      else if (res.status === 404) {
+        showToastMessage('info', vehicle.message)
+      }
+      else if (res.status === 409) {
+        showToastMessage('error', vehicle.message)
+      }
+    } catch (error) {
+      console.log(error)
+      showToastMessage('error', 'Something went wrong')
+    }
+  }
+
   const clearForm = (formikProps) => {
     formikProps.resetForm({
       values: {
@@ -272,198 +298,196 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
 
   return (
     <>
-    <Dialog open={open}>
-      {open && (
-        <form onSubmit={handleSubmit} autoComplete="new" >
-          <div className="fixed top-0 left-0 w-full h-full flex items-center justify-center">
-            <div className="bg-white rounded shadow-xl">
-              <div className="flex items-center justify-between sticky bg-gradient-to-br from-gray-800 to-gray-700">
-                <div></div>
-                <div className="text-white text-center text-lg">
-                  {edit ? "EDIT CUSTOMER" : "NEW CUSTOMER"}
-                </div>
-                <button
-                  className=" bg-transparent hover:bg-gray-800 text-white font-bold py-2 px-4 rounded"
-                  onClick={handleClose}
-                  type="button"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth="1.5"
-                    stroke="currentColor"
-                    className="w-6 h-6"
+      <Dialog open={open}>
+        {open && (
+          <form onSubmit={handleSubmit} autoComplete="new">
+            <div className="flex justify-center w-full">
+              <div className="bg-white rounded shadow-xl">
+                <div className="flex items-center justify-between sticky bg-gradient-to-br from-gray-800 to-gray-700">
+                  <div></div>
+                  <div className="text-white text-center text-lg">
+                    {edit ? "EDIT CUSTOMER" : "NEW CUSTOMER"}
+                  </div>
+                  <button
+                    className=" bg-transparent hover:bg-gray-800 text-white font-bold py-2 px-4 rounded"
+                    onClick={handleClose}
+                    type="button"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
-                </button>
-              </div>
-
-              <div className="p-6">
-                <div className="flex justify-around mb-3">
-                  <div className="flex space-x-4">
-                    <label className="flex items-center cursor-pointer">
-                      <input
-                        type="radio"
-                        name="customerType"
-                        value="personal"
-                        checked={values.customerType === 'personal'}
-                        onChange={() => setValues({...values, customerType: 'personal', licenseNo: ''})}
-                        className="hidden"
-                      />
-                      <div
-                        className={`px-4 py-2 rounded-full transition-colors ${values.customerType === 'personal' ? 'bg-gradient-to-br from-gray-800 to-gray-700 text-white' : 'bg-gray-200 text-gray-700'
-                          }`}
-                      >
-                        Personal
-                      </div>
-                    </label>
-
-                    <label className="flex items-center cursor-pointer">
-                      <input
-                        type="radio"
-                        name="customerType"
-                        value="business"
-                        checked={values.customerType === 'business'}
-                        onChange={handleChange}
-                        className="hidden"
-                      />
-                      <div
-                        className={`px-4 py-2 rounded-full transition-colors ${values.customerType === 'business' ? 'bg-gradient-to-br from-gray-800 to-gray-700 text-white' : 'bg-gray-200 text-gray-700'
-                          }`}
-                      >
-                        Business
-                      </div>
-                    </label>
-                  </div>
-                </div>
-                <div className="flex items-center justify-start space-x-4 w-full">
-                  <div className="basis-[33.33%]">
-                    <label className="font-bold">First Name</label> <br />
-                    <input
-                      className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
-                      id="firstName"
-                      name="firstName"
-                      type="text"
-                      value={values.firstName}
-                      onChange={handleChange}
-                      onBlur={handleBlur}
-                    />
-                    {(touched.firstName && errors.firstName) ? (
-                      <div className="text-red-500">
-                        {errors.firstName}
-                      </div>
-                    ) : (<div></div>)}
-                  </div>
-                  <div className="basis-[33.33%]">
-                    <label className="font-bold">Last Name</label> <br />
-                    <input
-                      className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
-                      id="lastName"
-                      name="lastName"
-                      type="text"
-                      value={values.lastName}
-                      onChange={handleChange}
-                      onBlur={handleBlur}
-                    />
-                    {touched.lastName && errors.lastName ? (
-                      <div className="text-red-500">
-                        {errors.lastName}
-                      </div>
-                    ) : (<div></div>)}
-                  </div>
-
-                  <div className="basis-[33.33%]">
-                    <label className="font-bold">Mobile Phone</label> <br />
-                    <input
-                      className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
-                      id="phone"
-                      name="phone"
-                      type="text"
-                      value={values.phone}
-                      onChange={handleChange}
-                      onBlur={handleBlur}
-                    />
-                    {(touched.phone && errors.phone) ? (
-                      <div className="text-red-500">
-                        {errors.phone}
-                      </div>
-                    ) : (<div></div>)}
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-start space-x-4">
-                  <div className="basis-[33.33%]">
-                    <label className="font-bold">Email</label> <br />
-                    <input
-                      className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
-                      id="email"
-                      name="email"
-                      type="email"
-                      value={values.email}
-                      onChange={handleChange}
-                      onBlur={handleBlur}
-                    />
-                    {touched.email && errors.email && (
-                      <div className="text-red-500">
-                        {errors.email}
-                      </div>
-                    )}
-                  </div>
-                  <div className="basis-[33.33%]">
-                    <label className="font-bold">License No</label> <br />
-                    <input
-                      className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
-                      id="licenseNo"
-                      name="licenseNo"
-                      type="text"
-                      value={values.licenseNo}
-                      onChange={handleChange}
-                      onBlur={handleBlur}
-                      disabled={values.customerType !== 'business'}
-                    />
-                    {touched.licenseNo && errors.licenseNo && (
-                      <div className="text-red-500">
-                        {errors.licenseNo}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="basis-[33.33%]">
-                    <label className="p-2 font-bold">Branch</label> <br />
-                    <select
-                      className="w-full p-2 border border-gray-300 bg-inherit rounded-md"
-                      label="Select Business"
-                      animate={{
-                        mount: { y: 0 },
-                        unmount: { y: 25 },
-                      }}
-                      value={business}
-                      onChange={(e) =>
-                        setBusiness(e.target.value)
-                      }
-                      size="md"
-                      disabled={state.userInfo.role !== 'super_admin'}
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth="1.5"
+                      stroke="currentColor"
+                      className="w-6 h-6"
                     >
-                      {businesses ?
-                        businesses.map((business) => (
-                          <option key={business.id} value={business.id}>{business.name}, {business.location}</option>
-                        )) : []}
-                    </select>
-                  </div>
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
                 </div>
 
-                <div className="mt-4">
-                  <div className="flex items-center justify-start space-x-4 w-full">
+                <div className="w-[50vw] p-6">
+                  <div className="flex justify-around mb-3">
+                    <div className="flex space-x-4">
+                      <label className="flex items-center cursor-pointer">
+                        <input
+                          type="radio"
+                          name="customerType"
+                          value="personal"
+                          checked={values.customerType === 'personal'}
+                          onChange={() => setValues({ ...values, customerType: 'personal', licenseNo: '' })}
+                          className="hidden"
+                        />
+                        <div
+                          className={`px-4 py-2 rounded-full transition-colors ${values.customerType === 'personal' ? 'bg-gradient-to-br from-gray-800 to-gray-700 text-white' : 'bg-gray-200 text-gray-700'
+                            }`}
+                        >
+                          Personal
+                        </div>
+                      </label>
 
+                      <label className="flex items-center cursor-pointer">
+                        <input
+                          type="radio"
+                          name="customerType"
+                          value="business"
+                          checked={values.customerType === 'business'}
+                          onChange={handleChange}
+                          className="hidden"
+                        />
+                        <div
+                          className={`px-4 py-2 rounded-full transition-colors ${values.customerType === 'business' ? 'bg-gradient-to-br from-gray-800 to-gray-700 text-white' : 'bg-gray-200 text-gray-700'
+                            }`}
+                        >
+                          Business
+                        </div>
+                      </label>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-start space-x-4">
+                    <div className="basis-[33.33%]">
+                      <label className="font-bold">First Name</label> <br />
+                      <input
+                        className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
+                        id="firstName"
+                        name="firstName"
+                        type="text"
+                        value={values.firstName}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                      />
+                      {(touched.firstName && errors.firstName) ? (
+                        <div className="text-red-500">
+                          {errors.firstName}
+                        </div>
+                      ) : (<div></div>)}
+                    </div>
+                    <div className="basis-[33.33%]">
+                      <label className="font-bold">Last Name</label> <br />
+                      <input
+                        className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
+                        id="lastName"
+                        name="lastName"
+                        type="text"
+                        value={values.lastName}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                      />
+                      {touched.lastName && errors.lastName ? (
+                        <div className="text-red-500">
+                          {errors.lastName}
+                        </div>
+                      ) : (<div></div>)}
+                    </div>
+
+                    <div className="basis-[33.33%]">
+                      <label className="font-bold">Mobile Phone</label> <br />
+                      <input
+                        className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
+                        id="phone"
+                        name="phone"
+                        type="text"
+                        value={values.phone}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                      />
+                      {(touched.phone && errors.phone) ? (
+                        <div className="text-red-500">
+                          {errors.phone}
+                        </div>
+                      ) : (<div></div>)}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-start space-x-4">
+                    <div className="basis-[33.33%]">
+                      <label className="font-bold">Email</label> <br />
+                      <input
+                        className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
+                        id="email"
+                        name="email"
+                        type="email"
+                        value={values.email}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                      />
+                      {touched.email && errors.email && (
+                        <div className="text-red-500">
+                          {errors.email}
+                        </div>
+                      )}
+                    </div>
+                    <div className="basis-[33.33%]">
+                      <label className="font-bold">License No</label> <br />
+                      <input
+                        className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
+                        id="licenseNo"
+                        name="licenseNo"
+                        type="text"
+                        value={values.licenseNo}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                        disabled={values.customerType !== 'business'}
+                      />
+                      {touched.licenseNo && errors.licenseNo && (
+                        <div className="text-red-500">
+                          {errors.licenseNo}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="basis-[33.33%]">
+                      <label className="p-2 font-bold">Branch</label> <br />
+                      <select
+                        className="w-full p-2 border border-gray-300 bg-inherit rounded-md"
+                        label="Select Business"
+                        animate={{
+                          mount: { y: 0 },
+                          unmount: { y: 25 },
+                        }}
+                        value={business}
+                        onChange={(e) =>
+                          setBusiness(e.target.value)
+                        }
+                        size="md"
+                        disabled={state.userInfo.role !== 'super_admin'}
+                      >
+                        {businesses ?
+                          businesses.map((business) => (
+                            <option key={business.id} value={business.id}>{business.name}, {business.location}</option>
+                          )) : []}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-start space-x-4">
                     <div className="basis-[40%]">
                       <label className="font-bold">Street</label> <br />
-                      <input className="p-2 border border-gray-300 rounded-md text-black font-medium"
+                      <input className="p-2 w-full border border-gray-300 rounded-md text-black font-medium"
                         id="Address.street"
                         name="Address.street"
                         type="text"
@@ -480,7 +504,7 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
 
                     <div className="basis-[20%]">
                       <label className="font-bold">City</label> <br />
-                      <input className="p-2 border border-gray-300 rounded-md text-black font-medium"
+                      <input className="p-2 w-full border border-gray-300 rounded-md text-black font-medium"
                         id="Address.city"
                         name="Address.city"
                         type="text"
@@ -497,7 +521,7 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
 
                     <div className="basis-[20%]">
                       <label className="font-bold">State</label> <br />
-                      <input className="p-2 border border-gray-300 rounded-md text-black font-medium"
+                      <input className="p-2 w-full border border-gray-300 rounded-md text-black font-medium"
                         id="Address.state"
                         name="Address.state"
                         type="text"
@@ -514,7 +538,7 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
 
                     <div className="basis-[20%]">
                       <label className="font-bold">Zip Code</label> <br />
-                      <input className="p-2 border border-gray-300 rounded-md text-black font-medium"
+                      <input className="p-2 w-full border border-gray-300 rounded-md text-black font-medium"
                         id="Address.zipcode"
                         name="Address.zipcode"
                         type="text"
@@ -529,16 +553,15 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
                       ) : (<div></div>)}
                     </div>
                   </div>
-                </div>
-                {edit && (
-                  <div className="mt-4 flex">
-                    <div className="basis-[33.33%]">
-                      <div className="flex items-center">
-                      <label className="p-1 font-bold">Vehicles</label>
-                      <PlusCircleIcon onClick={openPopup} className="h-6 w-6 text-blue-600 cursor-pointer" /> 
-                      </div>
-                      <MyPopUpForm />
-                      <select
+                  {edit && (
+                    <div className="my-4 flex items-center w-full">
+                      <div className="basis-[10%] ">
+                        <div className="flex items-center">
+                          <label className="p-1 font-bold">Vehicles</label>
+                          <PlusCircleIcon onClick={openPopup} className="h-6 w-6 text-blue-600 cursor-pointer" />
+                        </div>
+                        <MyPopUpForm />
+                        {/* <select
                         className="w-full p-2 border border-gray-300 bg-inherit rounded-md"
                         label="Select Vehicle"
                         animate={{
@@ -556,70 +579,82 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
                       >
                         {values.Vehicle ?
                           values.Vehicle.map((vehicle) => (
-                            <option key={vehicle.id} value={vehicle.id}>{vehicle.make}, {vehicle.model}</option>
+                            <option key={vehicle.id} value={vehicle.id}>
+                              <span>{vehicle.make}, {vehicle.model}</span>                                                          
+                            </option>
                           )) : []}
-                      </select>
+                      </select> */}
+                      </div>
+                      <div className="flex overflow-x-auto basis-[90%]">
+                        {values.Vehicle && values.Vehicle.length > 0 &&
+                          values.Vehicle.map((vehicle) => (
+                            <div className="flex items-center gap-4 w-fit h-fit border px-2 py-1 m-1 rounded-md whitespace-nowrap">
+                              <span onClick={() => handleEditVehicle(vehicle)} className="hover:underline cursor-pointer">{vehicle.make} {vehicle.model} {vehicle.year}</span>
+                              <TrashIcon className="h-4 w-4 text-red-500 cursor-pointer" onClick={() => {deleteVehicle(vehicle.id)}} />
+                            </div>
+                          ))
+                        }
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
-                <div>
-                  <label className="font-bold">Notes</label> <br />
-                  <textarea
-                    className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
-                    id="notes"
-                    name="notes"
-                    value={values.notes}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                  />
-                  {touched.notes && errors.notes && (
-                    <div className="text-red-500">
-                      {errors.notes}
+                  <div className="w-full">
+                    <label className="font-bold">Notes</label> <br />
+                    <textarea
+                      className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
+                      id="notes"
+                      name="notes"
+                      value={values.notes}
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                    />
+                    {touched.notes && errors.notes && (
+                      <div className="text-red-500">
+                        {errors.notes}
+                      </div>
+                    )}
+                  </div>
+                  {values.customerType !== 'business' && (
+                    <div>
+                      <label className="font-bold">
+                        <input
+                          type="checkbox"
+                          id="taxableCheckbox"
+                          name="taxableCheckbox"
+                          checked={values.taxable}
+                          onChange={(e) => {
+                            setValues((prevValues) => ({
+                              ...prevValues,
+                              taxable: e.target.checked
+                            }));
+                          }}
+                        />
+                        &nbsp;Taxable
+                      </label>
                     </div>
                   )}
                 </div>
-                {values.customerType !== 'business' && (
-                <div>
-                  <label className="font-bold">
-                    <input
-                      type="checkbox"
-                      id="taxableCheckbox"
-                      name="taxableCheckbox"
-                      checked={values.taxable}
-                      onChange={(e) => {
-                        setValues((prevValues) => ({
-                          ...prevValues,
-                          taxable: e.target.checked
-                        }));
-                      }}
-                    />
-                    &nbsp;Taxable
-                  </label>
+                <div className="flex items-center justify-end space-x-2 sticky bg-gradient-to-br from-gray-800 to-gray-700">
+                  <button
+                    className=" w-32 bg-gray-600 hover:bg-gray-900 text-white font-bold py-2 px-4"
+                    onClick={() => clearForm(formikProps)}
+                    type="button"
+                  >
+                    Clear
+                  </button>
+                  <button
+                    className="w-32 bg-gray-600 hover:bg-gray-900 text-white font-bold py-2 px-4"
+                    type="submit"
+                  >
+                    {edit ? "Update" : "Save"}
+                  </button>
                 </div>
-              )}
-              </div>
-              <div className="flex items-center justify-end space-x-2 sticky bg-gradient-to-br from-gray-800 to-gray-700">
-                <button
-                  className=" w-32 bg-gray-600 hover:bg-gray-900 text-white font-bold py-2 px-4"
-                  onClick={() => clearForm(formikProps)}
-                  type="button"
-                >
-                  Clear
-                </button>
-                <button
-                  className="w-32 bg-gray-600 hover:bg-gray-900 text-white font-bold py-2 px-4"
-                  type="submit"
-                >
-                  {edit ? "Update" : "Save"}
-                </button>
               </div>
             </div>
-          </div>
-        </form>
-      )}
-    </Dialog>
-    {selectedItem ?  <CustomerVehicleForm open={isOpen} close={closePopup} refresh={refresh} setRefresh={setRefresh} CustomerId={selectedItem?.id} getCustomerDetails={getCustomerDetails} /> : null}
+          </form>
+        )}
+      </Dialog>
+      {selectedItem ? <CustomerVehicleForm open={isOpen} close={closePopup} refresh={refresh} setRefresh={setRefresh} CustomerId={selectedItem?.id} getCustomerDetails={getCustomerDetails} selectedVehicle={currentVehicle} /> : null}
     </>
   );
 };

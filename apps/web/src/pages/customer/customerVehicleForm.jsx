@@ -3,11 +3,11 @@ import { useEffect } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { Dialog, Spinner } from "@material-tailwind/react";
-import { updateVehicle } from "@/services/updateVehicle";
 import { toast } from 'react-toastify';
 import { State } from "@/state/Context";
 import { fetchVehicles } from "@/services/fetchVehicles";
 import { addCustomerVehicle } from "@/services/addCustomerVehicle";
+import { updateCustomerVehicle } from "@/services/updateCustomerVehicle";
 
 const schema = Yup.object().shape({
     year: Yup.number().required("Year is required"),
@@ -19,12 +19,20 @@ const schema = Yup.object().shape({
     notes: Yup.string(),
 });
 
-const CustomerVehicleForm = ({ open, close, refresh, setRefresh, CustomerId, getCustomerDetails }) => {
+const CustomerVehicleForm = ({ open, close, refresh, setRefresh, CustomerId, getCustomerDetails, selectedVehicle }) => {
     const vehicleInputRef = useRef(null);
     const { state } = State();
     const [edit, setEdit] = useState(false);
     const [vehicles, setVehicles] = useState([]);
     const [showVehicleSuggestions, setShowVehicleSuggestions] = useState(false);
+
+    // set the years to be displayed in the year select input
+    const startYear = import.meta.env.VITE_START_YEAR;
+    const endYear = import.meta.env.VITE_END_YEAR;
+    const years = [];
+    for (let year = endYear; year >= startYear; year--) {
+        years.push(year);
+    }
 
     const showToastMessage = (type, message) => {
         if (type === 'success') {
@@ -44,13 +52,21 @@ const CustomerVehicleForm = ({ open, close, refresh, setRefresh, CustomerId, get
         close();
     };
 
-    // useEffect(() => {
-    //     if (selectedItem) {
-    //         formikProps.setValues(selectedItem);
-    //         setEdit(true);
-    //         console.log(formikProps.values);
-    //     }
-    // }, [selectedItem]);
+    useEffect(() => {
+        if (selectedVehicle) {
+            setValues({
+                year: selectedVehicle.year, 
+                vehicle: `${selectedVehicle.make} ${selectedVehicle.model}`,
+                odometer: selectedVehicle.odometer,
+                licenseNo: selectedVehicle.licenseNo,
+                engineSize: selectedVehicle.engineSize,
+                color: selectedVehicle.color,
+                notes: selectedVehicle.notes,
+            })
+            setEdit(true);
+            console.log(formikProps.values);
+        }
+    }, [selectedVehicle]);
 
     const onSubmit = async (values) => {
         try {
@@ -59,15 +75,14 @@ const CustomerVehicleForm = ({ open, close, refresh, setRefresh, CustomerId, get
                 const res = await addCustomerVehicle(values, state.userToken)
                 const vehicle = await res.json();
                 if (res.status === 200) {
-                    showToastMessage('success', vehicle.message)
-                    getCustomerDetails();
+                    showToastMessage('success', vehicle.message)                    
                 }
                 else if (res.status === 409) {
                     showToastMessage('error', vehicle.message)
                 }
             }
             else {
-                const res = await updateVehicle(selectedItem.id, values, state.userToken)
+                const res = await updateCustomerVehicle(selectedVehicle.id, values, state.userToken)
                 const vehicle = await res.json();
                 if (res.status === 200) {
                     showToastMessage('success', vehicle.message)
@@ -89,6 +104,7 @@ const CustomerVehicleForm = ({ open, close, refresh, setRefresh, CustomerId, get
 
     // Fetch data from API when the component mounts
     useEffect(() => {
+        getCustomerDetails();
         getVehicles();
     }, [refresh]);
 
@@ -167,16 +183,6 @@ const CustomerVehicleForm = ({ open, close, refresh, setRefresh, CustomerId, get
         };
     }, []);
 
-    const startYear = import.meta.env.VITE_START_YEAR;
-    const endYear = import.meta.env.VITE_END_YEAR;
-    const years = [];
-    for (let year = endYear; year >= startYear; year--) {
-        years.push(year);
-    }
-
-    useEffect(() => {
-
-    }, [values.vehicle]);
     return (
         <Dialog open={open}>
             {open && (

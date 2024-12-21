@@ -683,7 +683,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
                             key={vehicle.id}
                             value={vehicle.id}
                           >
-                            {vehicle.make} {vehicle.model}
+                            {vehicle.make} {vehicle.model} {vehicle.year}
                           </option>
                         ))
                           :

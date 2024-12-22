@@ -647,6 +647,7 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
                     Clear
                   </button>
                   <button
+                    disabled={isLoading}
                     className="w-32 bg-gray-600 hover:bg-gray-900 text-white font-bold py-2 px-4"
                     type="submit"
                   >

@@ -131,7 +131,6 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
     }
   };
 
-
   const handleTax = (value, event) => {
     const isChecked = event.target.checked;
 
@@ -140,9 +139,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
     } else {
       setSelectedTaxes(selectedTaxes.filter(id => id !== value));
     }
-
   }
-
 
   const clearForm = (formikProps) => {
     formikProps.resetForm({
@@ -202,7 +199,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
   return (
     <Dialog open={open}>
       {open && (
-        <form onSubmit={ (e) => handleSubmit(e)} autoComplete="new">
+        <form onSubmit={handleSubmit} autoComplete="new">
           <div className="fixed top-0 left-0 w-full h-full flex items-center justify-center">
             <div className="bg-white rounded shadow-xl">
               <div className="flex items-center justify-between sticky bg-gradient-to-br from-gray-800 to-gray-700">
@@ -243,7 +240,6 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
                       type="file"
                       accept="image/*"
                       onChange={(e) => {
-                        console.log(e.target.files[0])
                         setProductPreviewPic(URL.createObjectURL(e.target.files[0]))
                         setFieldValue('image', e.target.files[0]);
                       }}
@@ -421,9 +417,6 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
                     </div>
                   ))
                 }
-
-
-
               </div>
               <div className="flex items-center justify-end space-x-2 sticky bg-gradient-to-br from-gray-800 to-gray-700">
                 <button

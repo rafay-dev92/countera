@@ -1041,6 +1041,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
                     Clear
                   </button>
                   <button
+                    disabled={isLoading}
                     className="w-32 bg-gray-600 hover:bg-gray-900 text-white font-bold py-2 px-4"
                     type="submit"
                   >

@@ -9,8 +9,8 @@ import { toast } from "react-toastify";
 import { fetchBusinesses } from "@/services/fetchBusinesses";
 
 const schema = Yup.object().shape({
-    customerName: Yup.string().required("Customer name is required"),
-    customerEmail: Yup.string().email('Invalid email'),
+    customerName: Yup.string().required("Name is required"),
+    customerEmail: Yup.string().email('Invalid email').required("Email is required"),
     description: Yup.string(),
     startDateTime: Yup.date().required("Start date is required"),
     endDateTime: Yup.string().required("End Time is required"),
@@ -29,7 +29,7 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, close, refresh, 
     const [isLoading, setIsLoading] = useState(false);
 
     const handleClose = () => {
-        setBusiness('');
+        setBusiness(null);
         clearForm(formikProps);
         setEdit(false);
         setSelectedItem(null);
@@ -133,7 +133,6 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, close, refresh, 
     };
 
     const onSubmit = async (values) => {
-        console.log(values)
         setIsLoading(true);
         const inputDate = values.startDateTime.split('T')[0];
         const inputStartTime = (parseInt(values.startDateTime.split('T')[1].split(':')[0], 10) * 60) + parseInt(values.startDateTime.split('T')[1].split(':')[1], 10);
@@ -145,7 +144,6 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, close, refresh, 
         let updatedValues = {};
 
         if (state.userInfo.role === 'super_admin') {
-
             updatedValues = { ...values, endDateTime: inputEndDateTime };
         }
         else {
@@ -156,18 +154,24 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, close, refresh, 
             showToastMessage('error', 'Start time must be before end time')
             setError(true);
             setErrorFalse();
+            setIsLoading(false);
+            return;
         }
 
         else if (inputStartTime <= currentTime && inputDate === currDate) {
             showToastMessage('error', 'Start time must be ahead of current time')
             setError(true);
             setErrorFalse();
+            setIsLoading(false);
+            return;
         }
 
         else if (inputEndTime <= currentTime && inputDate === currDate) {
-            showToastMessage('error', 'End time must be before end time')
+            showToastMessage('error', 'End time must be ahead of current time')
             setError(true);
             setErrorFalse();
+            setIsLoading(false);
+            return;
         }
 
         else {
@@ -186,7 +190,6 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, close, refresh, 
                     }
                 }
                 else {
-                    console.log(selectedItem.id);
                     const res = await updateAppointment(selectedItem.id, updatedValues, state.userToken);
                     const appointment = await res.json();
                     
@@ -209,7 +212,8 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, close, refresh, 
             } catch (error) {
                 console.log(error)
                 setIsLoading(false);
-                showToastMessage('error', 'Something went wrong')
+                showToastMessage('error', 'Something went wrong');
+                handleClose();
             }
         }
     };
@@ -219,6 +223,7 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, close, refresh, 
             values: {
                 customerName: '',
                 description: '',
+                customerEmail: '',
                 startDateTime: '',
                 endDateTime: '',
                 BusinessId: '',
@@ -227,6 +232,7 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, close, refresh, 
             errors: {
                 customerName: '',
                 description: '',
+                customerEmail: '',
                 startDateTime: '',
                 endDateTime: '',
                 BusinessId: '',
@@ -239,6 +245,7 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, close, refresh, 
         initialValues: {
             customerName: '',
             description: '',
+            customerEmail: '',
             startDateTime: '',
             endDateTime: '',
             BusinessId: '',
@@ -263,7 +270,7 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, close, refresh, 
         <>
             <Dialog size="sm" open={open}>
                 {open && (
-                    <form onSubmit={handleSubmit} autoComplete="new" >
+                    <form autoComplete="new" >
                         <div className="fixed top-0 left-0 w-full h-full flex items-center justify-center">
                             <div className="bg-white rounded shadow-xl">
                                 <div className="flex items-center justify-between sticky bg-gradient-to-br from-gray-800 to-gray-700">
@@ -425,6 +432,8 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, close, refresh, 
                                         Clear
                                     </button>
                                     <button
+                                        disabled={isLoading}
+                                        onClick={() => onSubmit(values)}
                                         className="w-32 bg-gray-600 hover:bg-gray-900 text-white font-bold py-2 px-4"
                                         type="submit"
                                     >

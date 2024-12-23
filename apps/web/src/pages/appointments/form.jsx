@@ -147,7 +147,7 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, close, refresh, 
             updatedValues = { ...values, endDateTime: inputEndDateTime };
         }
         else {
-            updatedValues = { ...values, endDateTime: inputEndDateTime, BusinessId: state.business.id };
+            updatedValues = { ...values, endDateTime: inputEndDateTime, BusinessId: state.business.id, BusinessEmail: state.business.email };
         }
 
         if (inputStartTime >= inputEndTime) {
@@ -181,6 +181,9 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, close, refresh, 
                     const appointment = await res.json();
                     if (res.status === 200) {
                         showToastMessage('success', appointment.message)
+                    }
+                    else if (res.status === 404) {
+                        showToastMessage('info', appointment.message)
                     }
                     else if (res.status === 409) {
                         showToastMessage('error', appointment.message)

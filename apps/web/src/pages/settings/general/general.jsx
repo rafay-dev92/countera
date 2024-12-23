@@ -11,6 +11,7 @@ function Profile() {
     const [busiensslogo, setBusiensslogo] = useState(null);
     const [formData, setFormData] = useState({
         name: "",
+        email: "",
         logo: null,
         defaultMargin: "",
         address: "",
@@ -78,6 +79,7 @@ function Profile() {
             const res = await updateBusiness(state.business.id, businessData, state.userToken);
             if (res.status === 200) {
                 const business = await res.json();
+                console.log(business.data);
                 const { logo, ...rest } = business.data;
                 setBusiensslogo(logo);
                 setFormData(rest);
@@ -135,6 +137,13 @@ function Profile() {
                         type="text"
                         name="name"
                         value={formData?.name}
+                        onChange={handleChange}
+                    />
+                     <Input
+                        label="Email"
+                        type="text"
+                        name="email"
+                        value={formData?.email}
                         onChange={handleChange}
                     />
                     <Input

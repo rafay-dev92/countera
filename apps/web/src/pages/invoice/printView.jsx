@@ -41,6 +41,7 @@ export default function printView({ printInvoice, componentRef, appliedTaxes, ca
                                 <span className="text-sm font-normal text-black">{printInvoice?.Business.city}, {printInvoice?.Business.state}, {printInvoice?.Business.zipcode}</span>
                                 <span className="text-sm font-normal text-black">Phone: {printInvoice?.Business.tel}</span>
                                 <span className="text-sm font-normal text-black">Fax: {printInvoice?.Business.fax}</span>
+                                <span className="text-sm font-normal text-black">Email: {printInvoice?.Business.email}</span>
                             </div>
                             <img src={printInvoice?.Business.logo} className="rounded-xl h-[100px] w-[100px]" alt="Business logo" width={100} height={100} />
                         </div>
@@ -51,8 +52,8 @@ export default function printView({ printInvoice, componentRef, appliedTaxes, ca
                         <span className="text-sm">License No: {printInvoice?.Business.licenseNumber}</span>
                         <span className="text-sm">Permit No: {printInvoice?.Business.permitNumber}</span>
                     </div>
-                </div>
-                <div className="flex justify-between items-center p-4">
+                </div>                
+                <div className="flex justify-between items-center p-4">                    
                     <div>
                         <table className="w-full min-w-max table-auto text-left">
                             <thead>

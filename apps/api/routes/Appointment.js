@@ -101,7 +101,7 @@ router.post("/create", fetchUser, async (req, res) => {
       const { BusinessEmail, ...usefulData } = appointmentData;
       await Appointment.create(usefulData);
       //   if (newAppointment.sendEmail) {
-      if (BusinessEmail === "") {
+      if (BusinessEmail === null) {
         return res
           .status(400)
           .json({ message: "Appointment scheduled, but email not sent to the customer as the business email is not set" });

@@ -8,6 +8,7 @@ import {
   CardBody,
   Dialog,
   IconButton,
+  Spinner,
 } from "@material-tailwind/react";
 import {
   XCircleIcon
@@ -618,7 +619,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
                                 </li>
                               ))
                               :
-                              <Spinner className="mx-auto my-auto h-6 w-6 text-blue-900/50" />
+                              <li className="px-2 py-1 rounded-sm">No Customer</li>
                             }
                           </ul>
                         )}

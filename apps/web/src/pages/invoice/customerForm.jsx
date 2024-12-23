@@ -57,7 +57,12 @@ const CustomerForm = ({ open, close, refresh, setRefresh, setSelectedCustomer })
     try {
       const res = await fetchBusinesses(state.userToken);
       const businesses = await res.json();
-      setBusiness(businesses[0].id)
+      if (state.userInfo.role !== 'super_admin') {
+        const currentBusiness = businesses.filter(business => business.id === state.business.id)
+        setBusiness(currentBusiness[0].id)
+      }
+      else
+        setBusiness(businesses[0].id)
       setBusinesses(businesses)
     } catch (error) {
       toast.error("Something went wrong")
@@ -371,7 +376,7 @@ const CustomerForm = ({ open, close, refresh, setRefresh, setSelectedCustomer })
                       >
                         {businesses ?
                           businesses.map((business) => (
-                            <option key={business.id} value={business.id}>{business.name}, {business.location}</option>
+                            <option key={business.id} value={business.id}>{business.name}</option>
                           )) : []}
                       </select>
                     </div>

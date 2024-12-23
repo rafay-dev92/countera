@@ -182,7 +182,7 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, close, refresh, 
                     if (res.status === 200) {
                         showToastMessage('success', appointment.message)
                     }
-                    else if (res.status === 404) {
+                    else if (res.status === 400) {
                         showToastMessage('info', appointment.message)
                     }
                     else if (res.status === 409) {

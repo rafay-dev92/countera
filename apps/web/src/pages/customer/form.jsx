@@ -81,7 +81,12 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
     try {
       const res = await fetchBusinesses(state.userToken);
       const businesses = await res.json();
-      setBusiness(businesses[0].id)
+      if (state.userInfo.role !== 'super_admin') {
+        const currentBusiness = businesses.filter(business => business.id === state.business.id)
+        setBusiness(currentBusiness[0].id)
+      }
+      else
+        setBusiness(businesses[0].id)
       setBusinesses(businesses)
     } catch (error) {
       toast.error("Something went wrong")
@@ -123,9 +128,9 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
     setIsLoading(true);
     let updatedValues = {};
     // setting business id
-    if (business !== '')
+    if (business !== '') 
       updatedValues = { ...values, BusinessId: business };
-    else
+    else 
       updatedValues = { ...values, BusinessId: state.business.id };
 
     // setting taxable to false for business customer
@@ -482,7 +487,7 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
                       >
                         {businesses ?
                           businesses.map((business) => (
-                            <option key={business.id} value={business.id}>{business.name}, {business.location}</option>
+                            <option key={business.id} value={business.id}>{business.name}</option>
                           )) : []}
                       </select>
                     </div>

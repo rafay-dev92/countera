@@ -98,42 +98,50 @@ router.post("/create", fetchUser, async (req, res) => {
       req.body.startDateTime !== "" &&
       req.body.endTime !== ""
     ) {
-      const newAppointment = await Appointment.create(appointmentData);
-    //   if (newAppointment.sendEmail) {
-        let transporter = nodemailer.createTransport({
-          host: "smtp.sendgrid.net",
-          port: 587,
-          auth: {
-            user: "apikey",
-            pass: process.env.SENDGRID_API_KEY,
-          },
-        });
-        
-        const mailOptions = {
-          from: "rafaywork93@gmail.com",
-          to: appointmentData.customerEmail,
-          subject: "Appointment Confirmed",
-          text: `${
-            appointmentData.customerName
-          } your appointment has been scheduled on ${
-            appointmentData.startDateTime.split("T")[0]
-          } at ${appointmentData.startDateTime.split("T")[1]} 
+      const { BusinessEmail, ...usefulData } = appointmentData;
+      await Appointment.create(usefulData);
+      //   if (newAppointment.sendEmail) {
+      if (BusinessEmail === "") {
+        return res
+          .status(400)
+          .json({ message: "Appointment scheduled, but email not sent to the customer as the business email is not set" });
+      }
+      let transporter = nodemailer.createTransport({
+        host: "smtp.sendgrid.net",
+        port: 587,
+        auth: {
+          user: "apikey",
+          pass: process.env.SENDGRID_API_KEY,
+        },
+      });
+
+      const mailOptions = {
+        from: BusinessEmail,
+        to: appointmentData.customerEmail,
+        subject: "Appointment Confirmed",
+        text: `${
+          appointmentData.customerName
+        } your appointment has been scheduled on ${
+          appointmentData.startDateTime.split("T")[0]
+        } at ${appointmentData.startDateTime.split("T")[1]} 
                     Thanks and Have a nice day!`,
-          html: `<h6>Hey ${appointmentData.customerName}!</h6>
+        html: `<h6>Hey ${appointmentData.customerName}!</h6>
                     <p>Your appointment has been scheduled on <b>${
                       appointmentData.startDateTime.split("T")[0]
-                    }</b> at <b>${appointmentData.startDateTime.split("T")[1]}</b></p>
+                    }</b> at <b>${
+          appointmentData.startDateTime.split("T")[1]
+        }</b></p>
                     <p>Have a nice day!</p>`,
-        };
+      };
 
-        transporter.sendMail(mailOptions, (error, info) => {
-          if (error) {
-            console.log(error);
-          } else {
-            console.log("Email sent: " + info.response);
-          }
-        });
-    //   }
+      transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+          console.log(error);
+        } else {
+          console.log("Email sent: " + info.response);
+        }
+      });
+      //   }
       return res
         .status(200)
         .json({ message: "Appointment has been scheduled successfully" });

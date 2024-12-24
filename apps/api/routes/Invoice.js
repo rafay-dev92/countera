@@ -20,7 +20,7 @@ router.get("/", fetchUser, async (req, res) => {
     const user = await User.findOne({
       where: {
         id: userId,
-        role: { [Op.ne]: "super_admin" },
+        role: { [Op.ne]: "super-admin" },
         BusinessId: { [Op.ne]: null },
       },
     });

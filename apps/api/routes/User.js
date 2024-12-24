@@ -12,18 +12,18 @@ router.get('/', fetchUser, async (req, res) => {
     try {
         const userId = req.user.id;
         const loggedInUser = await User.findOne({
-            where: { id: userId, role: { [Op.ne]: 'super_admin' }, BusinessId: { [Op.ne]: null } },
+            where: { id: userId, role: { [Op.ne]: 'super-admin' }, BusinessId: { [Op.ne]: null } },
         })
 
         if (loggedInUser) {
             const user = await User.findAll({
                 where: { BusinessId: loggedInUser.dataValues.BusinessId },
-                include: ['Permission']
+                include: ['Permission', 'Business']
             });
             return res.json(user);
         }
         const user = await User.findAll({
-            include: ['Permission']
+            include: ['Permission', 'Business']
         });
         return res.json(user);
     } catch (error) {

@@ -4,6 +4,7 @@ const { Business, User } = require("../models");
 const fetchUser = require("../middlewares/fetchUser");
 require("dotenv").config();
 const multer = require("multer");
+const { Op } = require("sequelize");
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -41,19 +42,32 @@ router.get("/:id", fetchUser, async (req, res) => {
   }
 });
 
-router.post("/create", async (req, res) => {
+router.post("/create", upload.single("logo"), async (req, res) => {
   try {
-    const businessData = req.body;
+    const {name, email, licenseNumber, permitNumber} = req.body;
     const existingBusiness = await Business.findOne({
-      where: { name: businessData.name },
+      where: {
+        [Op.or]: [
+          { name },
+          { email },
+          { licenseNumber },
+          { permitNumber },
+        ],
+      },
     });
 
     if (existingBusiness) {
-      res
+      return res
         .status(409)
-        .json({ message: "Business with this name already exists" });
+        .json({ message: "Business already exists" });
     }
-    const newBusiness = await Business.create(businessData);
+    if (req.file) {
+      const imageUrl = `${req.protocol}://${req.get("host")}/uploads/business/${
+        req.file.filename
+      }`;
+      req.body.logo = imageUrl;
+    }
+    const newBusiness = await Business.create(req.body);
     res.json(newBusiness);
   } catch (error) {
     console.error(error);

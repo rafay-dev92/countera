@@ -9,7 +9,7 @@ router.get('/', fetchUser, async (req, res) => {
     try {
         const userId = req.user.id;
         const user = await User.findOne({
-            where: { id: userId, role: { [Op.ne]: 'super_admin' }, BusinessId: { [Op.ne]: null } },
+            where: { id: userId, role: { [Op.ne]: 'super-admin' }, BusinessId: { [Op.ne]: null } },
         })
 
         if (user) {

@@ -271,20 +271,6 @@ export function Customers() {
                     </Typography>
                   </th>
                 ))}
-                {state.userInfo.role === 'super_admin' && (
-                  <th
-                    key={'BUSINESS'}
-                    className="border-y border-blue-gray-100 bg-blue-gray-50/50 p-4"
-                  >
-                    <Typography
-                      variant="small"
-                      color="blue-gray"
-                      className="font-normal leading-none opacity-70"
-                    >
-                      BUSINESS
-                    </Typography>
-                  </th>
-                )}
               </tr>
             </thead>
             <tbody>
@@ -350,18 +336,7 @@ export function Customers() {
                           <TrashIcon className="h-6 w-6 text-red-600" />
                         </IconButton>
                       </Tooltip>
-                    </td>
-                    {state.userInfo.role === 'super_admin' && (
-                      <td className={classes}>
-                        <Typography
-                          variant="small"
-                          color="blue-gray"
-                          className="font-normal opacity-70"
-                        >
-                          {Business.name}
-                        </Typography>
-                      </td>
-                    )}
+                    </td>                    
                   </tr>
                 );
               },

@@ -8,22 +8,11 @@ import {
 import { useNavigate } from "react-router-dom";
 import { signIn } from "@/services/signIn";
 import { toast } from 'react-toastify';
+import { getUserDetails } from "@/services/getUserDetails";
 
 export function SignIn() {
-
-  const [showPassword, setShowPassword] = useState(false);
-
-  useEffect(() => {
-    try {
-      const token = JSON.parse(localStorage.getItem('Token'));
-      if (token) navigate('/dashboard');
-    } catch (error) {
-      console.log(error)
-    }
-
-  }, []);
-
   const navigate = useNavigate();
+  const [showPassword, setShowPassword] = useState(false);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -41,6 +30,40 @@ export function SignIn() {
     }
   };
 
+  useEffect(() => {
+    const checkUserRole = async () => {
+      setLoading(true);
+      try {
+        const token = JSON.parse(localStorage.getItem("Token"));
+        if (!token) {
+          setLoading(false);
+          return;
+        }
+
+        const user = await getUserInfo(token);
+        setLoading(false);
+        if (user?.role === "super-admin") {
+          navigate("/super-admin/dashboard");
+        } else {
+          navigate("/dashboard/home");
+        }
+      } catch (error) {
+        console.log("Error in useEffect:", error);
+      }
+    };
+
+    checkUserRole();
+  }, [navigate]);
+
+  const getUserInfo = async (token) => {
+    try {
+      const UserInfo = await (await getUserDetails(token)).json();
+      return UserInfo;
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
   async function handleSignIn() {
     setLoading(true);
     const data = {
@@ -51,13 +74,19 @@ export function SignIn() {
       const res = await signIn(data);
       const user = await res.json();
       if (res.ok) {
-        setEmail('');
-        setPassword('');
-        setShowPassword(false);
-        setLoading(false);
         localStorage.setItem('Token', JSON.stringify(user.token));
         localStorage.setItem('sessionExp', JSON.stringify(user.sessionExpire));
-        navigate('/dashboard/home')
+        try {
+          const UserInfo = await getUserInfo(user.token);
+          setEmail('');
+          setPassword('');
+          setShowPassword(false);
+          setLoading(false);
+          if (UserInfo?.role === 'super-admin') navigate('/super-admin/dashboard')
+          else navigate('/dashboard/home')
+        } catch (error) {
+          console.log(error)
+        }
       }
       else {
         setLoading(false);
@@ -68,7 +97,6 @@ export function SignIn() {
       setLoading(false);
       showToastMessage('error', "Something went wrong")
     }
-
   }
 
   if (loading) {

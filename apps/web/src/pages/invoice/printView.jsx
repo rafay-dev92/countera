@@ -1,9 +1,5 @@
-import React, { useState, useEffect, useRef } from "react";
-import {
-    Card,
-    Typography,
-    CardBody,
-} from "@material-tailwind/react";
+import React from "react";
+import {Typography} from "@material-tailwind/react";
 
 const INVOICE_TABLE_HEAD = ["Customer", "Status", "Payment Method", "Total"];
 const PRODUCT_TABLE_HEAD = ["Product", "Quantity", "Price", "Tax", "Amount"]
@@ -122,77 +118,6 @@ export default function printView({ printInvoice, componentRef, appliedTaxes, ca
                         </div>
                     </div>
                 </div>
-                {/* <Card className="h-full w-full ">
-                    <CardBody className="p-2 px-0">
-                        <table className=" w-full min-w-max table-auto text-left">
-                            <thead>
-                                <tr>
-                                    {INVOICE_TABLE_HEAD.map((head) => (
-                                        <th
-                                            key={head}
-                                            className="border-y border-blue-gray-100 bg-blue-gray-50/50 p-4"
-                                        >
-                                            <Typography
-                                                variant="small"
-                                                color="blue-gray"
-                                                className="font-normal leading-none opacity-70"
-                                            >
-                                                {head}
-                                            </Typography>
-                                        </th>
-                                    ))}
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {printInvoice.length !== 0 ?
-                                    <tr key={printInvoice.id}>
-                                        <td>
-                                            <Typography
-                                                variant="small"
-                                                color="blue-gray"
-                                                className="font-normal py-2 px-4"
-                                            >
-                                                {printInvoice.Customer.firstName} {printInvoice.Customer.lastName}
-                                            </Typography>
-                                        </td>
-
-                                        <td>
-                                            <Typography
-                                                variant="small"
-                                                color="blue-gray"
-                                                className="font-normal py-2 px-4"
-                                            >
-                                                {printInvoice.paymentStatus}
-                                            </Typography>
-                                        </td>
-
-                                        <td>
-                                            <Typography
-                                                variant="small"
-                                                color="blue-gray"
-                                                className="font-normal py-2 px-4"
-                                            >
-                                                {printInvoice.paymentMethod}
-                                            </Typography>
-                                        </td>
-
-                                        <td>
-                                            <Typography
-                                                variant="small"
-                                                color="blue-gray"
-                                                className="font-normal py-2 px-4"
-                                            >
-                                                {printInvoice.totalAmount}
-                                            </Typography>
-                                        </td>                                        
-                                    </tr>
-                                    :
-                                    null
-                                }
-                            </tbody>
-                        </table>
-                    </CardBody>
-                </Card> */}
 
                 <div className="w-full p-4">
                     <table className="w-full min-w-max table-auto text-left">

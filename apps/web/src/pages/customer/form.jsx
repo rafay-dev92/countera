@@ -43,11 +43,9 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
   const { state } = State();
   const [isLoading, setIsLoading] = useState(false);
   const [edit, setEdit] = useState(false);
-  const [businesses, setBusinesses] = useState([]);
-  const [business, setBusiness] = useState(null);
   const [currentVehicle, setCurrentVehicle] = useState(null);
 
-
+  // for customer form
   const [isOpen, setIsOpen] = useState(false);
 
   const openPopup = () => {
@@ -73,38 +71,16 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
     }
   };
 
-  useEffect(() => {
-    getBusinesses();
-  }, [])
-
-  const getBusinesses = async () => {
-    try {
-      const res = await fetchBusinesses(state.userToken);
-      const businesses = await res.json();
-      if (state.userInfo.role !== 'super_admin') {
-        const currentBusiness = businesses.filter(business => business.id === state.business.id)
-        setBusiness(currentBusiness[0].id)
-      }
-      else
-        setBusiness(businesses[0].id)
-      setBusinesses(businesses)
-    } catch (error) {
-      toast.error("Something went wrong")
-    }
-  }
-
   const handleClose = () => {
     clearForm(formikProps);
     setEdit(false);
     setSelectedItem(null);
-    setBusiness('');
     close();
   };
 
   useEffect(() => {
     if (selectedItem) {
       formikProps.setValues(selectedItem);
-      setBusiness(selectedItem.BusinessId);
       setEdit(true);
     }
   }, [selectedItem]);
@@ -126,12 +102,7 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
 
   const onSubmit = async (values) => {
     setIsLoading(true);
-    let updatedValues = {};
-    // setting business id
-    if (business !== '') 
-      updatedValues = { ...values, BusinessId: business };
-    else 
-      updatedValues = { ...values, BusinessId: state.business.id };
+    const updatedValues = { ...values, BusinessId: state.business.id };
 
     // setting taxable to false for business customer
     if (updatedValues.customerType === 'business') updatedValues.taxable = false;
@@ -470,26 +441,7 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
                     </div>
 
                     <div className="basis-[33.33%]">
-                      <label className="p-2 font-bold">Branch</label> <br />
-                      <select
-                        className="w-full p-2 border border-gray-300 bg-inherit rounded-md"
-                        label="Select Business"
-                        animate={{
-                          mount: { y: 0 },
-                          unmount: { y: 25 },
-                        }}
-                        value={business}
-                        onChange={(e) =>
-                          setBusiness(e.target.value)
-                        }
-                        size="md"
-                        disabled={state.userInfo.role !== 'super_admin'}
-                      >
-                        {businesses ?
-                          businesses.map((business) => (
-                            <option key={business.id} value={business.id}>{business.name}</option>
-                          )) : []}
-                      </select>
+                      
                     </div>
                   </div>
 

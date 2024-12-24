@@ -14,24 +14,24 @@ import { getUserDetails } from "@/services/getUserDetails";
 import { toast } from "react-toastify";
 
 export function Dashboard() {
-  const { state, dispatch } = State();
+  const { dispatch } = State();
   const navigate = useNavigate();
   const [controller] = useMaterialTailwindController();
   const { sidenavType } = controller;
-  const [Token, setToken] = useState('')
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-
     const setImpProp = async () => {
       const token = JSON.parse(localStorage.getItem('Token'));
       if (token) {
-        setToken(token)
         dispatch({ type: 'SET_TOKEN', payload: token });
         try {
           const UserInfo = await getUserDetails(token);
           if (UserInfo.status >= 200 && UserInfo.status <= 299) {
             const user = await UserInfo.json();
+            if (user?.role === "super-admin") {
+              navigate("/super-admin/dashboard");
+            }
             dispatch({ type: 'SET_USER', payload: user });
             localStorage.setItem('User', JSON.stringify(user));
             dispatch({ type: 'SET_BUSINESS', payload: user.Business });
@@ -41,7 +41,9 @@ export function Dashboard() {
             try {
               const user = JSON.parse(localStorage.getItem('User'));
               const business = JSON.parse(localStorage.getItem('Business'));
-
+              if (user?.role === "super-admin") {
+                navigate("/super-admin/dashboard");
+              }
               if (user !== null && business !== null) {
                 dispatch({ type: 'SET_USER', payload: user });
                 dispatch({ type: 'SET_BUSINESS', payload: user.Business });
@@ -82,6 +84,9 @@ export function Dashboard() {
     }, 1000);
   }, [])
 
+  if (loading) {
+    return <Spinner className="mx-auto mt-[40vh] h-10 w-10 text-gray-900/50" />
+  }
   return (
     <>
       <DashboardNavbar />
@@ -92,9 +97,7 @@ export function Dashboard() {
         {/* brandImg={
           sidenavType === "dark" ? "/img/logo-ct.png" : "/img/logo-ct-dark.png"
         } */}
-        {loading ?
-          <Spinner className="mx-auto mt-[40vh] h-10 w-10 text-gray-900/50" />
-          :
+        
           <div className="p-4 xl:ml-72 ">
             <Routes>
               {routes.map(
@@ -106,8 +109,6 @@ export function Dashboard() {
               )}
             </Routes>
           </div>
-
-        }
       </div>
       {/* <div className="bg-blue-gray-50/50"> */}
       {/* <Footer /> */}

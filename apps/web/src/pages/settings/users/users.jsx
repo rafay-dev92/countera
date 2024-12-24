@@ -54,14 +54,7 @@ function Users() {
     try {
       const res = await fetchPermissions(state.userToken);
       const permissions = await res.json();
-      
-      console.log(state.userInfo.role)
-      if (state.userInfo.role === 'super-admin') {
-        setPermissions(permissions)
-      }
-      else{
-        setPermissions(permissions.filter(permission => permission.name !== 'IS_ADMIN' && permission.name !== "IS_SUPER_ADMIN"))
-      }
+      setPermissions(permissions.filter(permission => permission.name !== 'IS_ADMIN' && permission.name !== "IS_SUPER_ADMIN"))
     } catch (error) {
       toast.error("Something went wrong")
     }

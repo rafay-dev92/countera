@@ -6,7 +6,6 @@ import { useFormik } from "formik";
 import * as Yup from "yup";
 import { State } from "@/state/Context";
 import { toast } from "react-toastify";
-import { fetchBusinesses } from "@/services/fetchBusinesses";
 
 const schema = Yup.object().shape({
     customerName: Yup.string().required("Name is required"),
@@ -24,12 +23,9 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, close, refresh, 
     const [currentDate, setCurrentDate] = useState(getCurrentDateTimeForInput());
     const [edit, setEdit] = useState(false);
     const [error, setError] = useState(false);
-    const [business, setBusiness] = useState(null);
-    const [businesses, setBusinesses] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
 
     const handleClose = () => {
-        setBusiness(null);
         clearForm(formikProps);
         setEdit(false);
         setSelectedItem(null);
@@ -50,23 +46,6 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, close, refresh, 
     };
 
     useEffect(() => {
-        if (state.business !== null) {
-            setValues({...values, ['BusinessId']: state.business.id})
-        }
-        getBusinesses();
-    }, [])
-
-    const getBusinesses = async () => {
-        try {
-            const res = await fetchBusinesses(state.userToken);
-            const businesses = await res.json();
-            setBusinesses(businesses)
-        } catch (error) {
-            toast.error("Something went wrong")
-        }
-    }
-
-    useEffect(() => {
         if (selectedItem) {
             setEdit(true);
             formikProps.setValues({
@@ -77,7 +56,6 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, close, refresh, 
                 BusinessId: selectedItem.BusinessId,
                 sendEmail: selectedItem.sendEmail,
             });
-            // setBusiness(selectedItem.BusinessId)
         }
     }, [selectedItem])
 
@@ -141,14 +119,7 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, close, refresh, 
         const currentTime = (parseInt(currentDate.split('T')[1].split(':')[0], 10) * 60) + parseInt(currentDate.split('T')[1].split(':')[1], 10);
 
         const inputEndDateTime = `${inputDate}T${values.endDateTime}`.trim();
-        let updatedValues = {};
-
-        if (state.userInfo.role === 'super_admin') {
-            updatedValues = { ...values, endDateTime: inputEndDateTime };
-        }
-        else {
-            updatedValues = { ...values, endDateTime: inputEndDateTime, BusinessId: state.business.id, BusinessEmail: state.business.email };
-        }
+        const updatedValues = { ...values, endDateTime: inputEndDateTime, BusinessId: state.business.id, BusinessEmail: state.business.email };
 
         if (inputStartTime >= inputEndTime) {
             showToastMessage('error', 'Start time must be before end time')
@@ -266,7 +237,6 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, close, refresh, 
         handleBlur,
         handleChange,
         handleSubmit,
-        setValues
     } = formikProps;
 
     return (
@@ -395,36 +365,7 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, close, refresh, 
                                                 {errors.description}
                                             </div>
                                         )}
-                                    </div>
-                                    {state.userInfo.role === 'super_admin' && (
-                                        <div>
-                                            <label className="p-2 font-bold">Select Business</label> <br />
-                                            <select
-                                                className="w-full p-3 border border-gray-300 bg-inherit rounded-md text-black font-medium"
-                                                label="Select Business"
-                                                animate={{
-                                                    mount: { y: 0 },
-                                                    unmount: { y: 25 },
-                                                }}
-                                                value={values.BusinessId}
-                                                onChange={(e) =>
-                                                    setValues({...values, ['BusinessId']: e.target.value})
-                                                }
-                                                size="md"
-                                            >
-                                                <option key={''} value={''}>Select Business</option>
-                                                {businesses ?
-                                                    businesses.map((business) => (
-                                                        <option key={business.id} value={business.id}>{business.name}, {business.location}</option>
-                                                    )) : []}
-                                            </select>
-                                            {(touched.BusinessId && errors.BusinessId) ? (
-                                                <div className="text-red-500">
-                                                    {errors.BusinessId}
-                                                </div>
-                                            ) : (<div></div>)}
-                                        </div>
-                                    )}
+                                    </div>                                    
                                 </div>
                                 <div className="flex items-center justify-end space-x-2 sticky bg-gradient-to-br from-gray-800 to-gray-700">
                                     <button

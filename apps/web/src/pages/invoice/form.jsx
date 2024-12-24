@@ -8,7 +8,6 @@ import {
   CardBody,
   Dialog,
   IconButton,
-  Spinner,
 } from "@material-tailwind/react";
 import {
   XCircleIcon
@@ -22,7 +21,6 @@ import PrintView from "./printView";
 import ReactToPrint from "react-to-print";
 import { toast } from "react-toastify";
 import { State } from "@/state/Context";
-import { fetchBusinesses } from "@/services/fetchBusinesses";
 import CustomerVehicleForm from "../customer/customerVehicleForm";
 import { fetchCustomer } from "@/services/fetchCustomer";
 import { PlusCircleIcon } from "@heroicons/react/24/outline";
@@ -65,8 +63,6 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
   const [invoiceId, setInvoiceId] = useState('');
   const [edit, setEdit] = useState(false);
   const [printInvoice, setPrintInvoice] = useState([]);
-  const [businesses, setBusinesses] = useState([]);
-  const [business, setBusiness] = useState(null);
   const [appliedTaxes, setAppliedTaxes] = useState([]);
   const [showCustomerSuggestions, setShowCustomerSuggestions] = useState(false);
   const [vehicleOdometer, setVehicleOdometer] = useState('');
@@ -109,7 +105,6 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
     setAppliedTaxes([]);
     clearForm(formikProps);
     setEdit(false)
-    setBusiness(null);
     setRefresh(!refresh);
     close();
   };
@@ -130,20 +125,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
     }
   }
 
-  // get businesses
-  const getBusinesses = async () => {
-    try {
-      const res = await fetchBusinesses(state.userToken);
-      const businesses = await res.json();
-      setBusiness(businesses[0].id)
-      setBusinesses(businesses)
-    } catch (error) {
-      toast.error("Something went wrong")
-    }
-  }
-
   useEffect(() => {
-    getBusinesses();
     getProducts();
     getCustomers();
     getTaxes();
@@ -159,7 +141,6 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
       // setProducts(selectedInvoice.Product)
       setValues({ ...values, ['customer']: selectedInvoice.CustomerId, ['vehicle']: selectedInvoice.CustomerVehicleId, ['paymentMethod']: selectedInvoice.paymentMethod })
       setEdit(true)
-      setBusiness(selectedInvoice.BusinessId);
 
       let selectedProd = [...selectedProducts]
       const productTaxes = [];
@@ -213,14 +194,8 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
       },
       "products": selectedProductIds,
     };
-
-    let updatedData = {};
-    if (state.userInfo.role === 'super_admin') {
-      updatedData = { ...data, invoiceData: { ...data.invoiceData, BusinessId: business } };
-    }
-    else {
-      updatedData = { ...data, invoiceData: { ...data.invoiceData, BusinessId: state.business.id } };
-    }
+        
+    const updatedData = { ...data, invoiceData: { ...data.invoiceData, BusinessId: state.business.id } };
 
     try {
       if (edit) {
@@ -821,31 +796,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
                               <div className="text-red-500">
                                 {errors.paymentMethod}
                               </div>
-                            ) : (<div></div>)}
-
-                            {state.userInfo.role === 'super_admin' && (
-                              <div>
-                                <label className="p-2 font-bold">Select Business</label> <br />
-                                <select
-                                  className="w-48 p-2 border border-gray-300 bg-inherit rounded-md"
-                                  label="Select Business"
-                                  animate={{
-                                    mount: { y: 0 },
-                                    unmount: { y: 25 },
-                                  }}
-                                  value={business}
-                                  onChange={(e) =>
-                                    setBusiness(e.target.value)
-                                  }
-                                  size="md"
-                                >
-                                  {businesses ?
-                                    businesses.map((business) => (
-                                      <option key={business.id} value={business.id}>{business.name}, {business.location}</option>
-                                    )) : []}
-                                </select>
-                              </div>
-                            )}
+                            ) : (<div></div>)}                            
                           </div>
                         </div>
                       </div>

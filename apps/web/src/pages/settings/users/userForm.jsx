@@ -238,15 +238,9 @@ function UserForm({ permissions, userData, setUserData, open, handleOpen, refres
                                 required
                             >
                                 <option key={''} value={''} disabled selected>Select Role</option>
-                                {state.userInfo.role === 'super-admin' ?
-                                    userRoles.map((role) => (
-                                        <option key={role.value} value={role.value}>{role.label}</option>
-                                    ))
-                                    :
-                                    userRoles.filter((role) => role.label !== 'Admin').map(filteredRole => (
-                                        <option key={filteredRole.value} value={filteredRole.value}>{filteredRole.label}</option>
-                                    ))
-                                }
+                                {userRoles.filter((role) => role.label !== 'Admin').map(filteredRole => (
+                                    <option key={filteredRole.value} value={filteredRole.value}>{filteredRole.label}</option>
+                                ))}
                             </select>
 
                             <Input

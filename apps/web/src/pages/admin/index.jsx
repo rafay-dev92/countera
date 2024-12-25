@@ -11,9 +11,11 @@ import {
   HomeIcon,
   BriefcaseIcon,
   UserGroupIcon,
+  ShieldCheckIcon,
 } from "@heroicons/react/24/solid";
 import Businesses from "./components/businesses";
 import Users from "./components/users";
+import Permissions from "./components/permissions";
 
 function AdminPanel() {
   const { dispatch } = State();
@@ -46,7 +48,14 @@ function AdminPanel() {
           path: "/users",
           element: <Users />,
         },
+        {
+          icon: <ShieldCheckIcon {...icon} />,
+          name: "Permissions",
+          path: "/permissions",
+          element: <Permissions />,
+        },
       ],
+      
     },
   ];
 

@@ -7,19 +7,18 @@ import { toast } from "react-toastify";
 import { State } from "@/state/Context";
 import { fetchBusinesses } from "@/services/fetchBusinesses";
 import { PlusCircleIcon } from "@heroicons/react/24/outline";
-import { fetchCustomer } from "@/services/fetchCustomer";
-import { TrashIcon } from "@heroicons/react/24/solid";
 import { addUser } from "@/services/addUser";
 import { updateUser } from "@/services/updateUser";
 import { fetchPermissions } from "@/services/fetchPermissions";
+import PermissionForm from "../permissions/form";
 
 const schema = Yup.object().shape({
     first_name: Yup.string().required("First name is required"),
     last_name: Yup.string().required("Last name is required"),
     email: Yup.string().email("Please add a valid email address").required("Email address is required"),
-    password: Yup.string().required("Password is required"),
+    password: Yup.string(),
     role: Yup.string().required("Role is required"),
-    dob: Yup.string().required("Date of birth is required"),
+    dob: Yup.string().notRequired(),
 });
 
 const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setRefresh }) => {
@@ -32,7 +31,7 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
     const [permissions, setPermissions] = useState([]);
     const [selectPerms, setSelectPerms] = useState([]);
 
-    // for customer form
+    // for permission form
     const [isOpen, setIsOpen] = useState(false);
 
     const openPopup = () => {
@@ -59,13 +58,15 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
         clearForm(formikProps);
         setEdit(false);
         setSelectedItem(null);
+        setSelectPerms([]);
+        setBusiness(businesses[0].id)
         close();
     };
 
     useEffect(() => {
         getPermissions();
         getBusinesses();
-    }, [])
+    }, [refresh]);
 
     const getPermissions = async () => {
         try {
@@ -98,10 +99,12 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
         }
     }, [selectedItem]);
 
-    const onSubmit = async (values) => {
+    const onSubmit = async (values) => {       
         setIsLoading(true);
         const updatedValues = { ...values, BusinessId: business };
-
+        if (values.dob === "") {
+            delete updatedValues.dob;
+        }
         const userData = {
             user: updatedValues,
             permissions: selectPerms,
@@ -121,15 +124,15 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
             else {
 
                 const res = await updateUser(selectedItem.id, userData, state.userToken);
-                const customer = await res.json();
+                const permission = await res.json();
                 if (res.status === 200) {
-                    showToastMessage('success', customer.message)
+                    showToastMessage('success', permission.message)
                 }
                 else if (res.status === 404) {
-                    showToastMessage('info', customer.message)
+                    showToastMessage('info', permission.message)
                 }
                 else if (res.status === 409) {
-                    showToastMessage('error', customer.message)
+                    showToastMessage('error', permission.message)
                 }
             }
 
@@ -188,7 +191,6 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
         onSubmit,
     });
 
-
     const {
         values,
         errors,
@@ -196,7 +198,6 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
         handleBlur,
         handleChange,
         handleSubmit,
-        setValues,
     } = formikProps;
 
     const userRoles = [
@@ -385,7 +386,10 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
                                     </div>
 
                                     <div className="w-full mt-2">
-                                        <label className=" font-bold my-4">Permissions</label> <br />
+                                        <div className="flex items-center gap-1 my-4">
+                                            <label className=" font-bold">Permissions</label>
+                                            <PlusCircleIcon className="w-6 h-6 text-blue-600 cursor-pointer" onClick={openPopup} />
+                                        </div>
                                         <div className="max-h-24 py-4 overflow-y-auto">
                                             {permissions &&
                                                 permissions.map((permission) => (
@@ -430,6 +434,7 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
                     </form>
                 )}
             </Dialog>
+            <PermissionForm refresh={refresh} setRefresh={setRefresh} open={isOpen} close={closePopup} selectedItem={null} setSelectedItem={null} />
         </>
     );
 };

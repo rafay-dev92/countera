@@ -3,17 +3,17 @@ import { useEffect, useState } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { Dialog } from "@material-tailwind/react";
-import { updateProduct } from "@/services/updateProduct";
 import { toast } from 'react-toastify';
 import { State } from "@/state/Context";
 import dummyImage from "../../../../assets/dummyImage.png";
 import { addBusiness } from "@/services/addBusiness";
+import { updateBusiness } from "@/services/updateBusiness";
 
 const schema = Yup.object().shape({
     name: Yup.string().required("Name is required"),
     email: Yup.string().required("Email is required"),
     defaultMargin: Yup.string().required("Margin is required"),
-    tel: Yup.string().required("Te; is required"),
+    tel: Yup.string().required("Tel is required"),
     fax: Yup.string(),
     licenseNumber: Yup.string().required("License No. is required"),
     permitNumber: Yup.string().required("Permit No. is required"),
@@ -64,7 +64,6 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
     useEffect(() => {
         if (selectedItem) {
             // separating image from business data
-            console.log(selectedItem)
             const { logo, ...restItemData } = selectedItem;
             if (logo !== 'null') setBusinessPreviewPic(logo);
             formikProps.setValues(selectedItem);
@@ -100,7 +99,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
                 }
             }
             else {
-                const res = await updateProduct(selectedItem.id, businessData, state.userToken);
+                const res = await updateBusiness(selectedItem.id, businessData, state.userToken);
                 const business = await res.json();
                 if (res.status === 200) {
                     showToastMessage('success', business.message)

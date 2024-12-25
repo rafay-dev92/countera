@@ -3,10 +3,13 @@ const router = express.Router();
 const { Permission } = require('../models');
 const fetchUser = require('../middlewares/fetchUser');
 require('dotenv').config();
+const { Op } = require("sequelize");
 
 router.get('/', fetchUser, async (req, res) => {
     try {
-        const permission = await Permission.findAll();
+        const permission = await Permission.findAll({
+            where: {name: { [Op.ne]: 'IS_SUPER_ADMIN' }},
+        });
         res.json(permission);
     } catch (error) {
         res.status(500).json({ message: error.message });

@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { User, Permission } = require("../models");
+const { User, Permission, Business } = require("../models");
 const { body, validationResult } = require("express-validator");
 const bcryptjs = require("bcryptjs");
 const jwt = require("jsonwebtoken");
@@ -28,6 +28,7 @@ router.get("/", fetchUser, async (req, res) => {
     }
     const user = await User.findAll({
       include: ["Permission", "Business"],
+      order: [[Business, 'name', 'ASC'], ['createdAt', 'ASC']],
     });
     return res.json(user);
   } catch (error) {
@@ -74,7 +75,12 @@ router.post(
       const userData = req.body.user;
 
       const existingUser = await User.findOne({
-        where: { email: userData.email },
+        where: {
+          [Op.or]: [
+            { email: userData.email },
+            { role: "super-admin" }
+          ]
+        },
       });
 
       if (existingUser) {

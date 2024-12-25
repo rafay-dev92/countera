@@ -1,6 +1,6 @@
 
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
-import { BriefcaseIcon, TrashIcon } from "@heroicons/react/24/solid";
+import { TrashIcon, UserGroupIcon } from "@heroicons/react/24/solid";
 import {
     Card,
     CardHeader,
@@ -11,7 +11,6 @@ import {
     CardFooter,
     IconButton,
     Tooltip,
-    Checkbox,
     Spinner,
 } from "@material-tailwind/react";
 import { useState, useEffect } from "react";
@@ -169,7 +168,7 @@ export default function Users() {
                 <CardHeader floated={false} shadow={false} className="rounded-none">
                     <div className="mb-4 sm:mb-0 flex items-center">
                         <Typography variant="h5" color="blue-gray" className="flex items-center">
-                            <BriefcaseIcon className="h-12 w-12 text-blueGray-500 ml-2" />
+                            <UserGroupIcon className="h-12 w-12 text-blueGray-500 ml-2" />
                             Users
                         </Typography>
                     </div>

@@ -13,7 +13,6 @@ const schema = Yup.object().shape({
     description: Yup.string(),
     startDateTime: Yup.date().required("Start date is required"),
     endDateTime: Yup.string().required("End Time is required"),
-    BusinessId: Yup.string().required("Business in required"),
     sendEmail: Yup.boolean()
 });
 
@@ -50,10 +49,10 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, close, refresh, 
             setEdit(true);
             formikProps.setValues({
                 customerName: selectedItem.customerName,
+                customerEmail: selectedItem.customerEmail,
                 description: selectedItem.description,
                 startDateTime: correctDateFormat(selectedItem.startDateTime),
                 endDateTime: correctTimeFormat(selectedItem.endDateTime),
-                BusinessId: selectedItem.BusinessId,
                 sendEmail: selectedItem.sendEmail,
             });
         }
@@ -201,7 +200,7 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, close, refresh, 
                 startDateTime: '',
                 endDateTime: '',
                 BusinessId: '',
-                sendEmail: false,
+                sendEmail: true,
             },
             errors: {
                 customerName: '',
@@ -210,7 +209,7 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, close, refresh, 
                 startDateTime: '',
                 endDateTime: '',
                 BusinessId: '',
-                sendEmail: false,
+                sendEmail: true,
             },
         });
     };
@@ -223,12 +222,11 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, close, refresh, 
             startDateTime: '',
             endDateTime: '',
             BusinessId: '',
-            sendEmail: false,
+            sendEmail: true,
         },
         validationSchema: schema,
         onSubmit,
     });
-
 
     const {
         values,
@@ -241,10 +239,10 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, close, refresh, 
 
     return (
         <>
-            <Dialog size="sm" open={open}>
+            <Dialog open={open} >
                 {open && (
-                    <form autoComplete="new" >
-                        <div className="fixed top-0 left-0 w-full h-full flex items-center justify-center">
+                    <form onSubmit={handleSubmit} autoComplete="new" >
+                        <div className="flex justify-center w-full">
                             <div className="bg-white rounded shadow-xl">
                                 <div className="flex items-center justify-between sticky bg-gradient-to-br from-gray-800 to-gray-700">
                                     <div></div>
@@ -252,7 +250,7 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, close, refresh, 
                                         {edit ? "EDIT APPOINTMENT" : "NEW APPOINTMENT"}
                                     </div>
                                     <button
-                                        className=" bg-transparent hover:bg-gray-800 text-white font-bold py-2 px-4 rounded"
+                                        className="bg-transparent hover:bg-gray-800 text-white font-bold py-2 px-4 rounded"
                                         onClick={handleClose}
                                         type="button"
                                     >
@@ -273,9 +271,9 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, close, refresh, 
                                     </button>
                                 </div>
 
-                                <div className="p-6">
+                                <div className="w-[40vw] p-6 space-y-4">
                                     <div className="flex items-center justify-start space-x-4">
-                                        <div>
+                                        <div className="basis-[50%]">
                                             <label className="font-bold">Customer Name</label> <br />
                                             <input
                                                 className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
@@ -292,7 +290,7 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, close, refresh, 
                                                 </div>
                                             )}
                                         </div>
-                                        <div>
+                                        <div className="basis-[50%]">
                                             <label className="font-bold">Customer Email</label> <br />
                                             <input
                                                 className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
@@ -311,8 +309,8 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, close, refresh, 
                                         </div>
                                     </div>
 
-                                    <div className="flex items-center justify-start space-x-4">
-                                        <div>
+                                    <div className="flex items-center justify-start space-x-4 w-full">
+                                        <div className="basis-[50%]">
                                             <label className="font-bold">Start Date & Time</label> <br />
                                             <input
                                                 className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
@@ -330,7 +328,7 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, close, refresh, 
                                                 </div>
                                             ) : (<div></div>)}
                                         </div>
-                                        <div>
+                                        <div className="basis-[50%]">
                                             <label className="font-bold">End Time</label> <br />
                                             <input
                                                 className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
@@ -377,7 +375,6 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, close, refresh, 
                                     </button>
                                     <button
                                         disabled={isLoading}
-                                        onClick={() => onSubmit(values)}
                                         className="w-32 bg-gray-600 hover:bg-gray-900 text-white font-bold py-2 px-4"
                                         type="submit"
                                     >

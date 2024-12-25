@@ -108,21 +108,46 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
         handleBlur,
         handleChange,
         handleSubmit,
-        setValues,
     } = formikProps;
 
-    return (
+    return (        
         <Dialog open={open}>
-            <form onSubmit={handleSubmit} autoComplete="new" >
-                <div className="fixed top-0 left-0 w-full h-full flex items-center justify-center">
-                    <div className="bg-white rounded shadow-xl">
-                        <DialogHeader>{!edit ? "ADD VEHICLE" : "EDIT VEHICLE"}</DialogHeader>
-                        {/* <DialogBody> */}
+            {open && (
+                <form onSubmit={handleSubmit} autoComplete="new" >
+                    <div className="fixed top-0 left-0 w-full h-full flex items-center justify-center">
+                        <div className="bg-white rounded shadow-xl">
+                            <div className="flex items-center justify-between sticky bg-gradient-to-br from-gray-800 to-gray-700">
+                                <div></div>
+                                <div className="text-white text-center text-lg">
+                                    {edit ? "EDIT VEHICLE" : "NEW VEHICLE"}
+                                </div>
+                                <button
+                                    className="bg-transparent hover:bg-gray-800 text-white font-bold py-2 px-4 rounded"
+                                    onClick={handleClose}
+                                    type="button"
+                                >
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        strokeWidth="1.5"
+                                        stroke="currentColor"
+                                        className="w-6 h-6"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            d="M6 18L18 6M6 6l12 12"
+                                        />
+                                    </svg>
+                                </button>
+                            </div>
+
                             <div className="p-6">
                                 <div className="flex items-center justify-start space-x-4">
                                     <div className="relative">
-                                        <Input
-                                            label="Make"
+                                        <label className="font-bold">Make</label> <br />
+                                        <input
                                             className="w-full p-2 border border-gray-300 rounded-md text-black font-small"
                                             id="make"
                                             name="make"
@@ -130,19 +155,19 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
                                             value={values.make}
                                             onChange={handleChange}
                                             onBlur={handleBlur}
-                                            autoComplete="off"
-                                            disabled={values.year !== '' ? false : true}
                                         />
-
                                         {(touched.make && errors.make) ? (
                                             <div className="text-red-500">
                                                 {errors.make}
                                             </div>
                                         ) : (<div></div>)}
                                     </div>
-                                    <div className="relative">
-                                        <Input
-                                            label="Model"
+                                </div>
+
+                                <div className="flex items-center justify-start space-x-4">
+                                    <div className="relative" >
+                                        <label className="font-bold">Model</label> <br />
+                                        <input
                                             className="w-full p-2 border border-gray-300 rounded-md text-black font-small"
                                             id="model"
                                             name="model"
@@ -150,8 +175,6 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
                                             value={values.model}
                                             onChange={handleChange}
                                             onBlur={handleBlur}
-                                            autoComplete="off"
-                                            disabled={values.make !== '' ? false : true}
                                         />
                                         {touched.model && errors.model ? (
                                             <div className="text-red-500">
@@ -161,24 +184,25 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
                                     </div>
                                 </div>
                             </div>
-                        {/* </DialogBody> */}
-            <DialogFooter>
-                <Button
-                    variant="text"
-                    color="red"
-                    onClick={() => handleClose()}
-                    className="mr-1"
-                >
-                    <span>Cancel</span>
-                </Button>
-                <Button type="submit" variant="gradient" color="green" >
-                    <span>{edit ? 'Update' : 'Add'}</span>
-                </Button>
-            </DialogFooter>
-                        
+                            <div className="flex items-center justify-end space-x-2 sticky bg-gradient-to-br from-gray-800 to-gray-700">
+                                <button
+                                    className=" w-32 bg-gray-600 hover:bg-gray-900 text-white font-bold py-2 px-4"
+                                    onClick={() => clearForm(formikProps)}
+                                    type="button"
+                                >
+                                    Clear
+                                </button>
+                                <button
+                                    className="w-32 bg-gray-600 hover:bg-gray-900 text-white font-bold py-2 px-4"
+                                    type="submit"
+                                >
+                                    {edit ? "Update" : "Save"}
+                                </button>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </form>
+                </form>
+            )}
         </Dialog>
     );
 };

@@ -151,7 +151,7 @@ const PermissionForm = ({ open, close, selectedItem, setSelectedItem, refresh, s
                                     </button>
                                 </div>
 
-                                <div className="w-[50vw] p-6">
+                                <div className="w-[30vw] p-6">
                                     <div className="flex items-center justify-start space-x-4">
                                         <div className="basis-[50%]">
                                             <label className="font-bold">Name</label> <br />

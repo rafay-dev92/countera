@@ -131,20 +131,7 @@ export default function Vehicles() {
     };
 
     // Function to handle deletion of selected items
-    const handleDelete = async (id) => {
-        // Calculate the indexes of the selected rows within the full data set
-        // const selectedIndexes = selectedRows.map((index) => {
-        //   const startIndex = (currentPage - 1) * itemsPerPage;
-        //   return startIndex + index;
-        // });
-
-        // Create a new array containing the rows that are not selected
-        // const updatedItems = finalItems.filter((_, index) => !selectedIndexes.includes(index));
-
-        // Update finalItems and clear selectedRows
-        // setFinalItems(updatedItems);
-        // setSelectedRows([]);
-        // setSelectAll(false);
+    const handleDelete = async (id) => {       
         if (state.userInfo.Permission.some(obj => obj.name === "CAN_DELETE_VEHICLE" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
             try {
                 const res = await delVehicle(id, state.userToken);

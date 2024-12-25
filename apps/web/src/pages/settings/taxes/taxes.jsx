@@ -1,21 +1,40 @@
 import React, { useEffect, useState } from "react";
-import { XCircleIcon, PencilIcon, CheckIcon, PlusCircleIcon } from "@heroicons/react/24/outline";
-import { Card } from "@material-tailwind/react";
+import { MagnifyingGlassIcon, PlusCircleIcon } from "@heroicons/react/24/outline";
+import { TrashIcon } from "@heroicons/react/24/solid";
+import { Card, CardHeader, CardBody, CardFooter, Typography, Input, Button, Tooltip, IconButton, Spinner } from "@material-tailwind/react";
 import TaxForm from "./taxForm";
 import { fetchTaxes } from "@/services/fetchTaxes";
 import { delTax } from "@/services/delTax";
 import { State } from "@/state/Context";
 import { toast } from "react-toastify";
+import { Link } from "react-router-dom";
+
+const TABLE_HEAD = ["Name", "Rate", "Type", "Actions"];
 
 function Taxes() {
 
   const { state } = State();
-  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [taxes, setTaxes] = useState([]);
-  const [data, setData] = useState('');
   const [refresh, setRefresh] = useState(false);
 
-  const handleOpen = () => setOpen(!open);
+  // for edit of a vehicle 
+  const [selectedItem, setSelectedItem] = useState(null);
+
+  // for filtering
+  const [selectedRows, setSelectedRows] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(5);
+
+  // Popup state
+  const [isOpen, setIsOpen] = useState(false);
+  const openPopup = () => {
+      setIsOpen(true);
+  };
+  const closePopup = () => {
+      setIsOpen(false);
+  };
 
   useEffect(() => {
     getTaxes();
@@ -25,71 +44,210 @@ function Taxes() {
     try {
       const taxes = await fetchTaxes(state.userToken);
       setTaxes(await taxes.json());
+      setLoading(false);
     } catch (error) {
       console.log(error);
       toast.error("Something went wrong")
     }
   }
-
-  async function handleDel(id) {
-    try {
-      const res = await delTax(id, state.userToken);
-      const tax = await res.json();
-      setRefresh(!refresh)
-
-    } catch (error) {
-      console.log(error);
+  // Function to handle deletion of selected items
+  const handleDelete = async (id) => {       
+    if (state.userInfo.Permission.some(obj => obj.name === "CAN_DELETE" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
+        try {
+            const res = await delTax(id, state.userToken);
+            const tax = await res.json();
+            if (res.status === 200) {
+                toast.success(tax.message)
+            }
+            else if (res.status === 404) {
+                toast.info(tax.message)
+            }
+            else if (res.status === 500) {
+                toast.error("You must delete its foreign key relations first");
+            }
+            setRefresh(!refresh);
+        } catch (error) {
+            console.log(error)
+            showToastMessage('error', "You must delete its foreign key relations first");
+        }
     }
-  }
+    else {
+        toast.error("You are not allowed to delete a tax");
+    }
+  };
 
-  const handleEdit = (data) => {
-    setData(data)
-    handleOpen()
-  }
+  // Modify handleRowSelect to update the selected item's data
+  const handleEditTax = (index) => {
+    // Assuming currentItems holds the filtered rows for display
+    if (state.userInfo.Permission.some(obj => obj.name === "CAN_UPDATE" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
+        const selected = currentItems[index];
+        setSelectedItem(selected);
+        openPopup();
+    }
+    else {
+        toast.error("You are not allowed to update a tax");
+    }
+  };
 
+  const filteredRows = taxes.filter(
+    ({ name, type }) =>
+      name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      type.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredRows.slice(indexOfFirstItem, indexOfLastItem);
+
+  // Function to handle items per page change
+  const handleItemsPerPageChange = (event) => {
+    const selectedItemsPerPage = parseInt(event.target.value, 10);
+    setItemsPerPage(selectedItemsPerPage);
+    setCurrentPage(1);
+  };
+
+  if (loading) {
+    return <Spinner className="mx-auto mt-[30vh] h-10 w-10 text-gray-900/50" />
+  }
   return (
-    <div className="flex flex-col w-full bg-transparent rounded-md p-4">
-      <TaxForm taxData={data} setTaxData={setData} open={open} handleOpen={handleOpen} refresh={refresh} setRefresh={setRefresh} />
-      <div className="flex items-center mb-2">
-        <h2 className="text-lg font-semibold">Tax Rates</h2>
-        <PlusCircleIcon onClick={handleOpen} className="ml-4 mr-1 h-7 w-7 text-blue-600 cursor-pointer" />
-        <span className="text-base">Add new tax rate</span>
-      </div>
-      <Card className="w-full h-full">
-        <table className="border-collapse w-full">
-          <thead>
-            <tr className="border-b border-gray-200">
-              <th className="text-left p-4 w-1/2">NAME</th>
-              <th className="text-center p-4 w-1/5">RATE</th>
-              {/* <th className="text-center px-4 py-2 w-1/5">DEFAULT</th> */}
-              {state.userInfo.role === 'super_admin' && (
-                <th
-                  className="text-center px-4 py-2 w-1/5"
-                >
-                  BUSINESS
-                </th>
-              )}
-              <th className="text-center p-4 w-1/5">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {taxes.map((tax) => (
-              <tr key={tax.id} className="border-b border-gray-200">
-                <td className="text-left p-4"><PencilIcon onClick={() => handleEdit(tax)} className="inline-block mr-2 h-5 w-5 text-blue-700 cursor-pointer" />{tax.name}</td>
-                <td className="text-center p-4">{tax.rate}{tax.type}</td>
-                {/* <td className="text-center px-4 py-2">{tax.default ? <div className="flex items-center justify-center"> <CheckIcon className="inline-block mr-2 h-6 w-6 text-green-600" /></div> : ""}</td> */}
-                {state.userInfo.role === 'super_admin' && (
-                  <td>
-                    {tax.Business.name}
-                  </td>
-                )}
-                <td className="text-center p-4 cursor-pointer"><XCircleIcon onClick={() => handleDel(tax.id)} className="h-6 w-6 text-gray-600 mx-auto hover:text-red-500" /></td>
+    <>
+    <Card className="h-full w-full ">
+        <CardHeader floated={false} shadow={false} className="rounded-none">
+          <div className="flex flex-col md:flex-row items-center w-full h-max py-3">
+            <div className="w-full md:w-2/5 flex items-center justify-center md:justify-start gap-2">
+              <Typography variant="h5" color="blue-gray" className="flex items-center">
+                Taxes
+              </Typography>
+              <PlusCircleIcon onClick={openPopup} className="ml-4 mr-1 h-7 w-7 text-blue-600 cursor-pointer" />
+              <span className="text-base">Add new Tax</span>
+            </div>
+            <div className="flex items-center mt-4 md:mt-0 md:ml-auto">
+              <div className="w-full md:flex-1 md:mr-4">
+                <Input
+                  label="Search"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  icon={<MagnifyingGlassIcon className="h-5 w-5" />}
+                />
+              </div>
+              <Typography variant="small" color="blue-gray" className="mr-2">
+                Items per page:
+              </Typography>
+              <select
+                value={itemsPerPage}
+                onChange={handleItemsPerPageChange}
+                className="px-2 py-1 border border-blue-gray-300 rounded bg-white text-blue-gray-700"
+              >
+                <option value={5}>5</option>
+                <option value={10}>10</option>
+                <option value={15}>15</option>
+              </select>
+            </div>
+          </div>
+        </CardHeader>
+
+        <CardBody className="p-2 overflow-auto px-0">
+          <table className=" w-full min-w-max table-auto text-left">
+            <thead>
+              <tr>
+                {TABLE_HEAD.map((head) => (
+                  <th
+                    key={head}
+                    className="border-y border-blue-gray-100 bg-blue-gray-50/50 p-4"
+                  >
+                    <Typography
+                      variant="small"
+                      color="blue-gray"
+                      className="font-normal leading-none opacity-70"
+                    >
+                      {head}
+                    </Typography>
+                  </th>
+                ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {currentItems.map(({ name, rate, type, id }, index) => {
+                const isLast = index === currentItems.length - 1;
+                const classes = isLast
+                  ? "p-2"
+                  : "p-2 border-b border-blue-gray-50";
+                const isChecked = selectedRows.includes(index);
+                return (
+                  <tr key={id}>
+                    <td className={classes}>
+                      <Link
+                        to="#"
+                        className="text-blue-gray font-normal hover:underline"
+                        onClick={() => {
+                          handleEditTax(index);
+                        }}
+                      >
+                        {name}
+                      </Link>
+                    </td>
+                    <td className={classes}>
+                      <Typography
+                        variant="small"
+                        color="blue-gray"
+                        className="font-normal"
+                      >
+                        {rate}
+                      </Typography>
+                    </td>
+                    <td className={classes}>
+                      <Typography
+                        variant="small"
+                        color="blue-gray"
+                        className="font-normal"
+                      >
+                        {type}
+                      </Typography>
+                    </td>
+                    <td className={classes}>
+                      <Tooltip content="Delete Vehicle">
+                        <IconButton variant="text" onClick={() => handleDelete(id)}>
+                          <TrashIcon className="h-6 w-6 text-red-600" />
+                        </IconButton>
+                      </Tooltip>
+                    </td>
+                  </tr>
+                );
+              },
+              )}
+            </tbody>
+          </table>
+        </CardBody>
+        <CardFooter className="flex items-center justify-between border-t border-blue-gray-50 p-4">
+          <Typography variant="small" color="blue-gray" className="font-normal">
+            Showing {indexOfFirstItem + 1} - {Math.min(indexOfLastItem, filteredRows.length)} of {filteredRows.length}
+          </Typography>
+          <Typography variant="small" color="blue-gray" className="font-normal">
+            Page {currentPage} of {Math.ceil(filteredRows.length / itemsPerPage)}
+          </Typography>
+          <div className="flex gap-2">
+            <Button
+              variant="outlined"
+              size="sm"
+              disabled={currentPage === 1}
+              onClick={() => paginate(currentPage - 1)}
+            >
+              Previous
+            </Button>
+            <Button
+              variant="outlined"
+              size="sm"
+              disabled={indexOfLastItem >= filteredRows.length}
+              onClick={() => paginate(currentPage + 1)}
+            >
+              Next
+            </Button>
+          </div>
+        </CardFooter>
+        
       </Card>
-    </div>
+      <TaxForm taxData={selectedItem} setTaxData={setSelectedItem} open={isOpen} close={closePopup} refresh={refresh} setRefresh={setRefresh} />
+    </>    
   );
 }
 

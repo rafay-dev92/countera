@@ -78,7 +78,7 @@ router.post(
         where: {
           [Op.or]: [
             { email: userData.email },
-            { role: "super-admin" }
+            { email: userData.email, role: "super-admin" }
           ]
         },
       });

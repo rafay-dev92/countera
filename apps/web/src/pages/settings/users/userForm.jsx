@@ -5,8 +5,6 @@ import * as Yup from "yup";
 import { Dialog } from "@material-tailwind/react";
 import { toast } from "react-toastify";
 import { State } from "@/state/Context";
-import { fetchBusinesses } from "@/services/fetchBusinesses";
-import { PlusCircleIcon } from "@heroicons/react/24/outline";
 import { addUser } from "@/services/addUser";
 import { updateUser } from "@/services/updateUser";
 import { fetchPermissions } from "@/services/fetchPermissions";
@@ -65,6 +63,7 @@ const UserForm = ({ open, close, selectedItem, setSelectedItem, refresh, setRefr
         if (selectedItem) {
             const {password, Permission, BusinessId, ...rest} = selectedItem;
             formikProps.setValues(rest);
+            setFieldValue('password', undefined);
             setSelectPerms(Permission.map((perm) => (perm.id)));
             setEdit(true);
         }
@@ -87,6 +86,9 @@ const UserForm = ({ open, close, selectedItem, setSelectedItem, refresh, setRefr
                 const user = await res.json();
                 if (res.status === 200) {
                     showToastMessage('success', user.message)
+                }
+                else if (res.status === 400) {
+                    showToastMessage('info', user.message)
                 }
                 else if (res.status === 409) {
                     showToastMessage('error', user.message)
@@ -169,6 +171,7 @@ const UserForm = ({ open, close, selectedItem, setSelectedItem, refresh, setRefr
         handleBlur,
         handleChange,
         handleSubmit,
+        setFieldValue,
     } = formikProps;
 
     const userRoles = [
@@ -265,7 +268,7 @@ const UserForm = ({ open, close, selectedItem, setSelectedItem, refresh, setRefr
                                                 size="md"
                                                 required
                                             >
-                                                <option key={''} value={''} disabled selected>Select Role</option>
+                                                <option key={''} value={''} selected >Select Role</option>
                                                 {userRoles.map((role) => (
                                                     <option key={role.value} value={role.value}>{role.label}</option>
                                                 ))}

@@ -65,11 +65,8 @@ router.post(
     //Checking whether request is normal
     const errors = validationResult(req);
 
-    if (!errors.isEmpty()) {
-      return res
-        .status(400)
-        .json({ message: "User not created. Enter a valid email address" });
-    }
+    if (!errors.isEmpty())
+      return res.status(400).json({ message: `User not created. ${errors.errors[0]?.msg}` });
 
     try {
       const userData = req.body.user;

@@ -2,22 +2,19 @@ import React, { useState } from "react";
 import { useEffect } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
-import { Dialog, IconButton } from "@material-tailwind/react";
+import { Dialog } from "@material-tailwind/react";
 import { addCustomer } from "@/services/addCustomer";
 import { updateCustomer } from "@/services/updateCustomer";
 import { toast } from "react-toastify";
 import { State } from "@/state/Context";
-import { fetchBusinesses } from "@/services/fetchBusinesses";
 import { addAddress } from "@/services/addAddress";
 import { updateAddress } from "@/services/updateAddress";
 import { PlusCircleIcon } from "@heroicons/react/24/outline";
 import CustomerVehicleForm from "./customerVehicleForm";
-import { fetchCustomerVehicles } from "@/services/fetchCustomerVehicles";
 import { fetchCustomer } from "@/services/fetchCustomer";
 import { TrashIcon } from "@heroicons/react/24/solid";
 import { delCustomerVehicle } from "@/services/delCustomerVehicle";
 
-const phoneRgex = /^((\+92)?(0092)?(92)?(0)?)(3)([0-9]{9})$/gm;
 
 const addressSchema = Yup.object().shape({
   street: Yup.string().required("street is required"),
@@ -30,7 +27,7 @@ const schema = Yup.object().shape({
   firstName: Yup.string().required("First name is required"),
   lastName: Yup.string().required("Last name is required"),
   customerType: Yup.string().default('personal').required("Customer type is required"),
-  phone: Yup.string().matches(phoneRgex, "Please add a valid phone number").required("Mobile number is required"),
+  phone: Yup.string().required("Mobile number is required"),
   licenseNo: Yup.string(),
   email: Yup.string().email("Please add a valid email"),
   Address: addressSchema,

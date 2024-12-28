@@ -85,7 +85,9 @@ module.exports= (sequelize) => {
         Business.hasMany(models.Tax, {
             as: 'Tax'
         });
-
+        Business.hasMany(models.Product, {
+            as: 'Product'
+        })
     };
 
     return Business;

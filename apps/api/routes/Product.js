@@ -1,9 +1,10 @@
 const express = require("express");
 const router = express.Router();
-const { Product, Tax } = require("../models");
+const { Product, Tax, User } = require("../models");
 const fetchUser = require("../middlewares/fetchUser");
 require("dotenv").config();
 const multer = require("multer");
+const { Op } = require("sequelize");
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -19,7 +20,30 @@ const upload = multer({ storage: storage });
 // routes below
 router.get("/", fetchUser, async (req, res) => {
   try {
-    const products = await Product.findAll({
+    const user = await User.findOne({
+      where: {
+        id: req.user.id,
+        role: { [Op.ne]: "super-admin" },
+        BusinessId: { [Op.ne]: null },
+      },
+    });
+
+    if (user) {
+      const products = await Product.findAll({
+        where: { BusinessId: user.dataValues.BusinessId },
+        include: [
+          {
+            model: Tax,
+            as: "Tax",
+            through: "product_tax",
+          },
+        ],
+        order: [["createdAt", "ASC"]],
+      });
+      return res.status(200).json(products);
+    }
+
+    const products = await Product.findAll({ 
       include: [
         {
           model: Tax,
@@ -60,13 +84,18 @@ router.post("/create", fetchUser, upload.single("image"), async (req, res) => {
   try {
     const productData = req.body;
     const existingProduct = await Product.findOne({
-      where: { name: productData.name },
+      where: { 
+        [Op.or]: [
+          {name: productData.name, BusinessId: productData.BusinessId},
+          {itemCode: productData.itemCode, BusinessId: productData.BusinessId}
+        ]
+      }
     });
 
     if (existingProduct) {
       return res
         .status(409)
-        .json({ message: "Product with this name already exists" });
+        .json({ message: "Product with this name or item code already exists" });
     }
     if (req.file) {
       const imageUrl = `${req.protocol}://${req.get("host")}/uploads/products/${
@@ -77,14 +106,15 @@ router.post("/create", fetchUser, upload.single("image"), async (req, res) => {
 
     productTaxes = JSON.parse(productData.taxes);
     delete productData.taxes;
-    console.log("product data: ", productData);
 
     const newProduct = await Product.create(productData);
     if (productTaxes.length > 0 && productData.taxable) {
-      productTaxes.map(async (item) => {
-        const tax = await Tax.findByPk(item);
-        await newProduct.addTax(tax);
-      });
+      await Promise.all(
+        productTaxes.map(async (item) => {
+          const tax = await Tax.findByPk(item);
+          await newProduct.addTax(tax);
+        })
+      );
     }
     return res.status(200).json({ message: "Product added successfully" });
   } catch (error) {
@@ -99,7 +129,15 @@ router.put(
   upload.single("image"),
   async (req, res) => {
     try {
-      const product = await Product.findByPk(req.params.id);
+      const product = await Product.findByPk(req.params.id, {
+        include: [
+          {
+            model: Tax,
+            as: "Tax",
+            through: "product_tax",
+          },
+        ],
+      });
 
       if (!product) {
         return res.status(404).json({ message: "product not found" });
@@ -111,6 +149,33 @@ router.put(
         req.body.image = imageUrl;
       }
       await product.update(req.body);
+
+      const deletedItems = product.Tax.filter(
+        (originalTaxes) =>
+          !JSON.parse(req.body.taxes).some((item) => item === originalTaxes.dataValues.id)
+      ).map((changeItem) => changeItem.dataValues.id);
+  
+      const addItems = JSON.parse(req.body.taxes).filter(
+        (tax) => !product.Tax.some((item) => item.dataValues.id === tax)
+      );
+
+      if (addItems.length !== 0) {
+        await Promise.all(
+          addItems.map(async (item) => {
+            const tax = await Tax.findByPk(item);
+            await product.addTax(tax);
+          })
+        );
+      }
+  
+      if (deletedItems.length !== 0) {
+        await Promise.all(
+          deletedItems.map(async (item) => {
+            const tax = await Tax.findByPk(item);
+            await product.removeTax(tax);
+          })
+        );
+      }  
 
       return res.status(200).json({ message: "Product updated successfully" });
     } catch (error) {

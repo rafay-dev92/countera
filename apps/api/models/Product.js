@@ -1,5 +1,4 @@
 const { DataTypes } = require('sequelize');
-const InvoiceProduct = require('./Invoice_Product');
 
 module.exports= (sequelize) => {
     const Product = sequelize.define('Product', {
@@ -45,11 +44,20 @@ module.exports= (sequelize) => {
             type: DataTypes.BOOLEAN,
             allowNull: false,
         },
+        BusinessId: {
+            type: DataTypes.UUID,
+            allowNull: false,
+            onDelete: "RESTRICT",
+            onUpdate: "CASCADE",
+        }
     },{
         tableName: 'products'
     })
 
     Product.associate = (models) => {
+        Product.belongsTo(models.Business, {
+            as: 'Business'
+        });
         Product.belongsToMany(models.Invoice, {
             as: 'Invoice',
             through: 'invoice_product'

@@ -96,6 +96,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
     productData.append('taxable', values.taxable);
     productData.append('image', values.image);
     productData.append('taxes', JSON.stringify(selectedTaxes));
+    productData.append('BusinessId', state.business.id);
 
     try {
       if (!edit) {

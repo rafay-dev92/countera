@@ -128,7 +128,31 @@ router.post("/create", fetchUser, async (req, res) => {
         })
       );
     }
-    return res.status(200).json({ message: "Invoice created successfully" });
+
+    const currentInvoice = await Invoice.findByPk(newInvoice.id, {
+      include: [
+        {
+          model: Customer,
+          as: "Customer",
+          include: ["Address", "Vehicle"],
+        },
+        {
+          model: CustomerVehicle,
+          as: "CustomerVehicle",
+        },
+        {
+          model: Product,
+          as: "Product",
+          through: "invoice_product",
+          include: ["Tax"],
+        },
+        {
+          model: Business,
+          as: "Business",
+        },
+      ],
+    });
+    return res.status(200).json({ message: "Invoice created successfully", data: currentInvoice });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: error.message });
@@ -146,41 +170,41 @@ router.put("/update/:id", fetchUser, async (req, res) => {
       return res.status(404).json({ message: "Invoice not found" });
     }
 
-    if (invoice.dataValues.realInvoiceId === null) {
+    // if (invoice.dataValues.realInvoiceId === null) {
       // Update the status of original Invoice
-      if (invoice.dataValues.current) {
-        let oldInvoiceData = invoice.dataValues;
-        oldInvoiceData = { ...oldInvoiceData, current: false };
-        await invoice.update(oldInvoiceData);
-
+      // if (invoice.dataValues.current) {
+        // let oldInvoiceData = invoice.dataValues;
+        // oldInvoiceData = { ...oldInvoiceData, current: false };
+        // await invoice.update(invoice);
+        
         // Create a new Invoice
-        invoiceData = {
-          ...invoiceData,
-          invoiceData: {
-            ...invoiceData.invoiceData,
-            current: true,
-            realInvoiceId: oldInvoiceData.id,
-          },
-        };
-        try {
-          const newInvoice = await Invoice.create(invoiceData.invoiceData);
-          if (invoiceData.products.length !== 0) {
-            invoiceData.products.map(async (item) => {
-              const product = await Product.findByPk(item.split(":")[0]);
-              await newInvoice.addProduct(product, {
-                through: { quantity: item.split(":")[1] },
-              });
-            });
-          }
-          return res
-            .status(200)
-            .json({ message: "Invoice updated successfully" });
-        } catch (error) {
-          return res.status(500).json({ message: "Something went wrong" });
-        }
-      }
-      return res.status(409).json({ message: "Edit version already created" });
-    }
+        // invoiceData = {
+        //   ...invoiceData,
+        //   invoiceData: {
+        //     ...invoiceData.invoiceData,
+        //     current: true,
+        //     realInvoiceId: oldInvoiceData.id,
+        //   },
+        // };
+        // try {
+          // const newInvoice = await Invoice.create(invoiceData.invoiceData);
+          // if (invoiceData.products.length !== 0) {
+          //   invoiceData.products.map(async (item) => {
+          //     const product = await Product.findByPk(item.split(":")[0]);
+          //     await newInvoice.addProduct(product, {
+          //       through: { quantity: item.split(":")[1] },
+          //     });
+          //   });
+          // }
+        //   return res
+        //     .status(200)
+        //     .json({ message: "Invoice updated successfully" });
+        // } catch (error) {
+        //   return res.status(500).json({ message: "Something went wrong" });
+        // }
+      // }
+      // return res.status(409).json({ message: "Invoice updated successfully" });
+    // }
 
     if (req.body.products.length !== 0) {
       try {
@@ -225,10 +249,12 @@ router.put("/update/:id", fetchUser, async (req, res) => {
       ).map((changeItem) => changeItem.dataValues.id);
 
       if (deletedItems.length !== 0) {
-        deletedItems.forEach(async (item) => {
-          const product = await Product.findByPk(item.split(":")[0]);
-          await invoice.removeProduct(product);
-        });
+        await Promise.all(
+          deletedItems.map(async (item) => {
+            const product = await Product.findByPk(item.split(":")[0]);
+            await invoice.removeProduct(product);
+          })
+        );
       }
 
       // const addItems = req.body.products.filter(prod =>
@@ -243,7 +269,32 @@ router.put("/update/:id", fetchUser, async (req, res) => {
     }
 
     await invoice.update(req.body.invoiceData);
-    return res.status(200).json({ message: "Invoice updated successfully" });
+
+    const currentInvoice = await Invoice.findByPk(invoice.id, {
+      include: [
+        {
+          model: Customer,
+          as: "Customer",
+          include: ["Address", "Vehicle"],
+        },
+        {
+          model: CustomerVehicle,
+          as: "CustomerVehicle",
+        },
+        {
+          model: Product,
+          as: "Product",
+          through: "invoice_product",
+          include: ["Tax"],
+        },
+        {
+          model: Business,
+          as: "Business",
+        },
+      ],
+    });
+
+    return res.status(200).json({ message: "Invoice updated successfully", data: currentInvoice });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: error.message });

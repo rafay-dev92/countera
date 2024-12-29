@@ -45,7 +45,10 @@ const schema = Yup.object().shape({
 
 const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSelectedInvoice }) => {
   const componentRef = useRef();
+  const printRef = useRef();
   const customerInputRef = useRef();
+  const productInputRef = useRef();
+
   const { state } = State();
   const [isLoading, setIsLoading] = useState(false);
   const [customers, setCustomers] = useState([]);
@@ -65,11 +68,15 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
   const [printInvoice, setPrintInvoice] = useState([]);
   const [appliedTaxes, setAppliedTaxes] = useState([]);
   const [showCustomerSuggestions, setShowCustomerSuggestions] = useState(false);
+  const [showProductSuggestions, setShowProductSuggestions] = useState(false);
   const [vehicleOdometer, setVehicleOdometer] = useState('');
 
   // customer vehicle form
   const [isCustomerVehicleFormOpen, setIsCustomerVehicleFormOpen] = useState(false);
   const [isCustomerFormOpen, setIsCustomerFormOpen] = useState(false);
+
+  // product suggestions
+  const [productSearchText, setProductSearchText] = useState("");
 
   const closeCustomerVehicleForm = () => {
     setIsCustomerVehicleFormOpen(false);
@@ -133,7 +140,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
 
   useEffect(() => {
     if (selectedInvoice) {
-      setPrintInvoice(selectedInvoice);
+      // setPrintInvoice(selectedInvoice);
       setInvoiceId(selectedInvoice.id)
       setSelectedCustomer(selectedInvoice.Customer)
       setSelectedVehicle(selectedInvoice.CustomerVehicle)
@@ -194,13 +201,14 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
       },
       "products": selectedProductIds,
     };
-        
+
     const updatedData = { ...data, invoiceData: { ...data.invoiceData, BusinessId: state.business.id } };
 
     try {
       if (edit) {
         const res = await updateInvoice(invoiceId, updatedData, state.userToken)
         const invoice = await res.json();
+        setPrintInvoice(invoice?.data);
         if (res.status === 200) {
           showToastMessage('success', invoice.message)
         }
@@ -214,6 +222,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
       else {
         const res = await addInvoice(updatedData, state.userToken)
         const invoice = await res.json();
+        setPrintInvoice(invoice?.data);
         if (res.status === 200) {
           showToastMessage('success', invoice.message)
         }
@@ -222,7 +231,6 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
         }
       }
       setIsLoading(false);
-      handleClose();
     } catch (error) {
       setIsLoading(false);
       console.log(error);
@@ -263,11 +271,12 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
       // adding taxes
       if (selectedCustomer?.taxable) {
         const productTaxes = [];
-        selectedProductDetails.Tax?.forEach(productTax => {
-          appliedTaxes.some(tax => tax.id === productTax.id) ? null : productTaxes.push(productTax);
+        selectedProducts.forEach((product) => {
+          products.find(prod => prod.id === product.product).Tax?.forEach(productTax => {
+            productTaxes.some(tax => tax.id === productTax.id) ? null : productTaxes.push(productTax);
+          })
         })
-
-        setAppliedTaxes([...productTaxes, ...appliedTaxes]);
+        setAppliedTaxes(productTaxes);
       }
 
       if (selectedProductDetails) {
@@ -301,7 +310,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
         setSelectedProducts([...updatedItems, newItem]);
       }
     }
-
+    setProductSearchText("");
   };
 
   // handle quantity change
@@ -330,19 +339,16 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
       updatedItems.splice(index, 1);
       setSelectedProducts(updatedItems);
 
-      setAppliedTaxes([]);
-
-      updatedItems.forEach((product, ind) => {
-        products.forEach((prod) => {
-          if (product.id === prod.id) {
-            const productTaxes = [];
-            prod.Tax?.forEach(productTax => {
-              appliedTaxes.some(tax => tax.id === productTax.id) ? null : productTaxes.push(productTax);
-            })
-            setAppliedTaxes([...productTaxes, ...appliedTaxes]);
-          }
+      if (updatedItems.length > 1) {        
+        const productTaxes = [];
+        updatedItems.forEach(product => {
+          products.find(prod => prod.id === product.id)?.Tax?.forEach(productTax => {
+            productTaxes.some(tax => tax.id === productTax.id) ? null : productTaxes.push(productTax);
+          })
         })
-      })
+        setAppliedTaxes(productTaxes);
+      }
+      else setAppliedTaxes([]);
     }
   };
 
@@ -367,6 +373,12 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
       setVehicleOdometer(customer.Vehicle[0]?.odometer);
       setValues({ ...values, ['customer']: `${customer.firstName} ${customer.lastName}`, ['vehicle']: customer.Vehicle[0].id })
     };
+    setSelectedProducts([{
+      product: "",
+      quantity: 1,
+      price: 0,
+      taxable: false
+    }]);
     setShowCustomerSuggestions(false);
   };
 
@@ -472,6 +484,10 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
       if (customerInputRef.current && !customerInputRef.current.contains(event.target)) {
         setShowCustomerSuggestions(false);
       }
+
+      if (productInputRef.current && !productInputRef.current.contains(event.target)) {
+        setShowProductSuggestions(false);
+      }
     }
 
     document.addEventListener('mousedown', handleClickOutside);
@@ -483,7 +499,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
   const clearForm = (formikProps) => {
     formikProps.resetForm({
       values: {
-        customer: "Select Customer",
+        customer: "",
         vehicle: "",
         paymentMethod: "",
       },
@@ -502,11 +518,12 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
       price: 0,
       taxable: false
     }])
+    setAppliedTaxes([]);
   };
 
   const formikProps = useFormik({
     initialValues: {
-      customer: "Select Customer",
+      customer: "",
       vehicle: "",
       paymentMethod: "",
     },
@@ -523,6 +540,15 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
     handleSubmit,
     setValues,
   } = formikProps;
+
+  useEffect(() => {
+    if (Object.keys(printInvoice).length > 0) {      
+      if (printRef.current) {
+        printRef.current.handlePrint();
+        handleClose();
+      }
+    }
+  }, [printInvoice])
 
   return (
     <>
@@ -565,7 +591,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
                         <div className="flex items-center pl-2">
                           <label className="font-bold">Customer</label>
                           <IconButton variant="text" onClick={() => setIsCustomerFormOpen(true)}>
-                            <PlusCircleIcon className="h-5 w-5 text-blue-600 cursor-pointer" /> 
+                            <PlusCircleIcon className="h-5 w-5 text-blue-600 cursor-pointer" />
                           </IconButton>
                         </div>
                         <input
@@ -573,11 +599,12 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
                           id="customer"
                           name="customer"
                           type="text"
-                          value={selectedCustomer? `${selectedCustomer.firstName} ${selectedCustomer.lastName}` : values.customer}
-                          onClick={() => {setShowCustomerSuggestions(true); setValues({ ...values, ['customer']: '' })}}
-                          onChange={(e) => {setSelectedCustomer(null); setSelectedVehicle(null); setVehicleOdometer(''), handleChange(e)}}
+                          value={selectedCustomer ? `${selectedCustomer.firstName} ${selectedCustomer.lastName}` : values.customer}
+                          onClick={() => { setShowCustomerSuggestions(true); setValues({ ...values, ['customer']: '' }) }}
+                          onChange={(e) => { setSelectedCustomer(null); setSelectedVehicle(null); setVehicleOdometer(''), handleChange(e) }}
                           onBlur={handleBlur}
                           autoComplete="off"
+                          placeholder="Select Customer"
                         />
 
                         {/* {(touched.customer && errors.customer) ? (
@@ -598,7 +625,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
                             }
                           </ul>
                         )}
-                      </div>                      
+                      </div>
 
                       <label className="p-2 font-bold">Name</label> <br />
                       <input
@@ -648,7 +675,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
                       <div className="flex items-center pl-2">
                         <label className="font-bold">Vehicle</label>
                         <IconButton variant="text" onClick={() => selectedCustomer && setIsCustomerVehicleFormOpen(true)}>
-                          <PlusCircleIcon className="h-5 w-5 text-blue-600 cursor-pointer" /> 
+                          <PlusCircleIcon className="h-5 w-5 text-blue-600 cursor-pointer" />
                         </IconButton>
                       </div>
                       <select
@@ -796,7 +823,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
                               <div className="text-red-500">
                                 {errors.paymentMethod}
                               </div>
-                            ) : (<div></div>)}                            
+                            ) : (<div></div>)}
                           </div>
                         </div>
                       </div>
@@ -829,25 +856,39 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
                           {selectedProducts.map((item, index) => (
                             <tr key={index}>
                               <td className="p-4 border-b border-blue-gray-50">
-                                <div>
-                                  <select
-                                    className="w-full p-2 border border-gray-300 bg-inherit rounded-md"
-                                    value={item.product}
-                                    onChange={(e) =>
-                                      handleProductChange(index, item.quantity, e.target.value)
-                                    }
-                                  >
-                                    <option value="">Select Product</option>
-                                    {products.map((product) => (
-                                      <option
-                                        key={product.id}
-                                        value={product.id}
-                                      >
-                                        {product.name}
-                                      </option>
-                                    ))}
-                                  </select>
-                                </div>
+                                {index !== (selectedProducts.length - 1) ?
+                                  <div className="w-[70%] h-[97%] m-2 p-2 border border-gray-300 rounded-md text-gray-600 font-small">
+                                    {item.name}
+                                  </div>
+                                  :
+                                  <div ref={productInputRef}>
+                                    <input
+                                      className="w-[70%] h-[97%] mx-2 p-2 border border-gray-300 rounded-md text-gray-600 font-small"
+                                      id="product"
+                                      name="product"
+                                      type="text"
+                                      value={selectedProducts[index].name ? selectedProducts[index].name : productSearchText}
+                                      onClick={() => { selectedCustomer && setShowProductSuggestions(true) }}
+                                      onChange={(e) => setProductSearchText(e.target.value)}
+                                      onBlur={handleBlur}
+                                      autoComplete="off"
+                                      placeholder="Select Product"
+                                    />
+                                    {showProductSuggestions && (
+                                      <ul className="d-block absolute z-50 bg-white border border-slate-700 w-[27%] mt-1 ml-2 overflow-y-auto min-h-24 max-h-48">
+                                        {products?.length > 0 ?
+                                          products.filter(product => `${product.name}`.toLowerCase().includes(productSearchText)).map((product) => (
+                                            <li key={product.id} className="cursor-pointer px-2 py-1 rounded-sm hover:bg-gray-200" onClick={() => { handleProductChange(index, item.quantity, product.id), setShowProductSuggestions(false) }}>
+                                              {product?.name}
+                                            </li>
+                                          ))
+                                          :
+                                          <li className="px-2 py-1 rounded-sm">No Product</li>
+                                        }
+                                      </ul>
+                                    )}
+                                  </div>
+                                }
                               </td>
                               <td className="p-4 border-b border-blue-gray-50">
                                 <input
@@ -872,9 +913,8 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
                               <td className="p-4 border-b border-blue-gray-50">
                                 <input
                                   type="checkbox"
-                                  checked={item.taxable}
+                                  checked={selectedCustomer?.taxable && item.taxable}
                                   readOnly
-                                  onChange={(e) => handleTaxableChange(index, e.target.checked)}
                                 />
                               </td>
                               <td className="p-4 border-b border-blue-gray-50">
@@ -966,24 +1006,21 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
                           <h1>{calculateTotalAmountWithTax()} $</h1>
                         </div>
                       </div>
-
                     </div>
-
-
                   </div>
                 </div>
                 <div className="flex items-center justify-end space-x-2 sticky bg-gradient-to-br from-gray-800 to-gray-700">
-                  {edit && (
                     <ReactToPrint
+                      ref={printRef}
                       trigger={() => <button
-                        className=" w-32 bg-gray-600 hover:bg-gray-900 text-white font-bold py-2 px-4"
+                        onClick={() => setPrintInvoice(selectedInvoice)}
+                        className={`w-32 bg-gray-600 hover:bg-gray-900 text-white font-bold py-2 px-4 ${!edit ? 'hidden' : ''}`}
                         type="button"
                       >
                         Print
                       </button>}
                       content={() => componentRef.current}
                     />
-                  )}
 
                   <button
                     className=" w-32 bg-gray-600 hover:bg-gray-900 text-white font-bold py-2 px-4"
@@ -997,12 +1034,12 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
                     className="w-32 bg-gray-600 hover:bg-gray-900 text-white font-bold py-2 px-4"
                     type="submit"
                   >
-                    {!isLoading?
+                    {!isLoading ?
                       <span>{edit ? 'Update' : 'Save'}</span> :
                       <div className="flex items-center justify-center h-fit">
-                          <div className="w-6 h-6 border-4 border-gray-500 border-t-transparent rounded-full animate-spin"></div>
+                        <div className="w-6 h-6 border-4 border-gray-500 border-t-transparent rounded-full animate-spin"></div>
                       </div>
-                    }                 
+                    }
                   </button>
                 </div>
               </div>
@@ -1012,8 +1049,8 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
         )}
       </Dialog>
       <CustomerForm open={isCustomerFormOpen} close={closeCustomerForm} refresh={refresh} setRefresh={setRefresh} setSelectedCustomer={setSelectedCustomer} />
-      {selectedCustomer ?  <CustomerVehicleForm open={isCustomerVehicleFormOpen} close={closeCustomerVehicleForm} refresh={refresh} setRefresh={setRefresh} CustomerId={selectedCustomer?.id} getCustomerDetails={getCustomerDetails} /> : null}
-      <PrintView printInvoice={printInvoice} componentRef={componentRef} appliedTaxes={appliedTaxes} calculateTaxAmount={calculateTaxAmount} totalAmountWithTax={calculateTotalAmountWithTax()} />
+      {selectedCustomer ? <CustomerVehicleForm open={isCustomerVehicleFormOpen} close={closeCustomerVehicleForm} refresh={refresh} setRefresh={setRefresh} CustomerId={selectedCustomer?.id} getCustomerDetails={getCustomerDetails} /> : null}
+      {Object.keys(printInvoice).length > 0 ? <PrintView printInvoice={printInvoice} componentRef={componentRef} appliedTaxes={appliedTaxes} calculateTaxAmount={calculateTaxAmount} totalAmountWithTax={calculateTotalAmountWithTax()} /> : null}
     </>
   );
 };

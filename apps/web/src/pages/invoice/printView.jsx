@@ -1,11 +1,12 @@
-import React from "react";
-import {Typography} from "@material-tailwind/react";
+import React, { useEffect, useState } from "react";
+import { Typography } from "@material-tailwind/react";
 
 const INVOICE_TABLE_HEAD = ["Customer", "Status", "Payment Method", "Total"];
 const PRODUCT_TABLE_HEAD = ["Product", "Quantity", "Price", "Tax", "Amount"]
 
 export default function printView({ printInvoice, componentRef, appliedTaxes, calculateTaxAmount, totalAmountWithTax }) {
     const currentDate = new Date().toLocaleDateString();
+    const [taxes, setTaxes] = useState([]);
 
     const formatCreatedAt = (createdAt) => {
         const date = new Date(createdAt);
@@ -24,8 +25,23 @@ export default function printView({ printInvoice, componentRef, appliedTaxes, ca
         return total;
     };
 
-    if (printInvoice.length !== 0) {
+    useEffect(() => {
+        if (!printInvoice?.Product || !printInvoice?.Customer) return;
+        const updatedTaxes = [];
+        printInvoice.Product.forEach((prod) => {
+            if (printInvoice.Customer.taxable) {
+            prod.Tax?.forEach((productTax) => {
+                if (!updatedTaxes.some((tax) => tax.id === productTax.id)) {
+                updatedTaxes.push(productTax);
+                }
+            });
+            }
+        });
 
+        setTaxes(updatedTaxes); 
+    }, [])
+
+    if (Object.keys(printInvoice).length > 0) {
         return (
             <div ref={componentRef} className="hidden print:block ">
                 <div className="flex items-center justify-between p-4">
@@ -48,8 +64,8 @@ export default function printView({ printInvoice, componentRef, appliedTaxes, ca
                         <span className="text-sm">License No: {printInvoice?.Business.licenseNumber}</span>
                         <span className="text-sm">Permit No: {printInvoice?.Business.permitNumber}</span>
                     </div>
-                </div>                
-                <div className="flex justify-between items-center p-4">                    
+                </div>
+                <div className="flex justify-between items-center p-4">
                     <div>
                         <table className="w-full min-w-max table-auto text-left">
                             <thead>

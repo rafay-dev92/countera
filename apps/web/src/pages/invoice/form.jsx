@@ -66,7 +66,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
   const [invoiceId, setInvoiceId] = useState('');
   const [edit, setEdit] = useState(false);
   const [printInvoice, setPrintInvoice] = useState([]);
-  const [appliedTaxes, setAppliedTaxes] = useState([]);
+  const [appliedTaxes, setAppliedTaxes] = useState(new Object());
   const [showCustomerSuggestions, setShowCustomerSuggestions] = useState(false);
   const [showProductSuggestions, setShowProductSuggestions] = useState(false);
   const [vehicleOdometer, setVehicleOdometer] = useState('');
@@ -249,76 +249,232 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
     }
   };
 
-  // handle product change
+
+  // Handle product change
   const handleProductChange = async (index, quantity, selectedProId) => {
     const updatedItems = [...selectedProducts];
-    updatedItems[index].product = selectedProId; // Assign the selected product's ID to product
 
-    const existingProductIndex = selectedProducts.findIndex(prod => prod.id === selectedProId);
+    // Check if the selected product already exists in the list
+    const existingProductIndex = selectedProducts.findIndex(
+      (prod) => prod.id === selectedProId
+    );
 
     if (existingProductIndex !== -1) {
-      const updatedItems = [...selectedProducts];
-      updatedItems[existingProductIndex].quantity += quantity;
-
-      updatedItems[index].product = ""; // Reset to empty string or default value
+      // If the product already exists, update its quantity
+      handleQuantityChange(existingProductIndex, selectedProducts[existingProductIndex].quantity + quantity);
+      updatedItems[index].product = ""; // Reset the current row
       setSelectedProducts(updatedItems);
+      return;
     }
-    else {
-      const selectedProductDetails = products.find(
-        (product) => product.id === selectedProId
-      );
 
-      // adding taxes
-      if (selectedCustomer?.taxable) {
-        const productTaxes = [];
-        selectedProducts.forEach((product) => {
-          products.find(prod => prod.id === product.product).Tax?.forEach(productTax => {
-            productTaxes.some(tax => tax.id === productTax.id) ? null : productTaxes.push(productTax);
-          })
-        })
-        setAppliedTaxes(productTaxes);
-      }
+    // Find the selected product details
+    const selectedProductDetails = products.find((product) => product.id === selectedProId);
 
-      if (selectedProductDetails) {
-        updatedItems[index].id = selectedProductDetails.id; // Assign the selected product's ID
-        updatedItems[index].name = selectedProductDetails.name;
-        updatedItems[index].quantity = quantity;
-        updatedItems[index].price = selectedProductDetails.price;
-        updatedItems[index].taxable = selectedProductDetails.taxable;
-      } else {
-        updatedItems[index].id = "";
-        updatedItems[index].name = "";
-        updatedItems[index].quantity = 1;
-        updatedItems[index].price = 0;
-        updatedItems[index].taxable = false;
-      }
-
-      setSelectedProducts(updatedItems);
-
-      const isLastRow = index === selectedProducts.length - 1;
-      const isNewProductSelected = selectedProId !== "";
-
-      if (isLastRow && isNewProductSelected) {
-        const newItem = {
-          id: "",
-          product: "",
-          name: "",
-          quantity: 1,
-          price: 0,
-          taxable: false,
-        };
-        setSelectedProducts([...updatedItems, newItem]);
-      }
+    if (selectedProductDetails) {
+      updatedItems[index] = {
+        id: selectedProductDetails.id,
+        product: selectedProId,
+        name: selectedProductDetails.name,
+        quantity,
+        price: selectedProductDetails.price,
+        taxable: selectedProductDetails.taxable,
+        Tax: selectedProductDetails.Tax,
+      };
+    } else {
+      // Reset the row if no product is found
+      updatedItems[index] = {
+        id: "",
+        product: "",
+        name: "",
+        quantity: 1,
+        price: 0,
+        taxable: false,
+        Tax: [],
+      };
     }
+
+    // Recalculate taxes
+    recalculateTaxes(updatedItems);
+
+    // Add a new empty row if it's the last row and a product is selected
+    const isLastRow = index === selectedProducts.length - 1;
+    if (isLastRow && selectedProId) {
+      updatedItems.push({
+        id: "",
+        product: "",
+        name: "",
+        quantity: 1,
+        price: 0,
+        taxable: false,
+        Tax: [],
+      });
+    }
+
+    setSelectedProducts(updatedItems);
     setProductSearchText("");
   };
 
-  // handle quantity change
+  // Handle quantity change
   const handleQuantityChange = (index, quantity) => {
     const updatedItems = [...selectedProducts];
     updatedItems[index].quantity = Number(quantity);
+
+    // Recalculate taxes
+    recalculateTaxes(updatedItems);
+
     setSelectedProducts(updatedItems);
   };
+
+  // Handle removing a product
+  const handleRemoveProduct = (index) => {
+    const updatedItems = [...selectedProducts];
+    updatedItems.splice(index, 1);
+
+    // Recalculate taxes if there are remaining items
+    if (updatedItems.length > 0) {
+      recalculateTaxes(updatedItems);
+    } else {
+      setAppliedTaxes([]);
+    }
+
+    setSelectedProducts(updatedItems);
+  };
+
+  // Recalculate taxes
+  const recalculateTaxes = (products) => {
+    if (!selectedCustomer?.taxable) {
+      setAppliedTaxes([]);
+      return;
+    }
+
+    const productTaxes = {};
+
+    products.forEach((product) => {
+      product.Tax?.forEach((productTax) => {
+        const key = `${productTax.name}_${productTax.rate}_${productTax.type}`;
+
+        if (!productTaxes[key]) {
+          productTaxes[key] = 0;
+        }
+
+        if (productTax.type === "%") {
+          productTaxes[key] += product.price * product.quantity * (productTax.rate / 100);
+        } else {
+          productTaxes[key] += product.quantity * productTax.rate;
+        }
+      });
+    });
+
+    setAppliedTaxes(productTaxes);
+  };
+
+
+
+  // handle product change
+  // const handleProductChange = async (index, quantity, selectedProId) => {
+  //   const updatedItems = [...selectedProducts];
+  //   updatedItems[index].product = selectedProId; // Assign the selected product's ID to product
+
+  //   const existingProductIndex = selectedProducts.findIndex(prod => prod.id === selectedProId);
+
+  //   if (existingProductIndex !== -1) {
+  //     const updatedItems = [...selectedProducts];
+  //     // updatedItems[existingProductIndex].quantity += quantity;
+  //     handleQuantityChange(existingProductIndex, updatedItems[existingProductIndex].quantity+quantity);
+
+  //     updatedItems[index].product = ""; // Reset to empty string or default value
+  //     setSelectedProducts(updatedItems);
+  //   }
+  //   else {
+  //     const selectedProductDetails = products.find(
+  //       (product) => product.id === selectedProId
+  //     );      
+
+  //     if (selectedProductDetails) {
+  //       updatedItems[index].id = selectedProductDetails.id; // Assign the selected product's ID
+  //       updatedItems[index].name = selectedProductDetails.name;
+  //       updatedItems[index].quantity = quantity;
+  //       updatedItems[index].price = selectedProductDetails.price;
+  //       updatedItems[index].taxable = selectedProductDetails.taxable;
+  //       updatedItems[index].price = selectedProductDetails.price;
+  //       updatedItems[index].Tax = selectedProductDetails.Tax;
+  //     } else {
+  //       updatedItems[index].id = "";
+  //       updatedItems[index].name = "";
+  //       updatedItems[index].quantity = 1;
+  //       updatedItems[index].price = 0;
+  //       updatedItems[index].taxable = false;
+  //     }
+
+  //     // adding taxes
+  //     if (selectedCustomer?.taxable) {
+  //       const productTaxes = new Object();
+  //       updatedItems.forEach((product) => {
+  //         product.Tax?.forEach(productTax => {
+  //           const key=`${productTax.name}_${productTax.rate}_${productTax.type}`;
+  //           if (productTaxes[key] === undefined) {
+  //             productTaxes[key] = 0;
+  //             if (productTax.type === '%') 
+  //               productTaxes[key] += ( product.price * product.quantity * (productTax.rate / 100) );    
+  //             else
+  //               productTaxes[key] += ( product.quantity * productTax.rate);
+  //           }
+  //           else
+  //             productTaxes[key] += (product.price * product.quantity * productTax.type === '%'? (productTax.rate / 100) : productTax.rate);            
+  //         })
+  //       })
+  //       setAppliedTaxes(productTaxes);
+  //     }
+
+  //     setSelectedProducts(updatedItems);
+
+  //     const isLastRow = index === selectedProducts.length - 1;
+  //     const isNewProductSelected = selectedProId !== "";
+
+  //     if (isLastRow && isNewProductSelected) {
+  //       const newItem = {
+  //         id: "",
+  //         product: "",
+  //         name: "",
+  //         quantity: 1,
+  //         price: 0,
+  //         taxable: false,
+  //       };
+  //       setSelectedProducts([...updatedItems, newItem]);
+  //     }
+  //   }
+  //   setProductSearchText("");
+  // };
+
+  // // handle quantity change
+  // const handleQuantityChange = (index, quantity) => {
+  //   const updatedItems = [...selectedProducts];
+  //   if (selectedCustomer?.taxable) {
+  //     const productTaxes = new Object();
+  //     updatedItems.forEach((product) => {
+  //       product.Tax?.forEach(productTax => {
+  //         const key=`${productTax.name}_${productTax.rate}_${productTax.type}`;
+  //         if (productTaxes[key] === undefined) productTaxes[key] = 0;
+
+  //         if (selectedProducts[index].quantity < Number(quantity)) {
+  //           if (productTax.type === '%') 
+  //             productTaxes[key] += ( product.price * product.quantity * (productTax.rate / 100) );    
+  //           else
+  //             productTaxes[key] += ( product.quantity * productTax.rate);
+  //         }
+  //         else {
+  //           if (productTax.type === '%') 
+  //             productTaxes[key] -= ( product.price * product.quantity * (productTax.rate / 100) );    
+  //           else
+  //             productTaxes[key] -= ( product.quantity * productTax.rate);
+  //         }          
+  //       })
+  //     })
+  //     setAppliedTaxes(productTaxes);
+  //   }
+  //   updatedItems[index].quantity = Number(quantity);
+  //   setSelectedProducts(updatedItems);
+  // };
 
   // calculate amount
   const calculateAmount = (price, quantity) => {
@@ -333,24 +489,33 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
   };
 
   // handle remove product
-  const handleRemoveProduct = (index) => {
-    if (selectedProducts.length > 1) {
-      const updatedItems = [...selectedProducts];
-      updatedItems.splice(index, 1);
-      setSelectedProducts(updatedItems);
+  // const handleRemoveProduct = (index) => {
+  //   if (selectedProducts.length > 1) {
+  //     const updatedItems = [...selectedProducts];
+  //     updatedItems.splice(index, 1);
+  //     setSelectedProducts(updatedItems);
 
-      if (updatedItems.length > 1) {        
-        const productTaxes = [];
-        updatedItems.forEach(product => {
-          products.find(prod => prod.id === product.id)?.Tax?.forEach(productTax => {
-            productTaxes.some(tax => tax.id === productTax.id) ? null : productTaxes.push(productTax);
-          })
-        })
-        setAppliedTaxes(productTaxes);
-      }
-      else setAppliedTaxes([]);
-    }
-  };
+  //     if (updatedItems.length > 1) {        
+  //       const productTaxes = new Object();
+  //       updatedItems.forEach(product => {
+  //         product?.Tax?.forEach(productTax => {
+  //           const key=`${productTax.name}_${productTax.rate}_${productTax.type}`;
+  //           if (productTaxes[key] === undefined) {
+  //             productTaxes[key] = 0;
+  //             console.log(product.price, product.quantity, productTax.rate);
+  //             productTaxes[key] += (product.price * product.quantity * productTax.type === '%'? (productTax.rate / 100) : productTax.rate);  
+  //           }
+  //           else
+  //             productTaxes[key] += (product.price * product.quantity * productTax.type === '%'? (productTax.rate / 100) : productTax.rate);
+
+  //             // productTaxes.some(tax => tax.id === productTax.id) ? null : productTaxes.push(productTax);
+  //         });
+  //       })
+  //       setAppliedTaxes(productTaxes);
+  //     }
+  //     else setAppliedTaxes([]);
+  //   }
+  // };
 
   // get customers
   const getCustomers = async () => {
@@ -458,25 +623,6 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
     }
   };
 
-  // handle tax change
-  const handleTaxChange = (taxId) => {
-    const foundTax = taxes.find(
-      (tax) => `${tax.id}` === taxId
-    );
-    const isTaxAlreadyApplied = appliedTaxes.some(tax => tax.id === foundTax.id);
-    if (!isTaxAlreadyApplied) setAppliedTaxes([...appliedTaxes, foundTax]);
-  };
-
-  // set default tax
-  useEffect(() => {
-    if (taxes.length > 0) {
-      const foundtax = taxes.find(
-        (tax) => tax.default === true
-      );
-
-      // setAppliedTaxes([foundtax]);
-    }
-  }, [taxes]);
 
   // handle customer suggestions
   useEffect(() => {
@@ -542,7 +688,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
   } = formikProps;
 
   useEffect(() => {
-    if (Object.keys(printInvoice).length > 0) {      
+    if (Object.keys(printInvoice).length > 0) {
       if (printRef.current) {
         printRef.current.handlePrint();
         handleClose();
@@ -949,27 +1095,22 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
                     <div className="basis-[50%] max-w-[50%]">
                     </div>
 
-                    <div className="basis-[50%] max-w-[50%]">
-                      <div className="flex items-center justify-between mx-10">
-                        <div className="text-1xl mt-5 px-1">
+                    <div className="basis-[50%] max-w-[50%] border my-4 font-normal">
+                      <div className="flex justify-between p-2">
+                        <div className="text-1xl">
                           <h1>Subtotal</h1>
                         </div>
-                        <div className="text-1xl mt-5">
+                        <div className="text-1xl">
                           <h1>{totalAmount} $</h1>
                         </div>
                       </div>
 
-                      <div className="flex flex-col gap-2 mx-10 my-2">
-                        {appliedTaxes.map((tax, ind) => (
+                      <div className="flex flex-col divide-y border-y">
+                        {Object.keys(appliedTaxes).map((tax, ind) => (
                           <div key={ind} className="flex justify-between">
-                            <span className="rounded border w-min p-2 whitespace-nowrap self-center" >{tax.name}</span>
-                            <span className="w-fit p-2 border border-gray-300 rounded-md text-black self-center" >{tax.rate} {tax.type}</span>
-                            <div className="flex items-center justify-center">
-                              {/* <p className="w-9 p-2 text-black" >{tax.type}</p> */}
-                              <div className="text-1xl mt-2">
-                                <h1>{calculateTaxAmount(tax)} $</h1>
-                              </div>
-                            </div>
+                            <span className="rounded w-min p-2 whitespace-nowrap basis-[33.33%]" >{tax.split('_')[0]}</span>
+                            <span className="w-fit p-2 rounded-md basis-[33.33%]" >{tax.split('_')[1]} {tax.split('_')[2]}</span>
+                            <span className="text-1xl p-2 w-fit text-right basis-[33.33%]">{tax.split('_')[2] === '%' ? appliedTaxes[tax].toFixed(2) : appliedTaxes[tax]} $</span>
                           </div>
                         ))}
                       </div>
@@ -998,11 +1139,11 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
                         <div></div>                        
                       </div> */}
 
-                      <div className="flex items-center justify-between mx-10">
-                        <div className="text-1xl mt-2 px-1">
+                      <div className="flex items-center justify-between p-2 font-medium text-black bg-yellow-700">
+                        <div className="text-1xl">
                           <h1>Total</h1>
                         </div>
-                        <div className="text-1xl mt-2">
+                        <div className="text-1xl">
                           <h1>{calculateTotalAmountWithTax()} $</h1>
                         </div>
                       </div>
@@ -1010,17 +1151,17 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
                   </div>
                 </div>
                 <div className="flex items-center justify-end space-x-2 sticky bg-gradient-to-br from-gray-800 to-gray-700">
-                    <ReactToPrint
-                      ref={printRef}
-                      trigger={() => <button
-                        onClick={() => setPrintInvoice(selectedInvoice)}
-                        className={`w-32 bg-gray-600 hover:bg-gray-900 text-white font-bold py-2 px-4 ${!edit ? 'hidden' : ''}`}
-                        type="button"
-                      >
-                        Print
-                      </button>}
-                      content={() => componentRef.current}
-                    />
+                  <ReactToPrint
+                    ref={printRef}
+                    trigger={() => <button
+                      onClick={() => setPrintInvoice(selectedInvoice)}
+                      className={`w-32 bg-gray-600 hover:bg-gray-900 text-white font-bold py-2 px-4 ${!edit ? 'hidden' : ''}`}
+                      type="button"
+                    >
+                      Print
+                    </button>}
+                    content={() => componentRef.current}
+                  />
 
                   <button
                     className=" w-32 bg-gray-600 hover:bg-gray-900 text-white font-bold py-2 px-4"

@@ -93,7 +93,27 @@ router.get("/", fetchUser, async (req, res) => {
 router.get("/:id", fetchUser, async (req, res) => {
   try {
     const invoice = await Invoice.findByPk(req.params.id, {
-      include: ["Customer", "CustomerVehicle", "Product"],
+      include: [
+        {
+          model: Customer,
+          as: "Customer",
+          include: ["Address", "Vehicle"],
+        },
+        {
+          model: CustomerVehicle,
+          as: "CustomerVehicle",
+        },
+        {
+          model: Product,
+          as: "Product",
+          through: "invoice_product",
+          include: ["Tax"],
+        },
+        {
+          model: Business,
+          as: "Business",
+        },
+      ],
     });
 
     if (!invoice) {

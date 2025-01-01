@@ -20,6 +20,12 @@ module.exports = (sequelize) => {
         onDelete: "RESTRICT",
         onUpdate: "CASCADE",
       },
+      CustomerVehicleId: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        onDelete: "RESTRICT",
+        onUpdate: "CASCADE",
+      }, 
       BusinessId: {
         type: DataTypes.UUID,
         allowNull: false,
@@ -40,6 +46,10 @@ module.exports = (sequelize) => {
     
     Quotation.belongsTo(models.Customer, {
       as: "Customer",
+    });
+
+    Quotation.belongsTo(models.CustomerVehicle, {
+      as: "CustomerVehicle",
     });
 
     Quotation.belongsTo(models.Business, {

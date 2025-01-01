@@ -38,12 +38,12 @@ export const routes = [
         path: "/invoice",
         element: <Invoice />,
       },
-      // {
-      //   icon: <DocumentTextIcon {...icon} />,
-      //   name: "Quotations",
-      //   path: "/quotation",
-      //   element: <Quotation />,
-      // },
+      {
+        icon: <DocumentTextIcon {...icon} />,
+        name: "Quotations",
+        path: "/quotation",
+        element: <Quotation />,
+      },
       {
         icon: <CubeIcon {...icon} />,
         name: "Products",

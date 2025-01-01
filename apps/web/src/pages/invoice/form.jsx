@@ -18,7 +18,7 @@ import { fetchTaxes } from "@/services/fetchTaxes";
 import { addInvoice } from "@/services/addInvoice";
 import { updateInvoice } from "@/services/updateInvoice";
 import PrintView from "./printView";
-import ReactToPrint from "react-to-print";
+import ReactToPrint, { useReactToPrint } from "react-to-print";
 import { toast } from "react-toastify";
 import { State } from "@/state/Context";
 import CustomerVehicleForm from "../customer/customerVehicleForm";
@@ -66,7 +66,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
   const [invoiceId, setInvoiceId] = useState('');
   const [edit, setEdit] = useState(false);
   const [printInvoice, setPrintInvoice] = useState([]);
-  const [appliedTaxes, setAppliedTaxes] = useState(new Object());
+  const [appliedTaxes, setAppliedTaxes] = useState({});
   const [showCustomerSuggestions, setShowCustomerSuggestions] = useState(false);
   const [showProductSuggestions, setShowProductSuggestions] = useState(false);
   const [vehicleOdometer, setVehicleOdometer] = useState('');
@@ -109,7 +109,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
       price: 0,
       taxable: false
     }]);
-    setAppliedTaxes([]);
+    setAppliedTaxes({});
     clearForm(formikProps);
     setEdit(false)
     setRefresh(!refresh);
@@ -150,7 +150,6 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
       setEdit(true)
 
       let selectedProd = [...selectedProducts]
-      const productTaxes = [];
       selectedInvoice.Product.forEach((prod) => {
         const aProd = {
           product: prod.id,
@@ -158,18 +157,35 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
           name: prod.name,
           price: prod.price,
           quantity: prod.invoice_product.quantity,
-          taxable: prod.taxable
+          taxable: prod.taxable,
+          Tax: prod.Tax,
         }
         selectedProd = [aProd, ...selectedProd];
-        if (selectedInvoice?.Customer?.taxable) {
-          prod.Tax?.forEach(productTax => {
-            productTaxes.some(tax => tax.id === productTax.id) ? null : productTaxes.push(productTax);
-          })
-        }
       })
-      setAppliedTaxes(productTaxes);
+
+      if (selectedInvoice?.Customer?.taxable) {
+        const productTaxes = {};
+
+        selectedProd.forEach((product) => {
+          product.Tax?.forEach((productTax) => {
+            const key = `${productTax.name}_${productTax.rate}_${productTax.type}`;
+
+            if (!productTaxes[key]) {
+              productTaxes[key] = 0;
+            }
+
+            if (productTax.type === "%") {
+              productTaxes[key] += product.price * product.quantity * (productTax.rate / 100);
+            } else {
+              productTaxes[key] += product.quantity * productTax.rate;
+            }
+          });
+        });
+        setAppliedTaxes(productTaxes);
+      }
+
       setSelectedProducts(selectedProd);
-      setSelectedInvoice(null)
+      // setSelectedInvoice(null)
     }
 
   }, [selectedInvoice])
@@ -334,7 +350,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
     if (updatedItems.length > 0) {
       recalculateTaxes(updatedItems);
     } else {
-      setAppliedTaxes([]);
+      setAppliedTaxes({});
     }
 
     setSelectedProducts(updatedItems);
@@ -343,7 +359,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
   // Recalculate taxes
   const recalculateTaxes = (products) => {
     if (!selectedCustomer?.taxable) {
-      setAppliedTaxes([]);
+      setAppliedTaxes({});
       return;
     }
 
@@ -364,7 +380,6 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
         }
       });
     });
-
     setAppliedTaxes(productTaxes);
   };
 
@@ -566,35 +581,12 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
     return total;
   };
 
-  const calculateTaxAmount = (tax) => {
-    if (tax) {
-      if (tax.type === '$') {
-        return tax.rate;
-      } else if (tax.type === '%') {
-        const taxableProducts = selectedProducts.filter(product => product.taxable === true);
-        const totalTaxableAmount = taxableProducts.reduce((acc, product) => {
-          return acc + (product.price * product.quantity);
-        }, 0);
-        return ((totalTaxableAmount * tax.rate) / 100).toFixed(2);
-      }
-    };
-  }
-
   // calculate tax amount
   const calculateTotalTaxAmount = () => {
     let totalTaxAmount = 0;
-    if (appliedTaxes.length > 0) {
-      appliedTaxes.forEach((tax) => {
-        if (tax.type === '$') {
-          totalTaxAmount += tax.rate;
-        } else if (tax.type === '%') {
-          const taxableProducts = selectedProducts.filter(product => product.taxable === true);
-          const totalTaxableAmount = taxableProducts.reduce((acc, product) => {
-            return acc + (product.price * product.quantity);
-          }, 0);
-
-          totalTaxAmount += (totalTaxableAmount * tax.rate) / 100;
-        }
+    if (Object.keys(appliedTaxes).length > 0) {
+      Object.keys(appliedTaxes).forEach((tax) => {
+        totalTaxAmount += parseFloat(appliedTaxes[tax].toFixed(2));
       });
       return totalTaxAmount;
     }
@@ -664,7 +656,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
       price: 0,
       taxable: false
     }])
-    setAppliedTaxes([]);
+    setAppliedTaxes({});
   };
 
   const formikProps = useFormik({
@@ -687,8 +679,11 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
     setValues,
   } = formikProps;
 
+  const reactToPrintFn = useReactToPrint({ componentRef });
+
   useEffect(() => {
     if (Object.keys(printInvoice).length > 0) {
+      console.log(printInvoice)     
       if (printRef.current) {
         printRef.current.handlePrint();
         handleClose();
@@ -1108,9 +1103,9 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
                       <div className="flex flex-col divide-y border-y">
                         {Object.keys(appliedTaxes).map((tax, ind) => (
                           <div key={ind} className="flex justify-between">
-                            <span className="rounded w-min p-2 whitespace-nowrap basis-[33.33%]" >{tax.split('_')[0]}</span>
-                            <span className="w-fit p-2 rounded-md basis-[33.33%]" >{tax.split('_')[1]} {tax.split('_')[2]}</span>
-                            <span className="text-1xl p-2 w-fit text-right basis-[33.33%]">{tax.split('_')[2] === '%' ? appliedTaxes[tax].toFixed(2) : appliedTaxes[tax]} $</span>
+                            <span className="rounded w-min p-2 whitespace-nowrap basis-[50%]" >{`${tax.split('_')[0]} (${tax.split('_')[1]}${tax.split('_')[2]})`}</span>
+                            <span className="w-fit p-2 rounded-md basis-[33.33%]" >{ }</span>
+                            <span className="text-1xl p-2 w-fit text-right basis-[50%]">{tax.split('_')[2] === '%' ? appliedTaxes[tax].toFixed(2) : appliedTaxes[tax]} $</span>
                           </div>
                         ))}
                       </div>
@@ -1191,7 +1186,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
       </Dialog>
       <CustomerForm open={isCustomerFormOpen} close={closeCustomerForm} refresh={refresh} setRefresh={setRefresh} setSelectedCustomer={setSelectedCustomer} />
       {selectedCustomer ? <CustomerVehicleForm open={isCustomerVehicleFormOpen} close={closeCustomerVehicleForm} refresh={refresh} setRefresh={setRefresh} CustomerId={selectedCustomer?.id} getCustomerDetails={getCustomerDetails} /> : null}
-      {Object.keys(printInvoice).length > 0 ? <PrintView printInvoice={printInvoice} componentRef={componentRef} appliedTaxes={appliedTaxes} calculateTaxAmount={calculateTaxAmount} totalAmountWithTax={calculateTotalAmountWithTax()} /> : null}
+      {printInvoice && Object.keys(printInvoice).length > 0 ? <PrintView printInvoice={printInvoice} ref={componentRef} appliedTaxes={appliedTaxes} totalAmountWithTax={calculateTotalAmountWithTax()} /> : null}
     </>
   );
 };

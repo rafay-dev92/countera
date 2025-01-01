@@ -4,7 +4,8 @@ import { Typography } from "@material-tailwind/react";
 const INVOICE_TABLE_HEAD = ["Customer", "Status", "Payment Method", "Total"];
 const PRODUCT_TABLE_HEAD = ["Product", "Quantity", "Price", "Tax", "Amount"]
 
-export default function printView({ printInvoice, componentRef, appliedTaxes, calculateTaxAmount, totalAmountWithTax }) {
+const printView = React.forwardRef(({printInvoice, appliedTaxes, totalAmountWithTax}, ref) => {
+    
     const currentDate = new Date().toLocaleDateString();
     const [taxes, setTaxes] = useState([]);
 
@@ -30,20 +31,20 @@ export default function printView({ printInvoice, componentRef, appliedTaxes, ca
         const updatedTaxes = [];
         printInvoice.Product.forEach((prod) => {
             if (printInvoice.Customer.taxable) {
-            prod.Tax?.forEach((productTax) => {
-                if (!updatedTaxes.some((tax) => tax.id === productTax.id)) {
-                updatedTaxes.push(productTax);
-                }
-            });
+                prod.Tax?.forEach((productTax) => {
+                    if (!updatedTaxes.some((tax) => tax.id === productTax.id)) {
+                        updatedTaxes.push(productTax);
+                    }
+                });
             }
         });
 
-        setTaxes(updatedTaxes); 
+        setTaxes(updatedTaxes);
     }, [])
 
     if (Object.keys(printInvoice).length > 0) {
         return (
-            <div ref={componentRef} className="hidden print:block ">
+            <div ref={ref} className="hidden print:block ">
                 <div className="flex items-center justify-between p-4">
                     <div className="flex flex-col gap-1">
                         <h3 className="text-2xl font-bold">{printInvoice?.Business.name}</h3>
@@ -228,12 +229,12 @@ export default function printView({ printInvoice, componentRef, appliedTaxes, ca
                         </div>
 
                         <div className="flex flex-col">
-                            {appliedTaxes.map((tax, index) => (
-                                <div key={index} className="flex border divide-x">
-                                    <span className="basis-[50%] max-w-[50%] w-min p-2 whitespace-nowrap" >{tax.name} ({tax.rate} {tax.type})</span>
-                                    <h1 className="basis-[50%] max-w-[50%] text-1xl p-2">{calculateTaxAmount(tax)} $</h1>
+                            {Object.keys(appliedTaxes).map((tax, ind) => (
+                                <div key={ind} className="flex border divide-x">
+                                    <span className="max-w-[50%] w-min p-2 whitespace-nowrap basis-[50%]" >{`${tax.split('_')[0]} (${tax.split('_')[1]}${tax.split('_')[2]})`}</span>
+                                    <span className="max-w-[50%] text-1xl p-2 basis-[50%]">{tax.split('_')[2] === '%' ? appliedTaxes[tax].toFixed(2) : appliedTaxes[tax]} $</span>
                                 </div>
-                            ))}
+                            ))}                            
                         </div>
                         <div className="flex items-center border divide-x">
                             <h1 className="basis-[50%] max-w-[50%] text-1xl p-2">Total</h1>
@@ -244,4 +245,6 @@ export default function printView({ printInvoice, componentRef, appliedTaxes, ca
             </div>
         );
     }
-}   
+});
+
+export default printView;

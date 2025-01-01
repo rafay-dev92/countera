@@ -1,15 +1,12 @@
-import React, { useState, useEffect, useRef } from "react";
-import {
-    Card,
-    Typography,
-    CardBody,
-} from "@material-tailwind/react";
+import React, { useEffect, useState } from "react";
+import { Typography } from "@material-tailwind/react";
 
-const INVOICE_TABLE_HEAD = ["Customer", "Total", "Quotation Date", "Vehicle"];
+const INVOICE_TABLE_HEAD = ["Customer", "Status", "Payment Method", "Total"];
 const PRODUCT_TABLE_HEAD = ["Product", "Quantity", "Price", "Tax", "Amount"]
 
-export default function printView({ printInvoice, componentRef, selectedTax, taxAmount, totalAmountWithTax }) {
+const printView = React.forwardRef(({printQuotation, appliedTaxes, totalAmountWithTax}, ref) =>  {
     const currentDate = new Date().toLocaleDateString();
+    const [taxes, setTaxes] = useState([]);
 
     const formatCreatedAt = (createdAt) => {
         const date = new Date(createdAt);
@@ -29,211 +26,224 @@ export default function printView({ printInvoice, componentRef, selectedTax, tax
     };
 
     useEffect(() => {
-        console.log(printInvoice);
-        console.log(selectedTax);
-    }, [printInvoice])
+        if (!printQuotation?.Product || !printQuotation?.Customer) return;
+        const updatedTaxes = [];
+        printQuotation.Product.forEach((prod) => {
+            if (printQuotation.Customer.taxable) {
+                prod.Tax?.forEach((productTax) => {
+                    if (!updatedTaxes.some((tax) => tax.id === productTax.id)) {
+                        updatedTaxes.push(productTax);
+                    }
+                });
+            }
+        });
 
-    if (printInvoice.length !== 0) {
+        setTaxes(updatedTaxes);
+    }, [])
+
+    if (Object.keys(printQuotation).length > 0) {
         return (
-            <div ref={componentRef} className="hidden print:block">
+            <div ref={ref} className="hidden print:block ">
                 <div className="flex items-center justify-between p-4">
-                    <h1 className="text-2xl font-bold">Sales4x</h1>
-                    <h2 className="text-2xl">Quotation Receipt</h2>
-                    <p className="text-sm">{currentDate}</p>
+                    <div className="flex flex-col gap-1">
+                        <h3 className="text-2xl font-bold">{printQuotation?.Business.name}</h3>
+                        <div className="flex items-center gap-4">
+                            <div className="flex flex-col items-start justify-start">
+                                <span className="text-sm font-normal text-black">{printQuotation?.Business.address}</span>
+                                <span className="text-sm font-normal text-black">{printQuotation?.Business.city}, {printQuotation?.Business.state}, {printQuotation?.Business.zipcode}</span>
+                                <span className="text-sm font-normal text-black">Phone: {printQuotation?.Business.tel}</span>
+                                <span className="text-sm font-normal text-black">Fax: {printQuotation?.Business.fax}</span>
+                                <span className="text-sm font-normal text-black">Email: {printQuotation?.Business.email}</span>
+                            </div>
+                            <img src={printQuotation?.Business.logo} className="rounded-xl h-[100px] w-[100px]" alt="Business logo" width={100} height={100} />
+                        </div>
+                    </div>
+                    <div className="flex flex-col items-end gap-1">
+                        <span className="text-sm font-semibold">Date: {currentDate}</span>
+                        <span className="text-sm">Invoice No: #0000{printQuotation?.invoiceNumber}</span>
+                        <span className="text-sm">License No: {printQuotation?.Business.licenseNumber}</span>
+                        <span className="text-sm">Permit No: {printQuotation?.Business.permitNumber}</span>
+                    </div>
                 </div>
-                <Card className="h-full w-full ">
-                    <CardBody className="p-2 px-0">
-                        <table className=" w-full min-w-max table-auto text-left">
-                            <thead>
-                                <tr>
-                                    {INVOICE_TABLE_HEAD.map((head) => (
-                                        <th
-                                            key={head}
-                                            className="border-y border-blue-gray-100 bg-blue-gray-50/50 p-4"
-                                        >
-                                            <Typography
-                                                variant="small"
-                                                color="blue-gray"
-                                                className="font-normal leading-none opacity-70"
-                                            >
-                                                {head}
-                                            </Typography>
-                                        </th>
-                                    ))}
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {printInvoice.length !== 0 ?
-                                    <tr key={printInvoice.id}>
-                                        <td>
-                                            <Typography
-                                                variant="small"
-                                                color="blue-gray"
-                                                className="font-normal p-2"
-                                            >
-                                                {printInvoice.Customer.firstName} {printInvoice.Customer.lastName}
-                                            </Typography>
-                                        </td>                                        
-
-                                        <td>
-                                            <Typography
-                                                variant="small"
-                                                color="blue-gray"
-                                                className="font-normal p-2"
-                                            >
-                                                {printInvoice.totalAmount}
-                                            </Typography>
-                                        </td>
-                                        <td>
-                                            <Typography
-                                                variant="small"
-                                                color="blue-gray"
-                                                className="font-normal p-2"
-                                            >
-                                                {formatCreatedAt(printInvoice.createdAt)}
-                                            </Typography>
-                                        </td>
-                                        <td>
-                                            <Typography
-                                                variant="small"
-                                                color="blue-gray"
-                                                className="font-normal p-2"
-                                            >
-                                                {`${printInvoice.Vehicle.make} ${printInvoice.Vehicle.model} ${printInvoice.Vehicle.year}`}
-                                            </Typography>
-                                        </td>
-                                    </tr>
-                                    :
-                                    null
-                                }
-                            </tbody>
-                        </table>
-                    </CardBody>
-                </Card>
-
-                <Card className=" w-full">
-                    <CardBody className="p-2">
+                <div className="flex justify-between items-center p-4">
+                    <div>
                         <table className="w-full min-w-max table-auto text-left">
                             <thead>
                                 <tr>
-                                    {PRODUCT_TABLE_HEAD.map((head) => (
-                                        <th
-                                            key={head}
-                                            className="border-y border-blue-gray-100 bg-blue-gray-50/50 p-4"
+                                    <th className="border-y border-blue-gray-100 bg-blue-gray-50/50 p-4">
+                                        <Typography
+                                            variant="small"
+                                            color="blue-gray"
+                                            className="font-normal leading-none opacity-70"
                                         >
-                                            <Typography
-                                                variant="small"
-                                                color="blue-gray"
-                                                className="font-normal leading-none opacity-70"
-                                            >
-                                                {head}
-                                            </Typography>
-                                        </th>
-                                    ))}
+                                            Bill To
+                                        </Typography>
+                                    </th>
                                 </tr>
                             </thead>
-                            <tbody className="bg-white divide-y divide-gray-200">
-                                {printInvoice.Product.map((item, index) => (
-                                    <tr key={index}>
-                                        <td className="p-4 border-b border-blue-gray-50">
-                                            <Typography
-                                                variant="small"
-                                                color="blue-gray"
-                                                className="font-normal leading-none opacity-70"
-                                            >
-                                                {item.name}
-                                            </Typography>
-                                        </td>
-                                        <td className="p-4 border-b border-blue-gray-50">
-                                            <Typography
-                                                variant="small"
-                                                color="blue-gray"
-                                                className="font-normal leading-none opacity-70"
-                                            >
-                                                {item.quotation_product.quantity}
-                                            </Typography>
-                                        </td>
-                                        <td className="p-4 border-b border-blue-gray-50">
-                                            <Typography
-                                                variant="small"
-                                                color="blue-gray"
-                                                className="font-normal leading-none opacity-70"
-                                            >
-                                                {item.price}
-                                            </Typography>
-                                        </td>
-                                        <td className="p-4 border-b border-blue-gray-50">
-                                            <input
-                                                type="checkbox"
-                                                checked={item.taxable}
-                                                readOnly
-                                            />
-                                        </td>
-                                        <td className="p-4 border-b border-blue-gray-50">
-                                            <Typography
-                                                variant="small"
-                                                color="blue-gray"
-                                                className="font-normal opacity-70"
-                                            >
-                                                {calculateAmount(item.price, item.quotation_product.quantity)}
-                                            </Typography>
-                                        </td>
-                                    </tr>
-                                ))}
+                            <tbody>
+                                <tr>
+                                    <td className="p-2 border-b border-blue-gray-50 space-y-2">
+                                        <Typography
+                                            variant="small"
+                                            color="blue-gray"
+                                            className="font-normal leading-none"
+                                        >
+                                            {printQuotation.Customer.firstName} {printQuotation.Customer.lastName}
+                                        </Typography>
+                                        <Typography
+                                            variant="small"
+                                            color="blue-gray"
+                                            className="font-normal leading-none"
+                                        >
+                                            {printQuotation?.Customer.Address.street}
+                                        </Typography>
+                                        <Typography
+                                            variant="small"
+                                            color="blue-gray"
+                                            className="font-normal leading-none"
+                                        >
+                                            {printQuotation?.Customer.Address.city}, {printQuotation?.Customer.Address.state}, {printQuotation?.Customer.Address.zipcode}
+                                        </Typography>
+                                        <Typography
+                                            variant="small"
+                                            color="blue-gray"
+                                            className="font-normal leading-none"
+                                        >
+                                            Phone: {printQuotation?.Customer.phone}
+                                        </Typography>
+                                    </td>
+                                </tr>
                             </tbody>
-
                         </table>
-                    </CardBody>
-                </Card>
-                <div className="grid grid-cols-2 ">
-                    <div>
                     </div>
-
-                    <div className="flex items-center justify-between mx-10">
-                        <div className="text-1xl mt-5">
-                            <h1>Subtotal</h1>
+                    <div className="flex border border-black-2">
+                        <div className="flex flex-col divide-y">
+                            <span className="text-xs p-2">License No:</span>
+                            <span className="text-xs p-2">Odometer</span>
+                            <span className="text-xs p-2">Year</span>
+                            <span className="text-xs p-2">Make</span>
+                            <span className="text-xs p-2">Model</span>
                         </div>
-                        <div className="text-1xl mt-5">
-                            <h1>{calculateTotalAmount(printInvoice.Product)}</h1>
-                        </div>
-                    </div>
-
-                    <div className="flex justify-end">
-                        <input
-                            className="w-20 p-2 border border-gray-300 rounded-md text-black"
-                            type="text"
-                            value={selectedTax && `${selectedTax.name} tax`}
-                            disabled
-                        />
-                    </div>
-
-                    <div className="flex items-center justify-between mx-10">
-                        <div className="flex items-center justify-between ">
-                            <input
-                                className="w-9 p-2 border border-gray-300 rounded-md text-black"
-                                type="text"
-                                value={selectedTax && selectedTax.rate}
-                                disabled
-                            />
-                            <p className="w-9 p-2  text-black" >{selectedTax && selectedTax.type}</p>
-                        </div>
-                        <div className="text-1xl mt-2">
-                            <h1>{taxAmount}</h1>
-                        </div>
-                    </div>
-
-                    <div>
-                    </div>
-                    <div className="flex items-center justify-between mx-10">
-                        <div className="text-1xl mt-2">
-                            <h1>Total</h1>
-                        </div>
-                        <div className="text-1xl mt-2">
-                            <h1>{totalAmountWithTax}</h1>
+                        <div className="flex flex-col divide-y">
+                            <span className="text-xs p-2">{printQuotation?.CustomerVehicle.licenseNo}</span>
+                            <span className="text-xs p-2">{printQuotation?.CustomerVehicle.odometer}</span>
+                            <span className="text-xs p-2">{printQuotation?.CustomerVehicle.year}</span>
+                            <span className="text-xs p-2">{printQuotation?.CustomerVehicle.make}</span>
+                            <span className="text-xs p-2">{printQuotation?.CustomerVehicle.model}</span>
                         </div>
                     </div>
                 </div>
-            </ div>
+
+                <div className="w-full p-4">
+                    <table className="w-full min-w-max table-auto text-left">
+                        <thead>
+                            <tr>
+                                {PRODUCT_TABLE_HEAD.map((head) => (
+                                    <th
+                                        key={head}
+                                        className="border-y border-blue-gray-100 bg-blue-gray-50/50 p-4"
+                                    >
+                                        <Typography
+                                            variant="small"
+                                            color="blue-gray"
+                                            className="font-normal leading-none opacity-70"
+                                        >
+                                            {head}
+                                        </Typography>
+                                    </th>
+                                ))}
+                            </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                            {printQuotation.Product.map((item, index) => (
+                                <tr key={index}>
+                                    <td className="p-4 border-b border-blue-gray-50">
+                                        <Typography
+                                            variant="small"
+                                            color="blue-gray"
+                                            className="font-normal leading-none"
+                                        >
+                                            {item.name}
+                                        </Typography>
+                                    </td>
+                                    <td className="p-4 border-b border-blue-gray-50">
+                                        <Typography
+                                            variant="small"
+                                            color="blue-gray"
+                                            className="font-normal leading-none"
+                                        >
+                                            {item.quotation_product.quantity}
+                                        </Typography>
+                                    </td>
+                                    <td className="p-4 border-b border-blue-gray-50">
+                                        <Typography
+                                            variant="small"
+                                            color="blue-gray"
+                                            className="font-normal leading-none"
+                                        >
+                                            {item.price}
+                                        </Typography>
+                                    </td>
+                                    <td className="p-4 border-b border-blue-gray-50">
+                                        <input
+                                            type="checkbox"
+                                            checked={item.taxable}
+                                            readOnly
+                                        />
+                                    </td>
+                                    <td className="p-4 border-b border-blue-gray-50">
+                                        <Typography
+                                            variant="small"
+                                            color="blue-gray"
+                                            className="font-normal leading-none"
+                                        >
+                                            {calculateAmount(item.price, item.quotation_product.quantity)}
+                                        </Typography>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+
+                    </table>
+                </div>
+                <div className="flex p-2">
+                    <div className="basis-[50%] max-w-[50%] h-full p-4">
+                        <div className="flex flex-col justify-end items-start h-full gap-6">
+                            <div className="basis-[80%] flex flex-col">
+                                <h1 className="font-semibold text-md">Terms & Conditions</h1>
+                                <p className="text-xs border py-6 px-2 w-[80%]">you agree to the following terms and conditions. Our platform facilitates the purchase and sale
+                                    of vehicle auto parts. All products are subject to availability and provided "as is." We are not responsible for any misuse or improper
+                                    installation of parts. Returns and refunds are subject to our policies, which may change without notice. By continuing to use our services,
+                                    you agree to comply with all applicable laws and regulations. For further inquiries, please contact our support team.</p>
+                            </div>
+                            <h2 className="basis-[20%] font-semibold text-lg italic">Thank You For Your Business!</h2>
+                        </div>
+                    </div>
+
+                    <div className="basis-[50%] max-w-[50%]">
+                        <div className="flex items-center justify-center border divide-x">
+                            <h1 className="basis-[50%] max-w-[50%] text-1xl p-2">Subtotal</h1>
+                            <h1 className="basis-[50%] max-w-[50%] text-1xl p-2">{calculateTotalAmount(printQuotation.Product)} $</h1>
+                        </div>
+
+                        <div className="flex flex-col">
+                            {Object.keys(appliedTaxes).map((tax, ind) => (
+                                <div key={ind} className="flex border divide-x">
+                                    <span className="max-w-[50%] w-min p-2 whitespace-nowrap basis-[50%]" >{`${tax.split('_')[0]} (${tax.split('_')[1]}${tax.split('_')[2]})`}</span>
+                                    <span className="max-w-[50%] text-1xl p-2 basis-[50%]">{tax.split('_')[2] === '%' ? appliedTaxes[tax].toFixed(2) : appliedTaxes[tax]} $</span>
+                                </div>
+                            ))}                           
+                        </div>
+                        <div className="flex items-center border divide-x">
+                            <h1 className="basis-[50%] max-w-[50%] text-1xl p-2">Total</h1>
+                            <h1 className="basis-[50%] max-w-[50%] text-1xl p-2">{totalAmountWithTax} $</h1>
+                        </div>
+                    </div>
+                </div>
+            </div>
         );
     }
-}   
+});
+
+export default printView;

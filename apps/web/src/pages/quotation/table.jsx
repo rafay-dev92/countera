@@ -54,7 +54,6 @@ export function Quotation() {
         try {
             const fetchedQuotations = await fetchQuotations(state.userToken);
             const totalQuotations = await fetchedQuotations.json();
-            console.log(totalQuotations);
             setQuotations(totalQuotations);
             setLoading(false);
         } catch (error) {
@@ -111,8 +110,8 @@ export function Quotation() {
 
     let currentItems = [];
     let filteredRows = [];
-    if (quotations.length !== 0) {
-        filteredRows = quotations.filter(
+    if (quotations.length > 0) {
+        filteredRows = quotations?.filter(
             ({ Customer }) =>
                 Customer['firstName'].toLowerCase().includes(searchQuery.toLowerCase()) ||
                 Customer['lastName'].toLowerCase().includes(searchQuery.toLowerCase())
@@ -142,6 +141,11 @@ export function Quotation() {
 
     const closePopup = () => {
         setIsOpen(false);
+    };
+
+    const createInvoice = (data) => {
+        console.log("Create invoice");
+        console.log(data);
     };
 
     if (loading) {
@@ -226,7 +230,7 @@ export function Quotation() {
                             </tr>
                         </thead>
                         <tbody>
-                            {currentItems.map(({ id, Customer, totalAmount, createdAt, Vehicle, Business }, index) => {
+                            {currentItems.map(({ id, Customer, totalAmount, createdAt, CustomerVehicle }, index) => {
                                 const isLast = index === currentItems.length - 1;
                                 const classes = isLast
                                     ? "p-4"
@@ -269,7 +273,7 @@ export function Quotation() {
                                                 color="blue-gray"
                                                 className="font-normal "
                                             >
-                                                {`${Vehicle['make']} ${Vehicle['model']} ${Vehicle['year']}`}
+                                                {`${CustomerVehicle['make']} ${CustomerVehicle['model']} ${CustomerVehicle['year']}`}
                                             </Typography>
                                         </td>
 
@@ -281,6 +285,7 @@ export function Quotation() {
                                                     <TrashIcon className="h-6 w-6 text-red-500" />
                                                 </IconButton>
                                             </Tooltip>
+                                            <Button onClick={() => createInvoice(currentItems[index])} className="px-6 py-3 rounded bg-blue-600">Create invoice</Button>
                                         </td>
                                         {state.userInfo.role === 'super_admin' && (
                                             <td className={classes}>

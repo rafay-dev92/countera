@@ -7,7 +7,6 @@ import { addVehicle } from "@/services/addVehicle";
 import { updateVehicle } from "@/services/updateVehicle";
 import { toast } from 'react-toastify';
 import { State } from "@/state/Context";
-import jsonp from "jsonp";
 
 const schema = Yup.object().shape({
     make: Yup.string().required("Make is required"),
@@ -103,55 +102,6 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
             console.log(error)
         }
     };
-
-    const fetchMakes = async (year) => {
-        try {
-            setShowMakeSuggestions(true);
-            setMakeLoading(true);
-            const apiUrl = `https://www.carqueryapi.com/api/0.3/?cmd=getMakes&year=${year}&sold_in_us=&body=`;
-
-            jsonp(apiUrl, null, (err, data) => {
-                if (err) {
-                    fetchMakes(year);
-                    setMakeLoading(false);
-                    toast.error("Something went wrong");
-                } else {
-                    setMakes(data.Makes)
-                    setFilteredMakes(data.Makes)
-                    setMakeLoading(false);
-                }
-            });            
-
-        } catch (error) {
-            console.log(error);
-            setMakeLoading(false);
-            toast.error("Something went wrong");
-        }
-    }
-
-    const fetchModels = (make, year) => {
-        try {
-            setShowModelSuggestions(true);
-            setModelLoading(true);
-            const apiUrl = `https://www.carqueryapi.com/api/0.3/?cmd=getModels&make=${make.toLowerCase()}&year=${year}&sold_in_us=&body=`;
-
-            jsonp(apiUrl, null, (err, data) => {
-                if (err) {
-                    setModelLoading(false);
-                    toast.error("Something went wrong");
-                } else {
-                    setModels(data.Models)
-                    setFilteredModels(data.Models)
-                    setModelLoading(false);
-                }
-            });
-
-        } catch (error) {
-            console.log(error);
-            setModelLoading(false);
-            toast.error("Something went wrong");
-        }
-    }
 
     const handleInputChange = (inputName, event) => {
         const inputValue = event.target.value;

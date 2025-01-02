@@ -106,24 +106,6 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
     const handleInputChange = (inputName, event) => {
         const inputValue = event.target.value;
         setValues({ ...values, [inputName]: inputValue });
-
-        if (inputName === 'make') {
-            const filtered = makes.filter((make) =>
-                make.make_display.toLowerCase().includes(inputValue.toLowerCase())
-            );
-            setFilteredMakes(filtered);
-            setShowMakeSuggestions(true);
-        }
-        else if (inputName === 'model') {
-            const filtered = models.filter((model) =>
-                model.model_name.toLowerCase().includes(inputValue.toLowerCase())
-            );
-            setFilteredModels(filtered);
-            setShowModelSuggestions(true);
-        }
-        else if (inputName === 'year') {
-            fetchMakes(inputValue)
-        }
     };
 
 

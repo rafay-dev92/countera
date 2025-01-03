@@ -11,7 +11,7 @@ import {
     Tooltip,
     Spinner,
 } from "@material-tailwind/react";
-import { DocumentTextIcon, TrashIcon } from "@heroicons/react/24/solid";
+import { DocumentTextIcon, TrashIcon, DocumentPlusIcon } from "@heroicons/react/24/solid";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import MyPopUpForm from "./form";
 import { Link } from "react-router-dom";
@@ -19,6 +19,7 @@ import { State } from "../../state/Context";
 import { fetchQuotations } from "@/services/fetchQuotations";
 import { delQuotation } from "@/services/delQuotaion";
 import { toast } from "react-toastify";
+import { addInvoice } from "@/services/addInvoice";
 
 const TABLE_HEAD = ["Customer", "Total", "Quotation Date", "Vehicle", "Actions"];
 
@@ -143,9 +144,33 @@ export function Quotation() {
         setIsOpen(false);
     };
 
-    const createInvoice = (data) => {
+    const createInvoice = async (quotationData) => {
         console.log("Create invoice");
+        const selectedProductIds = quotationData?.Product?.map((product) => `${product.id}:${product.quotation_product?.quantity}`);
+        const data = {
+            invoiceData: {
+              totalAmount: quotationData.totalAmount,
+              paymentStatus: "Unpaid",
+              CustomerId: quotationData.CustomerId,
+              CustomerVehicleId: quotationData.CustomerVehicleId,
+              BusinessId: state.business.id
+            },
+            "products": selectedProductIds,
+        };
         console.log(data);
+
+        // try {
+        //     const res = await addInvoice(data, state.userToken)
+        //     const invoice = await res.json();
+        //     if (res.status === 200) {
+        //         showToastMessage('success', invoice.message)
+        //     }
+        //     else if (res.status === 404) {
+        //         showToastMessage('info', invoice.message)
+        //     }
+        // } catch (error) {
+        //     console.log(error);
+        // }
     };
 
     if (loading) {
@@ -285,7 +310,13 @@ export function Quotation() {
                                                     <TrashIcon className="h-6 w-6 text-red-500" />
                                                 </IconButton>
                                             </Tooltip>
-                                            <Button onClick={() => createInvoice(currentItems[index])} className="px-6 py-3 rounded bg-blue-600">Create invoice</Button>
+                                            <Tooltip content="Craete Invoice">
+                                                <IconButton variant="text" onClick={() => {
+                                                    createInvoice(currentItems[index])
+                                                }}>
+                                                    <DocumentPlusIcon className="h-6 w-6 text-blue-500" />
+                                                </IconButton>
+                                            </Tooltip>
                                         </td>
                                         {state.userInfo.role === 'super_admin' && (
                                             <td className={classes}>

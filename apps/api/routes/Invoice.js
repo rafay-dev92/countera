@@ -8,7 +8,7 @@ const {
   Customer,
   CustomerVehicle,
   Business,
-  Tax,
+  Payment,
 } = require("../models");
 const fetchUser = require("../middlewares/fetchUser");
 const { Op } = require("sequelize");
@@ -49,6 +49,10 @@ router.get("/", fetchUser, async (req, res) => {
             model: Business,
             as: "Business",
           },
+          {
+            model: Payment,
+            as: "Payments",
+          }
         ],
       });
       return res.json({
@@ -79,6 +83,10 @@ router.get("/", fetchUser, async (req, res) => {
           model: Business,
           as: "Business",
         },
+        {
+          model: Payment,
+          as: "Payments",
+        }
       ],
     });
     return res.json({
@@ -112,6 +120,10 @@ router.get("/:id", fetchUser, async (req, res) => {
         {
           model: Business,
           as: "Business",
+        },
+        {
+          model: Payment,
+          as: "Payments",
         },
       ],
     });
@@ -170,6 +182,10 @@ router.post("/create", fetchUser, async (req, res) => {
           model: Business,
           as: "Business",
         },
+        {
+          model: Payment,
+          as: "Payments",
+        }
       ],
     });
     return res.status(200).json({ message: "Invoice created successfully", data: currentInvoice });
@@ -226,7 +242,7 @@ router.put("/update/:id", fetchUser, async (req, res) => {
       // return res.status(409).json({ message: "Invoice updated successfully" });
     // }
 
-    if (req.body.products.length !== 0) {
+    if (req.body?.products.length !== 0) {
       try {
         req.body.products.forEach(async (newProduct) => {
           const productId = newProduct.split(":")[0];
@@ -311,6 +327,10 @@ router.put("/update/:id", fetchUser, async (req, res) => {
           model: Business,
           as: "Business",
         },
+        {
+          model: Payment,
+          as: "Payments",
+        }
       ],
     });
 

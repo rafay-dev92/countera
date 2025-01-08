@@ -45,6 +45,7 @@ app.use("/api/quotation", require("./routes/Quotation"));
 app.use("/api/workorder", require("./routes/WorkOrder"));
 app.use("/api/address", require("./routes/Address"));
 app.use("/api/customervehicle", require("./routes/CustomerVehicle"));
+app.use("/api/payment", require("./routes/Payment"));
 
 app.listen(5000, (error) => {
   if (!error)

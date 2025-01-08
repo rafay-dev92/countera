@@ -24,7 +24,7 @@ module.exports = (sequelize) => {
         },
         paymentMethod: {
             type: DataTypes.STRING,
-            allowNull: false,
+            allowNull: true,
         },
         paymentStatus: {
             type: DataTypes.STRING,
@@ -53,6 +53,11 @@ module.exports = (sequelize) => {
     })
 
     Invoice.associate = (models) => {
+        Invoice.hasMany(models.Payment, {
+            foreignKey: 'InvoiceId',
+            as: 'Payments'
+        });
+
         Invoice.belongsToMany(models.Product, {
             as: 'Product',
             through: 'invoice_product'

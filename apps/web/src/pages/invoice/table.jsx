@@ -19,8 +19,9 @@ import { delInvoice } from "@/services/delInvoice";
 import { Link } from "react-router-dom";
 import { State } from "../../state/Context";
 import { toast } from "react-toastify";
+import ViewInvoice from "./viewInvoice";
 
-const TABLE_HEAD = ["Customer", "Status", "Payment Method", "Total", "Invoice Date", "Vehicle", "Actions"];
+const TABLE_HEAD = ["Customer", "Status", "Total", "Invoice Date", "Vehicle", "Actions"];
 
 export function Invoice() {
 
@@ -31,7 +32,8 @@ export function Invoice() {
   const [itemsPerPage, setItemsPerPage] = useState(5);
   const [refresh, setRefresh] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
-  const [isOpen, setIsOpen] = useState(false);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isViewOpen, setIsViewOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const showToastMessage = (type, message) => {
@@ -73,6 +75,7 @@ export function Invoice() {
     if (state.userInfo.Permission.some(obj => obj.name === "CAN_EDIT_INVOICE" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
       const selected = currentItems[index];
       setSelectedInvoice(selected);
+      setIsViewOpen(true);
       openPopup();
     }
     else {
@@ -81,7 +84,7 @@ export function Invoice() {
   };
 
   const handleDeleteInvoice = async (index) => {
-    if (state.userInfo.Permission.some(obj => obj.name === "CAN_DELETE_INVOICE" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
+    if (state.userInfo.Permission.some(obj => obj.name === "CAN_DELETE" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
       const updatedInvoices = invoices.filter((_, rowIndex) => rowIndex !== index);
       const deletedInvoiceId = invoices.find((_, rowIndex) => rowIndex === index);
       setInvoices(updatedInvoices);
@@ -136,15 +139,11 @@ export function Invoice() {
 
   const openPopup = () => {
     if (state.userInfo.Permission.some(obj => obj.name === "CAN_CREATE_INVOICE" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
-      setIsOpen(true);
+      setIsFormOpen(true);
     }
     else {
       toast.error("You are not allowed to add an invoice");
     }
-  };
-
-  const closePopup = () => {
-    setIsOpen(false);
   };
 
   if (loading) {
@@ -212,11 +211,11 @@ export function Invoice() {
                       {head}
                     </Typography>
                   </th>
-                ))}              
+                ))}
               </tr>
             </thead>
             <tbody>
-              {currentItems.map(({ id, Customer, paymentStatus, paymentMethod, totalAmount, createdAt, CustomerVehicle, Business }, index) => {
+              {currentItems.map(({ id, Customer, paymentStatus, totalAmount, createdAt, CustomerVehicle, Business }, index) => {
                 const isLast = index === currentItems.length - 1;
                 const classes = isLast
                   ? "p-4"
@@ -245,7 +244,7 @@ export function Invoice() {
                       </Typography>
                     </td>
 
-                    <td className={classes}>
+                    {/* <td className={classes}>
                       <Typography
                         variant="small"
                         color="blue-gray"
@@ -253,7 +252,7 @@ export function Invoice() {
                       >
                         {paymentMethod}
                       </Typography>
-                    </td>
+                    </td> */}
 
                     <td className={classes}>
                       <Typography
@@ -291,7 +290,7 @@ export function Invoice() {
                           <TrashIcon className="h-6 w-6 text-red-500" />
                         </IconButton>
                       </Tooltip>
-                    </td>                    
+                    </td>
                   </tr>
                 );
               },
@@ -325,9 +324,8 @@ export function Invoice() {
             </Button>
           </div>
         </CardFooter>
-
       </Card>
-      <MyPopUpForm refresh={refresh} setRefresh={setRefresh} open={isOpen} close={closePopup} selectedInvoice={selectedInvoice} setSelectedInvoice={setSelectedInvoice} />
+      <MyPopUpForm refresh={refresh} setRefresh={setRefresh} open={isFormOpen} close={() => setIsFormOpen(false)} selectedInvoice={selectedInvoice} setSelectedInvoice={setSelectedInvoice} isViewOpen={isViewOpen} setIsViewOpen={setIsViewOpen} />
     </>
   );
 }   

@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { Typography } from "@material-tailwind/react";
+import PaidImg from "@/assets/paid.png";
 
 const INVOICE_TABLE_HEAD = ["Customer", "Status", "Payment Method", "Total"];
 const PRODUCT_TABLE_HEAD = ["Product", "Quantity", "Price", "Tax", "Amount"]
 
-const printView = React.forwardRef(({printInvoice, appliedTaxes, totalAmountWithTax}, ref) => {
-    
-    const currentDate = new Date().toLocaleDateString();
-    const [taxes, setTaxes] = useState([]);
+const printView = React.forwardRef(({ view, printInvoice, appliedTaxes }, ref) => {
+
+    const invoiceDate = new Date(printInvoice?.createdAt);
 
     const formatCreatedAt = (createdAt) => {
         const date = new Date(createdAt);
@@ -26,25 +26,9 @@ const printView = React.forwardRef(({printInvoice, appliedTaxes, totalAmountWith
         return total;
     };
 
-    useEffect(() => {
-        if (!printInvoice?.Product || !printInvoice?.Customer) return;
-        const updatedTaxes = [];
-        printInvoice.Product.forEach((prod) => {
-            if (printInvoice.Customer.taxable) {
-                prod.Tax?.forEach((productTax) => {
-                    if (!updatedTaxes.some((tax) => tax.id === productTax.id)) {
-                        updatedTaxes.push(productTax);
-                    }
-                });
-            }
-        });
-
-        setTaxes(updatedTaxes);
-    }, [])
-
     if (Object.keys(printInvoice).length > 0) {
         return (
-            <div ref={ref} className="hidden print:block ">
+            <div ref={ref} className={`${!view ? "hidden print:block" : ""}`}>
                 <div className="flex items-center justify-between p-4">
                     <div className="flex flex-col gap-1">
                         <h3 className="text-2xl font-bold">{printInvoice?.Business.name}</h3>
@@ -59,8 +43,13 @@ const printView = React.forwardRef(({printInvoice, appliedTaxes, totalAmountWith
                             <img src={printInvoice?.Business.logo} className="rounded-xl h-[100px] w-[100px]" alt="Business logo" width={100} height={100} />
                         </div>
                     </div>
+                    {printInvoice?.paymentStatus === "Paid" && (
+                        <div className="">
+                            <img src={PaidImg} alt="paid" width={200} height={200} />
+                        </div>
+                    )}
                     <div className="flex flex-col items-end gap-1">
-                        <span className="text-sm font-semibold">Date: {currentDate}</span>
+                        <span className="text-sm font-semibold">Date: {invoiceDate.toLocaleDateString("en-US")}</span>
                         <span className="text-sm">Invoice No: #0000{printInvoice?.invoiceNumber}</span>
                         <span className="text-sm">License No: {printInvoice?.Business.licenseNumber}</span>
                         <span className="text-sm">Permit No: {printInvoice?.Business.permitNumber}</span>
@@ -234,12 +223,30 @@ const printView = React.forwardRef(({printInvoice, appliedTaxes, totalAmountWith
                                     <span className="max-w-[50%] w-min p-2 whitespace-nowrap basis-[50%]" >{`${tax.split('_')[0]} (${tax.split('_')[1]}${tax.split('_')[2]})`}</span>
                                     <span className="max-w-[50%] text-1xl p-2 basis-[50%]">{tax.split('_')[2] === '%' ? appliedTaxes[tax].toFixed(2) : appliedTaxes[tax]} $</span>
                                 </div>
-                            ))}                            
+                            ))}
                         </div>
                         <div className="flex items-center border divide-x">
                             <h1 className="basis-[50%] max-w-[50%] text-1xl p-2">Total</h1>
-                            <h1 className="basis-[50%] max-w-[50%] text-1xl p-2">{totalAmountWithTax} $</h1>
+                            <h1 className="basis-[50%] max-w-[50%] text-1xl p-2">{printInvoice?.totalAmount} $</h1>
                         </div>
+
+                        <div className="p-2 border mt-5 text-center font-medium">
+                            Payments
+                        </div>
+                        {printInvoice?.Payments.length > 0 ? printInvoice?.Payments.map((payment, index) => {
+                            const date = new Date(payment.createdAt);
+                            return (
+                            <div key={index} className="flex items-center border divide-x">
+                                <h1 className="basis-[50%] max-w-[50%] text-1xl p-2">{payment.paymentMethod} on {date.toLocaleDateString("en-US")}</h1>
+                                <h1 className="basis-[50%] max-w-[50%] text-1xl p-2">{payment.paidAmount} $</h1>
+                            </div>
+                        )})
+                        :
+                        <div className="flex items-center border divide-x ">
+                            <h1 className="basis-[50%] max-w-[50%] text-1xl p-2">N/A</h1>
+                            <h1 className="basis-[50%] max-w-[50%] text-1xl p-2">0.00 $</h1>  
+                        </div>  
+                        }
                     </div>
                 </div>
             </div>

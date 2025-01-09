@@ -199,7 +199,7 @@ router.put("/update/:id", fetchUser, async (req, res) => {
   try {
     let invoiceData = req.body;
     const invoice = await Invoice.findByPk(req.params.id, {
-      include: ["Product", "realInvoice"],
+      include: ["Product"],
     });
 
     if (!invoice) {

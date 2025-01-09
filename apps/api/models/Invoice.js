@@ -12,19 +12,10 @@ module.exports = (sequelize) => {
             type: DataTypes.INTEGER,
             defaultValue: 0,
             allowNull: false,
-            unique: true,
-        },
-        current: {
-            type: DataTypes.BOOLEAN,
-            defaultValue: true,
         },
         totalAmount: {
             type: DataTypes.FLOAT,
             allowNull: false,
-        },
-        paymentMethod: {
-            type: DataTypes.STRING,
-            allowNull: true,
         },
         paymentStatus: {
             type: DataTypes.STRING,
@@ -74,21 +65,34 @@ module.exports = (sequelize) => {
         Invoice.belongsTo(models.Business, {
             as: 'Business'
         })
-
-        Invoice.belongsTo(Invoice, { as: 'realInvoice' });
     }
 
     // Define a hook to set the invoiceNumber before creating a new invoice
     Invoice.beforeCreate(async (invoice, options) => {
-        const latestInvoice = await findLatestInvoice();
-        const nextInvoiceNumber = latestInvoice ? latestInvoice.invoiceNumber + 1 : 1;
-        invoice.invoiceNumber = nextInvoiceNumber;
+        const transaction = options.transaction || await Invoice.sequelize.transaction();
+        try {
+            const latestInvoice = await Invoice.findOne({
+                where: { BusinessId: invoice.BusinessId }, // Filter by BusinessId
+                order: [['createdAt', 'DESC']], // Sort by creation date
+                lock: transaction.LOCK.UPDATE, // Lock rows to prevent race conditions
+                transaction,
+            });
+    
+            const nextInvoiceNumber = latestInvoice ? latestInvoice.invoiceNumber + 1 : 1;
+            invoice.invoiceNumber = nextInvoiceNumber;
+    
+            if (!options.transaction) await transaction.commit();
+        } catch (error) {
+            if (!options.transaction) await transaction.rollback();
+            throw error;
+        }
     });
 
     // Method to find the latest invoice number
-    async function findLatestInvoice() {
+    async function findLatestInvoice(businessId) {
         return Invoice.findOne({
-            order: [['createdAt', 'DESC']], // Assuming you have a createdAt field
+            where: { businessId }, // Filter by businessId
+            order: [['createdAt', 'DESC']], // Sort by creation date in descending order
         });
     }
 

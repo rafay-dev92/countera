@@ -52,12 +52,7 @@ export function Invoice() {
     try {
       const fetchedInvoices = await fetchInvoices(state.userToken);
       const totalInvoices = await fetchedInvoices.json();
-      if (state.Settings.General.invoice === 'all') {
-        setInvoices(totalInvoices);
-      }
-      else if (state.Settings.General.invoice === 'current') {
-        setInvoices(totalInvoices?.data.filter(invoice => invoice.current === true))
-      }
+      setInvoices(totalInvoices.data);
       setLoading(false);
 
     } catch (error) {

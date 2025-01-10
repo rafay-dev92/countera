@@ -27,6 +27,7 @@ import CustomerForm from "../invoice/customerForm";
 import { updateCustomerVehicle } from "@/services/updateCustomerVehicle";
 import { updateQuotation } from "@/services/updateQuotation";
 import { addQuotaion } from "@/services/addQuotation";
+import ViewQuotation from "./viewQuotation";
 
 const TABLE_HEAD = [
   "Product",
@@ -42,7 +43,7 @@ const schema = Yup.object().shape({
   vehicle: Yup.string().required("Vehicle is required"),
 });
 
-const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setSelectedQuotation }) => {
+const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setSelectedQuotation, isViewOpen, setIsViewOpen }) => {
   const componentRef = useRef();
   const printRef = useRef();
   const customerInputRef = useRef();
@@ -64,7 +65,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
   const [totalAmount, setTotalAmount] = useState(0);
   const [invoiceId, setInvoiceId] = useState('');
   const [edit, setEdit] = useState(false);
-  const [printQuotation, setPrintInvoice] = useState([]);
+  const [printQuotation, setPrintQuotation] = useState([]);
   const [appliedTaxes, setAppliedTaxes] = useState({});
   const [showCustomerSuggestions, setShowCustomerSuggestions] = useState(false);
   const [showProductSuggestions, setShowProductSuggestions] = useState(false);
@@ -102,6 +103,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
     setSelectedCustomer(null)
     setSelectedVehicle(null)
     setSelectedQuotation(null)
+    setPrintQuotation([])
     setSelectedProducts([{
       product: "",
       quantity: 1,
@@ -112,6 +114,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
     clearForm(formikProps);
     setEdit(false)
     setRefresh(!refresh);
+    setIsViewOpen(false);
     close();
   };
 
@@ -139,7 +142,8 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
 
   useEffect(() => {
     if (selectedQuotation) {
-      // setPrintInvoice(selectedInvoice);
+      console.log(selectedQuotation)
+      setPrintQuotation(selectedQuotation);
       setInvoiceId(selectedQuotation.id)
       setSelectedCustomer(selectedQuotation.Customer)
       setSelectedVehicle(selectedQuotation.CustomerVehicle)
@@ -167,11 +171,11 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
         selectedProd.forEach((product) => {
           product.Tax?.forEach((productTax) => {
             const key = `${productTax.name}_${productTax.rate}_${productTax.type}`;
-    
+
             if (!productTaxes[key]) {
               productTaxes[key] = 0;
             }
-    
+
             if (productTax.type === "%") {
               productTaxes[key] += product.price * product.quantity * (productTax.rate / 100);
             } else {
@@ -182,7 +186,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
         setAppliedTaxes(productTaxes);
       }
       setSelectedProducts(selectedProd);
-      setSelectedQuotation(null)
+      // setSelectedQuotation(null)
     }
 
   }, [selectedQuotation])
@@ -219,7 +223,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
       if (edit) {
         const res = await updateQuotation(invoiceId, updatedData, state.userToken)
         const quotation = await res.json();
-        setPrintInvoice(quotation?.data);
+        setPrintQuotation(quotation?.data);
         if (res.status === 200) {
           showToastMessage('success', quotation.message)
         }
@@ -233,7 +237,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
       else {
         const res = await addQuotaion(updatedData, state.userToken)
         const quotation = await res.json();
-        setPrintInvoice(quotation?.data);
+        setPrintQuotation(quotation?.data);
         if (res.status === 200) {
           showToastMessage('success', quotation.message)
         }
@@ -540,10 +544,11 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
 
   useEffect(() => {
     if (Object.keys(printQuotation).length > 0) {
-      if (printRef.current) {
-        printRef.current.handlePrint();
-        handleClose();
-      }
+      setIsViewOpen(true);
+      // if (printRef.current) {
+      //   printRef.current.handlePrint();
+      //   handleClose();
+      // }
     }
   }, [printQuotation])
 
@@ -557,7 +562,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
                 <div className="flex items-center justify-between sticky bg-gradient-to-br from-gray-800 to-gray-700">
                   <div></div>
                   <div className="text-white text-center text-lg">
-                    {edit ? "EDIT QUOTATION" : "NEW QUOTATION"}
+                    {isViewOpen ? "VIEW" : edit ? "EDIT" : "NEW"} {"QUOTATION"}
                   </div>
                   <button
                     className="bg-transparent hover:bg-gray-800 text-white font-bold py-2 px-4 rounded"
@@ -581,360 +586,363 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
                   </button>
                 </div>
 
-                <div className="overflow-y-auto h-[80vh] overflow-x-hidden p-2">
-                  <div className="flex gap-4">
-                    <div className="basis-[40%] max-w-[40%]">
-                      <div className="relative mb-7" ref={customerInputRef}>
-                        <div className="flex items-center pl-2">
-                          <label className="font-bold">Customer</label>
-                          <IconButton variant="text" onClick={() => setIsCustomerFormOpen(true)}>
-                            <PlusCircleIcon className="h-5 w-5 text-blue-600 cursor-pointer" />
-                          </IconButton>
-                        </div>
-                        <input
-                          className="w-[70%] h-[97%] m-2 p-2 border border-gray-300 rounded-md text-gray-600 font-small"
-                          id="customer"
-                          name="customer"
-                          type="text"
-                          value={selectedCustomer ? `${selectedCustomer.firstName} ${selectedCustomer.lastName}` : values.customer}
-                          onClick={() => { setShowCustomerSuggestions(true); setValues({ ...values, ['customer']: '' }) }}
-                          onChange={(e) => { setSelectedCustomer(null); setSelectedVehicle(null); setVehicleOdometer(''), handleChange(e) }}
-                          onBlur={handleBlur}
-                          autoComplete="off"
-                          placeholder="Select Customer"
-                        />
+                {isViewOpen ? (
+                  <ViewQuotation quotationData={printQuotation} setQuotationData={setPrintQuotation} componentRef={componentRef} appliedTaxes={appliedTaxes} setEdit={setEdit} setIsViewOpen={setIsViewOpen} close={handleClose} />
+                ) : (
+                  <div className="overflow-y-auto h-[80vh] overflow-x-hidden p-2">
+                    <div className="flex gap-4">
+                      <div className="basis-[40%] max-w-[40%]">
+                        <div className="relative mb-7" ref={customerInputRef}>
+                          <div className="flex items-center pl-2">
+                            <label className="font-bold">Customer</label>
+                            <IconButton variant="text" onClick={() => setIsCustomerFormOpen(true)}>
+                              <PlusCircleIcon className="h-5 w-5 text-blue-600 cursor-pointer" />
+                            </IconButton>
+                          </div>
+                          <input
+                            className="w-[70%] h-[97%] m-2 p-2 border border-gray-300 rounded-md text-gray-600 font-small"
+                            id="customer"
+                            name="customer"
+                            type="text"
+                            value={selectedCustomer ? `${selectedCustomer.firstName} ${selectedCustomer.lastName}` : values.customer}
+                            onClick={() => { setShowCustomerSuggestions(true); setValues({ ...values, ['customer']: '' }) }}
+                            onChange={(e) => { setSelectedCustomer(null); setSelectedVehicle(null); setVehicleOdometer(''), handleChange(e) }}
+                            onBlur={handleBlur}
+                            autoComplete="off"
+                            placeholder="Select Customer"
+                          />
 
-                        {/* {(touched.customer && errors.customer) ? (
+                          {/* {(touched.customer && errors.customer) ? (
                           <div className="text-red-500">
                             {errors.customer}
                           </div>
                         ) : (<div></div>)} */}
-                        {showCustomerSuggestions && (
-                          <ul className="d-block absolute z-50 bg-white border border-slate-700 w-[70%] mt-1 ml-2 overflow-y-auto min-h-24 max-h-48 ">
-                            {customers.length > 0 ?
-                              customers.filter(customer => `${customer.firstName.toLowerCase()} ${customer.lastName.toLowerCase()}`.includes(values.customer.trim().toLowerCase())).map((customer) => (
-                                <li key={customer.id} className="cursor-pointer px-2 py-1 rounded-sm hover:bg-gray-200" onClick={() => { handleCustomerChange(customer) }}>
-                                  {customer.firstName} {customer.lastName}
-                                </li>
-                              ))
-                              :
-                              <li className="px-2 py-1 rounded-sm">No Customer</li>
-                            }
-                          </ul>
-                        )}
-                      </div>
+                          {showCustomerSuggestions && (
+                            <ul className="d-block absolute z-50 bg-white border border-slate-700 w-[70%] mt-1 ml-2 overflow-y-auto min-h-24 max-h-48 ">
+                              {customers.length > 0 ?
+                                customers.filter(customer => `${customer.firstName.toLowerCase()} ${customer.lastName.toLowerCase()}`.includes(values.customer.trim().toLowerCase())).map((customer) => (
+                                  <li key={customer.id} className="cursor-pointer px-2 py-1 rounded-sm hover:bg-gray-200" onClick={() => { handleCustomerChange(customer) }}>
+                                    {customer.firstName} {customer.lastName}
+                                  </li>
+                                ))
+                                :
+                                <li className="px-2 py-1 rounded-sm">No Customer</li>
+                              }
+                            </ul>
+                          )}
+                        </div>
 
-                      <label className="p-2 font-bold">Name</label> <br />
-                      <input
-                        className="w-48 lg:w-72 m-2 p-2 border border-gray-300 rounded-md text-black"
-                        id="email"
-                        name="email"
-                        type="email"
-                        value={selectedCustomer ? `${selectedCustomer.firstName} ${selectedCustomer.lastName}` : ''}
-                        disabled
-                      /> <br />
-
-                      <label className="p-2 font-bold">Email</label> <br />
-                      <input
-                        className="w-48 lg:w-72 m-2 p-2 border border-gray-300 rounded-md text-black"
-                        id="email"
-                        name="email"
-                        type="email"
-                        value={selectedCustomer ? selectedCustomer.email : ''}
-                        disabled
-                      /> <br />
-
-                      <label className="p-2 font-bold">Phone</label> <br />
-
-                      <input
-                        className="w-48 lg:w-72 m-2 p-2 border border-gray-300 rounded-md text-black"
-                        id="phone"
-                        name="phone"
-                        type="text"
-                        value={selectedCustomer ? selectedCustomer.phone : ''}
-                        disabled
-                      /> <br />
-                      <div>
-                        <label className="p-2 font-bold">Address</label> <br />
-
-                        <textarea
-                          className="w-48 lg:w-80 m-2 p-2 border border-gray-300 rounded-md text-black"
-                          id="address"
-                          name="address"
-                          type="text"
-                          value={selectedCustomer ? `${selectedCustomer.Address?.street}, ${selectedCustomer.Address?.city}` : ''}
+                        <label className="p-2 font-bold">Name</label> <br />
+                        <input
+                          className="w-48 lg:w-72 m-2 p-2 border border-gray-300 rounded-md text-black"
+                          id="email"
+                          name="email"
+                          type="email"
+                          value={selectedCustomer ? `${selectedCustomer.firstName} ${selectedCustomer.lastName}` : ''}
                           disabled
-                        />
-                      </div>
-                    </div>
+                        /> <br />
 
-                    <div className="basis-[60%] max-w-[60%]">
-                      <div className="flex items-center pl-2">
-                        <label className="font-bold">Vehicle</label>
-                        <IconButton variant="text" onClick={() => selectedCustomer && setIsCustomerVehicleFormOpen(true)}>
-                          <PlusCircleIcon className="h-5 w-5 text-blue-600 cursor-pointer" />
-                        </IconButton>
-                      </div>
-                      <select
-                        id="vehicle"
-                        name="vehicle"
-                        className="w-48 lg:w-72 m-2 p-2 border border-gray-300 bg-inherit rounded-md"
-                        value={values.vehicle}
-                        onChange={(e) =>
-                          handleVehicleChange(e.target.value)
-                        }
-                        onBlur={handleBlur}
-                      >
+                        <label className="p-2 font-bold">Email</label> <br />
+                        <input
+                          className="w-48 lg:w-72 m-2 p-2 border border-gray-300 rounded-md text-black"
+                          id="email"
+                          name="email"
+                          type="email"
+                          value={selectedCustomer ? selectedCustomer.email : ''}
+                          disabled
+                        /> <br />
 
-                        {selectedCustomer && selectedCustomer.Vehicle?.length > 0 ? selectedCustomer.Vehicle?.map((vehicle) => (
-                          <option
-                            key={vehicle.id}
-                            value={vehicle.id}
-                          >
-                            {vehicle.make} {vehicle.model} {vehicle.year}
-                          </option>
-                        ))
-                          :
-                          <option value="">Select Vehicle</option>
-                        }
-                      </select>
-                      {touched.vehicle && errors.vehicle ? (
-                        <div className="text-red-500">
-                          {errors.vehicle}
-                        </div>
-                      ) : (<div></div>)} <br />
-                      <div className="flex gap-5">
-                        <div className="flex flex-col">
-                          <div>
-                            <label className="p-2 font-bold">Make</label> <br />
-                            <input
-                              className="w-48 lg:w-72 m-2 p-2 border border-gray-300 rounded-md text-black"
-                              id="make"
-                              name="make"
-                              type="text"
-                              value={selectedVehicle ? selectedVehicle.make : ''}
-                              disabled
-                            /> <br />
-                          </div>
+                        <label className="p-2 font-bold">Phone</label> <br />
 
-                          <div>
-                            <label className="p-2 font-bold">Model</label> <br />
-                            <input
-                              className="w-48 lg:w-72 m-2 p-2 border border-gray-300 rounded-md text-black"
-                              id="model"
-                              name="model"
-                              type="text"
-                              value={selectedVehicle ? selectedVehicle.model : ''}
-                              disabled
-                            /> <br />
-                          </div>
-                        </div>
-                        <div className="flex flex-col" >
-                          <div>
-                            <label className="p-2 font-bold">Year</label> <br />
-                            <input
-                              className="w-48 lg:w-72 m-2 p-2 border border-gray-300 rounded-md text-black"
-                              id="year"
-                              name="year"
-                              type="number"
-                              value={selectedVehicle ? selectedVehicle.year : ''}
-                              disabled
-                            /> <br />
-                          </div>
+                        <input
+                          className="w-48 lg:w-72 m-2 p-2 border border-gray-300 rounded-md text-black"
+                          id="phone"
+                          name="phone"
+                          type="text"
+                          value={selectedCustomer ? selectedCustomer.phone : ''}
+                          disabled
+                        /> <br />
+                        <div>
+                          <label className="p-2 font-bold">Address</label> <br />
 
-                          <div>
-                            <label className="p-2 font-bold">Color</label> <br />
-                            <input
-                              className="w-48 lg:w-72 m-2 p-2 border border-gray-300 rounded-md text-black"
-                              id="color"
-                              name="color"
-                              type="text"
-                              value={selectedVehicle ? selectedVehicle.color : ''}
-                              disabled
-                            /> <br />
-                          </div>
+                          <textarea
+                            className="w-48 lg:w-80 m-2 p-2 border border-gray-300 rounded-md text-black"
+                            id="address"
+                            name="address"
+                            type="text"
+                            value={selectedCustomer ? `${selectedCustomer.Address?.street}, ${selectedCustomer.Address?.city}` : ''}
+                            disabled
+                          />
                         </div>
                       </div>
 
-                      <div className="flex gap-5">
-                        <div className="flex flex-col" >
-                          <div>
-                            <div className="flex items-center pl-2">
-                              <label className="font-bold">Odometer</label> <br />
-                              <IconButton variant='text' onClick={() => setVehicleOdometer(selectedVehicle?.odometer)}>
-                                <ArrowUturnLeftIcon className="h-5 w-5 text-blue-600 cursor-pointer" />
-                              </IconButton>
+                      <div className="basis-[60%] max-w-[60%]">
+                        <div className="flex items-center pl-2">
+                          <label className="font-bold">Vehicle</label>
+                          <IconButton variant="text" onClick={() => selectedCustomer && setIsCustomerVehicleFormOpen(true)}>
+                            <PlusCircleIcon className="h-5 w-5 text-blue-600 cursor-pointer" />
+                          </IconButton>
+                        </div>
+                        <select
+                          id="vehicle"
+                          name="vehicle"
+                          className="w-48 lg:w-72 m-2 p-2 border border-gray-300 bg-inherit rounded-md"
+                          value={values.vehicle}
+                          onChange={(e) =>
+                            handleVehicleChange(e.target.value)
+                          }
+                          onBlur={handleBlur}
+                        >
+
+                          {selectedCustomer && selectedCustomer.Vehicle?.length > 0 ? selectedCustomer.Vehicle?.map((vehicle) => (
+                            <option
+                              key={vehicle.id}
+                              value={vehicle.id}
+                            >
+                              {vehicle.make} {vehicle.model} {vehicle.year}
+                            </option>
+                          ))
+                            :
+                            <option value="">Select Vehicle</option>
+                          }
+                        </select>
+                        {touched.vehicle && errors.vehicle ? (
+                          <div className="text-red-500">
+                            {errors.vehicle}
+                          </div>
+                        ) : (<div></div>)} <br />
+                        <div className="flex gap-5">
+                          <div className="flex flex-col">
+                            <div>
+                              <label className="p-2 font-bold">Make</label> <br />
+                              <input
+                                className="w-48 lg:w-72 m-2 p-2 border border-gray-300 rounded-md text-black"
+                                id="make"
+                                name="make"
+                                type="text"
+                                value={selectedVehicle ? selectedVehicle.make : ''}
+                                disabled
+                              /> <br />
                             </div>
-                            <input
-                              className="w-48 lg:w-72 m-2 p-2 border border-gray-300 rounded-md text-black"
-                              id="year"
-                              name="year"
-                              type="number"
-                              value={vehicleOdometer}
-                              onChange={(e) => setVehicleOdometer(e.target.value)}
-                            /> <br />
-                          </div>
 
-                          <div>
-                            <label className="p-2 font-bold">License No.</label> <br />
-                            <input
-                              className="w-48 lg:w-72 m-2 p-2 border border-gray-300 rounded-md text-black"
-                              id="color"
-                              name="color"
-                              type="text"
-                              value={selectedVehicle ? selectedVehicle.licenseNo : ''}
-                              disabled
-                            /> <br />
+                            <div>
+                              <label className="p-2 font-bold">Model</label> <br />
+                              <input
+                                className="w-48 lg:w-72 m-2 p-2 border border-gray-300 rounded-md text-black"
+                                id="model"
+                                name="model"
+                                type="text"
+                                value={selectedVehicle ? selectedVehicle.model : ''}
+                                disabled
+                              /> <br />
+                            </div>
+                          </div>
+                          <div className="flex flex-col" >
+                            <div>
+                              <label className="p-2 font-bold">Year</label> <br />
+                              <input
+                                className="w-48 lg:w-72 m-2 p-2 border border-gray-300 rounded-md text-black"
+                                id="year"
+                                name="year"
+                                type="number"
+                                value={selectedVehicle ? selectedVehicle.year : ''}
+                                disabled
+                              /> <br />
+                            </div>
+
+                            <div>
+                              <label className="p-2 font-bold">Color</label> <br />
+                              <input
+                                className="w-48 lg:w-72 m-2 p-2 border border-gray-300 rounded-md text-black"
+                                id="color"
+                                name="color"
+                                type="text"
+                                value={selectedVehicle ? selectedVehicle.color : ''}
+                                disabled
+                              /> <br />
+                            </div>
                           </div>
                         </div>
-                        <div className="flex flex-col ml-3 place-self-end">
-                          <div className="text-5xl mt-5">
-                            <h1>$  {calculateTotalAmountWithTax()}</h1>
-                          </div>                          
+
+                        <div className="flex gap-5">
+                          <div className="flex flex-col" >
+                            <div>
+                              <div className="flex items-center pl-2">
+                                <label className="font-bold">Odometer</label> <br />
+                                <IconButton variant='text' onClick={() => setVehicleOdometer(selectedVehicle?.odometer)}>
+                                  <ArrowUturnLeftIcon className="h-5 w-5 text-blue-600 cursor-pointer" />
+                                </IconButton>
+                              </div>
+                              <input
+                                className="w-48 lg:w-72 m-2 p-2 border border-gray-300 rounded-md text-black"
+                                id="year"
+                                name="year"
+                                type="number"
+                                value={vehicleOdometer}
+                                onChange={(e) => setVehicleOdometer(e.target.value)}
+                              /> <br />
+                            </div>
+
+                            <div>
+                              <label className="p-2 font-bold">License No.</label> <br />
+                              <input
+                                className="w-48 lg:w-72 m-2 p-2 border border-gray-300 rounded-md text-black"
+                                id="color"
+                                name="color"
+                                type="text"
+                                value={selectedVehicle ? selectedVehicle.licenseNo : ''}
+                                disabled
+                              /> <br />
+                            </div>
+                          </div>
+                          <div className="flex flex-col ml-3 place-self-end">
+                            <div className="text-5xl mt-5">
+                              <h1>$  {calculateTotalAmountWithTax()}</h1>
+                            </div>
+                          </div>
                         </div>
+
                       </div>
-
                     </div>
-                  </div>
 
-                  <Card className=" w-full">
-                    <CardBody className="p-2">
-                      <table className="w-full min-w-max table-auto text-left ">
-                        <thead>
-                          <tr>
-                            {TABLE_HEAD.map((head) => (
-                              <th
-                                key={head}
-                                className="border-y border-blue-gray-100 bg-blue-gray-50/50 p-4"
-                              >
-                                <Typography
-                                  variant="small"
-                                  color="blue-gray"
-                                  className="font-normal leading-none opacity-70"
+                    <Card className=" w-full">
+                      <CardBody className="p-2">
+                        <table className="w-full min-w-max table-auto text-left ">
+                          <thead>
+                            <tr>
+                              {TABLE_HEAD.map((head) => (
+                                <th
+                                  key={head}
+                                  className="border-y border-blue-gray-100 bg-blue-gray-50/50 p-4"
                                 >
-                                  {head}
-                                </Typography>
-                              </th>
-                            ))}
-                          </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                          {selectedProducts.map((item, index) => (
-                            <tr key={index}>
-                              <td className="p-4 border-b border-blue-gray-50">
-                                {index !== (selectedProducts.length - 1) ?
-                                  <div className="w-[70%] h-[97%] m-2 p-2 border border-gray-300 rounded-md text-gray-600 font-small">
-                                    {item.name}
-                                  </div>
-                                  :
-                                  <div ref={productInputRef}>
-                                    <input
-                                      className="w-[70%] h-[97%] mx-2 p-2 border border-gray-300 rounded-md text-gray-600 font-small"
-                                      id="product"
-                                      name="product"
-                                      type="text"
-                                      value={selectedProducts[index].name ? selectedProducts[index].name : productSearchText}
-                                      onClick={() => { selectedCustomer && setShowProductSuggestions(true) }}
-                                      onChange={(e) => setProductSearchText(e.target.value)}
-                                      onBlur={handleBlur}
-                                      autoComplete="off"
-                                      placeholder="Select Product"
-                                    />
-                                    {showProductSuggestions && (
-                                      <ul className="d-block absolute z-50 bg-white border border-slate-700 w-[27%] mt-1 ml-2 overflow-y-auto min-h-24 max-h-48">
-                                        {products?.length > 0 ?
-                                          products.filter(product => `${product.name}`.toLowerCase().includes(productSearchText)).map((product) => (
-                                            <li key={product.id} className="cursor-pointer px-2 py-1 rounded-sm hover:bg-gray-200" onClick={() => { handleProductChange(index, item.quantity, product.id), setShowProductSuggestions(false) }}>
-                                              {product?.name}
-                                            </li>
-                                          ))
-                                          :
-                                          <li className="px-2 py-1 rounded-sm">No Product</li>
-                                        }
-                                      </ul>
-                                    )}
-                                  </div>
-                                }
-                              </td>
-                              <td className="p-4 border-b border-blue-gray-50">
-                                <input
-                                  type="number"
-                                  min={1}
-                                  className="w-14 p-2 border rounded-md text-black"
-                                  value={item.quantity}
-                                  onChange={(e) =>
-                                    handleQuantityChange(index, e.target.value)
-                                  }
-                                />
-                              </td>
-                              <td className="p-4 border-b border-blue-gray-50">
-                                <Typography
-                                  variant="small"
-                                  color="blue-gray"
-                                  className="font-normal opacity-70"
-                                >
-                                  {item.price}
-                                </Typography>
-                              </td>
-                              <td className="p-4 border-b border-blue-gray-50">
-                                <input
-                                  type="checkbox"
-                                  checked={selectedCustomer?.taxable && item.taxable}
-                                  readOnly
-                                />
-                              </td>
-                              <td className="p-4 border-b border-blue-gray-50">
-                                <Typography
-                                  variant="small"
-                                  color="blue-gray"
-                                  className="font-normal opacity-70"
-                                >
-
-                                  {calculateAmount(item.price, item.quantity)}
-                                </Typography>
-                              </td>
-                              <td className="p-4 border-b border-blue-gray-50 text-center px-4 py-2">
-                                {index !== selectedProducts.length - 1 ?
-                                  <XCircleIcon
-                                    onClick={() => handleRemoveProduct(index)}
-                                    className="h-6 w-6 text-gray-600 hover:text-red-500 cursor-pointer"
-                                  />
-                                  :
-                                  null
-                                }
-                              </td>
+                                  <Typography
+                                    variant="small"
+                                    color="blue-gray"
+                                    className="font-normal leading-none opacity-70"
+                                  >
+                                    {head}
+                                  </Typography>
+                                </th>
+                              ))}
                             </tr>
-                          ))}
-                        </tbody>
+                          </thead>
+                          <tbody className="bg-white divide-y divide-gray-200">
+                            {selectedProducts.map((item, index) => (
+                              <tr key={index}>
+                                <td className="p-4 border-b border-blue-gray-50">
+                                  {index !== (selectedProducts.length - 1) ?
+                                    <div className="w-[70%] h-[97%] m-2 p-2 border border-gray-300 rounded-md text-gray-600 font-small">
+                                      {item.name}
+                                    </div>
+                                    :
+                                    <div ref={productInputRef}>
+                                      <input
+                                        className="w-[70%] h-[97%] mx-2 p-2 border border-gray-300 rounded-md text-gray-600 font-small"
+                                        id="product"
+                                        name="product"
+                                        type="text"
+                                        value={selectedProducts[index].name ? selectedProducts[index].name : productSearchText}
+                                        onClick={() => { selectedCustomer && setShowProductSuggestions(true) }}
+                                        onChange={(e) => setProductSearchText(e.target.value)}
+                                        onBlur={handleBlur}
+                                        autoComplete="off"
+                                        placeholder="Select Product"
+                                      />
+                                      {showProductSuggestions && (
+                                        <ul className="d-block absolute z-50 bg-white border border-slate-700 w-[27%] mt-1 ml-2 overflow-y-auto min-h-24 max-h-48">
+                                          {products?.length > 0 ?
+                                            products.filter(product => `${product.name}`.toLowerCase().includes(productSearchText)).map((product) => (
+                                              <li key={product.id} className="cursor-pointer px-2 py-1 rounded-sm hover:bg-gray-200" onClick={() => { handleProductChange(index, item.quantity, product.id), setShowProductSuggestions(false) }}>
+                                                {product?.name}
+                                              </li>
+                                            ))
+                                            :
+                                            <li className="px-2 py-1 rounded-sm">No Product</li>
+                                          }
+                                        </ul>
+                                      )}
+                                    </div>
+                                  }
+                                </td>
+                                <td className="p-4 border-b border-blue-gray-50">
+                                  <input
+                                    type="number"
+                                    min={1}
+                                    className="w-14 p-2 border rounded-md text-black"
+                                    value={item.quantity}
+                                    onChange={(e) =>
+                                      handleQuantityChange(index, e.target.value)
+                                    }
+                                  />
+                                </td>
+                                <td className="p-4 border-b border-blue-gray-50">
+                                  <Typography
+                                    variant="small"
+                                    color="blue-gray"
+                                    className="font-normal opacity-70"
+                                  >
+                                    {item.price}
+                                  </Typography>
+                                </td>
+                                <td className="p-4 border-b border-blue-gray-50">
+                                  <input
+                                    type="checkbox"
+                                    checked={selectedCustomer?.taxable && item.taxable}
+                                    readOnly
+                                  />
+                                </td>
+                                <td className="p-4 border-b border-blue-gray-50">
+                                  <Typography
+                                    variant="small"
+                                    color="blue-gray"
+                                    className="font-normal opacity-70"
+                                  >
 
-                      </table>
-                    </CardBody>
-                  </Card>
+                                    {calculateAmount(item.price, item.quantity)}
+                                  </Typography>
+                                </td>
+                                <td className="p-4 border-b border-blue-gray-50 text-center px-4 py-2">
+                                  {index !== selectedProducts.length - 1 ?
+                                    <XCircleIcon
+                                      onClick={() => handleRemoveProduct(index)}
+                                      className="h-6 w-6 text-gray-600 hover:text-red-500 cursor-pointer"
+                                    />
+                                    :
+                                    null
+                                  }
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
 
-                  <div className="flex">
-                    <div className="basis-[50%] max-w-[50%]">
-                    </div>
+                        </table>
+                      </CardBody>
+                    </Card>
 
-                    <div className="basis-[50%] max-w-[50%] border my-4 font-normal">
-                      <div className="flex justify-between p-2">
-                        <div className="text-1xl">
-                          <h1>Subtotal</h1>
-                        </div>
-                        <div className="text-1xl">
-                          <h1>{totalAmount} $</h1>
-                        </div>
+                    <div className="flex">
+                      <div className="basis-[50%] max-w-[50%]">
                       </div>
 
-                      <div className="flex flex-col divide-y border-y">
-                        {Object.keys(appliedTaxes).map((tax, ind) => (
-                          <div key={ind} className="flex justify-between">
-                            <span className="rounded w-min p-2 whitespace-nowrap basis-[50%]" >{`${tax.split('_')[0]} (${tax.split('_')[1]}${tax.split('_')[2]})`}</span>
-                            <span className="text-1xl p-2 w-fit text-right basis-[50%]">{tax.split('_')[2] === '%' ? appliedTaxes[tax].toFixed(2) : appliedTaxes[tax]} $</span>
+                      <div className="basis-[50%] max-w-[50%] border my-4 font-normal">
+                        <div className="flex justify-between p-2">
+                          <div className="text-1xl">
+                            <h1>Subtotal</h1>
                           </div>
-                        ))}
-                      </div>
+                          <div className="text-1xl">
+                            <h1>{totalAmount} $</h1>
+                          </div>
+                        </div>
 
-                      {/* <div className="flex justify-between mx-10">
+                        <div className="flex flex-col divide-y border-y">
+                          {Object.keys(appliedTaxes).map((tax, ind) => (
+                            <div key={ind} className="flex justify-between">
+                              <span className="rounded w-min p-2 whitespace-nowrap basis-[50%]" >{`${tax.split('_')[0]} (${tax.split('_')[1]}${tax.split('_')[2]})`}</span>
+                              <span className="text-1xl p-2 w-fit text-right basis-[50%]">{tax.split('_')[2] === '%' ? appliedTaxes[tax].toFixed(2) : appliedTaxes[tax]} $</span>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* <div className="flex justify-between mx-10">
                         <div className="w-min" >
                           <select
                             className="w-min p-2 border border-gray-300 bg-inherit rounded-md outline-none"
@@ -958,50 +966,64 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
                         <div></div>                        
                       </div> */}
 
-                      <div className="flex items-center justify-between p-2 font-medium text-black bg-yellow-700">
-                        <div className="text-1xl">
-                          <h1>Total</h1>
-                        </div>
-                        <div className="text-1xl">
-                          <h1>{calculateTotalAmountWithTax()} $</h1>
+                        <div className="flex items-center justify-between p-2 font-medium text-black bg-yellow-700">
+                          <div className="text-1xl">
+                            <h1>Total</h1>
+                          </div>
+                          <div className="text-1xl">
+                            <h1>{calculateTotalAmountWithTax()} $</h1>
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
-                <div className="flex items-center justify-end space-x-2 sticky bg-gradient-to-br from-gray-800 to-gray-700">
-                  <ReactToPrint
+                )}
+                {!isViewOpen ? (
+                  <div className="flex items-center justify-end space-x-2 sticky bg-gradient-to-br from-gray-800 to-gray-700">
+                    {/* <ReactToPrint
                     ref={printRef}
                     trigger={() => <button
-                      onClick={() => setPrintInvoice(selectedQuotation)}
+                      onClick={() => setSelectedQuotation(selectedQuotation)}
                       className={`w-32 bg-gray-600 hover:bg-gray-900 text-white font-bold py-2 px-4 ${!edit ? 'hidden' : ''}`}
                       type="button"
                     >
                       Print
                     </button>}
                     content={() => componentRef.current}
-                  />
+                  /> */}
 
-                  <button
-                    className=" w-32 bg-gray-600 hover:bg-gray-900 text-white font-bold py-2 px-4"
-                    onClick={() => clearForm(formikProps)}
-                    type="button"
-                  >
-                    Clear
-                  </button>
-                  <button
-                    disabled={isLoading}
-                    className="w-32 bg-gray-600 hover:bg-gray-900 text-white font-bold py-2 px-4"
-                    type="submit"
-                  >
-                    {!isLoading ?
-                      <span>{edit ? 'Update' : 'Save'}</span> :
-                      <div className="flex items-center justify-center h-fit">
-                        <div className="w-6 h-6 border-4 border-gray-500 border-t-transparent rounded-full animate-spin"></div>
-                      </div>
-                    }
-                  </button>
-                </div>
+                    {edit && (
+                      <button className=" w-32 bg-gray-600 hover:bg-gray-900 text-white font-bold py-2 px-4"
+                        onClick={() => { setEdit(false); setIsViewOpen(true) }}
+                        type="button"
+                      >
+                        Back
+                      </button>
+                    )}
+
+                    <button
+                      className=" w-32 bg-gray-600 hover:bg-gray-900 text-white font-bold py-2 px-4"
+                      onClick={() => clearForm(formikProps)}
+                      type="button"
+                    >
+                      Clear
+                    </button>
+                    <button
+                      disabled={isLoading}
+                      className="w-32 bg-gray-600 hover:bg-gray-900 text-white font-bold py-2 px-4"
+                      type="submit"
+                    >
+                      {!isLoading ?
+                        <span>{edit ? 'Update' : 'Save'}</span> :
+                        <div className="flex items-center justify-center h-fit">
+                          <div className="w-6 h-6 border-4 border-gray-500 border-t-transparent rounded-full animate-spin"></div>
+                        </div>
+                      }
+                    </button>
+                  </div>
+                ) :
+                  <div className="flex items-center justify-end space-x-2 sticky bg-gradient-to-br from-gray-800 to-gray-700"></div>
+                }
               </div>
             </div>
 
@@ -1010,7 +1032,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
       </Dialog>
       <CustomerForm open={isCustomerFormOpen} close={closeCustomerForm} refresh={refresh} setRefresh={setRefresh} setSelectedCustomer={setSelectedCustomer} />
       {selectedCustomer ? <CustomerVehicleForm open={isCustomerVehicleFormOpen} close={closeCustomerVehicleForm} refresh={refresh} setRefresh={setRefresh} CustomerId={selectedCustomer?.id} getCustomerDetails={getCustomerDetails} /> : null}
-      {Object.keys(printQuotation).length > 0 ? <PrintView printQuotation={printQuotation} ref={componentRef} appliedTaxes={appliedTaxes} totalAmountWithTax={calculateTotalAmountWithTax()} /> : null}
+      {printQuotation && Object.keys(printQuotation).length > 0 ? <PrintView view={false} quotationData={printQuotation} ref={componentRef} appliedTaxes={appliedTaxes} /> : null}
     </>
   );
 };

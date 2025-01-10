@@ -19,7 +19,6 @@ import { State } from "../../state/Context";
 import { fetchQuotations } from "@/services/fetchQuotations";
 import { delQuotation } from "@/services/delQuotaion";
 import { toast } from "react-toastify";
-import { addInvoice } from "@/services/addInvoice";
 
 const TABLE_HEAD = ["Customer", "Total", "Quotation Date", "Vehicle", "Actions"];
 
@@ -34,6 +33,7 @@ export function Quotation() {
     const [selectedQuotation, setSelectedQuotation] = useState(null);
     const [isOpen, setIsOpen] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [isViewOpen, setIsViewOpen] = useState(false);
 
     const showToastMessage = (type, message) => {
         if (type === 'success') {
@@ -364,7 +364,7 @@ export function Quotation() {
                 </CardFooter>
 
             </Card>
-            <MyPopUpForm refresh={refresh} setRefresh={setRefresh} open={isOpen} close={closePopup} selectedQuotation={selectedQuotation} setSelectedQuotation={setSelectedQuotation} />
+            <MyPopUpForm refresh={refresh} setRefresh={setRefresh} open={isOpen} close={closePopup} selectedQuotation={selectedQuotation} setSelectedQuotation={setSelectedQuotation} isViewOpen={isViewOpen} setIsViewOpen={setIsViewOpen} />
         </>
     );
 }   

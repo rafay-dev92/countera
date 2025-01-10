@@ -4,8 +4,8 @@ import { Typography } from "@material-tailwind/react";
 const INVOICE_TABLE_HEAD = ["Customer", "Status", "Payment Method", "Total"];
 const PRODUCT_TABLE_HEAD = ["Product", "Quantity", "Price", "Tax", "Amount"]
 
-const printView = React.forwardRef(({printQuotation, appliedTaxes, totalAmountWithTax}, ref) =>  {
-    const currentDate = new Date().toLocaleDateString();
+const printView = React.forwardRef(({view, quotationData, appliedTaxes}, ref) =>  {
+    const quotationDate = new Date(quotationData?.createdAt);
     const [taxes, setTaxes] = useState([]);
 
     const formatCreatedAt = (createdAt) => {
@@ -26,10 +26,10 @@ const printView = React.forwardRef(({printQuotation, appliedTaxes, totalAmountWi
     };
 
     useEffect(() => {
-        if (!printQuotation?.Product || !printQuotation?.Customer) return;
+        if (!quotationData?.Product || !quotationData?.Customer) return;
         const updatedTaxes = [];
-        printQuotation.Product.forEach((prod) => {
-            if (printQuotation.Customer.taxable) {
+        quotationData.Product.forEach((prod) => {
+            if (quotationData.Customer.taxable) {
                 prod.Tax?.forEach((productTax) => {
                     if (!updatedTaxes.some((tax) => tax.id === productTax.id)) {
                         updatedTaxes.push(productTax);
@@ -41,28 +41,28 @@ const printView = React.forwardRef(({printQuotation, appliedTaxes, totalAmountWi
         setTaxes(updatedTaxes);
     }, [])
 
-    if (Object.keys(printQuotation).length > 0) {
+    if (quotationData && Object.keys(quotationData).length > 0) {
         return (
-            <div ref={ref} className="hidden print:block ">
+            <div ref={ref} className={`${!view ? "hidden print:block" : ""}`}>
                 <div className="flex items-center justify-between p-4">
                     <div className="flex flex-col gap-1">
-                        <h3 className="text-2xl font-bold">{printQuotation?.Business.name}</h3>
+                        <h3 className="text-2xl font-bold">{quotationData?.Business.name}</h3>
                         <div className="flex items-center gap-4">
                             <div className="flex flex-col items-start justify-start">
-                                <span className="text-sm font-normal text-black">{printQuotation?.Business.address}</span>
-                                <span className="text-sm font-normal text-black">{printQuotation?.Business.city}, {printQuotation?.Business.state}, {printQuotation?.Business.zipcode}</span>
-                                <span className="text-sm font-normal text-black">Phone: {printQuotation?.Business.tel}</span>
-                                <span className="text-sm font-normal text-black">Fax: {printQuotation?.Business.fax}</span>
-                                <span className="text-sm font-normal text-black">Email: {printQuotation?.Business.email}</span>
+                                <span className="text-sm font-normal text-black">{quotationData?.Business.address}</span>
+                                <span className="text-sm font-normal text-black">{quotationData?.Business.city}, {quotationData?.Business.state}, {quotationData?.Business.zipcode}</span>
+                                <span className="text-sm font-normal text-black">Phone: {quotationData?.Business.tel}</span>
+                                <span className="text-sm font-normal text-black">Fax: {quotationData?.Business.fax}</span>
+                                <span className="text-sm font-normal text-black">Email: {quotationData?.Business.email}</span>
                             </div>
-                            <img src={printQuotation?.Business.logo} className="rounded-xl h-[100px] w-[100px]" alt="Business logo" width={100} height={100} />
+                            <img src={quotationData?.Business.logo} className="rounded-xl h-[100px] w-[100px]" alt="Business logo" width={100} height={100} />
                         </div>
                     </div>
                     <div className="flex flex-col items-end gap-1">
-                        <span className="text-sm font-semibold">Date: {currentDate}</span>
-                        <span className="text-sm">Invoice No: #0000{printQuotation?.invoiceNumber}</span>
-                        <span className="text-sm">License No: {printQuotation?.Business.licenseNumber}</span>
-                        <span className="text-sm">Permit No: {printQuotation?.Business.permitNumber}</span>
+                        <span className="text-sm font-semibold">Date: {quotationDate.toLocaleDateString("en-US")}</span>
+                        <span className="text-sm">Quotation No: #{`${quotationData?.quotationNumber}`.padStart(5, '0')}</span>
+                        <span className="text-sm">License No: {quotationData?.Business.licenseNumber}</span>
+                        <span className="text-sm">Permit No: {quotationData?.Business.permitNumber}</span>
                     </div>
                 </div>
                 <div className="flex justify-between items-center p-4">
@@ -89,28 +89,28 @@ const printView = React.forwardRef(({printQuotation, appliedTaxes, totalAmountWi
                                             color="blue-gray"
                                             className="font-normal leading-none"
                                         >
-                                            {printQuotation.Customer.firstName} {printQuotation.Customer.lastName}
+                                            {quotationData.Customer.firstName} {quotationData.Customer.lastName}
                                         </Typography>
                                         <Typography
                                             variant="small"
                                             color="blue-gray"
                                             className="font-normal leading-none"
                                         >
-                                            {printQuotation?.Customer.Address.street}
+                                            {quotationData?.Customer.Address.street}
                                         </Typography>
                                         <Typography
                                             variant="small"
                                             color="blue-gray"
                                             className="font-normal leading-none"
                                         >
-                                            {printQuotation?.Customer.Address.city}, {printQuotation?.Customer.Address.state}, {printQuotation?.Customer.Address.zipcode}
+                                            {quotationData?.Customer.Address.city}, {quotationData?.Customer.Address.state}, {quotationData?.Customer.Address.zipcode}
                                         </Typography>
                                         <Typography
                                             variant="small"
                                             color="blue-gray"
                                             className="font-normal leading-none"
                                         >
-                                            Phone: {printQuotation?.Customer.phone}
+                                            Phone: {quotationData?.Customer.phone}
                                         </Typography>
                                     </td>
                                 </tr>
@@ -126,11 +126,11 @@ const printView = React.forwardRef(({printQuotation, appliedTaxes, totalAmountWi
                             <span className="text-xs p-2">Model</span>
                         </div>
                         <div className="flex flex-col divide-y">
-                            <span className="text-xs p-2">{printQuotation?.CustomerVehicle.licenseNo}</span>
-                            <span className="text-xs p-2">{printQuotation?.CustomerVehicle.odometer}</span>
-                            <span className="text-xs p-2">{printQuotation?.CustomerVehicle.year}</span>
-                            <span className="text-xs p-2">{printQuotation?.CustomerVehicle.make}</span>
-                            <span className="text-xs p-2">{printQuotation?.CustomerVehicle.model}</span>
+                            <span className="text-xs p-2">{quotationData?.CustomerVehicle.licenseNo}</span>
+                            <span className="text-xs p-2">{quotationData?.CustomerVehicle.odometer}</span>
+                            <span className="text-xs p-2">{quotationData?.CustomerVehicle.year}</span>
+                            <span className="text-xs p-2">{quotationData?.CustomerVehicle.make}</span>
+                            <span className="text-xs p-2">{quotationData?.CustomerVehicle.model}</span>
                         </div>
                     </div>
                 </div>
@@ -156,7 +156,7 @@ const printView = React.forwardRef(({printQuotation, appliedTaxes, totalAmountWi
                             </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
-                            {printQuotation.Product.map((item, index) => (
+                            {quotationData.Product.map((item, index) => (
                                 <tr key={index}>
                                     <td className="p-4 border-b border-blue-gray-50">
                                         <Typography
@@ -224,7 +224,7 @@ const printView = React.forwardRef(({printQuotation, appliedTaxes, totalAmountWi
                     <div className="basis-[50%] max-w-[50%]">
                         <div className="flex items-center justify-center border divide-x">
                             <h1 className="basis-[50%] max-w-[50%] text-1xl p-2">Subtotal</h1>
-                            <h1 className="basis-[50%] max-w-[50%] text-1xl p-2">{calculateTotalAmount(printQuotation.Product)} $</h1>
+                            <h1 className="basis-[50%] max-w-[50%] text-1xl p-2">{calculateTotalAmount(quotationData.Product)} $</h1>
                         </div>
 
                         <div className="flex flex-col">
@@ -237,7 +237,7 @@ const printView = React.forwardRef(({printQuotation, appliedTaxes, totalAmountWi
                         </div>
                         <div className="flex items-center border divide-x">
                             <h1 className="basis-[50%] max-w-[50%] text-1xl p-2">Total</h1>
-                            <h1 className="basis-[50%] max-w-[50%] text-1xl p-2">{totalAmountWithTax} $</h1>
+                            <h1 className="basis-[50%] max-w-[50%] text-1xl p-2">{quotationData?.totalAmount} $</h1>
                         </div>
                     </div>
                 </div>

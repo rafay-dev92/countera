@@ -19,7 +19,6 @@ import { delInvoice } from "@/services/delInvoice";
 import { Link } from "react-router-dom";
 import { State } from "../../state/Context";
 import { toast } from "react-toastify";
-import ViewInvoice from "./viewInvoice";
 
 const TABLE_HEAD = ["Customer", "Status", "Total", "Invoice Date", "Vehicle", "Actions"];
 
@@ -70,7 +69,6 @@ export function Invoice() {
     if (state.userInfo.Permission.some(obj => obj.name === "CAN_EDIT_INVOICE" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
       const selected = currentItems[index];
       setSelectedInvoice(selected);
-      setIsViewOpen(true);
       openPopup();
     }
     else {

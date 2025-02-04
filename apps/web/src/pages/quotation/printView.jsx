@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Typography } from "@material-tailwind/react";
+import ApprovedImg from "@/assets/approved.png";
 
 const INVOICE_TABLE_HEAD = ["Customer", "Status", "Payment Method", "Total"];
 const PRODUCT_TABLE_HEAD = ["Product", "Quantity", "Price", "Tax", "Amount"]
@@ -58,6 +59,11 @@ const printView = React.forwardRef(({view, quotationData, appliedTaxes}, ref) =>
                             <img src={quotationData?.Business.logo} className="rounded-xl h-[100px] w-[100px]" alt="Business logo" width={100} height={100} />
                         </div>
                     </div>
+                    {quotationData?.approved && (
+                        <div className="">
+                            <img src={ApprovedImg} alt="approved" width={170} height={170} />
+                        </div>
+                    )}
                     <div className="flex flex-col items-end gap-1">
                         <span className="text-sm font-semibold">Date: {quotationDate.toLocaleDateString("en-US")}</span>
                         <span className="text-sm">Quotation No: #{`${quotationData?.quotationNumber}`.padStart(5, '0')}</span>

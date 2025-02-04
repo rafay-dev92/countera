@@ -22,7 +22,7 @@ export const routes = [
     pages: [
       {
         icon: <HomeIcon {...icon} />,
-        name: "dashboard",
+        name: "home",
         path: "/home",
         element: <Home />,
       },

@@ -27,6 +27,37 @@ export const Reducer = (state, action) => {
                 ...state,
                 userInfo: action.payload,
             })
+        case 'SET_INVOICE_VIEW':
+            return ({
+                ...state,
+                invoice: {
+                    ...state.invoice,
+                    isViewOpen: action.payload
+                }
+            })
+        case 'SET_INVOICE_VIEW_DATA':
+            return ({
+                ...state,
+                invoice: {
+                    ...state.invoice,
+                    viewData: action.payload
+                }
+            })
+        case 'SET_INVOICE_FORM':
+            return ({
+                ...state,
+                invoice: {
+                    ...state.invoice,
+                    openForm: action.payload
+                }
+            })
+        case 'SET_QUOTATION_VIEW':
+            return ({
+                ...state,
+                quotation: {
+                    isViewOpen: action.payload
+                }
+            })            
         case 'RESET':
             return ({
                 Settings: {

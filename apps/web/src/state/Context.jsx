@@ -14,6 +14,14 @@ const Context = ({children}) => {
         userToken: '',
         business: '',
         userInfo: {},
+        invoice: {
+            isViewOpen: false,
+            viewData: null,
+            openForm: false,
+        },
+        quotation: {
+            isViewOpen: false,
+        },
     }
     const [state, dispatch] = useReducer(Reducer, initialState)
 

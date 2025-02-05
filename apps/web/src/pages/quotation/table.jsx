@@ -14,17 +14,18 @@ import {
 import { DocumentTextIcon, TrashIcon, DocumentPlusIcon } from "@heroicons/react/24/solid";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import MyPopUpForm from "./form";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { State } from "../../state/Context";
 import { fetchQuotations } from "@/services/fetchQuotations";
 import { delQuotation } from "@/services/delQuotaion";
 import { toast } from "react-toastify";
+import { addInvoice } from "@/services/addInvoice";
 
 const TABLE_HEAD = ["Customer", "Total", "Quotation Date", "Vehicle", "Actions"];
 
 export function Quotation() {
-
-    const { state } = State();
+    const router = useNavigate();
+    const { state, dispatch } = State();
     const [searchQuery, setSearchQuery] = useState("");
     const [quotations, setQuotations] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
@@ -145,7 +146,6 @@ export function Quotation() {
     };
 
     const createInvoice = async (quotationData) => {
-        console.log("Create invoice");
         const selectedProductIds = quotationData?.Product?.map((product) => `${product.id}:${product.quotation_product?.quantity}`);
         const data = {
             invoiceData: {
@@ -157,20 +157,23 @@ export function Quotation() {
             },
             "products": selectedProductIds,
         };
-        console.log(data);
 
-        // try {
-        //     const res = await addInvoice(data, state.userToken)
-        //     const invoice = await res.json();
-        //     if (res.status === 200) {
-        //         showToastMessage('success', invoice.message)
-        //     }
-        //     else if (res.status === 404) {
-        //         showToastMessage('info', invoice.message)
-        //     }
-        // } catch (error) {
-        //     console.log(error);
-        // }
+        try {
+            const res = await addInvoice(data, state.userToken)
+            const invoice = await res.json();
+            if (res.status === 200) {
+                showToastMessage('success', invoice.message);
+                dispatch({ type: 'SET_INVOICE_VIEW_DATA', payload: invoice.data });
+                dispatch({ type: 'SET_INVOICE_VIEW', payload: true });
+                dispatch({ type: 'SET_INVOICE_FORM', payload: true });
+                router('/dashboard/invoice');
+            }
+            else if (res.status === 404) {
+                showToastMessage('info', invoice.message)
+            }
+        } catch (error) {
+            console.log(error);
+        }
     };
 
     if (loading) {

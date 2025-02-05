@@ -1,15 +1,21 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import PrintView from "./printView";
-import { delInvoice } from "@/services/delInvoice";
 import { toast } from "react-toastify";
 import { State } from "@/state/Context";
 import ReactToPrint from "react-to-print";
 import { updateQuotation } from "@/services/updateQuotation";
 import { delQuotation } from "@/services/delQuotaion";
+import { addInvoice } from "@/services/addInvoice";
+import { useNavigate } from "react-router-dom";
 
 
-const ViewQuotation = ({ quotationData, setQuotationData, componentRef, appliedTaxes, setIsViewOpen, setEdit, close }) => {
-    const { state } = State();
+const ViewQuotation = ({ quotationData, setQuotationData, componentRef, appliedTaxes, setEdit, close }) => {
+    const router = useNavigate();
+    const { state, dispatch } = State();
+    const [isLoading, setIsLoading] = React.useState({
+        delete: false,
+        createInvoice: false,
+    });
 
     // const [openAccordian, setAccordianOpen] = useState(null);
 
@@ -19,6 +25,7 @@ const ViewQuotation = ({ quotationData, setQuotationData, componentRef, appliedT
 
     // Delete Invoice
     const handleDel = async () => {
+        setIsLoading({ ...isLoading, delete: true });
         try {
             const res = await delQuotation(quotationData.id, state.userToken);
             const quotation = await res.json();
@@ -32,6 +39,7 @@ const ViewQuotation = ({ quotationData, setQuotationData, componentRef, appliedT
             console.log(error)
             toast.error("Something went wrong");
         }
+        setIsLoading({ ...isLoading, delete: false });
         close();
     }
 
@@ -47,6 +55,40 @@ const ViewQuotation = ({ quotationData, setQuotationData, componentRef, appliedT
         }
     }
 
+    const createInvoice = async () => {
+        setIsLoading({ ...isLoading, createInvoice: true });
+        const selectedProductIds = quotationData?.Product?.map((product) => `${product.id}:${product.quotation_product?.quantity}`);
+        const data = {
+            invoiceData: {
+                totalAmount: quotationData.totalAmount,
+                paymentStatus: "Unpaid",
+                CustomerId: quotationData.CustomerId,
+                CustomerVehicleId: quotationData.CustomerVehicleId,
+                BusinessId: state.business.id
+            },
+            "products": selectedProductIds,
+        };
+
+        try {
+            const res = await addInvoice(data, state.userToken)
+            const invoice = await res.json();
+            if (res.status === 200) {
+                toast.success(invoice.message);
+                dispatch({ type: 'SET_INVOICE_VIEW_DATA', payload: invoice.data });
+                dispatch({ type: 'SET_INVOICE_VIEW', payload: true });
+                dispatch({ type: 'SET_INVOICE_FORM', payload: true });
+                dispatch({ type: 'SET_QUOTATION_VIEW', payload: false });
+                router('/dashboard/invoice');
+            }
+            else if (res.status === 404) {
+                toast.info(invoice.message)
+            }
+        } catch (error) {
+            console.log(error);
+        }
+        setIsLoading({ ...isLoading, createInvoice: false });
+    };
+
     return (
         <>
             <div className="overflow-y-auto h-[80vh] overflow-x-hidden p-2">
@@ -56,8 +98,8 @@ const ViewQuotation = ({ quotationData, setQuotationData, componentRef, appliedT
                             {quotationData && Object.keys(quotationData).length > 0 ? <PrintView view={true} quotationData={quotationData} ref={componentRef} appliedTaxes={appliedTaxes} /> : null}
                         </div>
                     </div>
-                    <div className="basis-[20%] h-full overflow-y-auto flex flex-col items-center gap-6 bg-gradient-to-br from-gray-800 to-gray-700">                        
-                    <div className="text-center py-4">
+                    <div className="basis-[20%] h-full overflow-y-auto flex flex-col items-center gap-6 bg-gradient-to-br from-gray-800 to-gray-700">
+                        <div className="text-center py-4">
                             <h2 className="text-lg font-normal text-gray-400">Total Amount</h2>
                             <h5 className="text-4xl text-white font-normal">{(quotationData?.totalAmount).toFixed(2)} $</h5>
                         </div>
@@ -80,8 +122,25 @@ const ViewQuotation = ({ quotationData, setQuotationData, componentRef, appliedT
                                     )}
                                 </div>
                                 ))} */}
-                                <div onClick={() => { setIsViewOpen(false); setEdit(true) }} className="w-full py-2 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer">Edit</div>
-                                <div onClick={handleDel} className="w-full py-2 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer">Delete</div>
+                                <div onClick={() => { dispatch({ type: 'SET_QUOTATION_VIEW', payload: false }); setEdit(true) }} className="w-full py-2 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer">Edit</div>
+                                {!isLoading.delete ?
+                                    <div onClick={handleDel} className="w-full py-2 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer">Delete</div>
+                                    :
+                                    <div className="flex items-center justify-center h-fit py-2.5">
+                                        <div className="w-6 h-6 border-4 border-gray-500 border-t-transparent rounded-full animate-spin"></div>
+                                    </div>
+                                }
+
+                                {!isLoading.createInvoice ?
+                                    <div onClick={() => createInvoice()} className="w-full py-2 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer">
+                                        Create Invoice
+                                    </div>
+                                    :
+                                    <div className="flex items-center justify-center h-fit py-2.5">
+                                        <div className="w-6 h-6 border-4 border-gray-500 border-t-transparent rounded-full animate-spin"></div>
+                                    </div>
+                                }
+
                                 {/* print Btn */}
                                 <ReactToPrint
                                     trigger={() => <button

@@ -24,7 +24,7 @@ const TABLE_HEAD = ["Customer", "Status", "Total", "Invoice Date", "Vehicle", "A
 
 export function Invoice() {
 
-  const { state } = State();
+  const { state, dispatch } = State();
   const [searchQuery, setSearchQuery] = useState("");
   const [invoices, setInvoices] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -69,6 +69,7 @@ export function Invoice() {
     if (state.userInfo.Permission.some(obj => obj.name === "CAN_EDIT_INVOICE" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
       const selected = currentItems[index];
       setSelectedInvoice(selected);
+      dispatch({ type: 'SET_INVOICE_VIEW_DATA', payload: selected });
       openPopup();
     }
     else {
@@ -132,6 +133,7 @@ export function Invoice() {
 
   const openPopup = () => {
     if (state.userInfo.Permission.some(obj => obj.name === "CAN_CREATE_INVOICE" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
+      dispatch({ type: 'SET_INVOICE_FORM', payload: true });
       setIsFormOpen(true);
     }
     else {
@@ -166,7 +168,6 @@ export function Invoice() {
                 <Button className="w-full bg-blue-900 lg:w-auto" size="md" onClick={openPopup} >
                   New
                 </Button>
-
               </div>
             </div>
             <div className="flex items-center mt-4 lg:mt-0 lg:ml-auto">
@@ -318,7 +319,7 @@ export function Invoice() {
           </div>
         </CardFooter>
       </Card>
-      <MyPopUpForm refresh={refresh} setRefresh={setRefresh} open={isFormOpen} close={() => setIsFormOpen(false)} selectedInvoice={selectedInvoice} setSelectedInvoice={setSelectedInvoice} isViewOpen={isViewOpen} setIsViewOpen={setIsViewOpen} />
+      <MyPopUpForm refresh={refresh} setRefresh={setRefresh} open={isFormOpen} close={() => {setIsFormOpen(false); dispatch({ type: 'SET_INVOICE_FORM', payload: false })}} selectedInvoice={selectedInvoice} setSelectedInvoice={setSelectedInvoice} isViewOpen={isViewOpen} setIsViewOpen={setIsViewOpen} />
     </>
   );
 }   

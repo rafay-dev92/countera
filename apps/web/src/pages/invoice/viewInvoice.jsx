@@ -8,8 +8,8 @@ import { updateInvoice } from "@/services/updateInvoice";
 import ReactToPrint from "react-to-print";
 
 
-const ViewInvoice = ({ printInvoice, setPrintInvoice, componentRef, appliedTaxes, setIsViewOpen, setEdit, close }) => {
-    const { state } = State();
+const ViewInvoice = ({ printInvoice, setPrintInvoice, componentRef, appliedTaxes, setEdit, close }) => {
+    const { state, dispatch } = State();
     const [isPaymentFormOpen, setIsPaymentFormOpen] = useState(false);
     const [totalAmountPaid, setTotalAmountPaid] = useState(0);
     // const [openAccordian, setAccordianOpen] = useState(null);
@@ -96,7 +96,7 @@ const ViewInvoice = ({ printInvoice, setPrintInvoice, componentRef, appliedTaxes
                                     )}
                                 </div>
                                 ))} */}
-                                <div onClick={() => { setIsViewOpen(false); setEdit(true) }} className="w-full py-2 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer">Edit</div>
+                                <div onClick={() => { dispatch({ type: 'SET_INVOICE_VIEW', payload: false }); ; setEdit(true) }} className="w-full py-2 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer">Edit</div>
                                 <div onClick={handleDel} className="w-full py-2 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer">Delete</div>
                                 {/* print Btn */}
                                 <ReactToPrint

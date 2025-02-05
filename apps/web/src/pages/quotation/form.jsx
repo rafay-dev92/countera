@@ -43,13 +43,13 @@ const schema = Yup.object().shape({
   vehicle: Yup.string().required("Vehicle is required"),
 });
 
-const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setSelectedQuotation, isViewOpen, setIsViewOpen }) => {
+const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setSelectedQuotation }) => {
   const componentRef = useRef();
   const printRef = useRef();
   const customerInputRef = useRef();
   const productInputRef = useRef();
 
-  const { state } = State();
+  const { state, dispatch } = State();
   const [isLoading, setIsLoading] = useState(false);
   const [customers, setCustomers] = useState([]);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
@@ -114,7 +114,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
     clearForm(formikProps);
     setEdit(false)
     setRefresh(!refresh);
-    setIsViewOpen(false);
+    dispatch({ type: 'SET_QUOTATION_VIEW', payload: false });
     close();
   };
 
@@ -544,7 +544,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
 
   useEffect(() => {
     if (Object.keys(printQuotation).length > 0) {
-      setIsViewOpen(true);
+      dispatch({ type: 'SET_QUOTATION_VIEW', payload: true });
       // if (printRef.current) {
       //   printRef.current.handlePrint();
       //   handleClose();
@@ -562,7 +562,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
                 <div className="flex items-center justify-between sticky bg-gradient-to-br from-gray-800 to-gray-700">
                   <div></div>
                   <div className="text-white text-center text-lg">
-                    {isViewOpen ? "VIEW" : edit ? "EDIT" : "NEW"} {"QUOTATION"}
+                    {state?.quotation.isViewOpen ? "VIEW" : edit ? "EDIT" : "NEW"} {"QUOTATION"}
                   </div>
                   <button
                     className="bg-transparent hover:bg-gray-800 text-white font-bold py-2 px-4 rounded"
@@ -586,8 +586,8 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
                   </button>
                 </div>
 
-                {isViewOpen ? (
-                  <ViewQuotation quotationData={printQuotation} setQuotationData={setPrintQuotation} componentRef={componentRef} appliedTaxes={appliedTaxes} setEdit={setEdit} setIsViewOpen={setIsViewOpen} close={handleClose} />
+                {state?.quotation.isViewOpen ? (
+                  <ViewQuotation quotationData={printQuotation} setQuotationData={setPrintQuotation} componentRef={componentRef} appliedTaxes={appliedTaxes} setEdit={setEdit} close={handleClose} />
                 ) : (
                   <div className="overflow-y-auto h-[80vh] overflow-x-hidden p-2">
                     <div className="flex gap-4">
@@ -978,7 +978,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
                     </div>
                   </div>
                 )}
-                {!isViewOpen ? (
+                {!state?.quotation.isViewOpen ? (
                   <div className="flex items-center justify-end space-x-2 sticky bg-gradient-to-br from-gray-800 to-gray-700">
                     {/* <ReactToPrint
                     ref={printRef}
@@ -994,7 +994,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
 
                     {edit && (
                       <button className=" w-32 bg-gray-600 hover:bg-gray-900 text-white font-bold py-2 px-4"
-                        onClick={() => { setEdit(false); setIsViewOpen(true) }}
+                        onClick={() => { setEdit(false); dispatch({ type: 'SET_QUOTATION_VIEW', payload: true }); }}
                         type="button"
                       >
                         Back

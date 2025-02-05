@@ -43,13 +43,13 @@ const schema = Yup.object().shape({
   vehicle: Yup.string().required("Vehicle is required"),
 });
 
-const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSelectedInvoice, isViewOpen, setIsViewOpen }) => {
+const MyPopUpForm = ({ refresh, setRefresh, close }) => {
   const componentRef = useRef();
   const printRef = useRef();
   const customerInputRef = useRef();
   const productInputRef = useRef();
 
-  const { state } = State();
+  const { state, dispatch } = State();
   const [isLoading, setIsLoading] = useState(false);
   const [customers, setCustomers] = useState([]);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
@@ -102,7 +102,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
   const handleClose = () => {
     setSelectedCustomer(null)
     setSelectedVehicle(null)
-    setSelectedInvoice(null)
+    dispatch({ type: 'SET_INVOICE_VIEW_DATA', payload: null });
     setSelectedProducts([{
       product: "",
       quantity: 1,
@@ -113,7 +113,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
     clearForm(formikProps);
     setEdit(false)
     setRefresh(!refresh);
-    setIsViewOpen(false);
+    dispatch({ type: 'SET_INVOICE_VIEW', payload: false });
     close();
   };
 
@@ -140,7 +140,8 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
   }, [refresh]);
 
   useEffect(() => {
-    if (selectedInvoice) {
+    if (state?.invoice.viewData) {
+      const selectedInvoice = state.invoice.viewData;
       setPrintInvoice(selectedInvoice);
       setInvoiceId(selectedInvoice.id)
       setSelectedCustomer(selectedInvoice.Customer)
@@ -151,7 +152,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
       // setEdit(true)
 
       let selectedProd = [...selectedProducts]
-      selectedInvoice.Product.forEach((prod) => {
+      selectedInvoice?.Product.forEach((prod) => {
         const aProd = {
           product: prod.id,
           id: prod.id,
@@ -164,7 +165,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
         selectedProd = [aProd, ...selectedProd];
       })
 
-      if (selectedInvoice?.Customer?.taxable) {
+      if (state?.invoice.viewData?.Customer?.taxable) {
         const productTaxes = {};
 
         selectedProd.forEach((product) => {
@@ -189,7 +190,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
       // setSelectedInvoice(null)
     }
 
-  }, [selectedInvoice])
+  }, [state?.invoice.viewData])
 
   // handle submit
   const onSubmit = async (values) => {
@@ -382,8 +383,6 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
     });
     setAppliedTaxes(productTaxes);
   };
-
-
 
   // handle product change
   // const handleProductChange = async (index, quantity, selectedProId) => {
@@ -680,7 +679,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
 
   useEffect(() => {
     if (Object.keys(printInvoice).length > 0) {
-      setIsViewOpen(true);
+      dispatch({ type: 'SET_INVOICE_VIEW', payload: true });
       // if (printRef.current) {
       //   printRef.current.handlePrint();
       //   handleClose();
@@ -690,15 +689,15 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
 
   return (
     <>
-      <Dialog open={open} size="lg">
-        {open && (
+      <Dialog open={state?.invoice.openForm} size="lg">
+        {state?.invoice.openForm && (
           <form onSubmit={handleSubmit}>
             <div className="">
               <div className="bg-white rounded shadow-xl">
                 <div className="flex items-center justify-between sticky bg-gradient-to-br from-gray-800 to-gray-700">
                   <div></div>
                   <div className="text-white text-center text-lg">
-                    {isViewOpen ? "VIEW" : edit ? "EDIT" : "NEW"} {"INVOICE"}
+                    {state?.invoice.isViewOpen ? "VIEW" : edit ? "EDIT" : "NEW"} {"INVOICE"}
                   </div>
                   <button
                     className="bg-transparent hover:bg-gray-800 text-white font-bold py-2 px-4 rounded"
@@ -722,8 +721,8 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
                   </button>
                 </div>
 
-                {isViewOpen ? (
-                  <ViewInvoice printInvoice={printInvoice} setPrintInvoice={setPrintInvoice} componentRef={componentRef} appliedTaxes={appliedTaxes} setEdit={setEdit} setIsViewOpen={setIsViewOpen} close={handleClose} />
+                {state?.invoice.isViewOpen ? (
+                  <ViewInvoice printInvoice={printInvoice} setPrintInvoice={setPrintInvoice} componentRef={componentRef} appliedTaxes={appliedTaxes} setEdit={setEdit} close={handleClose} />
                 ) : (
                   <div className="overflow-y-auto h-[80vh] overflow-x-hidden p-2">
                     <div className="flex gap-4">
@@ -1146,7 +1145,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
                     </div>
                   </div>
                 )}
-                {!isViewOpen ? (
+                {!state?.invoice.isViewOpen ? (
                   <div className="flex items-center justify-end space-x-2 sticky bg-gradient-to-br from-gray-800 to-gray-700">
                     {/* <ReactToPrint
                     ref={printRef}
@@ -1161,7 +1160,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedInvoice, setSel
                   /> */}
                     {edit && (
                       <button className=" w-32 bg-gray-600 hover:bg-gray-900 text-white font-bold py-2 px-4"
-                        onClick={() => { setEdit(false); setIsViewOpen(true) }}
+                        onClick={() => { setEdit(false); dispatch({ type: 'SET_INVOICE_VIEW', payload: true }) }}
                         type="button"
                       >
                         Back

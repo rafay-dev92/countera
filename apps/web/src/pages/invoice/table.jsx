@@ -23,16 +23,13 @@ import { toast } from "react-toastify";
 const TABLE_HEAD = ["Customer", "Status", "Total", "Invoice Date", "Vehicle", "Actions"];
 
 export function Invoice() {
-
   const { state, dispatch } = State();
   const [searchQuery, setSearchQuery] = useState("");
   const [invoices, setInvoices] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
   const [refresh, setRefresh] = useState(false);
-  const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [isViewOpen, setIsViewOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const showToastMessage = (type, message) => {
@@ -68,7 +65,6 @@ export function Invoice() {
     // Assuming currentItems holds the filtered rows for display
     if (state.userInfo.Permission.some(obj => obj.name === "CAN_EDIT_INVOICE" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
       const selected = currentItems[index];
-      setSelectedInvoice(selected);
       dispatch({ type: 'SET_INVOICE_VIEW_DATA', payload: selected });
       openPopup();
     }
@@ -319,7 +315,7 @@ export function Invoice() {
           </div>
         </CardFooter>
       </Card>
-      <MyPopUpForm refresh={refresh} setRefresh={setRefresh} open={isFormOpen} close={() => {setIsFormOpen(false); dispatch({ type: 'SET_INVOICE_FORM', payload: false })}} selectedInvoice={selectedInvoice} setSelectedInvoice={setSelectedInvoice} isViewOpen={isViewOpen} setIsViewOpen={setIsViewOpen} />
+      <MyPopUpForm refresh={refresh} setRefresh={setRefresh} open={isFormOpen} close={() => {setIsFormOpen(false); dispatch({ type: 'SET_INVOICE_FORM', payload: false })}} />
     </>
   );
 }   

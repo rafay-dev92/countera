@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import {
     Card,
     CardHeader,
@@ -34,7 +34,6 @@ export function Quotation() {
     const [selectedQuotation, setSelectedQuotation] = useState(null);
     const [isOpen, setIsOpen] = useState(false);
     const [loading, setLoading] = useState(true);
-    const [isViewOpen, setIsViewOpen] = useState(false);
 
     const showToastMessage = (type, message) => {
         if (type === 'success') {
@@ -367,7 +366,7 @@ export function Quotation() {
                 </CardFooter>
 
             </Card>
-            <MyPopUpForm refresh={refresh} setRefresh={setRefresh} open={isOpen} close={closePopup} selectedQuotation={selectedQuotation} setSelectedQuotation={setSelectedQuotation} isViewOpen={isViewOpen} setIsViewOpen={setIsViewOpen} />
+            <MyPopUpForm refresh={refresh} setRefresh={setRefresh} open={isOpen} close={closePopup} selectedQuotation={selectedQuotation} setSelectedQuotation={setSelectedQuotation} />
         </>
     );
 }   

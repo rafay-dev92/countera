@@ -562,7 +562,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
                 <div className="flex items-center justify-between sticky bg-gradient-to-br from-gray-800 to-gray-700">
                   <div></div>
                   <div className="text-white text-center text-lg">
-                    {state?.quotation.isViewOpen ? "VIEW" : edit ? "EDIT" : "NEW"} {"QUOTATION"}
+                    {state?.quotation?.isViewOpen ? "VIEW" : edit ? "EDIT" : "NEW"} {"QUOTATION"}
                   </div>
                   <button
                     className="bg-transparent hover:bg-gray-800 text-white font-bold py-2 px-4 rounded"
@@ -586,7 +586,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
                   </button>
                 </div>
 
-                {state?.quotation.isViewOpen ? (
+                {state?.quotation?.isViewOpen ? (
                   <ViewQuotation quotationData={printQuotation} setQuotationData={setPrintQuotation} componentRef={componentRef} appliedTaxes={appliedTaxes} setEdit={setEdit} close={handleClose} />
                 ) : (
                   <div className="overflow-y-auto h-[80vh] overflow-x-hidden p-2">
@@ -978,7 +978,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
                     </div>
                   </div>
                 )}
-                {!state?.quotation.isViewOpen ? (
+                {!state?.quotation?.isViewOpen ? (
                   <div className="flex items-center justify-end space-x-2 sticky bg-gradient-to-br from-gray-800 to-gray-700">
                     {/* <ReactToPrint
                     ref={printRef}

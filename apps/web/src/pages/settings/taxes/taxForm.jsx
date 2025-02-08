@@ -129,10 +129,10 @@ function TaxForm({ taxData, setTaxData, open, close, refresh, setRefresh }) {
 
     return (
         <>
-            <Dialog open={open} size="xs" >
+            <Dialog open={open} >
                 {open && (
                     <form autoComplete="new">
-                        <div className="flex justify-center">
+                        <div className="fixed top-0 left-0 w-full h-full flex items-center justify-center">
                             <div className="bg-white rounded shadow-xl">
                                 <div className="flex items-center justify-between sticky bg-gradient-to-br from-gray-800 to-gray-700">
                                     <div></div>

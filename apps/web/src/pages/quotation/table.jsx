@@ -21,7 +21,7 @@ import { delQuotation } from "@/services/delQuotaion";
 import { toast } from "react-toastify";
 import { addInvoice } from "@/services/addInvoice";
 
-const TABLE_HEAD = ["Customer", "Total", "Quotation Date", "Vehicle", "Actions"];
+const TABLE_HEAD = ["Customer", "Total", "Status", "Quotation Date", "Vehicle", "Actions"];
 
 export function Quotation() {
     const router = useNavigate();
@@ -257,7 +257,7 @@ export function Quotation() {
                             </tr>
                         </thead>
                         <tbody>
-                            {currentItems.map(({ id, Customer, totalAmount, createdAt, CustomerVehicle }, index) => {
+                            {currentItems.map(({ id, Customer, totalAmount, approved, createdAt, CustomerVehicle }, index) => {
                                 const isLast = index === currentItems.length - 1;
                                 const classes = isLast
                                     ? "p-4"
@@ -283,6 +283,15 @@ export function Quotation() {
                                                 className="font-normal"
                                             >
                                                 {totalAmount}
+                                            </Typography>
+                                        </td>
+                                        <td className={classes}>
+                                            <Typography
+                                                variant="small"
+                                                color={approved? "green" : "red"}
+                                                className="font-normal"
+                                            >
+                                                {approved? 'Approved' : 'Pending'}
                                             </Typography>
                                         </td>
                                         <td className={classes}>

@@ -1,4 +1,4 @@
-import React from "react";
+import React, {useState} from "react";
 import PrintView from "./printView";
 import { toast } from "react-toastify";
 import { State } from "@/state/Context";
@@ -7,6 +7,7 @@ import { updateQuotation } from "@/services/updateQuotation";
 import { delQuotation } from "@/services/delQuotaion";
 import { addInvoice } from "@/services/addInvoice";
 import { useNavigate } from "react-router-dom";
+import { addQuotaion } from "@/services/addQuotation";
 
 
 const ViewQuotation = ({ quotationData, setQuotationData, componentRef, appliedTaxes, setEdit, close }) => {
@@ -15,13 +16,8 @@ const ViewQuotation = ({ quotationData, setQuotationData, componentRef, appliedT
     const [isLoading, setIsLoading] = React.useState({
         delete: false,
         createInvoice: false,
+        createCopy: false,
     });
-
-    // const [openAccordian, setAccordianOpen] = useState(null);
-
-    // const toggle = (index) => {
-    //     setAccordianOpen(openAccordian === index ? null : index);
-    // };
 
     // Delete Invoice
     const handleDel = async () => {
@@ -89,6 +85,35 @@ const ViewQuotation = ({ quotationData, setQuotationData, componentRef, appliedT
         setIsLoading({ ...isLoading, createInvoice: false });
     };
 
+    const createCopy = async () => {
+        setIsLoading({ ...isLoading, createCopy: true });
+        const selectedProductIds = quotationData?.Product?.map((product) => `${product.id}:${product.quotation_product?.quantity}`);
+
+        const data = {
+            quotationData: {
+                totalAmount: quotationData.totalAmount,
+                CustomerId: quotationData.CustomerId,
+                CustomerVehicleId: quotationData.CustomerVehicleId,
+              BusinessId: state.business.id,
+            },
+            "products": selectedProductIds,
+          };
+        try {
+            const res = await addQuotaion(data, state.userToken);
+            const quotation = await res.json();
+            if (res.status === 200) {
+                toast.success(quotation.message);
+                setQuotationData(quotation.data);
+            }
+            else if (res.status === 409) {
+                toast.error(quotation.message)
+            }
+        } catch (error) {
+            console.log(error);
+        }
+        setIsLoading({ ...isLoading, createCopy: false });
+    }
+
     return (
         <>
             <div className="overflow-y-auto h-[80vh] overflow-x-hidden p-2">
@@ -106,22 +131,7 @@ const ViewQuotation = ({ quotationData, setQuotationData, componentRef, appliedT
                         <div className="flex flex-col items-center justify-start h-full w-full">
                             <div className="text-white w-full text-center font-medium">
                                 <div className="w-full py-2 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer">Send</div>
-                                <div onClick={() => !quotationData?.approved && setQuotationApproved()} className={`w-full py-2 mx-auto ${!quotationData?.approved ? "hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer" : "text-green-500 font-bold"}`}>{!quotationData?.approved ? 'Approve' : 'Approved'}</div>
-                                {/* {['Copy'].map((item, index) => (
-                                <div key={index}>
-                                    <div
-                                        className={`px-4 py-2 hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer`}
-                                        onClick={() => toggle(index)}
-                                    >
-                                        {item}
-                                    </div>
-                                    {openAccordian === index && (
-                                        <div className="px-4 py-2 text-sm text-gray-300 bg-gradient-to-br from-gray-800 to-gray-700">
-                                            {item} details...
-                                        </div>
-                                    )}
-                                </div>
-                                ))} */}
+                                <div onClick={() => !quotationData?.approved && setQuotationApproved()} className={`w-full py-2 mx-auto ${!quotationData?.approved ? "hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer" : "text-green-500 font-bold"}`}>{!quotationData?.approved ? 'Approve' : 'Approved'}</div>                               
                                 <div onClick={() => { dispatch({ type: 'SET_QUOTATION_VIEW', payload: false }); setEdit(true) }} className="w-full py-2 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer">Edit</div>
                                 {!isLoading.delete ?
                                     <div onClick={handleDel} className="w-full py-2 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer">Delete</div>
@@ -132,7 +142,7 @@ const ViewQuotation = ({ quotationData, setQuotationData, componentRef, appliedT
                                 }
 
                                 {!isLoading.createInvoice ?
-                                    <div onClick={() => createInvoice()} className="w-full py-2 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer">
+                                    <div onClick={createInvoice} className="w-full py-2 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer">
                                         Create Invoice
                                     </div>
                                     :
@@ -141,6 +151,15 @@ const ViewQuotation = ({ quotationData, setQuotationData, componentRef, appliedT
                                     </div>
                                 }
 
+                                {!isLoading.createCopy ?
+                                    <div onClick={createCopy} className="w-full py-2 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer">
+                                        Create Duplicate
+                                    </div>
+                                    :
+                                    <div className="flex items-center justify-center h-fit py-2.5">
+                                        <div className="w-6 h-6 border-4 border-gray-500 border-t-transparent rounded-full animate-spin"></div>
+                                    </div>
+                                }
                                 {/* print Btn */}
                                 <ReactToPrint
                                     trigger={() => <button

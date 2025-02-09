@@ -20,7 +20,7 @@ import { Link } from "react-router-dom";
 import { State } from "../../state/Context";
 import { toast } from "react-toastify";
 
-const TABLE_HEAD = ["Customer", "Status", "Total", "Invoice Date", "Vehicle", "Actions"];
+const TABLE_HEAD = ["Customer", "Total", "Status", "Invoice Date", "Vehicle", "Actions"];
 
 export function Invoice() {
   const { state, dispatch } = State();
@@ -205,7 +205,7 @@ export function Invoice() {
               </tr>
             </thead>
             <tbody>
-              {currentItems.map(({ id, Customer, paymentStatus, totalAmount, createdAt, CustomerVehicle, Business }, index) => {
+              {currentItems.map(({ id, Customer, paymentStatus, totalAmount, createdAt, CustomerVehicle }, index) => {
                 const isLast = index === currentItems.length - 1;
                 const classes = isLast
                   ? "p-4"
@@ -230,29 +230,20 @@ export function Invoice() {
                         color="blue-gray"
                         className="font-normal"
                       >
-                        {paymentStatus}
+                        {totalAmount}
                       </Typography>
                     </td>
-
-                    {/* <td className={classes}>
-                      <Typography
-                        variant="small"
-                        color="blue-gray"
-                        className="font-normal"
-                      >
-                        {paymentMethod}
-                      </Typography>
-                    </td> */}
 
                     <td className={classes}>
                       <Typography
                         variant="small"
-                        color="blue-gray"
+                        color={paymentStatus === "Paid"? "green" : paymentStatus==="Partially Paid"? "orange" : "red"}
                         className="font-normal"
                       >
-                        {totalAmount}
+                        {paymentStatus}
                       </Typography>
                     </td>
+
                     <td className={classes}>
                       <Typography
                         variant="small"
@@ -262,6 +253,7 @@ export function Invoice() {
                         {formatCreatedAt(createdAt)}
                       </Typography>
                     </td>
+
                     <td className={classes}>
                       <Typography
                         variant="small"

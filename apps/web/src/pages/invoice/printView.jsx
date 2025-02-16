@@ -31,7 +31,7 @@ const printView = React.forwardRef(({ view, printInvoice, appliedTaxes }, ref) =
             <div ref={ref} className={`${!view ? "hidden print:block" : ""}`}>
                 <div className="flex items-center justify-between p-4">
                     <div className="flex flex-col gap-1">
-                        <h3 className="text-2xl font-bold">{printInvoice?.Business.name}</h3>
+                        <h3 className="text-2xl font-bold mb-3">{printInvoice?.Business.name}</h3>
                         <div className="flex items-center gap-4">
                             <div className="flex flex-col items-start justify-start">
                                 <span className="text-sm font-normal text-black">{printInvoice?.Business.address}</span>
@@ -201,7 +201,7 @@ const printView = React.forwardRef(({ view, printInvoice, appliedTaxes }, ref) =
                     <div className="basis-[50%] max-w-[50%] h-full p-4">
                         <div className="flex flex-col justify-end items-start h-full gap-6">
                             <div className="basis-[80%] flex flex-col">
-                                <h1 className="font-semibold text-md">Terms & Conditions</h1>
+                                <h1 className="font-semibold text-md mb-2">Terms & Conditions</h1>
                                 <p className="text-xs border py-6 px-2 w-[80%]">you agree to the following terms and conditions. Our platform facilitates the purchase and sale
                                     of vehicle auto parts. All products are subject to availability and provided "as is." We are not responsible for any misuse or improper
                                     installation of parts. Returns and refunds are subject to our policies, which may change without notice. By continuing to use our services,

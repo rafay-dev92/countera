@@ -108,7 +108,7 @@ export function Invoice() {
 
   let currentItems = [];
   let filteredRows = [];
-  if (invoices.length !== 0) {
+  if (invoices?.length !== 0) {
     filteredRows = invoices.filter(
       ({ Customer }) =>
         Customer['firstName'].toLowerCase().includes(searchQuery.toLowerCase()) ||

@@ -6,12 +6,18 @@ import { State } from "@/state/Context";
 import PaymentForm from "./paymentForm";
 import { updateInvoice } from "@/services/updateInvoice";
 import ReactToPrint from "react-to-print";
-
+import html2canvas from "html2canvas";
+import { jsPDF } from "jspdf";
+import { sendMail } from "@/services/sendMail";
 
 const ViewInvoice = ({ printInvoice, setPrintInvoice, componentRef, appliedTaxes, setEdit, close }) => {
     const { state, dispatch } = State();
     const [isPaymentFormOpen, setIsPaymentFormOpen] = useState(false);
     const [totalAmountPaid, setTotalAmountPaid] = useState(0);
+    const [isLoading, setIsLoading] = React.useState({
+        delete: false,
+        sendMail: false,
+    });
     // const [openAccordian, setAccordianOpen] = useState(null);
 
     // const toggle = (index) => {
@@ -20,6 +26,7 @@ const ViewInvoice = ({ printInvoice, setPrintInvoice, componentRef, appliedTaxes
 
     // Delete Invoice
     const handleDel = async () => {
+        setIsLoading({ ...isLoading, delete: true });
         try {
             const res = await delInvoice(printInvoice.id, state.userToken);
             const invoice = await res.json();
@@ -33,6 +40,7 @@ const ViewInvoice = ({ printInvoice, setPrintInvoice, componentRef, appliedTaxes
             console.log(error)
             toast.error("Something went wrong");
         }
+        setIsLoading({ ...isLoading, delete: false });
         close();
     }
 
@@ -46,6 +54,48 @@ const ViewInvoice = ({ printInvoice, setPrintInvoice, componentRef, appliedTaxes
         } catch (error) {
             console.log(error);
         }
+    }
+
+
+    // send mail
+    const sendMailToUser = async () => {
+        setIsLoading({ ...isLoading, sendMail: true });
+        try {
+            const invoiceElement = componentRef.current;
+            if (!invoiceElement) return;
+
+            const canvas = await html2canvas(invoiceElement, {
+                scale: window.devicePixelRatio,
+                useCORS: true
+            });
+            const imgData = canvas.toDataURL("image/png");
+
+            const pdf = new jsPDF("p", "mm", "a4");
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = pdf.internal.pageSize.getHeight();
+
+            pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+            const pdfBlob = pdf.output("blob");
+
+            const formData = new FormData();
+            formData.append("pdf", pdfBlob, "invoice.pdf");
+            formData.append("businessEmail", state?.business?.email);
+            formData.append("customerEmail", printInvoice?.Customer?.email);
+            formData.append("customerName", `${printInvoice?.Customer?.firstName} ${printInvoice?.Customer?.lastName}`);
+
+            const res = await sendMail(formData, 'invoice');
+            const data = await res.json();
+            if (res.status === 200) {
+                toast.success(data.message);
+            }
+            else {
+                toast.error(data.message);
+            }
+            close();
+        } catch (error) {
+            console.log(error);
+        }
+        setIsLoading({ ...isLoading, sendMail: false });
     }
 
     useEffect(() => {
@@ -79,7 +129,13 @@ const ViewInvoice = ({ printInvoice, setPrintInvoice, componentRef, appliedTaxes
                         </div>
                         <div className="flex flex-col items-center justify-start h-full w-full">
                             <div className="text-white w-full text-center font-medium">
-                                <div className="w-full py-2 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer">Send</div>
+                                {!isLoading.sendMail ?
+                                    <div onClick={sendMailToUser} className="w-full py-2 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer">Send</div>
+                                    :
+                                    <div className="flex items-center justify-center h-fit py-2.5">
+                                        <div className="w-6 h-6 border-4 border-gray-500 border-t-transparent rounded-full animate-spin"></div>
+                                    </div>
+                                }
                                 <div onClick={() => printInvoice?.paymentStatus !== 'Paid' && setIsPaymentFormOpen(true)} className={`w-full py-2 mx-auto ${printInvoice?.paymentStatus !== 'Paid' ? "hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer" : "text-green-500 font-bold"}`}>{printInvoice?.paymentStatus !== 'Paid' ? 'Pay' : 'Paid'}</div>
                                 {/* {['Copy'].map((item, index) => (
                                 <div key={index}>
@@ -96,8 +152,14 @@ const ViewInvoice = ({ printInvoice, setPrintInvoice, componentRef, appliedTaxes
                                     )}
                                 </div>
                                 ))} */}
-                                <div onClick={() => { dispatch({ type: 'SET_INVOICE_VIEW', payload: false }); ; setEdit(true) }} className="w-full py-2 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer">Edit</div>
-                                <div onClick={handleDel} className="w-full py-2 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer">Delete</div>
+                                <div onClick={() => { dispatch({ type: 'SET_INVOICE_VIEW', payload: false });; setEdit(true) }} className="w-full py-2 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer">Edit</div>
+                                {!isLoading.delete ?
+                                    <div onClick={handleDel} className="w-full py-2 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer">Delete</div>
+                                    :
+                                    <div className="flex items-center justify-center h-fit py-2.5">
+                                        <div className="w-6 h-6 border-4 border-gray-500 border-t-transparent rounded-full animate-spin"></div>
+                                    </div>
+                                }
                                 {/* print Btn */}
                                 <ReactToPrint
                                     trigger={() => <button

@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, { useState } from "react";
 import PrintView from "./printView";
 import { toast } from "react-toastify";
 import { State } from "@/state/Context";
@@ -8,7 +8,9 @@ import { delQuotation } from "@/services/delQuotaion";
 import { addInvoice } from "@/services/addInvoice";
 import { useNavigate } from "react-router-dom";
 import { addQuotaion } from "@/services/addQuotation";
-
+import { sendMail } from "@/services/sendMail";
+import html2canvas from "html2canvas";
+import { jsPDF } from "jspdf";
 
 const ViewQuotation = ({ quotationData, setQuotationData, componentRef, appliedTaxes, setEdit, close }) => {
     const router = useNavigate();
@@ -17,6 +19,7 @@ const ViewQuotation = ({ quotationData, setQuotationData, componentRef, appliedT
         delete: false,
         createInvoice: false,
         createCopy: false,
+        sendMail: false,
     });
 
     // Delete Invoice
@@ -94,10 +97,10 @@ const ViewQuotation = ({ quotationData, setQuotationData, componentRef, appliedT
                 totalAmount: quotationData.totalAmount,
                 CustomerId: quotationData.CustomerId,
                 CustomerVehicleId: quotationData.CustomerVehicleId,
-              BusinessId: state.business.id,
+                BusinessId: state.business.id,
             },
             "products": selectedProductIds,
-          };
+        };
         try {
             const res = await addQuotaion(data, state.userToken);
             const quotation = await res.json();
@@ -112,6 +115,46 @@ const ViewQuotation = ({ quotationData, setQuotationData, componentRef, appliedT
             console.log(error);
         }
         setIsLoading({ ...isLoading, createCopy: false });
+    }
+
+    const sendMailToUser = async () => {
+        setIsLoading({ ...isLoading, sendMail: true });
+        try {
+            const quotationElement = componentRef.current;
+            if (!quotationElement) return;
+
+            const canvas = await html2canvas(quotationElement, {
+                scale: window.devicePixelRatio,
+                useCORS: true
+            });
+            const imgData = canvas.toDataURL("image/png");
+
+            const pdf = new jsPDF("p", "mm", "a4");
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = pdf.internal.pageSize.getHeight();
+
+            pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+            const pdfBlob = pdf.output("blob");
+
+            const formData = new FormData();
+            formData.append("pdf", pdfBlob, "quotation.pdf");
+            formData.append("businessEmail", state?.business?.email);
+            formData.append("customerEmail", quotationData?.Customer?.email);
+            formData.append("customerName", `${quotationData?.Customer?.firstName} ${quotationData?.Customer?.lastName}`);
+
+            const res = await sendMail(formData, 'quotation');
+            const data = await res.json();
+            if (res.status === 200) {
+                toast.success(data.message);
+            }
+            else {
+                toast.error(data.message);
+            }
+            close();
+        } catch (error) {
+            console.log(error);
+        }
+        setIsLoading({ ...isLoading, sendMail: false });
     }
 
     return (
@@ -130,8 +173,14 @@ const ViewQuotation = ({ quotationData, setQuotationData, componentRef, appliedT
                         </div>
                         <div className="flex flex-col items-center justify-start h-full w-full">
                             <div className="text-white w-full text-center font-medium">
-                                <div className="w-full py-2 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer">Send</div>
-                                <div onClick={() => !quotationData?.approved && setQuotationApproved()} className={`w-full py-2 mx-auto ${!quotationData?.approved ? "hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer" : "text-green-500 font-bold"}`}>{!quotationData?.approved ? 'Approve' : 'Approved'}</div>                               
+                                {!isLoading.sendMail ?
+                                    <div onClick={sendMailToUser} className="w-full py-2 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer">Send</div>
+                                    :
+                                    <div className="flex items-center justify-center h-fit py-2.5">
+                                        <div className="w-6 h-6 border-4 border-gray-500 border-t-transparent rounded-full animate-spin"></div>
+                                    </div>
+                                }
+                                <div onClick={() => !quotationData?.approved && setQuotationApproved()} className={`w-full py-2 mx-auto ${!quotationData?.approved ? "hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer" : "text-green-500 font-bold"}`}>{!quotationData?.approved ? 'Approve' : 'Approved'}</div>
                                 <div onClick={() => { dispatch({ type: 'SET_QUOTATION_VIEW', payload: false }); setEdit(true) }} className="w-full py-2 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer">Edit</div>
                                 {!isLoading.delete ?
                                     <div onClick={handleDel} className="w-full py-2 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer">Delete</div>

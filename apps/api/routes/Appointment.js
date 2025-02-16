@@ -5,6 +5,7 @@ require("dotenv").config();
 const { Op } = require("sequelize");
 const nodemailer = require("nodemailer");
 const fetchUser = require("../middlewares/fetchUser");
+const sendMail = require("../utils/sendMail");
 
 router.get("/", fetchUser, async (req, res) => {
   try {
@@ -104,16 +105,11 @@ router.post("/create", fetchUser, async (req, res) => {
       if (BusinessEmail === null) {
         return res
           .status(400)
-          .json({ message: "Appointment scheduled, but email not sent to the customer as the business email is not set" });
+          .json({
+            message:
+              "Appointment scheduled, but email not sent to the customer as the business email is not set",
+          });
       }
-      let transporter = nodemailer.createTransport({
-        host: "smtp.sendgrid.net",
-        port: 587,
-        auth: {
-          user: "apikey",
-          pass: process.env.SENDGRID_API_KEY,
-        },
-      });
 
       const mailOptions = {
         from: BusinessEmail,
@@ -134,14 +130,8 @@ router.post("/create", fetchUser, async (req, res) => {
                     <p>Have a nice day!</p>`,
       };
 
-      transporter.sendMail(mailOptions, (error, info) => {
-        if (error) {
-          console.log(error);
-        } else {
-          console.log("Email sent: " + info.response);
-        }
-      });
-      //   }
+      await sendMail(mailOptions);
+
       return res
         .status(200)
         .json({ message: "Appointment has been scheduled successfully" });

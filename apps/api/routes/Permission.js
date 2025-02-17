@@ -9,6 +9,7 @@ router.get('/', fetchUser, async (req, res) => {
     try {
         const permission = await Permission.findAll({
             where: {name: { [Op.ne]: 'IS_SUPER_ADMIN' }},
+            order: [["createdAt", "DESC"]],
         });
         res.json(permission);
     } catch (error) {

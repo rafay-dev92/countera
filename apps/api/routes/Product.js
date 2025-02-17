@@ -31,6 +31,7 @@ router.get("/", fetchUser, async (req, res) => {
     if (user) {
       const products = await Product.findAll({
         where: { BusinessId: user.dataValues.BusinessId },
+        order: [["createdAt", "DESC"]],
         include: [
           {
             model: Tax,
@@ -44,6 +45,7 @@ router.get("/", fetchUser, async (req, res) => {
     }
 
     const products = await Product.findAll({ 
+      order: [["createdAt", "DESC"]],
       include: [
         {
           model: Tax,

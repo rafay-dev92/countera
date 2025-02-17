@@ -27,6 +27,7 @@ router.get("/", fetchUser, async (req, res) => {
     if (user) {
       const quotataions = await Quotation.findAll({
         where: { BusinessId: user.dataValues.BusinessId },
+        order: [["createdAt", "DESC"]],
         include: [
           {
             model: Customer,
@@ -53,7 +54,28 @@ router.get("/", fetchUser, async (req, res) => {
     }
 
     const quotataions = await Quotation.findAll({
-      include: ["Customer", "Product", "Business"],
+      order: [["createdAt", "DESC"]],
+      include: [
+        {
+          model: Customer,
+          as: "Customer",
+          include: ["Address", "Vehicle"],
+        },
+        {
+          model: CustomerVehicle,
+          as: "CustomerVehicle",
+        },
+        {
+          model: Product,
+          as: "Product",
+          through: "invoice_product",
+          include: ["Tax"],
+        },
+        {
+          model: Business,
+          as: "Business",
+        },
+      ],
     });
     return res.json(quotataions);
   } catch (error) {

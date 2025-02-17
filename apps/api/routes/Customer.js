@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { Customer, User } = require('../models');
 const fetchUser = require('../middlewares/fetchUser');
-const { Op } = require('sequelize');
+const { Op, or } = require('sequelize');
 require('dotenv').config();
 
 
@@ -15,11 +15,13 @@ router.get('/', fetchUser, async (req, res) => {
         if (user) {
             const customer = await Customer.findAll({
                 where: {BusinessId: user.dataValues.BusinessId},
+                order: [['createdAt', 'DESC']],
                 include: ['Business', 'Address', 'Vehicle']
             });
             return res.json(customer);
         }
         const customer = await Customer.findAll({
+            order: [['createdAt', 'DESC']],
             include: ['Business', 'Address', 'Vehicle']
         });
         return res.json(customer);

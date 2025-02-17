@@ -8,6 +8,7 @@ router.get("/customer/:id", fetchUser, async (req, res) => {
   try {
     const vehicles = await CustomerVehicle.findAll({
       where: { CustomerId: req.params.id },
+      order: [['createdAt', 'DESC']],
     });
     res.status(200).json(vehicles);
   } catch (error) {

@@ -1,4 +1,5 @@
 const { DataTypes } = require("sequelize");
+const Quotation = require("./Quotation");
 
 module.exports = (sequelize) => {
   const WorkOrder = sequelize.define(
@@ -10,15 +11,33 @@ module.exports = (sequelize) => {
         primaryKey: true,
         allowNull: false,
       },
-      products: {
-        type: DataTypes.STRING,
+      totalAmount: {
+        type: DataTypes.FLOAT,
         allowNull: false,
-        get() {
-          return this.getDataValue("products").split(";");
-        },
-        set(val) {
-          this.setDataValue("products", val.join(";"));
-        },
+      },
+      QuotationId: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        onDelete: "RESTRICT",
+        onUpdate: "CASCADE",
+      },
+      CustomerId: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        onDelete: "RESTRICT",
+        onUpdate: "CASCADE",
+      },
+      CustomerVehicleId: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        onDelete: "RESTRICT",
+        onUpdate: "CASCADE",
+      },
+      BusinessId: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        onDelete: "RESTRICT",
+        onUpdate: "CASCADE",
       },
     },
     {
@@ -27,8 +46,21 @@ module.exports = (sequelize) => {
   );
 
   WorkOrder.associate = (models) => {
+    WorkOrder.belongsToMany(models.Product, {
+      as: "Product",
+      through: "work_order_product",
+    });
+    WorkOrder.belongsTo(models.Quotation, {
+      as: "Quotation",
+    });
     WorkOrder.belongsTo(models.Customer, {
       as: "Customer",
+    });
+    WorkOrder.belongsTo(models.CustomerVehicle, {
+      as: "CustomerVehicle",
+    });
+    WorkOrder.belongsTo(models.Business, {
+      as: "Business",
     });
   };
 

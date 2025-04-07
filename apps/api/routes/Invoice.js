@@ -154,8 +154,9 @@ router.post("/create", fetchUser, async (req, res) => {
       await Promise.all(
         req.body.products.map(async (item) => {
           const product = await Product.findByPk(item.split(":")[0]);
+          const description = item.split(":")[2];
           await newInvoice.addProduct(product, {
-            through: { quantity: item.split(":")[1] },
+            through: { quantity: item.split(":")[1], description },
           });
         })
       );

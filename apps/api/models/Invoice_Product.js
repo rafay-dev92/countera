@@ -6,7 +6,12 @@ module.exports = (sequelize) => {
             type: DataTypes.INTEGER,
             defaultValue: 1,
             allowNull: false
-        }
+        },
+        description: {
+            type: DataTypes.STRING,
+            defaultValue: '',
+            allowNull: true
+        },
     },{
         tableName: 'invoice_product'
     });

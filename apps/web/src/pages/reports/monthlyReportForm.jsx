@@ -1,17 +1,29 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { State } from "@/state/Context";
 import { toast } from "react-toastify";
 import { Dialog } from "@material-tailwind/react";
+import { fetchInvoices } from "@/services/fetchInvoices";
+import { fetchProducts } from '@/services/fetchProducts';
+import MonthlyReportPreview from "./monthlyReport";
+import ReactToPrint from "react-to-print";
+import { fetchTaxes } from "@/services/fetchTaxes";
 
 const schema = Yup.object().shape({
     startDate: Yup.string().required("Start date is required"),
 });
 
 function MonthlyReportForm({ open, close }) {
+    const printRef = useRef();
+    const reactToPrintTriggerRef = useRef();
+    const { state } = State();
+    const [products, setProducts] = useState([]);
+    const [taxes, setTaxes] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
-
+    const [showPrint, setShowPrint] = useState(false);
+    const [reportData, setReportData] = useState([]);
+    const [invoices, setInvoices] = useState([]);
     const handleClose = () => {
         clearForm(formikProps);
         close();
@@ -33,6 +45,14 @@ function MonthlyReportForm({ open, close }) {
     const onSubmit = async (values) => {
         setIsLoading(true);
         try {
+            const filteredInvoices = invoices?.filter(invoice => {
+                return new Date(invoice.createdAt) >= new Date(values.startDate);
+            });
+            setReportData(filteredInvoices);
+            setShowPrint(true);
+            setTimeout(() => {
+                reactToPrintTriggerRef.current?.click();
+            }, 100);
             setIsLoading(false);
             handleClose();
         } catch (error) {
@@ -42,6 +62,44 @@ function MonthlyReportForm({ open, close }) {
             handleClose();
         }
     };
+
+    const getTaxes = async () => {
+        try {
+            const res = await fetchTaxes(state.userToken);
+            const taxes = await res.json();
+            setTaxes(taxes.map(tax => tax.name));
+        } catch (error) {
+            console.log(error);
+            toast.error("Something went wrong")
+        }
+    }
+
+    const getProducts = async () => {
+        try {
+            const products = await (await fetchProducts(state.userToken)).json();
+            setProducts(products.map(product => product.name));
+        } catch (error) {
+            console.log(error.message);
+        }
+    }
+
+    const getInvoices = async () => {
+        try {
+            const fetchedInvoices = await fetchInvoices(state.userToken);
+            const totalInvoices = await fetchedInvoices.json();
+            setInvoices(totalInvoices.data);
+
+        } catch (error) {
+            console.log(error.message);
+            showToastMessage('error', "Something went wrong");
+        }
+    };
+
+    useEffect(() => {
+        getTaxes();
+        getProducts();
+        getInvoices();
+    }, []);
 
     const clearForm = (formikProps) => {
         formikProps.resetForm({
@@ -138,7 +196,8 @@ function MonthlyReportForm({ open, close }) {
                                         type="submit"
                                     >
                                         {!isLoading ?
-                                            <span>Show</span> :
+                                            <span>Generate</span>
+                                            :
                                             <div className="flex items-center justify-center h-fit">
                                                 <div className="w-6 h-6 border-4 border-gray-500 border-t-transparent rounded-full animate-spin"></div>
                                             </div>
@@ -150,6 +209,22 @@ function MonthlyReportForm({ open, close }) {
                     </form>
                 )}
             </Dialog>
+            {showPrint && (
+                <>
+                    <MonthlyReportPreview
+                        ref={printRef}
+                        invoices={reportData}
+                        products={products}
+                        taxes={taxes}
+                    />
+                    <div className="hidden">
+                        <ReactToPrint
+                            trigger={() => <button ref={reactToPrintTriggerRef}>Print</button>}
+                            content={() => printRef.current}
+                        />
+                    </div>
+                </>
+            )}
         </>
     );
 }

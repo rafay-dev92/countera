@@ -87,7 +87,7 @@ function MonthlyReportForm({ open, close }) {
         try {
             const fetchedInvoices = await fetchInvoices(state.userToken);
             const totalInvoices = await fetchedInvoices.json();
-            setInvoices(totalInvoices.data);
+            setInvoices(totalInvoices.data.reverse());
 
         } catch (error) {
             console.log(error.message);

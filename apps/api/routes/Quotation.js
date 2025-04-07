@@ -182,7 +182,7 @@ router.put("/update/:id", fetchUser, async (req, res) => {
       return res.status(404).json({ message: "Quotataion not found" });
     }
 
-    if (req.body.products.length !== 0) {
+    if (req.body?.products && req.body?.products.length > 0) {
       try {
         req.body.products.forEach(async (newProduct) => {
           const productId = newProduct.split(":")[0];

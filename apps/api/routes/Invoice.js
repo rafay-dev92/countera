@@ -52,7 +52,7 @@ router.get("/", fetchUser, async (req, res) => {
           {
             model: Payment,
             as: "Payments",
-          }
+          },
         ],
       });
       return res.json({
@@ -86,7 +86,7 @@ router.get("/", fetchUser, async (req, res) => {
         {
           model: Payment,
           as: "Payments",
-        }
+        },
       ],
     });
     return res.json({
@@ -185,10 +185,12 @@ router.post("/create", fetchUser, async (req, res) => {
         {
           model: Payment,
           as: "Payments",
-        }
+        },
       ],
     });
-    return res.status(200).json({ message: "Invoice created successfully", data: currentInvoice });
+    return res
+      .status(200)
+      .json({ message: "Invoice created successfully", data: currentInvoice });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: error.message });
@@ -207,42 +209,42 @@ router.put("/update/:id", fetchUser, async (req, res) => {
     }
 
     // if (invoice.dataValues.realInvoiceId === null) {
-      // Update the status of original Invoice
-      // if (invoice.dataValues.current) {
-        // let oldInvoiceData = invoice.dataValues;
-        // oldInvoiceData = { ...oldInvoiceData, current: false };
-        // await invoice.update(invoice);
-        
-        // Create a new Invoice
-        // invoiceData = {
-        //   ...invoiceData,
-        //   invoiceData: {
-        //     ...invoiceData.invoiceData,
-        //     current: true,
-        //     realInvoiceId: oldInvoiceData.id,
-        //   },
-        // };
-        // try {
-          // const newInvoice = await Invoice.create(invoiceData.invoiceData);
-          // if (invoiceData.products.length !== 0) {
-          //   invoiceData.products.map(async (item) => {
-          //     const product = await Product.findByPk(item.split(":")[0]);
-          //     await newInvoice.addProduct(product, {
-          //       through: { quantity: item.split(":")[1] },
-          //     });
-          //   });
-          // }
-        //   return res
-        //     .status(200)
-        //     .json({ message: "Invoice updated successfully" });
-        // } catch (error) {
-        //   return res.status(500).json({ message: "Something went wrong" });
-        // }
-      // }
-      // return res.status(409).json({ message: "Invoice updated successfully" });
+    // Update the status of original Invoice
+    // if (invoice.dataValues.current) {
+    // let oldInvoiceData = invoice.dataValues;
+    // oldInvoiceData = { ...oldInvoiceData, current: false };
+    // await invoice.update(invoice);
+
+    // Create a new Invoice
+    // invoiceData = {
+    //   ...invoiceData,
+    //   invoiceData: {
+    //     ...invoiceData.invoiceData,
+    //     current: true,
+    //     realInvoiceId: oldInvoiceData.id,
+    //   },
+    // };
+    // try {
+    // const newInvoice = await Invoice.create(invoiceData.invoiceData);
+    // if (invoiceData.products.length !== 0) {
+    //   invoiceData.products.map(async (item) => {
+    //     const product = await Product.findByPk(item.split(":")[0]);
+    //     await newInvoice.addProduct(product, {
+    //       through: { quantity: item.split(":")[1] },
+    //     });
+    //   });
+    // }
+    //   return res
+    //     .status(200)
+    //     .json({ message: "Invoice updated successfully" });
+    // } catch (error) {
+    //   return res.status(500).json({ message: "Something went wrong" });
+    // }
+    // }
+    // return res.status(409).json({ message: "Invoice updated successfully" });
     // }
 
-    if (req.body?.products.length !== 0) {
+    if (req.body?.products && req.body?.products.length > 0) {
       try {
         req.body.products.forEach(async (newProduct) => {
           const productId = newProduct.split(":")[0];
@@ -330,11 +332,13 @@ router.put("/update/:id", fetchUser, async (req, res) => {
         {
           model: Payment,
           as: "Payments",
-        }
+        },
       ],
     });
 
-    return res.status(200).json({ message: "Invoice updated successfully", data: currentInvoice });
+    return res
+      .status(200)
+      .json({ message: "Invoice updated successfully", data: currentInvoice });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: error.message });

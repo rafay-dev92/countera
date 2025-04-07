@@ -21,6 +21,14 @@ module.exports = (sequelize) => {
             type: DataTypes.STRING,
             allowNull: false,
         },
+        notes: {
+            type: DataTypes.STRING,
+            allowNull: true,
+        },
+        comments: {
+            type: DataTypes.STRING,
+            allowNull: true,
+        },
         CustomerId: {
             type: DataTypes.UUID,
             allowNull: false,
@@ -87,14 +95,6 @@ module.exports = (sequelize) => {
             throw error;
         }
     });
-
-    // Method to find the latest invoice number
-    async function findLatestInvoice(businessId) {
-        return Invoice.findOne({
-            where: { businessId }, // Filter by businessId
-            order: [['createdAt', 'DESC']], // Sort by creation date in descending order
-        });
-    }
 
     return Invoice;
 }

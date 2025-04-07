@@ -24,6 +24,14 @@ module.exports = (sequelize) => {
         defaultValue: false,
         allowNull: false,
       },
+      notes: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      comments: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
       CustomerId: {
         type: DataTypes.UUID,
         allowNull: false,
@@ -79,7 +87,7 @@ module.exports = (sequelize) => {
       });
 
       const nextQuotationNumber = latestQuotation
-        ? latestQuotation.invoiceNumber + 1
+        ? latestQuotation.quotationNumber + 1
         : 1;
       quotation.quotationNumber = nextQuotationNumber;
 

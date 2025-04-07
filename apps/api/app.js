@@ -38,6 +38,7 @@ app.use("/api/business", require("./routes/Business"));
 app.use("/api/customer", require("./routes/Customer"));
 app.use("/api/vehicle", require("./routes/Vehicle"));
 app.use("/api/product", require("./routes/Product"));
+app.use("/api/productcategories", require("./routes/ProductCategory"));
 app.use("/api/tax", require("./routes/Tax"));
 app.use("/api/appointment", require("./routes/Appointment"));
 app.use("/api/invoice", require("./routes/Invoice"));

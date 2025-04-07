@@ -21,10 +21,12 @@ import { fetchCustomers } from "@/services/fetchCustomers";
 import { delCustomer } from "@/services/delCustomer";
 import { toast } from "react-toastify";
 import { State } from "@/state/Context";
+import { useConfirm } from "@/context/confirmContext";
 
 const TABLE_HEAD = ["Customer Name", "Email", "Phone", "Address", "Taxable", "Actions"];
 
 export function Customers() {
+  const confirm = useConfirm();
   const { state } = State();
   const [selectAll, setSelectAll] = useState(false);
   const [selectedRows, setSelectedRows] = useState([]);
@@ -148,7 +150,8 @@ export function Customers() {
     // setFinalItems(updatedItems);
     // setSelectedRows([]);
     // setSelectAll(false);
-
+    const confirmed = await confirm("Do you really want to delete this customer?");
+    if (!confirmed) return;
     if (state.userInfo.Permission.some(obj => obj.name === "CAN_DELETE_CUSTOMER" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
       try {
         const res = await delCustomer(id, state.userToken);

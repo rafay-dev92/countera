@@ -20,10 +20,12 @@ import { fetchQuotations } from "@/services/fetchQuotations";
 import { delQuotation } from "@/services/delQuotaion";
 import { toast } from "react-toastify";
 import { addInvoice } from "@/services/addInvoice";
+import { useConfirm } from "@/context/confirmContext";
 
 const TABLE_HEAD = ["Customer", "Total", "Status", "Quotation Date", "Vehicle", "Actions"];
 
 export function Quotation() {
+    const confirm = useConfirm();
     const router = useNavigate();
     const { state, dispatch } = State();
     const [searchQuery, setSearchQuery] = useState("");
@@ -76,6 +78,8 @@ export function Quotation() {
     };
 
     const handleDeleteQuotation = async (index) => {
+        const confirmed = await confirm("Do you really want to delete this quotation?");
+        if (!confirmed) return;
         if (state.userInfo.Permission.some(obj => obj.name === "CAN_DELETE_QUOTATION" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
             const updatedQuotations = quotations.filter((_, rowIndex) => rowIndex !== index);
             const deletedQuotationId = quotations.find((_, rowIndex) => rowIndex === index);

@@ -9,10 +9,14 @@ import ReactToPrint from "react-to-print";
 import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
 import { sendMail } from "@/services/sendMail";
+import NotesForm from "./notesForm";
+import { useConfirm } from "@/context/confirmContext";
 
 const ViewInvoice = ({ printInvoice, setPrintInvoice, componentRef, appliedTaxes, setEdit, close }) => {
+    const confirm = useConfirm();
     const { state, dispatch } = State();
     const [isPaymentFormOpen, setIsPaymentFormOpen] = useState(false);
+    const [isNotesFormOpen, setIsNotesFormOpen] = useState(false);
     const [totalAmountPaid, setTotalAmountPaid] = useState(0);
     const [isLoading, setIsLoading] = React.useState({
         delete: false,
@@ -26,6 +30,8 @@ const ViewInvoice = ({ printInvoice, setPrintInvoice, componentRef, appliedTaxes
 
     // Delete Invoice
     const handleDel = async () => {
+        const confirmed = await confirm();
+        if (!confirmed) return;
         setIsLoading({ ...isLoading, delete: true });
         try {
             const res = await delInvoice(printInvoice.id, state.userToken);
@@ -125,7 +131,7 @@ const ViewInvoice = ({ printInvoice, setPrintInvoice, componentRef, appliedTaxes
                     <div className="basis-[20%] h-full overflow-y-auto flex flex-col items-center gap-6 bg-gradient-to-br from-gray-800 to-gray-700">
                         <div className="text-center py-4">
                             <h2 className="text-lg font-normal text-gray-400">Balance Due</h2>
-                            <h5 className="text-4xl text-white font-normal">{(printInvoice?.totalAmount - totalAmountPaid).toFixed(2)} $</h5>
+                            <h5 className="text-4xl text-white font-normal">${(printInvoice?.totalAmount - totalAmountPaid).toFixed(2)}</h5>
                         </div>
                         <div className="flex flex-col items-center justify-start h-full w-full">
                             <div className="text-white w-full text-center font-medium">
@@ -137,23 +143,9 @@ const ViewInvoice = ({ printInvoice, setPrintInvoice, componentRef, appliedTaxes
                                     </div>
                                 }
                                 <div onClick={() => printInvoice?.paymentStatus !== 'Paid' && setIsPaymentFormOpen(true)} className={`w-full py-2 mx-auto ${printInvoice?.paymentStatus !== 'Paid' ? "hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer" : "text-green-500 font-bold"}`}>{printInvoice?.paymentStatus !== 'Paid' ? 'Pay' : 'Paid'}</div>
-                                {/* {['Copy'].map((item, index) => (
-                                <div key={index}>
-                                    <div
-                                        className={`px-4 py-2 hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer`}
-                                        onClick={() => toggle(index)}
-                                    >
-                                        {item}
-                                    </div>
-                                    {openAccordian === index && (
-                                        <div className="px-4 py-2 text-sm text-gray-300 bg-gradient-to-br from-gray-800 to-gray-700">
-                                            {item} details...
-                                        </div>
-                                    )}
-                                </div>
-                                ))} */}
                                 <div onClick={() => { dispatch({ type: 'SET_INVOICE_VIEW', payload: false });; setEdit(true) }} className="w-full py-2 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer">Edit</div>
-                                {!isLoading.delete ?
+                                <div onClick={() => setIsNotesFormOpen(true)} className="w-full py-2 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer">Notes</div>
+                                {!isLoading.delete ?                                
                                     <div onClick={handleDel} className="w-full py-2 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer">Delete</div>
                                     :
                                     <div className="flex items-center justify-center h-fit py-2.5">
@@ -175,6 +167,7 @@ const ViewInvoice = ({ printInvoice, setPrintInvoice, componentRef, appliedTaxes
                     </div>
                 </div>
             </div>
+            <NotesForm open={isNotesFormOpen} close={() => setIsNotesFormOpen(false)} invoiceId={printInvoice?.id} setPrintInvoice={setPrintInvoice} currentValue={printInvoice.notes} />
             <PaymentForm open={isPaymentFormOpen} close={() => setIsPaymentFormOpen(false)} totalAmount={printInvoice?.totalAmount} totalAmountPaid={totalAmountPaid} invoiceId={printInvoice?.id} setPrintInvoice={setPrintInvoice} />
         </>
     );

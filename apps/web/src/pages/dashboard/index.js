@@ -4,7 +4,7 @@ export * from "@/pages/invoice/table";
 export * from "@/pages/quotation/table";
 export * from "@/pages/appointments/appointments";
 export * from "@/pages/dashboard/inspection";
-export * from "@/pages/dashboard/reports";
+export * from "@/pages/reports/reports";
 export * from "@/pages/product/table";
 export * from "@/pages/vehicle/table";
 export * from "@/pages/dashboard/home";

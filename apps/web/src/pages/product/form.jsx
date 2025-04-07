@@ -9,10 +9,12 @@ import { toast } from 'react-toastify';
 import { State } from "@/state/Context";
 import { fetchTaxes } from "@/services/fetchTaxes";
 import dummyImage from "../../assets/dummyImage.png"
+import { fetchProductsCategories } from "@/services/fetchProductCategories";
 
 const schema = Yup.object().shape({
   type: Yup.string().required("Type is required"),
   name: Yup.string().required("Name is required"),
+  category: Yup.string().required("Category is required"),
   cost: Yup.string().required("Cost is required"),
   margin: Yup.string().required("Margin is required"),
   price: Yup.string().required("Price is required"),
@@ -40,7 +42,8 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
   const [taxes, setTaxes] = useState([]);
   const [selectedTaxes, setSelectedTaxes] = useState([]);
   const [productPreviewPic, setProductPreviewPic] = useState(null);
-  
+  const [productCategories, setProductCategories] = useState([]);
+
   const handleClose = () => {
     clearForm(formikProps);
     setEdit(false);
@@ -74,8 +77,16 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
   }, [selectedItem]);
 
   useEffect(() => {
+    getProductCategories();
     getTaxes();
   }, [])
+
+  const getProductCategories = async () => {
+    const fetchedProductCategories = await fetchProductsCategories(state.userToken);
+    const productCategoriesData = await fetchedProductCategories.json();
+  console.log("categories: ", productCategoriesData)
+    setProductCategories(productCategoriesData);
+  };
 
   const getTaxes = async () => {
     const fetchedTaxes = await fetchTaxes(state.userToken);
@@ -97,6 +108,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
     productData.append('image', values.image);
     productData.append('taxes', JSON.stringify(selectedTaxes));
     productData.append('BusinessId', state.business.id);
+    productData.append('CategoryId', values.category);
 
     try {
       if (!edit) {
@@ -146,6 +158,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
     formikProps.resetForm({
       values: {
         name: "",
+        category: "",
         cost: "",
         margin: state.business.defaultMargin || 10,
         price: "",
@@ -157,6 +170,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
       },
       errors: {
         name: "",
+        category: "",
         cost: "",
         margin: state.business.defaultMargin || 10,
         price: "",
@@ -172,6 +186,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
   const formikProps = useFormik({
     initialValues: {
       name: "",
+      category: "",
       cost: "",
       margin: state.business.defaultMargin || 10,
       price: "",
@@ -201,7 +216,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
     <Dialog open={open}>
       {open && (
         <form onSubmit={handleSubmit} autoComplete="new">
-          <div className="fixed top-0 left-0 w-full h-full flex items-center justify-center">
+          <div className="">
             <div className="bg-white rounded shadow-xl">
               <div className="flex items-center justify-between sticky bg-gradient-to-br from-gray-800 to-gray-700">
                 <div></div>
@@ -254,7 +269,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
                   </div>
                 </div>
                 <div className="flex items-center justify-start space-x-4 mb-3 w-full">
-                  <div className="basis-[33.33%]">
+                  <div className="basis-[20%]">
                     <label className="font-bold">Type</label>
                     <select
                       className="w-full p-2 border border-gray-300 bg-inherit rounded-md"
@@ -275,7 +290,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
                     ) : (<div></div>)}
                   </div>
 
-                  <div className="basis-[33.33%]">
+                  <div className="basis-[35%]">
                     <label className="font-bold">Name</label> <br />
                     <input
                       className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
@@ -293,8 +308,32 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
                     )}
                   </div>
 
-                  <div className="basis-[33.33%]">
-                    <label className="font-bold">Item Code</label> <br />
+                  <div className="basis-[30%]">
+                    <label className="font-bold">Category</label>
+                    <select
+                      className="w-full p-2 border border-gray-300 bg-inherit rounded-md"
+                      id="category"
+                      name="category"
+                      value={values.category}
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                    >
+                      <option value="">Select Category</option>
+                      {productCategories.map((category) => (
+                        <option key={category.id} value={category.id}>
+                          {category.name}
+                        </option>
+                      ))}                      
+                    </select>
+                    {touched.category && errors.category ? (
+                      <div className="text-red-500">
+                        {errors.category}
+                      </div>
+                    ) : (<div></div>)}
+                  </div>
+
+                  <div className="basis-[15%]">
+                    <label className="font-bold whitespace-nowrap">Item Code</label> <br />
                     <input
                       className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
                       id="itemCode"

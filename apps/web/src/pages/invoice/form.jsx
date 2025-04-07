@@ -41,6 +41,7 @@ const TABLE_HEAD = [
 const schema = Yup.object().shape({
   customer: Yup.string().required("Customer is required"),
   vehicle: Yup.string().required("Vehicle is required"),
+  comments: Yup.string(),
 });
 
 const MyPopUpForm = ({ refresh, setRefresh, close }) => {
@@ -111,7 +112,7 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
     }]);
     setAppliedTaxes({});
     clearForm(formikProps);
-    setEdit(false)
+    setEdit(false);
     setRefresh(!refresh);
     dispatch({ type: 'SET_INVOICE_VIEW', payload: false });
     close();
@@ -148,10 +149,10 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
       setSelectedVehicle(selectedInvoice.CustomerVehicle)
       setVehicleOdometer(selectedInvoice.CustomerVehicle?.odometer)
       // setProducts(selectedInvoice.Product)
-      setValues({ ...values, ['customer']: selectedInvoice.CustomerId, ['vehicle']: selectedInvoice.CustomerVehicleId })
 
+      setValues({ ...selectedInvoice, ['customer']: selectedInvoice.CustomerId, ['vehicle']: selectedInvoice.CustomerVehicleId })
       let selectedProd = [...selectedProducts]
-      selectedInvoice?.Product.forEach((prod) => {
+      selectedInvoice?.Product?.forEach((prod) => {
         const aProd = {
           product: prod.id,
           id: prod.id,
@@ -205,12 +206,14 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
         console.log(error)
       }
     }
+
     const data = {
       invoiceData: {
         totalAmount: calculateTotalAmountWithTax(),
         paymentStatus: "Unpaid",
         CustomerId: selectedCustomer.id,
         CustomerVehicleId: selectedVehicle.id,
+        comments: values.comments,
         BusinessId: null
       },
       "products": selectedProductIds,
@@ -493,10 +496,12 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
       values: {
         customer: "",
         vehicle: "",
+        comments: "",
       },
       errors: {
         customer: "",
         vehicle: "",
+        comments: "",
       },
     });
     setSelectedCustomer(null);
@@ -515,6 +520,7 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
     initialValues: {
       customer: "",
       vehicle: "",
+      comments: "",
     },
     validationSchema: schema,
     onSubmit,
@@ -661,40 +667,55 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
                       </div>
 
                       <div className="basis-[60%] max-w-[60%]">
-                        <div className="flex items-center pl-2">
-                          <label className="font-bold">Vehicle</label>
-                          <IconButton variant="text" onClick={() => selectedCustomer && setIsCustomerVehicleFormOpen(true)}>
-                            <PlusCircleIcon className="h-5 w-5 text-blue-600 cursor-pointer" />
-                          </IconButton>
-                        </div>
-                        <select
-                          id="vehicle"
-                          name="vehicle"
-                          className="w-48 lg:w-72 m-2 p-2 border border-gray-300 bg-inherit rounded-md"
-                          value={values.vehicle}
-                          onChange={(e) =>
-                            handleVehicleChange(e.target.value)
-                          }
-                          onBlur={handleBlur}
-                        >
-
-                          {selectedCustomer && selectedCustomer.Vehicle?.length > 0 ? selectedCustomer.Vehicle?.map((vehicle) => (
-                            <option
-                              key={vehicle.id}
-                              value={vehicle.id}
+                        <div className="flex items-center">
+                          <div>
+                            <div className="flex items-center pl-2">
+                              <label className="font-bold">Vehicle</label>
+                              <IconButton variant="text" onClick={() => selectedCustomer && setIsCustomerVehicleFormOpen(true)}>
+                                <PlusCircleIcon className="h-5 w-5 text-blue-600 cursor-pointer" />
+                              </IconButton>
+                            </div>
+                            <select
+                              id="vehicle"
+                              name="vehicle"
+                              className="w-48 lg:w-72 m-2 p-2 border border-gray-300 bg-inherit rounded-md"
+                              value={values.vehicle}
+                              onChange={(e) =>
+                                handleVehicleChange(e.target.value)
+                              }
+                              onBlur={handleBlur}
                             >
-                              {vehicle.make} {vehicle.model} {vehicle.year}
-                            </option>
-                          ))
-                            :
-                            <option value="">Select Vehicle</option>
-                          }
-                        </select>
-                        {touched.vehicle && errors.vehicle ? (
-                          <div className="text-red-500">
-                            {errors.vehicle}
+
+                              {selectedCustomer && selectedCustomer.Vehicle?.length > 0 ? selectedCustomer.Vehicle?.map((vehicle) => (
+                                <option
+                                  key={vehicle.id}
+                                  value={vehicle.id}
+                                >
+                                  {vehicle.make} {vehicle.model} {vehicle.year}
+                                </option>
+                              ))
+                                :
+                                <option value="">Select Vehicle</option>
+                              }
+                            </select>
+                            {touched.vehicle && errors.vehicle ? (
+                              <div className="text-red-500">
+                                {errors.vehicle}
+                              </div>
+                            ) : (<div></div>)} <br />
                           </div>
-                        ) : (<div></div>)} <br />
+                          <div className="ml-3">
+                            <label className="p-2 font-bold">Comments</label> <br />
+                            <textarea
+                              className="w-48 lg:w-80 m-2 p-2 border border-gray-300 rounded-md text-black"
+                              id="comments"
+                              name="comments"
+                              type="text"
+                              value={values.comments}
+                              onChange={handleChange}
+                            />
+                          </div>
+                        </div>
                         <div className="flex gap-5">
                           <div className="flex flex-col">
                             <div>

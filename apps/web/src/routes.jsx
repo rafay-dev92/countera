@@ -68,12 +68,12 @@ export const routes = [
         path: "/inspection",
         element: <Inspection />,
       },
-      // {
-      //   icon: <ChartBarIcon {...icon} />,
-      //   name: "Reports",
-      //   path: "/reports",
-      //   element: <Reports />,
-      // },
+      {
+        icon: <ChartBarIcon {...icon} />,
+        name: "Reports",
+        path: "/reports",
+        element: <Reports />,
+      },
       {
         icon: <Cog8ToothIcon {...icon} />,
         name: "Settings",

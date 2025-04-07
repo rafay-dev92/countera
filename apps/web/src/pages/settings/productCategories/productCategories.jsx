@@ -2,22 +2,22 @@ import React, { useState, useEffect } from "react";
 import { MagnifyingGlassIcon, PlusCircleIcon } from "@heroicons/react/24/outline";
 import { TrashIcon } from "@heroicons/react/24/solid";
 import { Card, CardHeader, CardBody, CardFooter, Typography, Input, Button, Tooltip, IconButton, Spinner } from "@material-tailwind/react";
-import { fetchUsers } from "@/services/fetchUsers";
-import { delUser } from "@/services/delUser";
 import { toast } from "react-toastify";
 import { State } from "@/state/Context";
-import UserForm from "./userForm";
+import Form from "./form";
 import { Link } from "react-router-dom";
+import { fetchProductsCategories } from "@/services/fetchProductCategories";
+import { delProductCategory } from "@/services/delProductCategory";
 import { useConfirm } from "@/context/confirmContext";
 
-const TABLE_HEAD = ["Name", "Role", "Business", "Actions"];
+const TABLE_HEAD = ["Name", "Business", "Actions"];
 
-function Users() {
+function ProductCategories() {
   const confirm = useConfirm();
   const { state } = State();
   const [loading, setLoading] = useState(true);
   const [refresh, setRefresh] = useState(false);
-  const [users, setUsers] = useState([]);
+  const [categories, setCategories] = useState([]);
 
   // for edit of a vehicle 
   const [selectedItem, setSelectedItem] = useState(null);
@@ -38,14 +38,14 @@ function Users() {
   };
 
   useEffect(() => {
-    getUsers()
+    getProductCategories()
   }, [refresh])
 
-  const getUsers = async () => {
+  const getProductCategories = async () => {
     try {
-      const res = await fetchUsers(state.userToken);
-      const users = await res.json();
-      setUsers(users.filter(user => user.role !== 'Admin'));
+      const res = await fetchProductsCategories(state.userToken);
+      const categories = await res.json();
+      setCategories(categories);
       setLoading(false)
     } catch (error) {
       toast.error("Something went wrong")
@@ -53,12 +53,12 @@ function Users() {
   }
 
   // Function to handle deletion of selected items
-  const handleDelete = async (id) => {    
-    const confirmed = await confirm("Do you really want to delete this user?");
-    if (!confirmed) return;   
+  const handleDelete = async (id) => {       
+    const confirmed = await confirm("Do you really want to delete this category?");
+    if (!confirmed) return;
     if (state.userInfo.Permission.some(obj => obj.name === "CAN_DELETE" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
         try {
-            const res = await delUser(id, state.userToken);
+            const res = await delProductCategory(id, state.userToken);
             const user = await res.json();
             if (res.status === 200) {
                 toast.success(user.message)
@@ -93,11 +93,9 @@ function Users() {
     }
   };
 
-  const filteredRows = users.filter(
-    ({ first_name, last_name, role }) =>
-      first_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      last_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      role.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredRows = categories.filter(
+    ({ name }) =>
+      name.toLowerCase().includes(searchQuery.toLowerCase())     
   );
 
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -121,10 +119,10 @@ function Users() {
           <div className="flex flex-col md:flex-row items-center w-full h-max py-3">
             <div className="w-full md:w-2/5 flex items-center justify-center md:justify-start gap-2">
               <Typography variant="h5" color="blue-gray" className="flex items-center">
-                Users
+                Product Categories
               </Typography>
               <PlusCircleIcon onClick={openPopup} className="ml-4 mr-1 h-7 w-7 text-blue-600 cursor-pointer" />
-              <span className="text-base">Add new User</span>
+              <span className="text-base">Add new Category</span>
             </div>
             <div className="flex items-center mt-4 md:mt-0 md:ml-auto">
               <div className="w-full md:flex-1 md:mr-4">
@@ -172,7 +170,7 @@ function Users() {
               </tr>
             </thead>
             <tbody>
-              {currentItems.map(({ first_name, last_name, role, id }, index) => {
+              {currentItems.map(({ id, name }, index) => {
                 const isLast = index === currentItems.length - 1;
                 const classes = isLast
                   ? "p-2"
@@ -188,18 +186,9 @@ function Users() {
                           handleEditUser(index);
                         }}
                       >
-                        {first_name} {last_name}
+                        {name}
                       </Link>
-                    </td>
-                    <td className={classes}>
-                      <Typography
-                        variant="small"
-                        color="blue-gray"
-                        className="font-normal"
-                      >
-                        {role}
-                      </Typography>
-                    </td>
+                    </td>                   
                     <td className={classes}>
                       <Typography
                         variant="small"
@@ -210,7 +199,7 @@ function Users() {
                       </Typography>
                     </td>
                     <td className={classes}>
-                      <Tooltip content="Delete User">
+                      <Tooltip content="Delete Category">
                         <IconButton variant="text" onClick={() => handleDelete(id)}>
                           <TrashIcon className="h-6 w-6 text-red-600" />
                         </IconButton>
@@ -251,9 +240,9 @@ function Users() {
         </CardFooter>
         
       </Card>
-      <UserForm open={isOpen} close={closePopup} selectedItem={selectedItem} setSelectedItem={setSelectedItem} refresh={refresh} setRefresh={setRefresh} />
+      <Form open={isOpen} close={closePopup} selectedItem={selectedItem} setSelectedItem={setSelectedItem} refresh={refresh} setRefresh={setRefresh} />
     </>    
   );
 }
 
-export default Users;
+export default ProductCategories;

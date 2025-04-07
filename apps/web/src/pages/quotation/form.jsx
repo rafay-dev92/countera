@@ -41,6 +41,7 @@ const TABLE_HEAD = [
 const schema = Yup.object().shape({
   customer: Yup.string().required("Customer is required"),
   vehicle: Yup.string().required("Vehicle is required"),
+  comments: Yup.string(),
 });
 
 const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setSelectedQuotation }) => {
@@ -142,18 +143,17 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
 
   useEffect(() => {
     if (selectedQuotation) {
-      console.log(selectedQuotation)
       setPrintQuotation(selectedQuotation);
       setInvoiceId(selectedQuotation.id)
       setSelectedCustomer(selectedQuotation.Customer)
       setSelectedVehicle(selectedQuotation.CustomerVehicle)
       setVehicleOdometer(selectedQuotation.CustomerVehicle?.odometer)
       // setProducts(selectedInvoice.Product)
-      setValues({ ...values, ['customer']: selectedQuotation.CustomerId, ['vehicle']: selectedQuotation.CustomerVehicleId })
+      setValues({ ...selectedQuotation, ['customer']: selectedQuotation.CustomerId, ['vehicle']: selectedQuotation.CustomerVehicleId })
       setEdit(true)
 
       let selectedProd = [...selectedProducts]
-      selectedQuotation.Product.forEach((prod) => {
+      selectedQuotation.Product?.forEach((prod) => {
         const aProd = {
           product: prod.id,
           id: prod.id,
@@ -212,7 +212,8 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
         totalAmount: calculateTotalAmountWithTax(),
         CustomerId: selectedCustomer.id,
         CustomerVehicleId: selectedVehicle.id,
-        BusinessId: null
+        BusinessId: null,
+        comments: values.comments,
       },
       "products": selectedProductIds,
     };
@@ -502,12 +503,12 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
       values: {
         customer: "",
         vehicle: "",
-        paymentMethod: "",
+        comments: "",
       },
       errors: {
         customer: "",
         vehicle: "",
-        paymentMethod: "",
+        comments: "",
       },
     });
     setSelectedCustomer(null);
@@ -526,7 +527,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
     initialValues: {
       customer: "",
       vehicle: "",
-      paymentMethod: "",
+      comments: "",
     },
     validationSchema: schema,
     onSubmit,
@@ -677,40 +678,55 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
                       </div>
 
                       <div className="basis-[60%] max-w-[60%]">
-                        <div className="flex items-center pl-2">
-                          <label className="font-bold">Vehicle</label>
-                          <IconButton variant="text" onClick={() => selectedCustomer && setIsCustomerVehicleFormOpen(true)}>
-                            <PlusCircleIcon className="h-5 w-5 text-blue-600 cursor-pointer" />
-                          </IconButton>
-                        </div>
-                        <select
-                          id="vehicle"
-                          name="vehicle"
-                          className="w-48 lg:w-72 m-2 p-2 border border-gray-300 bg-inherit rounded-md"
-                          value={values.vehicle}
-                          onChange={(e) =>
-                            handleVehicleChange(e.target.value)
-                          }
-                          onBlur={handleBlur}
-                        >
-
-                          {selectedCustomer && selectedCustomer.Vehicle?.length > 0 ? selectedCustomer.Vehicle?.map((vehicle) => (
-                            <option
-                              key={vehicle.id}
-                              value={vehicle.id}
+                        <div className="flex items-center">
+                          <div>
+                            <div className="flex items-center pl-2">
+                              <label className="font-bold">Vehicle</label>
+                              <IconButton variant="text" onClick={() => selectedCustomer && setIsCustomerVehicleFormOpen(true)}>
+                                <PlusCircleIcon className="h-5 w-5 text-blue-600 cursor-pointer" />
+                              </IconButton>
+                            </div>
+                            <select
+                              id="vehicle"
+                              name="vehicle"
+                              className="w-48 lg:w-72 m-2 p-2 border border-gray-300 bg-inherit rounded-md"
+                              value={values.vehicle}
+                              onChange={(e) =>
+                                handleVehicleChange(e.target.value)
+                              }
+                              onBlur={handleBlur}
                             >
-                              {vehicle.make} {vehicle.model} {vehicle.year}
-                            </option>
-                          ))
-                            :
-                            <option value="">Select Vehicle</option>
-                          }
-                        </select>
-                        {touched.vehicle && errors.vehicle ? (
-                          <div className="text-red-500">
-                            {errors.vehicle}
+
+                              {selectedCustomer && selectedCustomer.Vehicle?.length > 0 ? selectedCustomer.Vehicle?.map((vehicle) => (
+                                <option
+                                  key={vehicle.id}
+                                  value={vehicle.id}
+                                >
+                                  {vehicle.make} {vehicle.model} {vehicle.year}
+                                </option>
+                              ))
+                                :
+                                <option value="">Select Vehicle</option>
+                              }
+                            </select>
+                            {touched.vehicle && errors.vehicle ? (
+                              <div className="text-red-500">
+                                {errors.vehicle}
+                              </div>
+                            ) : (<div></div>)} <br />
                           </div>
-                        ) : (<div></div>)} <br />
+                          <div className="ml-3">
+                            <label className="p-2 font-bold">Comments</label> <br />
+                            <textarea
+                              className="w-48 lg:w-80 m-2 p-2 border border-gray-300 rounded-md text-black"
+                              id="comments"
+                              name="comments"
+                              type="text"
+                              value={values.comments}
+                              onChange={handleChange}
+                            />
+                          </div>
+                        </div>
                         <div className="flex gap-5">
                           <div className="flex flex-col">
                             <div>

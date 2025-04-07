@@ -11,8 +11,11 @@ import { addQuotaion } from "@/services/addQuotation";
 import { sendMail } from "@/services/sendMail";
 import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
+import NotesForm from "../quotation/notesForm";
+import { useConfirm } from "@/context/confirmContext";
 
 const ViewQuotation = ({ quotationData, setQuotationData, componentRef, appliedTaxes, setEdit, close }) => {
+    const confirm = useConfirm();
     const router = useNavigate();
     const { state, dispatch } = State();
     const [isLoading, setIsLoading] = React.useState({
@@ -21,9 +24,12 @@ const ViewQuotation = ({ quotationData, setQuotationData, componentRef, appliedT
         createCopy: false,
         sendMail: false,
     });
-
+    const [isNotesFormOpen, setIsNotesFormOpen] = useState(false);
+    
     // Delete Invoice
     const handleDel = async () => {
+        const confirmed = await confirm();
+        if (!confirmed) return;
         setIsLoading({ ...isLoading, delete: true });
         try {
             const res = await delQuotation(quotationData.id, state.userToken);
@@ -169,7 +175,7 @@ const ViewQuotation = ({ quotationData, setQuotationData, componentRef, appliedT
                     <div className="basis-[20%] h-full overflow-y-auto flex flex-col items-center gap-6 bg-gradient-to-br from-gray-800 to-gray-700">
                         <div className="text-center py-4">
                             <h2 className="text-lg font-normal text-gray-400">Total Amount</h2>
-                            <h5 className="text-4xl text-white font-normal">{(quotationData?.totalAmount).toFixed(2)} $</h5>
+                            <h5 className="text-4xl text-white font-normal">${(quotationData?.totalAmount).toFixed(2)}</h5>
                         </div>
                         <div className="flex flex-col items-center justify-start h-full w-full">
                             <div className="text-white w-full text-center font-medium">
@@ -182,6 +188,7 @@ const ViewQuotation = ({ quotationData, setQuotationData, componentRef, appliedT
                                 }
                                 <div onClick={() => !quotationData?.approved && setQuotationApproved()} className={`w-full py-2 mx-auto ${!quotationData?.approved ? "hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer" : "text-green-500 font-bold"}`}>{!quotationData?.approved ? 'Approve' : 'Approved'}</div>
                                 <div onClick={() => { dispatch({ type: 'SET_QUOTATION_VIEW', payload: false }); setEdit(true) }} className="w-full py-2 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer">Edit</div>
+                                <div onClick={() => setIsNotesFormOpen(true)} className="w-full py-2 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer">Notes</div>
                                 {!isLoading.delete ?
                                     <div onClick={handleDel} className="w-full py-2 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer">Delete</div>
                                     :
@@ -224,6 +231,7 @@ const ViewQuotation = ({ quotationData, setQuotationData, componentRef, appliedT
                     </div>
                 </div>
             </div>
+            <NotesForm open={isNotesFormOpen} close={() => setIsNotesFormOpen(false)} quotationId={quotationData?.id} setQuotationData={setQuotationData} currentValue={quotationData.notes} />
         </>
     );
 }

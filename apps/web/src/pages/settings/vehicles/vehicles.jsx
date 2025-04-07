@@ -20,10 +20,12 @@ import { fetchVehicles } from "@/services/fetchVehicles";
 import { delVehicle } from "@/services/delVehicle";
 import { toast } from 'react-toastify';
 import { State } from "@/state/Context";
+import { useConfirm } from "@/context/confirmContext";
 
 const TABLE_HEAD = ["Make", "Model", "Actions"];
 
 export default function Vehicles() {
+    const confirm = useConfirm();
     const { state } = State();
     const [selectAll, setSelectAll] = useState(false);
     const [selectedRows, setSelectedRows] = useState([]);
@@ -131,7 +133,9 @@ export default function Vehicles() {
     };
 
     // Function to handle deletion of selected items
-    const handleDelete = async (id) => {       
+    const handleDelete = async (id) => {  
+        const confirmed = await confirm("Do you really want to delete this vehicle?");
+        if (!confirmed) return;     
         if (state.userInfo.Permission.some(obj => obj.name === "CAN_DELETE_VEHICLE" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
             try {
                 const res = await delVehicle(id, state.userToken);

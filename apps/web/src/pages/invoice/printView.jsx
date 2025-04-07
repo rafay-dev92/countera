@@ -20,7 +20,7 @@ const printView = React.forwardRef(({ view, printInvoice, appliedTaxes }, ref) =
 
     const calculateTotalAmount = (products) => {
         let total = 0;
-        products.forEach((item) => {
+        products?.forEach((item) => {
             total += calculateAmount(item.price, item.invoice_product.quantity);
         });
         return total;
@@ -146,7 +146,7 @@ const printView = React.forwardRef(({ view, printInvoice, appliedTaxes }, ref) =
                             </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
-                            {printInvoice.Product.map((item, index) => (
+                            {printInvoice?.Product?.map((item, index) => (
                                 <tr key={index}>
                                     <td className="p-4 border-b border-blue-gray-50">
                                         <Typography
@@ -214,20 +214,20 @@ const printView = React.forwardRef(({ view, printInvoice, appliedTaxes }, ref) =
                     <div className="basis-[50%] max-w-[50%]">
                         <div className="flex items-center justify-center border divide-x">
                             <h1 className="basis-[50%] max-w-[50%] text-1xl p-2">Subtotal</h1>
-                            <h1 className="basis-[50%] max-w-[50%] text-1xl p-2">{calculateTotalAmount(printInvoice.Product)} $</h1>
+                            <h1 className="basis-[50%] max-w-[50%] text-1xl p-2">${calculateTotalAmount(printInvoice.Product)}</h1>
                         </div>
 
                         <div className="flex flex-col">
                             {Object.keys(appliedTaxes).map((tax, ind) => (
                                 <div key={ind} className="flex border divide-x">
                                     <span className="max-w-[50%] w-min p-2 whitespace-nowrap basis-[50%]" >{`${tax.split('_')[0]} (${tax.split('_')[1]}${tax.split('_')[2]})`}</span>
-                                    <span className="max-w-[50%] text-1xl p-2 basis-[50%]">{tax.split('_')[2] === '%' ? appliedTaxes[tax].toFixed(2) : appliedTaxes[tax]} $</span>
+                                    <span className="max-w-[50%] text-1xl p-2 basis-[50%]">${tax.split('_')[2] === '%' ? appliedTaxes[tax].toFixed(2) : appliedTaxes[tax]} </span>
                                 </div>
                             ))}
                         </div>
                         <div className="flex items-center border divide-x">
                             <h1 className="basis-[50%] max-w-[50%] text-1xl p-2">Total</h1>
-                            <h1 className="basis-[50%] max-w-[50%] text-1xl p-2">{printInvoice?.totalAmount} $</h1>
+                            <h1 className="basis-[50%] max-w-[50%] text-1xl p-2">${printInvoice?.totalAmount}</h1>
                         </div>
 
                         <div className="p-2 border mt-5 text-center font-medium">
@@ -238,13 +238,13 @@ const printView = React.forwardRef(({ view, printInvoice, appliedTaxes }, ref) =
                             return (
                             <div key={index} className="flex items-center border divide-x">
                                 <h1 className="basis-[50%] max-w-[50%] text-1xl p-2">{payment.paymentMethod} on {date.toLocaleDateString("en-US")}</h1>
-                                <h1 className="basis-[50%] max-w-[50%] text-1xl p-2">{payment.paidAmount} $</h1>
+                                <h1 className="basis-[50%] max-w-[50%] text-1xl p-2">${payment.paidAmount}</h1>
                             </div>
                         )})
                         :
                         <div className="flex items-center border divide-x ">
                             <h1 className="basis-[50%] max-w-[50%] text-1xl p-2">N/A</h1>
-                            <h1 className="basis-[50%] max-w-[50%] text-1xl p-2">0.00 $</h1>  
+                            <h1 className="basis-[50%] max-w-[50%] text-1xl p-2">$0.00</h1>  
                         </div>  
                         }
                     </div>

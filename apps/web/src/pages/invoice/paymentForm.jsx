@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { Dialog } from "@material-tailwind/react";
@@ -74,6 +74,13 @@ const PaymentForm = ({ open, close, totalAmount, totalAmountPaid, invoiceId, set
         handleSubmit,
         setFieldValue,
     } = formikProps;
+
+    useEffect(() => {
+        formikProps.setValues((prevValues) => ({
+            ...prevValues,
+            paidAmount: parseFloat((totalAmount - totalAmountPaid).toFixed(2)),
+        }));
+    }, [totalAmount, totalAmountPaid]);
 
     return (
         <>

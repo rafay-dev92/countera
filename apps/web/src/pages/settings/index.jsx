@@ -8,6 +8,7 @@ import {
 } from "@heroicons/react/24/solid";
 import { State } from '@/state/Context';
 import Vehicles from './vehicles/vehicles';
+import ProductCategories from './productCategories/productCategories';
 
 export function Settings() {
   const { state } = State();
@@ -29,7 +30,11 @@ export function Settings() {
     Vehicles: {
       title: 'Vehicles Settings',
       component: <Vehicles />
-    }
+    },
+    Product_Categories: {
+      title: 'Product Categories',
+      component: <ProductCategories />
+    },
   };
 
   const handleSectionClick = (section) => setActiveSection(section);

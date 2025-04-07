@@ -19,10 +19,12 @@ import { delInvoice } from "@/services/delInvoice";
 import { Link } from "react-router-dom";
 import { State } from "../../state/Context";
 import { toast } from "react-toastify";
+import { useConfirm } from "@/context/confirmContext";
 
 const TABLE_HEAD = ["Customer", "Total", "Status", "Invoice Date", "Vehicle", "Actions"];
 
 export function Invoice() {
+  const confirm = useConfirm();
   const { state, dispatch } = State();
   const [searchQuery, setSearchQuery] = useState("");
   const [invoices, setInvoices] = useState([]);
@@ -74,9 +76,11 @@ export function Invoice() {
   };
 
   const handleDeleteInvoice = async (index) => {
+    const confirmed = await confirm("Do you really want to delete this invoice?");
+    if (!confirmed) return;
     if (state.userInfo.Permission.some(obj => obj.name === "CAN_DELETE" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
-      const updatedInvoices = invoices.filter((_, rowIndex) => rowIndex !== index);
-      const deletedInvoiceId = invoices.find((_, rowIndex) => rowIndex === index);
+      const updatedInvoices = invoices?.filter((_, rowIndex) => rowIndex !== index);
+      const deletedInvoiceId = invoices?.find((_, rowIndex) => rowIndex === index);
       setInvoices(updatedInvoices);
       try {
         const res = await delInvoice(deletedInvoiceId['id'], state.userToken);
@@ -109,12 +113,12 @@ export function Invoice() {
   let currentItems = [];
   let filteredRows = [];
   if (invoices?.length !== 0) {
-    filteredRows = invoices.filter(
+    filteredRows = invoices?.filter(
       ({ Customer }) =>
         Customer['firstName'].toLowerCase().includes(searchQuery.toLowerCase()) ||
         Customer['lastName'].toLowerCase().includes(searchQuery.toLowerCase())
     );
-    currentItems = filteredRows.slice(indexOfFirstItem, indexOfLastItem);
+    currentItems = filteredRows?.slice(indexOfFirstItem, indexOfLastItem);
   }
 
   const handleItemsPerPageChange = (event) => {
@@ -205,7 +209,7 @@ export function Invoice() {
               </tr>
             </thead>
             <tbody>
-              {currentItems.map(({ id, Customer, paymentStatus, totalAmount, createdAt, CustomerVehicle }, index) => {
+              {currentItems?.map(({ id, Customer, paymentStatus, totalAmount, createdAt, CustomerVehicle }, index) => {
                 const isLast = index === currentItems.length - 1;
                 const classes = isLast
                   ? "p-4"
@@ -282,10 +286,10 @@ export function Invoice() {
         </CardBody>
         <CardFooter className="flex items-center justify-between border-t border-blue-gray-50 p-4">
           <Typography variant="small" color="blue-gray" className="font-normal">
-            Showing {indexOfFirstItem + 1} - {Math.min(indexOfLastItem, filteredRows.length)} of {filteredRows.length}
+            Showing {indexOfFirstItem + 1} - {Math.min(indexOfLastItem, filteredRows?.length)} of {filteredRows?.length}
           </Typography>
           <Typography variant="small" color="blue-gray" className="font-normal">
-            Page {currentPage} of {Math.ceil(filteredRows.length / itemsPerPage)}
+            Page {currentPage} of {Math.ceil(filteredRows?.length / itemsPerPage)}
           </Typography>
           <div className="flex gap-2">
             <Button
@@ -299,7 +303,7 @@ export function Invoice() {
             <Button
               variant="outlined"
               size="sm"
-              disabled={indexOfLastItem >= filteredRows.length}
+              disabled={indexOfLastItem >= filteredRows?.length}
               onClick={() => paginate(currentPage + 1)}
             >
               Next

@@ -230,20 +230,20 @@ const printView = React.forwardRef(({view, quotationData, appliedTaxes}, ref) =>
                     <div className="basis-[50%] max-w-[50%]">
                         <div className="flex items-center justify-center border divide-x">
                             <h1 className="basis-[50%] max-w-[50%] text-1xl p-2">Subtotal</h1>
-                            <h1 className="basis-[50%] max-w-[50%] text-1xl p-2">{calculateTotalAmount(quotationData.Product)} $</h1>
+                            <h1 className="basis-[50%] max-w-[50%] text-1xl p-2">${calculateTotalAmount(quotationData.Product)}</h1>
                         </div>
 
                         <div className="flex flex-col">
                             {Object.keys(appliedTaxes).map((tax, ind) => (
                                 <div key={ind} className="flex border divide-x">
                                     <span className="max-w-[50%] w-min p-2 whitespace-nowrap basis-[50%]" >{`${tax.split('_')[0]} (${tax.split('_')[1]}${tax.split('_')[2]})`}</span>
-                                    <span className="max-w-[50%] text-1xl p-2 basis-[50%]">{tax.split('_')[2] === '%' ? appliedTaxes[tax].toFixed(2) : appliedTaxes[tax]} $</span>
+                                    <span className="max-w-[50%] text-1xl p-2 basis-[50%]">${tax.split('_')[2] === '%' ? appliedTaxes[tax].toFixed(2) : appliedTaxes[tax]}</span>
                                 </div>
                             ))}                           
                         </div>
                         <div className="flex items-center border divide-x">
                             <h1 className="basis-[50%] max-w-[50%] text-1xl p-2">Total</h1>
-                            <h1 className="basis-[50%] max-w-[50%] text-1xl p-2">{quotationData?.totalAmount} $</h1>
+                            <h1 className="basis-[50%] max-w-[50%] text-1xl p-2">${quotationData?.totalAmount}</h1>
                         </div>
                     </div>
                 </div>

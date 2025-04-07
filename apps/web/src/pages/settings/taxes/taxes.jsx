@@ -8,11 +8,12 @@ import { delTax } from "@/services/delTax";
 import { State } from "@/state/Context";
 import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
+import { useConfirm } from "@/context/confirmContext";
 
 const TABLE_HEAD = ["Name", "Rate", "Type", "Actions"];
 
 function Taxes() {
-
+  const confirm = useConfirm();
   const { state } = State();
   const [loading, setLoading] = useState(true);
   const [taxes, setTaxes] = useState([]);
@@ -51,7 +52,9 @@ function Taxes() {
     }
   }
   // Function to handle deletion of selected items
-  const handleDelete = async (id) => {       
+  const handleDelete = async (id) => {     
+    const confirmed = await confirm("Do you really want to delete this tax?");
+    if (!confirmed) return;  
     if (state.userInfo.Permission.some(obj => obj.name === "CAN_DELETE" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
         try {
             const res = await delTax(id, state.userToken);
@@ -205,7 +208,7 @@ function Taxes() {
                       </Typography>
                     </td>
                     <td className={classes}>
-                      <Tooltip content="Delete Vehicle">
+                      <Tooltip content="Delete Tax">
                         <IconButton variant="text" onClick={() => handleDelete(id)}>
                           <TrashIcon className="h-6 w-6 text-red-600" />
                         </IconButton>

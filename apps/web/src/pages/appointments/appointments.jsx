@@ -146,7 +146,7 @@ export function Appointments() {
             isSameDay(appointment.startDateTime, date)
         );
 
-        return filteredAppointments.map((appointment, index) => (
+        return filteredAppointments?.map((appointment, index) => (
             <div key={index} className="mt-1 flex justify-center bg-blue-600 rounded-md w-[98%] h-max">
                 <div className='text-white text-sm cursor-pointer px-1 py-2 w-full' onClick={() => handleEdit(appointment)}>
                     <div className='mb-1 w-min text-orange-500 font-semibold'>{format(parseISO(appointment.startDateTime), 'HH:mm')}</div>

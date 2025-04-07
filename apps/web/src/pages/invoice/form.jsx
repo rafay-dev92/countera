@@ -59,6 +59,7 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
   const [products, setProducts] = useState([]);
   const [selectedProducts, setSelectedProducts] = useState([{
     product: "",
+    description: "",
     quantity: 1,
     price: 0,
     taxable: false
@@ -161,6 +162,7 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
           quantity: prod.invoice_product.quantity,
           taxable: prod.taxable,
           Tax: prod.Tax,
+          description: prod.invoice_product.description,
         }
         selectedProd = [aProd, ...selectedProd];
       })
@@ -193,7 +195,8 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
   // handle submit
   const onSubmit = async (values) => {
     setIsLoading(true);
-    const selectedProductIds = selectedProducts.map((product) => `${product.id}:${product.quantity}`);
+    const selectedProductIds = selectedProducts.map((product) => `${product.id}:${product.quantity}:${product.description}`);
+    // remove the last empty product
     selectedProductIds.pop();
 
     if (selectedVehicle?.odometer < vehicleOdometer) {
@@ -296,12 +299,14 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
         price: selectedProductDetails.price,
         taxable: selectedProductDetails.taxable,
         Tax: selectedProductDetails.Tax,
+        description: "",
       };
     } else {
       // Reset the row if no product is found
       updatedItems[index] = {
         id: "",
         product: "",
+        description: "",
         name: "",
         quantity: 1,
         price: 0,
@@ -319,6 +324,7 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
       updatedItems.push({
         id: "",
         product: "",
+        description: "",
         name: "",
         quantity: 1,
         price: 0,
@@ -539,7 +545,7 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
   const reactToPrintFn = useReactToPrint({ componentRef });
 
   useEffect(() => {
-    if (Object.keys(printInvoice).length > 0) {
+    if (printInvoice && Object.keys(printInvoice).length > 0) {
       dispatch({ type: 'SET_INVOICE_VIEW', payload: true });
       // if (printRef.current) {
       //   printRef.current.handlePrint();
@@ -867,8 +873,24 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
                               <tr key={index}>
                                 <td className="p-4 border-b border-blue-gray-50">
                                   {index !== (selectedProducts.length - 1) ?
-                                    <div className="w-[70%] h-[97%] m-2 p-2 border border-gray-300 rounded-md text-gray-600 font-small">
-                                      {item.name}
+                                    <div className="flex flex-col">
+                                      <div className="w-[70%] h-[97%] mx-2 p-2 border border-gray-300 rounded-md text-gray-600 font-small">
+                                        {item.name}
+                                      </div>
+                                      {/* Product description */}
+                                      <div>
+                                        <input
+                                          id="description"
+                                          name="description"
+                                          className="w-[70%] h-[30%] mx-2 p-1 rounded-md text-gray-600 text-xs focus:outline-none "
+                                          type="text"
+                                          value={item.description}
+                                          onChange={(e) => { setSelectedProducts((prev) => { const newProducts = [...prev]; newProducts[index].description = e.target.value; return newProducts }) }}
+                                          onBlur={handleBlur}
+                                          autoComplete="off"
+                                          placeholder="Description"
+                                        />
+                                      </div>
                                     </div>
                                     :
                                     <div ref={productInputRef}>

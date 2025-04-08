@@ -36,12 +36,12 @@ router.post("/create", fetchUser, async (req, res) => {
     let [make, model] = vehicle.split(" ");
     make = make.trim();
     model = model.trim();
-    const existingVehicle = await CustomerVehicle.findOne({
-      where: { make: make, model: model, year: year, CustomerId: CustomerId },
-    });
-    if (existingVehicle) {
-      return res.status(409).json({ message: "Vehicle already exists" });
-    }
+    // const existingVehicle = await CustomerVehicle.findOne({
+    //   where: { make: make, model: model, year: year, CustomerId: CustomerId },
+    // });
+    // if (existingVehicle) {
+    //   return res.status(409).json({ message: "Vehicle already exists" });
+    // }
 
     data = { ...data, make, model };
     delete data.vehicle;

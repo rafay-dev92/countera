@@ -15,8 +15,10 @@ import {
   setOpenSidenav,
 } from "@/context";
 import { State } from "@/state/Context";
+import { useConfirm } from "@/context/confirmContext";
 
 export function DashboardNavbar() {
+  const confirm = useConfirm();
   const { state, dispatch } = State();
   const navigate = useNavigate()
   const [controller, dispatcher] = useMaterialTailwindController();
@@ -24,7 +26,9 @@ export function DashboardNavbar() {
   const { pathname } = useLocation();
   const [layout, page] = pathname.split("/").filter((el) => el !== "");
 
-  const logout = () => {
+  const logout = async () => {
+    const confirmLogout = await confirm("Are you sure you want to logout?");
+    if (!confirmLogout) return;
     dispatch({ type: 'RESET' })
     localStorage.removeItem('Token');
     localStorage.removeItem('sessionExp');

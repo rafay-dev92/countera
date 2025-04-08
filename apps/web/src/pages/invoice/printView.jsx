@@ -50,7 +50,7 @@ const printView = React.forwardRef(({ view, printInvoice, appliedTaxes }, ref) =
                     )}
                     <div className="flex flex-col items-end gap-1">
                         <span className="text-sm font-semibold">Date: {invoiceDate.toLocaleDateString("en-US")}</span>
-                        <span className="text-sm">Invoice No: #{`${printInvoice?.invoiceNumber}`.padStart(5, '0')}</span>
+                        <span className="text-sm">Invoice No: INV{`${printInvoice?.invoiceNumber}`.padStart(4, '0')}</span>
                         <span className="text-sm">License No: {printInvoice?.Business.licenseNumber}</span>
                         <span className="text-sm">Permit No: {printInvoice?.Business.permitNumber}</span>
                     </div>

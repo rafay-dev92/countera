@@ -14,6 +14,7 @@ import CustomerVehicleForm from "./customerVehicleForm";
 import { fetchCustomer } from "@/services/fetchCustomer";
 import { TrashIcon } from "@heroicons/react/24/solid";
 import { delCustomerVehicle } from "@/services/delCustomerVehicle";
+import { useConfirm } from "@/context/confirmContext";
 
 
 const addressSchema = Yup.object().shape({
@@ -38,6 +39,7 @@ const schema = Yup.object().shape({
 const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setRefresh }) => {
 
   const { state } = State();
+  const confirm = useConfirm();
   const [isLoading, setIsLoading] = useState(false);
   const [edit, setEdit] = useState(false);
   const [currentVehicle, setCurrentVehicle] = useState(null);
@@ -185,6 +187,8 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
 
   // delete vehicle
   const deleteVehicle = async (vehicleId) => {
+    const confirmDelete = await confirm("Are you sure you want to delete this vehicle?");
+    if (!confirmDelete) return;
     try {
       const res = await delCustomerVehicle(vehicleId, state.userToken);
       const vehicle = await res.json();

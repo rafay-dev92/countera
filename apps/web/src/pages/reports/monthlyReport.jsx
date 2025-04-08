@@ -98,7 +98,7 @@ const MonthlyReportPreview = React.forwardRef(({ invoices, products, taxes }, re
                                             color="blue-gray"
                                             className="font-normal leading-none"
                                         >
-                                            INV000{item.invoiceNumber}
+                                            INV{String(item.invoiceNumber).padStart(4, '0')}
                                         </Typography>
                                     </td>
                                     <td className="p-4 border-b border-blue-gray-50">

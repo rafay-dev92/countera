@@ -66,7 +66,7 @@ const printView = React.forwardRef(({view, quotationData, appliedTaxes}, ref) =>
                     )}
                     <div className="flex flex-col items-end gap-1">
                         <span className="text-sm font-semibold">Date: {quotationDate.toLocaleDateString("en-US")}</span>
-                        <span className="text-sm">Quotation No: #{`${quotationData?.quotationNumber}`.padStart(5, '0')}</span>
+                        <span className="text-sm">Quotation No: QT{`${quotationData?.quotationNumber}`.padStart(4, '0')}</span>
                         <span className="text-sm">License No: {quotationData?.Business.licenseNumber}</span>
                         <span className="text-sm">Permit No: {quotationData?.Business.permitNumber}</span>
                     </div>

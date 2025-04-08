@@ -65,7 +65,6 @@ const CustomerVehicleForm = ({ open, close, refresh, setRefresh, CustomerId, get
                 notes: selectedVehicle.notes,
             })
             setEdit(true);
-            console.log(formikProps.values);
         }
     }, [selectedVehicle]);
 

@@ -18,6 +18,7 @@ import { MaterialTailwindControllerProvider } from "@/context";
 import "/public/css/tailwind.css";
 import Context from "./state/Context";
 import { ConfirmProvider } from "./context/confirmContext";
+import { DeleteInvoiceConfirmProvider } from "./context/deleteInvoiceConfirmContext";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   // <React.StrictMode>
@@ -26,7 +27,9 @@ ReactDOM.createRoot(document.getElementById("root")).render(
       <ThemeProvider>
         <MaterialTailwindControllerProvider>
           <ConfirmProvider>
-            <App />
+            <DeleteInvoiceConfirmProvider>
+              <App />
+            </DeleteInvoiceConfirmProvider>
           </ConfirmProvider>
         </MaterialTailwindControllerProvider>
       </ThemeProvider>

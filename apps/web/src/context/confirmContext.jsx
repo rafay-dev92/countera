@@ -41,7 +41,7 @@ export const ConfirmProvider = ({ children }) => {
           >
             <h3 className="text-lg font-semibold mb-4">Confirmation</h3>
             <p className="mb-6">{!message ? 'Are you sure?' : message}</p>
-            <div className="flex justify-end space-x-4">
+            <div className="flex justify-end space-x-2">
               <button onClick={handleCancel} className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">Cancel</button>
               <button onClick={handleConfirm} className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">Yes</button>
             </div>

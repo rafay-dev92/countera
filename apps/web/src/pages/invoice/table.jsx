@@ -20,11 +20,14 @@ import { Link } from "react-router-dom";
 import { State } from "../../state/Context";
 import { toast } from "react-toastify";
 import { useConfirm } from "@/context/confirmContext";
+import { softDelInvoice } from "@/services/softDelInvoice";
+import { useDeleteInvoiceConfirm } from "@/context/deleteInvoiceConfirmContext";
 
 const TABLE_HEAD = ["Customer", "Total", "Status", "Invoice Date", "Vehicle", "Actions"];
 
 export function Invoice() {
   const confirm = useConfirm();
+  const confirmDeleteInvoice = useDeleteInvoiceConfirm();
   const { state, dispatch } = State();
   const [searchQuery, setSearchQuery] = useState("");
   const [invoices, setInvoices] = useState([]);
@@ -50,9 +53,12 @@ export function Invoice() {
     try {
       const fetchedInvoices = await fetchInvoices(state.userToken);
       const totalInvoices = await fetchedInvoices.json();
-      setInvoices(totalInvoices.data);
+      setInvoices(
+        totalInvoices.data?.filter(
+          invoice => invoice.paymentStatus !== 'Refund' && invoice.paymentStatus !== 'Void'
+        )
+      );
       setLoading(false);
-
     } catch (error) {
       console.log(error.message);
       showToastMessage('error', "Something went wrong");
@@ -64,7 +70,6 @@ export function Invoice() {
   }, [refresh]);
 
   const handleEditInvoice = (index) => {
-    // Assuming currentItems holds the filtered rows for display
     if (state.userInfo.Permission.some(obj => obj.name === "CAN_EDIT_INVOICE" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
       const selected = currentItems[index];
       dispatch({ type: 'SET_INVOICE_VIEW_DATA', payload: selected });
@@ -76,19 +81,37 @@ export function Invoice() {
   };
 
   const handleDeleteInvoice = async (index) => {
-    const confirmed = await confirm("Do you really want to delete this invoice?");
-    if (!confirmed) return;
     if (state.userInfo.Permission.some(obj => obj.name === "CAN_DELETE" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
+      // const confirmed = await confirm("Do you really want to delete this invoice?");
+      // if (!confirmed) return;
+
+      const result = await confirmDeleteInvoice();
+      if (result === null) return;
+
+      const invoice = invoices[index];
+      if (result === "Void" && invoice.paymentStatus === "Void") {
+        showToastMessage('info', "Invoice is already voided");
+        return;
+      }
+      if (result === "Refund" && invoice.paymentStatus === "Refund") {
+        showToastMessage('info', "Invoice is already refunded");
+        return;
+      }
+
       const updatedInvoices = invoices?.filter((_, rowIndex) => rowIndex !== index);
       const deletedInvoiceId = invoices?.find((_, rowIndex) => rowIndex === index);
       setInvoices(updatedInvoices);
       try {
-        const res = await delInvoice(deletedInvoiceId['id'], state.userToken);
+        const res = await softDelInvoice(deletedInvoiceId['id'], result, state.userToken);
+        // const res = await delInvoice(deletedInvoiceId['id'], state.userToken);
         const invoice = await res.json();
         if (res.status === 200) {
           showToastMessage('success', invoice.message)
         }
         else if (res.status === 404) {
+          showToastMessage('info', invoice.message)
+        }
+        else if (res.status === 409) {
           showToastMessage('info', invoice.message)
         }
         setRefresh(!refresh);

@@ -2,6 +2,7 @@ export * from "@/pages/customer/table";
 export * from "@/pages/settings";
 export * from "@/pages/invoice/table";
 export * from "@/pages/quotation/table";
+export * from "@/pages/workorder/table";
 export * from "@/pages/appointments/appointments";
 export * from "@/pages/dashboard/inspection";
 export * from "@/pages/reports/reports";

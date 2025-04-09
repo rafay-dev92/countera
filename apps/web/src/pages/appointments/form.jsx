@@ -328,7 +328,7 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, close, refresh, 
                                                 </div>
                                             ) : (<div></div>)}
                                         </div>
-                                        <div className="basis-[50%]">
+                                        {/* <div className="basis-[50%]">
                                             <label className="font-bold">End Time</label> <br />
                                             <input
                                                 className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
@@ -344,7 +344,7 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, close, refresh, 
                                                     {errors.endDateTime}
                                                 </div>
                                             ) : (<div></div>)}
-                                        </div>
+                                        </div> */}
                                     </div>
                                     
                                     <div>

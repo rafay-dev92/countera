@@ -1,12 +1,12 @@
-export async function fetchQuotations(token){
+export async function fetchWorkOrders(token){
     try {
-        const quotations = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/quotation/`, {
+        const workorders = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/workorder/`, {
             method: "GET",
             headers: {
                 "auth-token": token
             }
         })
-        return quotations;
+        return workorders;
 
     } catch (error) {
         console.log(error);

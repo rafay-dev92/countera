@@ -57,6 +57,13 @@ export const Reducer = (state, action) => {
                 quotation: {
                     isViewOpen: action.payload
                 }
+            }) 
+        case 'SET_WORKORDER_VIEW':
+            return ({
+                ...state,
+                workorder: {
+                    isViewOpen: action.payload
+                }
             })            
         case 'RESET':
             return ({

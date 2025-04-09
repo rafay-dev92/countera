@@ -25,9 +25,9 @@ import { PlusCircleIcon } from "@heroicons/react/24/outline";
 import { ArrowUturnLeftIcon } from "@heroicons/react/24/outline";
 import CustomerForm from "../invoice/customerForm";
 import { updateCustomerVehicle } from "@/services/updateCustomerVehicle";
-import { updateQuotation } from "@/services/updateQuotation";
-import { addQuotaion } from "@/services/addQuotation";
-import ViewQuotation from "./viewQuotation";
+import { addWorkOrder } from "@/services/addWorkOrder";
+import { updateWorkOrder } from "@/services/updateWorkOrder";
+import ViewWorkOrder from "./viewWorkOrder";
 
 const TABLE_HEAD = [
   "Product",
@@ -44,7 +44,7 @@ const schema = Yup.object().shape({
   comments: Yup.string(),
 });
 
-const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setSelectedQuotation }) => {
+const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedWorkOrder, setSelectetWorkOrder }) => {
   const componentRef = useRef();
   const printRef = useRef();
   const customerInputRef = useRef();
@@ -66,7 +66,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
   const [totalAmount, setTotalAmount] = useState(0);
   const [invoiceId, setInvoiceId] = useState('');
   const [edit, setEdit] = useState(false);
-  const [printQuotation, setPrintQuotation] = useState([]);
+  const [printWorkOrder, setPrintWorkOrder] = useState([]);
   const [appliedTaxes, setAppliedTaxes] = useState({});
   const [showCustomerSuggestions, setShowCustomerSuggestions] = useState(false);
   const [showProductSuggestions, setShowProductSuggestions] = useState(false);
@@ -103,8 +103,8 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
   const handleClose = () => {
     setSelectedCustomer(null)
     setSelectedVehicle(null)
-    setSelectedQuotation(null)
-    setPrintQuotation([])
+    setSelectetWorkOrder(null)
+    setPrintWorkOrder([])
     setSelectedProducts([{
       product: "",
       quantity: 1,
@@ -115,7 +115,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
     clearForm(formikProps);
     setEdit(false)
     setRefresh(!refresh);
-    dispatch({ type: 'SET_QUOTATION_VIEW', payload: false });
+    dispatch({ type: 'SET_WORKORDER_VIEW', payload: false });
     close();
   };
 
@@ -142,31 +142,31 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
   }, [refresh]);
 
   useEffect(() => {
-    if (selectedQuotation) {
-      setPrintQuotation(selectedQuotation);
-      setInvoiceId(selectedQuotation.id)
-      setSelectedCustomer(selectedQuotation.Customer)
-      setSelectedVehicle(selectedQuotation.CustomerVehicle)
-      setVehicleOdometer(selectedQuotation.CustomerVehicle?.odometer)
+    if (selectedWorkOrder) {
+      setPrintWorkOrder(selectedWorkOrder);
+      setInvoiceId(selectedWorkOrder.id)
+      setSelectedCustomer(selectedWorkOrder.Customer)
+      setSelectedVehicle(selectedWorkOrder.CustomerVehicle)
+      setVehicleOdometer(selectedWorkOrder.CustomerVehicle?.odometer)
       // setProducts(selectedInvoice.Product)
-      setValues({ ...selectedQuotation, ['customer']: selectedQuotation.CustomerId, ['vehicle']: selectedQuotation.CustomerVehicleId })
+      setValues({ ...selectedWorkOrder, ['customer']: selectedWorkOrder.CustomerId, ['vehicle']: selectedWorkOrder.CustomerVehicleId })
       setEdit(true)
 
       let selectedProd = [...selectedProducts]
-      selectedQuotation.Product?.forEach((prod) => {
+      selectedWorkOrder.Product?.forEach((prod) => {
         const aProd = {
           product: prod.id,
           id: prod.id,
           name: prod.name,
           price: prod.price,
-          quantity: prod.quotation_product.quantity,
+          quantity: prod.workorder_product.quantity,
           taxable: prod.taxable,
           Tax: prod.Tax,
         }
         selectedProd = [aProd, ...selectedProd];
       })
 
-      if (selectedQuotation?.Customer?.taxable) {
+      if (selectedWorkOrder?.Customer?.taxable) {
         const productTaxes = {};
         selectedProd.forEach((product) => {
           product.Tax?.forEach((productTax) => {
@@ -189,7 +189,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
       // setSelectedQuotation(null)
     }
 
-  }, [selectedQuotation])
+  }, [selectedWorkOrder])
 
   // handle submit
   const onSubmit = async (values) => {
@@ -197,18 +197,18 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
     const selectedProductIds = selectedProducts.map((product) => `${product.id}:${product.quantity}`);
     selectedProductIds.pop();
 
-    if (selectedVehicle?.odometer < vehicleOdometer) {
-      try {
-        const customerVehicleUpdate = await updateCustomerVehicle(selectedVehicle.id, { odometer: vehicleOdometer }, state.userToken);
-        if (customerVehicleUpdate.status === 200) {
-          showToastMessage('success', 'Vehicle odometer updated successfully');
-        }
-      } catch (error) {
-        console.log(error)
-      }
-    }
+    // if (selectedVehicle?.odometer < vehicleOdometer) {
+    //   try {
+    //     const customerVehicleUpdate = await updateCustomerVehicle(selectedVehicle.id, { odometer: vehicleOdometer }, state.userToken);
+    //     if (customerVehicleUpdate.status === 200) {
+    //       showToastMessage('success', 'Vehicle odometer updated successfully');
+    //     }
+    //   } catch (error) {
+    //     console.log(error)
+    //   }
+    // }
     const data = {
-      quotationData: {
+      workOrderData: {
         totalAmount: calculateTotalAmountWithTax(),
         CustomerId: selectedCustomer.id,
         CustomerVehicleId: selectedVehicle.id,
@@ -218,32 +218,32 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
       "products": selectedProductIds,
     };
 
-    const updatedData = { ...data, quotationData: { ...data.quotationData, BusinessId: state.business.id } };
+    const updatedData = { ...data, workOrderData: { ...data.workOrderData, BusinessId: state.business.id } };
 
     try {
       if (edit) {
-        const res = await updateQuotation(invoiceId, updatedData, state.userToken)
-        const quotation = await res.json();
-        setPrintQuotation(quotation?.data);
+        const res = await updateWorkOrder(invoiceId, updatedData, state.userToken)
+        const workorder = await res.json();
+        setPrintWorkOrder(workorder?.data);
         if (res.status === 200) {
-          showToastMessage('success', quotation.message)
+          showToastMessage('success', workorder.message)
         }
         else if (res.status === 404) {
-          showToastMessage('info', quotation.message)
+          showToastMessage('info', workorder.message)
         }
         else if (res.status === 409) {
-          showToastMessage('error', quotation.message)
+          showToastMessage('error', workorder.message)
         }
       }
       else {
-        const res = await addQuotaion(updatedData, state.userToken)
-        const quotation = await res.json();
-        setPrintQuotation(quotation?.data);
+        const res = await addWorkOrder(updatedData, state.userToken)
+        const workorder = await res.json();
+        setPrintWorkOrder(workorder?.data);
         if (res.status === 200) {
-          showToastMessage('success', quotation.message)
+          showToastMessage('success', workorder.message)
         }
         else if (res.status === 409) {
-          showToastMessage('error', quotation.message)
+          showToastMessage('error', workorder.message)
         }
       }
       setIsLoading(false);
@@ -278,7 +278,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
     if (existingProductIndex !== -1) {
       // If the product already exists, update its quantity
       handleQuantityChange(existingProductIndex, selectedProducts[existingProductIndex].quantity + quantity);
-      updatedItems[index].product = ""; // Reset the current row
+      updatedItems[index].product = "";
       setSelectedProducts(updatedItems);
       return;
     }
@@ -544,14 +544,10 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
   } = formikProps;
 
   useEffect(() => {
-    if (printQuotation && Object.keys(printQuotation).length > 0) {
-      dispatch({ type: 'SET_QUOTATION_VIEW', payload: true });
-      // if (printRef.current) {
-      //   printRef.current.handlePrint();
-      //   handleClose();
-      // }
+    if (printWorkOrder && Object.keys(printWorkOrder).length > 0) {
+      dispatch({ type: 'SET_WORKORDER_VIEW', payload: true });
     }
-  }, [printQuotation])
+  }, [printWorkOrder])
 
   return (
     <>
@@ -563,7 +559,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
                 <div className="flex items-center justify-between sticky bg-gradient-to-br from-gray-800 to-gray-700">
                   <div></div>
                   <div className="text-white text-center text-lg">
-                    {state?.quotation?.isViewOpen ? "VIEW" : edit ? "EDIT" : "NEW"} {"QUOTATION"}
+                    {state?.workorder?.isViewOpen ? "VIEW" : edit ? "EDIT" : "NEW"} {"WORK ORDER"}
                   </div>
                   <button
                     className="bg-transparent hover:bg-gray-800 text-white font-bold py-2 px-4 rounded"
@@ -587,8 +583,8 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
                   </button>
                 </div>
 
-                {state?.quotation?.isViewOpen ? (
-                  <ViewQuotation quotationData={printQuotation} setQuotationData={setPrintQuotation} componentRef={componentRef} appliedTaxes={appliedTaxes} setEdit={setEdit} close={handleClose} />
+                {state?.workorder?.isViewOpen ? (                    
+                  <ViewWorkOrder workOrderData={printWorkOrder} setWorkOrderData={setPrintWorkOrder} componentRef={componentRef} appliedTaxes={appliedTaxes} setEdit={setEdit} close={handleClose} />
                 ) : (
                   <div className="overflow-y-auto h-[80vh] overflow-x-hidden p-2">
                     <div className="flex gap-4">
@@ -994,7 +990,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
                     </div>
                   </div>
                 )}
-                {!state?.quotation?.isViewOpen ? (
+                {!state?.workorder?.isViewOpen ? (
                   <div className="flex items-center justify-end space-x-2 sticky bg-gradient-to-br from-gray-800 to-gray-700">
                     {/* <ReactToPrint
                     ref={printRef}
@@ -1010,7 +1006,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
 
                     {edit && (
                       <button className=" w-32 bg-gray-600 hover:bg-gray-900 text-white font-bold py-2 px-4"
-                        onClick={() => { setEdit(false); dispatch({ type: 'SET_QUOTATION_VIEW', payload: true }); }}
+                        onClick={() => { setEdit(false); dispatch({ type: 'SET_WORKORDER_VIEW', payload: true }); }}
                         type="button"
                       >
                         Back
@@ -1048,7 +1044,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
       </Dialog>
       <CustomerForm open={isCustomerFormOpen} close={closeCustomerForm} refresh={refresh} setRefresh={setRefresh} setSelectedCustomer={setSelectedCustomer} />
       {selectedCustomer ? <CustomerVehicleForm open={isCustomerVehicleFormOpen} close={closeCustomerVehicleForm} refresh={refresh} setRefresh={setRefresh} CustomerId={selectedCustomer?.id} getCustomerDetails={getCustomerDetails} /> : null}
-      {printQuotation && Object.keys(printQuotation).length > 0 ? <PrintView view={false} quotationData={printQuotation} ref={componentRef} appliedTaxes={appliedTaxes} /> : null}
+      {printWorkOrder && Object.keys(printWorkOrder).length > 0 ? <PrintView view={false} workOrderData={printWorkOrder} ref={componentRef} appliedTaxes={appliedTaxes} /> : null}
     </>
   );
 };

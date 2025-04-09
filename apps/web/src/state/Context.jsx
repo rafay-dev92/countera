@@ -22,6 +22,9 @@ const Context = ({children}) => {
         quotation: {
             isViewOpen: false,
         },
+        workorder: {
+            isViewOpen: false,
+        }
     }
     const [state, dispatch] = useReducer(Reducer, initialState)
 

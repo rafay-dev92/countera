@@ -9,7 +9,7 @@ import {
   PencilSquareIcon,
   TruckIcon,
 } from "@heroicons/react/24/solid";
-import { Home, Customers, Invoice, Quotation, Product, Inspection, Appointments, Settings, Vehicles, Reports } from "@/pages/dashboard";
+import { Home, Customers, Invoice, Quotation, WorkOrder, Product, Inspection, Appointments, Settings, Vehicles, Reports } from "@/pages/dashboard";
 import { SignIn, SignUp } from "@/pages/auth";
 
 const icon = {
@@ -43,6 +43,12 @@ export const routes = [
         name: "Quotations",
         path: "/quotation",
         element: <Quotation />,
+      },
+      {
+        icon: <DocumentTextIcon {...icon} />,
+        name: "Work Orders",
+        path: "/work-orders",
+        element: <WorkOrder />,
       },
       {
         icon: <CubeIcon {...icon} />,

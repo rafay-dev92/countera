@@ -16,24 +16,24 @@ import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import MyPopUpForm from "./form";
 import { Link, useNavigate } from "react-router-dom";
 import { State } from "../../state/Context";
-import { fetchQuotations } from "@/services/fetchQuotations";
-import { delQuotation } from "@/services/delQuotaion";
 import { toast } from "react-toastify";
 import { addInvoice } from "@/services/addInvoice";
 import { useConfirm } from "@/context/confirmContext";
+import { fetchWorkOrders } from "@/services/fetchWorkOrders";
+import { delWorkOrder } from "@/services/delWorkOrder";
 
-const TABLE_HEAD = ["Customer", "Total", "Status", "Quotation Date", "Vehicle", "Actions"];
+const TABLE_HEAD = ["Customer", "Total", "Status", "WorkOrder Date", "Vehicle", "Actions"];
 
-export function Quotation() {
+export function WorkOrder() {
     const confirm = useConfirm();
     const router = useNavigate();
     const { state, dispatch } = State();
     const [searchQuery, setSearchQuery] = useState("");
-    const [quotations, setQuotations] = useState([]);
+    const [workOrders, setWorkOrders] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(5);
     const [refresh, setRefresh] = useState(false);
-    const [selectedQuotation, setSelectedQuotation] = useState(null);
+    const [selectedWorkOrder, setSelectetWorkOrder] = useState(null);
     const [isOpen, setIsOpen] = useState(false);
     const [loading, setLoading] = useState(true);
 
@@ -50,14 +50,14 @@ export function Quotation() {
     };
 
     useEffect(() => {
-        getQuotations();
+        getWorkOrders();
     }, [refresh]);
 
-    const getQuotations = async () => {
+    const getWorkOrders = async () => {
         try {
-            const fetchedQuotations = await fetchQuotations(state.userToken);
-            const totalQuotations = await fetchedQuotations.json();
-            setQuotations(totalQuotations);
+            const fetchedWorkOrders = await fetchWorkOrders(state.userToken);
+            const totalWorkOrders = await fetchedWorkOrders.json();
+            setWorkOrders(totalWorkOrders);
             setLoading(false);
         } catch (error) {
             console.log(error.message);
@@ -65,33 +65,33 @@ export function Quotation() {
         }
     };
 
-    const handleEditQuotation = (index) => {
+    const handleEditWorkOrder = (index) => {
         // Assuming currentItems holds the filtered rows for display
         if (state.userInfo.Permission.some(obj => obj.name === "CAN_EDIT_QUOTATION" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
             const selected = currentItems[index];
-            setSelectedQuotation(selected);
+            setSelectetWorkOrder(selected);
             openPopup();
         }
         else {
-            toast.error("You are not allowed to update a quotation");
+            toast.error("You are not allowed to update a workorder");
         }
     };
 
-    const handleDeleteQuotation = async (index) => {
-        const confirmed = await confirm("Do you really want to delete this quotation?");
+    const handleDeleteWorkOrder = async (index) => {
+        const confirmed = await confirm("Do you really want to delete this workorder?");
         if (!confirmed) return;
         if (state.userInfo.Permission.some(obj => obj.name === "CAN_DELETE_QUOTATION" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
-            const updatedQuotations = quotations.filter((_, rowIndex) => rowIndex !== index);
-            const deletedQuotationId = quotations.find((_, rowIndex) => rowIndex === index);
-            setQuotations(updatedQuotations);
+            const updatedWorkOrders = workOrders.filter((_, rowIndex) => rowIndex !== index);
+            const deletedWorkOrderId = workOrders.find((_, rowIndex) => rowIndex === index);
+            setWorkOrders(updatedWorkOrders);
             try {
-                const res = await delQuotation(deletedQuotationId['id'], state.userToken);
-                const quotation = await res.json();
+                const res = await delWorkOrder(deletedWorkOrderId['id'], state.userToken);
+                const workorder = await res.json();
                 if (res.status === 200) {
-                    showToastMessage('success', quotation.message)
+                    showToastMessage('success', workorder.message)
                 }
                 else if (res.status === 404) {
-                    showToastMessage('info', quotation.message)
+                    showToastMessage('info', workorder.message)
                 }
                 setRefresh(!refresh);
 
@@ -101,7 +101,7 @@ export function Quotation() {
             }
         }
         else {
-            toast.error("You are not allowed to delete a quotation");
+            toast.error("You are not allowed to delete a workorder");
         }
     };
 
@@ -115,8 +115,8 @@ export function Quotation() {
 
     let currentItems = [];
     let filteredRows = [];
-    if (quotations.length > 0) {
-        filteredRows = quotations?.filter(
+    if (workOrders.length > 0) {
+        filteredRows = workOrders?.filter(
             ({ Customer }) =>
                 Customer['firstName'].toLowerCase().includes(searchQuery.toLowerCase()) ||
                 Customer['lastName'].toLowerCase().includes(searchQuery.toLowerCase())
@@ -140,7 +140,7 @@ export function Quotation() {
             setIsOpen(true);
         }
         else {
-            toast.error("You are not allowed to create a quotation");
+            toast.error("You are not allowed to create a workorder");
         }
     };
 
@@ -148,16 +148,16 @@ export function Quotation() {
         setIsOpen(false);
     };
 
-    const createInvoice = async (quotationData) => {
-        const confirmed = await confirm("Do you really want to create an invoice from this quotation?");
+    const createInvoice = async (workOrderData) => {
+        const confirmed = await confirm("Are you sure you want to create an invoice for this work order?");
         if (!confirmed) return;
-        const selectedProductIds = quotationData?.Product?.map((product) => `${product.id}:${product.quotation_product?.quantity}`);
+        const selectedProductIds = workOrderData?.Product?.map((product) => `${product.id}:${product.workorder_product?.quantity}`);
         const data = {
             invoiceData: {
-              totalAmount: quotationData.totalAmount,
+              totalAmount: workOrderData.totalAmount,
               paymentStatus: "Unpaid",
-              CustomerId: quotationData.CustomerId,
-              CustomerVehicleId: quotationData.CustomerVehicleId,
+              CustomerId: workOrderData.CustomerId,
+              CustomerVehicleId: workOrderData.CustomerVehicleId,
               BusinessId: state.business.id
             },
             "products": selectedProductIds,
@@ -191,7 +191,7 @@ export function Quotation() {
                     <div className="mb-4 sm:mb-0 flex items-center">
                         <Typography variant="h5" color="blue-gray" className="flex items-center">
                             <DocumentTextIcon className="h-12 w-12 text-blueGray-500 ml-2" />
-                            Quotations
+                            Work Orders
                         </Typography>
                     </div>
                     <div className="flex flex-col lg:flex-row items-center w-full mt-5">
@@ -263,7 +263,7 @@ export function Quotation() {
                             </tr>
                         </thead>
                         <tbody>
-                            {currentItems.map(({ id, Customer, totalAmount, approved, createdAt, CustomerVehicle }, index) => {
+                            {currentItems.map(({ id, Customer, totalAmount, status, createdAt, CustomerVehicle }, index) => {
                                 const isLast = index === currentItems.length - 1;
                                 const classes = isLast
                                     ? "p-4"
@@ -275,7 +275,7 @@ export function Quotation() {
                                                 to="#"
                                                 className="text-blue-gray font-normal hover:underline"
                                                 onClick={() => {
-                                                    handleEditQuotation(index);
+                                                    handleEditWorkOrder(index);
                                                 }}
                                             >
                                                 {Customer['firstName']} {Customer['lastName']}
@@ -294,10 +294,10 @@ export function Quotation() {
                                         <td className={classes}>
                                             <Typography
                                                 variant="small"
-                                                color={approved? "green" : "red"}
+                                                color={status === 'Finished'? "green" : "red"}
                                                 className="font-normal"
                                             >
-                                                {approved? 'Approved' : 'Pending'}
+                                                {status}
                                             </Typography>
                                         </td>
                                         <td className={classes}>
@@ -320,9 +320,9 @@ export function Quotation() {
                                         </td>
 
                                         <td className={classes}>
-                                            <Tooltip content="Delete Quotation">
+                                            <Tooltip content="Delete WorkOrder">
                                                 <IconButton variant="text" onClick={() => {
-                                                    handleDeleteQuotation(index)
+                                                    handleDeleteWorkOrder(index)
                                                 }}>
                                                     <TrashIcon className="h-6 w-6 text-red-500" />
                                                 </IconButton>
@@ -381,7 +381,7 @@ export function Quotation() {
                 </CardFooter>
 
             </Card>
-            <MyPopUpForm refresh={refresh} setRefresh={setRefresh} open={isOpen} close={closePopup} selectedQuotation={selectedQuotation} setSelectedQuotation={setSelectedQuotation} />
+            <MyPopUpForm refresh={refresh} setRefresh={setRefresh} open={isOpen} close={closePopup} selectedWorkOrder={selectedWorkOrder} setSelectetWorkOrder={setSelectetWorkOrder} />
         </>
     );
 }   

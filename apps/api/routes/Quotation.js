@@ -250,7 +250,7 @@ router.put("/update/:id", fetchUser, async (req, res) => {
         {
           model: Product,
           as: "Product",
-          through: "invoice_product",
+          through: "quotation_product",
           include: ["Tax"],
         },
         {

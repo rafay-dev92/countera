@@ -1,5 +1,4 @@
 const { DataTypes } = require("sequelize");
-const Quotation = require("./Quotation");
 
 module.exports = (sequelize) => {
   const WorkOrder = sequelize.define(
@@ -11,15 +10,27 @@ module.exports = (sequelize) => {
         primaryKey: true,
         allowNull: false,
       },
+      workOrderNumber: {
+        type: DataTypes.INTEGER,
+        defaultValue: 0,
+        allowNull: false,
+      },
       totalAmount: {
         type: DataTypes.FLOAT,
         allowNull: false,
       },
-      QuotationId: {
-        type: DataTypes.UUID,
+      status: {
+        type: DataTypes.STRING,
+        defaultValue: "Pending",
         allowNull: false,
-        onDelete: "RESTRICT",
-        onUpdate: "CASCADE",
+      },
+      notes: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      comments: {
+        type: DataTypes.STRING,
+        allowNull: true,
       },
       CustomerId: {
         type: DataTypes.UUID,
@@ -48,10 +59,7 @@ module.exports = (sequelize) => {
   WorkOrder.associate = (models) => {
     WorkOrder.belongsToMany(models.Product, {
       as: "Product",
-      through: "work_order_product",
-    });
-    WorkOrder.belongsTo(models.Quotation, {
-      as: "Quotation",
+      through: "workorder_product",
     });
     WorkOrder.belongsTo(models.Customer, {
       as: "Customer",
@@ -63,6 +71,29 @@ module.exports = (sequelize) => {
       as: "Business",
     });
   };
+
+  WorkOrder.beforeCreate(async (workorder, options) => {
+    const transaction =
+      options.transaction || (await WorkOrder.sequelize.transaction());
+    try {
+      const latestWorkOrder = await WorkOrder.findOne({
+        where: { BusinessId: workorder.BusinessId },
+        order: [["createdAt", "DESC"]],
+        lock: transaction.LOCK.UPDATE,
+        transaction,
+      });
+
+      const nextWorkOrderNumber = latestWorkOrder
+        ? latestWorkOrder.workOrderNumber + 1
+        : 1;
+      workorder.workOrderNumber = nextWorkOrderNumber;
+
+      if (!options.transaction) await transaction.commit();
+    } catch (error) {
+      if (!options.transaction) await transaction.rollback();
+      throw error;
+    }
+  });
 
   return WorkOrder;
 };

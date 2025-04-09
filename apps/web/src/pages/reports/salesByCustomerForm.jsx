@@ -10,13 +10,15 @@ import MonthlyReportPreview from "./monthlyReport";
 import ReactToPrint from "react-to-print";
 import { fetchTaxes } from "@/services/fetchTaxes";
 import { fetchProductsCategories } from "@/services/fetchProductCategories";
+import { fetchCustomers } from "@/services/fetchCustomers";
 
 const schema = Yup.object().shape({
-    month: Yup.string().required("Month is required"),
+    customer: Yup.string().required("Customer is required"),
 });
 
-function MonthlyReportForm({ open, close }) {
+function SalesByCustomerForm({ open, close }) {
     const printRef = useRef();
+    const customerInputRef = useRef();
     const reactToPrintTriggerRef = useRef();
     const { state } = State();
     const [products, setProducts] = useState([]);
@@ -26,7 +28,13 @@ function MonthlyReportForm({ open, close }) {
     const [showPrint, setShowPrint] = useState(false);
     const [reportData, setReportData] = useState([]);
     const [invoices, setInvoices] = useState([]);
+
+    const [customers, setCustomers] = useState([]);
+    const [selectedCustomer, setSelectedCustomer] = useState(null);
+    const [showCustomerSuggestions, setShowCustomerSuggestions] = useState(false);
+
     const handleClose = () => {
+        setSelectedCustomer(null)
         clearForm(formikProps);
         close();
     };
@@ -47,11 +55,8 @@ function MonthlyReportForm({ open, close }) {
     const onSubmit = async (values) => {
         setIsLoading(true);
         try {
-            const startDate = new Date(values.month);
-            const endDate = new Date(startDate.getFullYear(), startDate.getMonth() + 1, 0);
-
             const filteredInvoices = invoices?.filter(invoice => {
-                return new Date(invoice.createdAt) >= startDate && new Date(invoice.createdAt) <= endDate;
+                return invoice.CustomerId === values.customer;
             });
             setReportData(filteredInvoices);
             setShowPrint(true);
@@ -66,6 +71,12 @@ function MonthlyReportForm({ open, close }) {
             showToastMessage('error', 'Something went wrong');
             handleClose();
         }
+    };
+
+    const getCustomers = async () => {
+    const fetchedCustomers = await fetchCustomers(state.userToken);
+    const customersData = await fetchedCustomers.json();
+    setCustomers(customersData);
     };
 
     const getTaxes = async () => {
@@ -110,25 +121,48 @@ function MonthlyReportForm({ open, close }) {
     };
 
     useEffect(() => {
+        getCustomers();
         getTaxes();
         getProductCategories();
         getInvoices();
     }, []);
 
+    const handleCustomerChange = (customer) => {
+        setSelectedCustomer(customer);
+        if (customer) {
+          setValues({ ['customer']: customer.id });
+        };
+        setShowCustomerSuggestions(false);
+      };
+
+    useEffect(() => {
+        function handleClickOutside(event) {
+          if (customerInputRef.current && !customerInputRef.current.contains(event.target)) {
+            setShowCustomerSuggestions(false);
+          }         
+        }
+    
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+          document.removeEventListener('mousedown', handleClickOutside);
+        };
+      }, []);
+
     const clearForm = (formikProps) => {
         formikProps.resetForm({
             values: {
-                month: '',
+                customer: '',
             },
             errors: {
-                month: '',
+                customer: '',
             },
         });
+        setSelectedCustomer(null);
     };
 
     const formikProps = useFormik({
         initialValues: {
-            month: '',
+            customer: '',
         },
         validationSchema: schema,
         onSubmit,
@@ -141,6 +175,7 @@ function MonthlyReportForm({ open, close }) {
         handleBlur,
         handleChange,
         handleSubmit,
+        setValues,
     } = formikProps;
 
     return (
@@ -153,7 +188,7 @@ function MonthlyReportForm({ open, close }) {
                                 <div className="flex items-center justify-between sticky bg-gradient-to-br from-gray-800 to-gray-700">
                                     <div></div>
                                     <div className="text-lg text-white font-medium" >
-                                        Monthly Report
+                                        Customer Sales Report
                                     </div>
                                     <button
                                         className="bg-transparent hover:bg-gray-800 text-white font-bold py-2 px-4 rounded"
@@ -178,22 +213,33 @@ function MonthlyReportForm({ open, close }) {
                                 </div>
 
                                 <div className="w-[25vw] p-6 space-y-4">
-                                    <div >
-                                        <label className="font-bold">Month</label> <br />
+                                    <div className="relative flex flex-col" ref={customerInputRef}>
+                                        <label className="font-bold">Customer</label>
                                         <input
-                                            className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
-                                            id="month"
-                                            name="month"
-                                            type="month"
-                                            value={values.month}
-                                            onChange={handleChange}
+                                            className="relative h-[97%] mt-1 p-2 border border-gray-300 rounded-md text-gray-600 font-small focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            id="customer"
+                                            name="customer"
+                                            type="text"
+                                            value={selectedCustomer ? `${selectedCustomer.firstName} ${selectedCustomer.lastName}` : values.customer}
+                                            onClick={() => { setShowCustomerSuggestions(true); setValues({ ['customer']: '' })}}
+                                            onChange={(e) => { setSelectedCustomer(null); setSelectedVehicle(null); setVehicleOdometer(''), handleChange(e) }}
                                             onBlur={handleBlur}
-                                        />
-                                        {(touched.month && errors.month) ? (
-                                            <div className="text-red-500">
-                                                {errors.month}
-                                            </div>
-                                        ) : (<div></div>)}
+                                            autoComplete="off"
+                                            placeholder="Select Customer"
+                                        />                                        
+                                        {showCustomerSuggestions && (
+                                            <ul className="d-block absolute z-50 bg-white border border-slate-700 w-full top-full mt-1 overflow-y-auto min-h-24 max-h-48 ">
+                                                {customers.length > 0 ?
+                                                    customers.filter(customer => `${customer.firstName.toLowerCase()} ${customer.lastName.toLowerCase()}`.includes(values.customer.trim().toLowerCase())).map((customer) => (
+                                                        <li key={customer.id} className="cursor-pointer px-2 py-1 rounded-sm hover:bg-gray-200" onClick={() => { handleCustomerChange(customer) }}>
+                                                            {customer.firstName} {customer.lastName}
+                                                        </li>
+                                                    ))
+                                                    :
+                                                    <li className="px-2 py-1 rounded-sm">No Customer</li>
+                                                }
+                                            </ul>
+                                        )}       
                                     </div>
                                 </div>
                                 <div className="flex items-center justify-end space-x-2 sticky bg-gradient-to-br from-gray-800 to-gray-700">
@@ -243,4 +289,4 @@ function MonthlyReportForm({ open, close }) {
     );
 }
 
-export default MonthlyReportForm;
+export default SalesByCustomerForm;

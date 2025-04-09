@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { Typography } from "@material-tailwind/react";
 import { State } from '@/state/Context';
 
-const MonthlyReportPreview = React.forwardRef(({ invoices, products, taxes }, ref) => {
-    const INVOICE_TABLE_HEAD = ["Date", "Invoice", "Total", ...products, ...taxes];
+const MonthlyReportPreview = React.forwardRef(({ invoices, productsCategories, taxes }, ref) => {
+    const INVOICE_TABLE_HEAD = ["Date", "Invoice", "Total", ...productsCategories, ...taxes];
 
     const { state } = State();
     const calculateTaxes = (products) => {
@@ -27,36 +27,39 @@ const MonthlyReportPreview = React.forwardRef(({ invoices, products, taxes }, re
         return productTaxes;
     };
 
-    const productTotals = products.map(product =>
+    const productTotals = productsCategories.map(category =>
         invoices.reduce((sum, invoice) => {
-            const matchedProduct = invoice.Product?.find(p => p.name === product);
+            const matchedProduct = invoice.Product?.find(p => p.Category.name === category);
             return sum + (matchedProduct?.invoice_product?.quantity || 0);
         }, 0)
     );
 
-    const taxTotals = taxes.map(tax =>
-        invoices.reduce((sum, invoice) => {
+    const taxTotals = taxes.map(tax => {
+        const value = invoices.reduce((sum, invoice) => {
             const productTaxes = calculateTaxes(invoice.Product);
             const matchingKey = Object.keys(productTaxes)?.find(key => key.split('_')[0] === tax);
             return sum + (matchingKey ? productTaxes[matchingKey] || 0 : 0);
-        }, 0)
-    );
+        }, 0);
+        return { name: tax, value };
+    });
 
     return (
-        <div ref={ref} className="p-6 text-black bg-white hidden print:block">
-            <h1 className="text-3xl font-bold text-center mb-4">Monthly Sales Report</h1>
-            <div className="flex gap-1">
-                <div className="flex flex-col w-full">
-                    <h3 className="text-2xl font-bold mb-3">{state.business.name}</h3>
-                    <div className="flex flex-col items-start justify-start">
-                        <span className="text-sm font-normal text-black">{state.business.address}</span>
-                        <span className="text-sm font-normal text-black">{state.business.city}, {state.business.state}, {state.business.zipcode}</span>
-                        <span className="text-sm font-normal text-black">Phone: {state.business.tel}</span>
-                        <span className="text-sm font-normal text-black">Fax: {state.business.fax}</span>
-                        <span className="text-sm font-normal text-black">Email: {state.business.email}</span>
-                    </div>                    
+        <div ref={ref} className="text-black bg-white hidden print:block print:p-0">
+            <div className='p-4'>
+                {/* <h1 className="text-3xl font-bold text-center mb-4">Monthly Sales Report</h1> */}
+                <div className="flex gap-1">
+                    <div className="flex flex-col w-full">
+                        <h3 className="text-2xl font-bold mb-3">{state.business.name}</h3>
+                        <div className="flex flex-col items-start justify-start">
+                            <span className="text-sm font-normal text-black">{state.business.address}</span>
+                            <span className="text-sm font-normal text-black">{state.business.city}, {state.business.state}, {state.business.zipcode}</span>
+                            <span className="text-sm font-normal text-black">Phone: {state.business.tel}</span>
+                            <span className="text-sm font-normal text-black">Fax: {state.business.fax}</span>
+                            <span className="text-sm font-normal text-black">Email: {state.business.email}</span>
+                        </div>
+                    </div>
+                    <img src={state.business.logo} className="rounded-xl h-[100px] w-[100px]" alt="Business logo" width={100} height={100} />
                 </div>
-                <img src={state.business.logo} className="rounded-xl h-[100px] w-[100px]" alt="Business logo" width={100} height={100} />
             </div>
             <div className='w-full p-2'>
                 <table className="w-full min-w-max table-auto text-left">
@@ -110,14 +113,14 @@ const MonthlyReportPreview = React.forwardRef(({ invoices, products, taxes }, re
                                             {item.totalAmount}
                                         </Typography>
                                     </td>
-                                    {products.map((product, idx) => (
+                                    {productsCategories.map((category, idx) => (
                                         <td key={idx} className="p-4 border-b border-blue-gray-50">
                                             <Typography
                                                 variant="small"
                                                 color="blue-gray"
                                                 className="font-normal leading-none"
                                             >
-                                                {item.Product?.find(item => item.name === product)?.invoice_product?.quantity || 0}
+                                                {item.Product?.find(item => item.Category.name === category)?.invoice_product?.quantity || 0}
                                             </Typography>
                                         </td>
                                     ))}
@@ -126,7 +129,7 @@ const MonthlyReportPreview = React.forwardRef(({ invoices, products, taxes }, re
                                         const value = matchingKey ? productTaxes[matchingKey] || 0 : 0;
                                         const taxType = matchingKey ? matchingKey.split('_')[2] : '';
                                         return (
-                                            <td key={idx} className="p-4 border-b border-blue-gray-50">
+                                            <td key={idx} className="p-4 border-b border-blue-gray-50 bg-blue-100">
                                                 <Typography
                                                     variant="small"
                                                     color="blue-gray"
@@ -157,11 +160,37 @@ const MonthlyReportPreview = React.forwardRef(({ invoices, products, taxes }, re
 
                         {taxTotals.map((total, idx) => (
                             <td key={idx} className="p-4 border-t font-semibold text-blue-gray-700">
-                                {total.toFixed(2)}
+                                {total.value.toFixed(2)}
                             </td>
                         ))}
                     </tr>
                 </table>
+                
+                {/* Summary */}
+                <div className="mt-10 border border-gray-400 p-4 rounded-md w-full justify-start max-w-md mr-auto">
+                    <h2 className="text-lg font-semibold text-center mb-2">{state.business.name}</h2>
+                    <div className="grid grid-cols gap-y-2 gap-x-4 text-sm border-t border-gray-300 pt-2">
+                        {/* <span className="font-medium">Taxable sales parts:</span>
+                        <span className="text-right">{taxablePartsTotal.toFixed(2)}</span>
+
+                        <span className="font-medium">Non-taxable sales labour:</span>
+                        <span className="text-right">{nonTaxableLabourTotal.toFixed(2)}</span>
+
+                        <span className="font-medium">Non-taxable sales - wholesales:</span>
+                        <span className="text-right">0.00</span> */}
+
+                        {taxTotals.map((total, idx) => (
+                            <div key={idx} className='flex justify-between'>
+                            <span className="font-medium">{total.name} collected:</span>
+                            <span className="text-right">{total.value.toFixed(2)}</span>
+                            </div>
+                        ))}                        
+                    </div>
+                    <div className="border-t mt-3 pt-2 font-bold text-md flex justify-between">
+                        <span>Gross Monthly Sales:</span>
+                        <span>{taxTotals.reduce((sum, tax) => sum + tax.value, 0).toFixed(2)}</span>
+                    </div>
+                </div>
             </div>
         </div>
     );

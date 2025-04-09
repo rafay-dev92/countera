@@ -74,7 +74,7 @@ module.exports = (sequelize) => {
     });
     Product.belongsTo(models.Product_Category, {
       foreignKey: "CategoryId",
-      as: "category",
+      as: "Category",
     });
     Product.belongsToMany(models.Invoice, {
       as: "Invoice",

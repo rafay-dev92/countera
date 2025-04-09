@@ -43,7 +43,7 @@ router.get("/", fetchUser, async (req, res) => {
             model: Product,
             as: "Product",
             through: "invoice_product",
-            include: ["Tax"],
+            include: ["Tax", "Category"],
           },
           {
             model: Business,
@@ -77,7 +77,7 @@ router.get("/", fetchUser, async (req, res) => {
           model: Product,
           as: "Product",
           through: "invoice_product",
-          include: ["Tax"],
+          include: ["Tax", "Category"],
         },
         {
           model: Business,
@@ -382,7 +382,7 @@ router.delete("/delete/:id/:status", fetchUser, async (req, res) => {
         return res.status(409).json({ message: "Invoice already voided" });
       }
     }
-    
+
     invoice.update({ paymentStatus: req.params.status });
     return res.status(200).json({ message: "Invoice deleted successfully" });
   } catch (error) {

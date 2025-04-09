@@ -151,6 +151,7 @@ export function WorkOrder() {
     const createInvoice = async (workOrderData) => {
         const confirmed = await confirm("Are you sure you want to create an invoice for this work order?");
         if (!confirmed) return;
+        setLoading(true);
         const selectedProductIds = workOrderData?.Product?.map((product) => `${product.id}:${product.workorder_product?.quantity}`);
         const data = {
             invoiceData: {
@@ -176,7 +177,9 @@ export function WorkOrder() {
             else if (res.status === 404) {
                 showToastMessage('info', invoice.message)
             }
+            setLoading(false);
         } catch (error) {
+            setLoading(false);
             console.log(error);
         }
     };

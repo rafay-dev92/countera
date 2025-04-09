@@ -7,9 +7,10 @@ import { Card, CardHeader, CardBody, Typography, Button, Tooltip, IconButton, Sp
 import { State } from '@/state/Context';
 import { toast } from "react-toastify";
 import { delAppointment } from '@/services/delAppointment';
+import { useConfirm } from '@/context/confirmContext';
 
 export function Appointments() {
-
+    const confirm = useConfirm();
     const { state } = State();
     const [open, setOpen] = useState(false);
     const [refresh, setRefresh] = useState(false);
@@ -116,7 +117,10 @@ export function Appointments() {
     }
 
     async function handleDel(id) {
+        const confirmed = await confirm("Are you sure you want to delete this appointment?");
+        if (!confirmed) return
         if (state.userInfo.Permission.some(obj => obj.name === "CAN_DELETE_APPOINTMENT" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
+            setAppointments(appointments.filter((appointment) => appointment.id !== id))
             try {
                 const res = await delAppointment(id, state.userToken);
                 const appointment = await res.json();

@@ -151,6 +151,7 @@ export function Quotation() {
     const createInvoice = async (quotationData) => {
         const confirmed = await confirm("Do you really want to create an invoice from this quotation?");
         if (!confirmed) return;
+        setLoading(true)
         const selectedProductIds = quotationData?.Product?.map((product) => `${product.id}:${product.quotation_product?.quantity}`);
         const data = {
             invoiceData: {
@@ -176,7 +177,9 @@ export function Quotation() {
             else if (res.status === 404) {
                 showToastMessage('info', invoice.message)
             }
+            setLoading(false)
         } catch (error) {
+            setLoading(false)
             console.log(error);
         }
     };

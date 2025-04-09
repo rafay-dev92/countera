@@ -12,7 +12,7 @@ const schema = Yup.object().shape({
     customerEmail: Yup.string().email('Invalid email').required("Email is required"),
     description: Yup.string(),
     startDateTime: Yup.date().required("Start date is required"),
-    endDateTime: Yup.string().required("End Time is required"),
+    // endDateTime: Yup.string().required("End Time is required"),
     sendEmail: Yup.boolean()
 });
 
@@ -111,36 +111,48 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, close, refresh, 
 
     const onSubmit = async (values) => {
         setIsLoading(true);
-        const inputDate = values.startDateTime.split('T')[0];
-        const inputStartTime = (parseInt(values.startDateTime.split('T')[1].split(':')[0], 10) * 60) + parseInt(values.startDateTime.split('T')[1].split(':')[1], 10);
-        const inputEndTime = (parseInt(values.endDateTime.split(':')[0], 10) * 60) + parseInt(values.endDateTime.split(':')[1], 10);
-        const currDate = currentDate.split('T')[0];
-        const currentTime = (parseInt(currentDate.split('T')[1].split(':')[0], 10) * 60) + parseInt(currentDate.split('T')[1].split(':')[1], 10);
+        const inputDateTime = new Date(values.startDateTime); // assumes ISO format string
+        const inputDate = inputDateTime.toISOString().split('T')[0];
 
-        const inputEndDateTime = `${inputDate}T${values.endDateTime}`.trim();
-        const updatedValues = { ...values, endDateTime: inputEndDateTime, BusinessId: state.business.id, BusinessEmail: state.business.email };
+        const inputStartTime =
+            inputDateTime.getHours() * 60 + inputDateTime.getMinutes();
 
-        if (inputStartTime >= inputEndTime) {
-            showToastMessage('error', 'Start time must be before end time')
-            setError(true);
-            setErrorFalse();
-            setIsLoading(false);
-            return;
-        }
+        // Add 30 minutes to start time for end time
+        const endDateTimeObj = new Date(inputDateTime.getTime() + 30 * 60000); // 60000 ms = 1 minute
+        const inputEndTime =
+            endDateTimeObj.getHours() * 60 + endDateTimeObj.getMinutes();
 
-        else if (inputStartTime <= currentTime && inputDate === currDate) {
+        const inputEndDateTime = endDateTimeObj.toISOString(); // final endDateTime in full ISO format
+
+        // Optional: Get current date/time for comparison
+        const currDateTime = new Date(currentDate);
+        const currDate = currDateTime.toISOString().split('T')[0];
+        const currentTime =
+            currDateTime.getHours() * 60 + currDateTime.getMinutes();
+
+        // Final updated values to send
+        const updatedValues = {
+            ...values,
+            endDateTime: inputEndDateTime,
+            BusinessId: state.business.id,
+            BusinessEmail: state.business.email,
+        };
+
+        // if (inputStartTime >= inputEndTime) {
+        //     showToastMessage('error', 'Start time must be before end time')
+        //     setError(true);
+        //     setErrorFalse();
+        //     setIsLoading(false);
+        //     close();
+        //     return;
+        // }
+
+        if (inputStartTime <= currentTime && inputDate === currDate) {
             showToastMessage('error', 'Start time must be ahead of current time')
             setError(true);
             setErrorFalse();
             setIsLoading(false);
-            return;
-        }
-
-        else if (inputEndTime <= currentTime && inputDate === currDate) {
-            showToastMessage('error', 'End time must be ahead of current time')
-            setError(true);
-            setErrorFalse();
-            setIsLoading(false);
+            close();
             return;
         }
 
@@ -165,7 +177,7 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, close, refresh, 
                 else {
                     const res = await updateAppointment(selectedItem.id, updatedValues, state.userToken);
                     const appointment = await res.json();
-                    
+
                     if (res.status === 200) {
                         showToastMessage('success', appointment.message)
                     }
@@ -198,7 +210,7 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, close, refresh, 
                 description: '',
                 customerEmail: '',
                 startDateTime: '',
-                endDateTime: '',
+                // endDateTime: '',
                 BusinessId: '',
                 sendEmail: true,
             },
@@ -207,7 +219,7 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, close, refresh, 
                 description: '',
                 customerEmail: '',
                 startDateTime: '',
-                endDateTime: '',
+                // endDateTime: '',
                 BusinessId: '',
                 sendEmail: true,
             },
@@ -220,7 +232,7 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, close, refresh, 
             description: '',
             customerEmail: '',
             startDateTime: '',
-            endDateTime: '',
+            // endDateTime: '',
             BusinessId: '',
             sendEmail: true,
         },
@@ -273,7 +285,7 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, close, refresh, 
 
                                 <div className="w-[40vw] p-6 space-y-4">
                                     <div className="flex items-center justify-start space-x-4">
-                                        <div className="basis-[50%]">
+                                        <div className="basis-[33.33%]">
                                             <label className="font-bold">Customer Name</label> <br />
                                             <input
                                                 className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
@@ -290,7 +302,7 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, close, refresh, 
                                                 </div>
                                             )}
                                         </div>
-                                        <div className="basis-[50%]">
+                                        <div className="basis-[33.33%]">
                                             <label className="font-bold">Customer Email</label> <br />
                                             <input
                                                 className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
@@ -307,9 +319,27 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, close, refresh, 
                                                 </div>
                                             )}
                                         </div>
+                                        <div className="basis-[33.33%]">
+                                            <label className="font-bold">Start Date & Time</label> <br />
+                                            <input
+                                                className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
+                                                id="startDateTime"
+                                                name="startDateTime"
+                                                type="datetime-local"
+                                                min={currentDate}
+                                                value={values.startDateTime}
+                                                onChange={handleChange}
+                                                onBlur={handleBlur}
+                                            />
+                                            {(touched.startDateTime && errors.startDateTime) ? (
+                                                <div className="text-red-500">
+                                                    {errors.startDateTime}
+                                                </div>
+                                            ) : (<div></div>)}
+                                        </div>
                                     </div>
 
-                                    <div className="flex items-center justify-start space-x-4 w-full">
+                                    {/* <div className="flex items-center justify-start space-x-4 w-full">
                                         <div className="basis-[50%]">
                                             <label className="font-bold">Start Date & Time</label> <br />
                                             <input
@@ -328,7 +358,7 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, close, refresh, 
                                                 </div>
                                             ) : (<div></div>)}
                                         </div>
-                                        {/* <div className="basis-[50%]">
+                                        <div className="basis-[50%]">
                                             <label className="font-bold">End Time</label> <br />
                                             <input
                                                 className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
@@ -344,9 +374,9 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, close, refresh, 
                                                     {errors.endDateTime}
                                                 </div>
                                             ) : (<div></div>)}
-                                        </div> */}
-                                    </div>
-                                    
+                                        </div>
+                                    </div> */}
+
                                     <div>
                                         <label className="font-bold">Description</label> <br />
                                         <textarea
@@ -363,7 +393,7 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, close, refresh, 
                                                 {errors.description}
                                             </div>
                                         )}
-                                    </div>                                    
+                                    </div>
                                 </div>
                                 <div className="flex items-center justify-end space-x-2 sticky bg-gradient-to-br from-gray-800 to-gray-700">
                                     <button
@@ -378,8 +408,8 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, close, refresh, 
                                         className="w-32 bg-gray-600 hover:bg-gray-900 text-white font-bold py-2 px-4"
                                         type="submit"
                                     >
-                                        {!isLoading? 
-                                            <span>{edit ? "Update" : "Save" }</span> : 
+                                        {!isLoading ?
+                                            <span>{edit ? "Update" : "Save"}</span> :
                                             <div className="flex items-center justify-center h-fit">
                                                 <div className="w-6 h-6 border-4 border-gray-500 border-t-transparent rounded-full animate-spin"></div>
                                             </div>

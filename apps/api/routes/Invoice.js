@@ -346,6 +346,51 @@ router.put("/update/:id", fetchUser, async (req, res) => {
   }
 });
 
+router.delete("/delete/:id/:status", fetchUser, async (req, res) => {
+  try {
+    const invoice = await Invoice.findByPk(req.params.id, {
+      include: [        
+        {
+          model: Payment,
+          as: "Payments",
+        },
+      ],
+    });
+
+    if (!invoice) {
+      return res.status(404).json({ message: "invoice not found" });
+    }
+
+    if (invoice.Payments.length > 0) {
+      try {
+        await Promise.all(
+          invoice.Payments.map(async (item) => {
+            const paymemt = await Payment.findByPk(item.id);
+            await paymemt.destroy();
+          })
+        );
+      } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: "Error deleting invoice payments" });      
+      }      
+    }
+    else {
+      if (req.params.status === "Refund") {
+        return res.status(409).json({ message: "Invoice already refunded" });
+      }
+      if (req.params.status === "Void") {
+        return res.status(409).json({ message: "Invoice already voided" });
+      }
+    }
+    
+    invoice.update({ paymentStatus: req.params.status });
+    return res.status(200).json({ message: "Invoice deleted successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error deleting invoice" });
+  }
+});
+
 router.delete("/delete/:id", fetchUser, async (req, res) => {
   try {
     const invoice = await Invoice.findByPk(req.params.id);

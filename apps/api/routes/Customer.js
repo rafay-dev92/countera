@@ -16,13 +16,13 @@ router.get('/', fetchUser, async (req, res) => {
             const customer = await Customer.findAll({
                 where: {BusinessId: user.dataValues.BusinessId},
                 order: [['createdAt', 'DESC']],
-                include: ['Business', 'Address', 'Vehicle']
+                include: ['Business', 'Address', 'Vehicle', 'Inspection']
             });
             return res.json(customer);
         }
         const customer = await Customer.findAll({
             order: [['createdAt', 'DESC']],
-            include: ['Business', 'Address', 'Vehicle']
+            include: ['Business', 'Address', 'Vehicle', 'Inspection']
         });
         return res.json(customer);
     } catch (error) {
@@ -33,7 +33,7 @@ router.get('/', fetchUser, async (req, res) => {
 router.get('/:id', fetchUser, async (req, res) => {
     try {
         const customer = await Customer.findByPk(req.params.id, {
-            include: ['Business', 'Address', 'Vehicle']
+            include: ['Business', 'Address', 'Vehicle', 'Inspection']
         });
 
         if (!customer) {

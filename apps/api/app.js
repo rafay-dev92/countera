@@ -44,6 +44,7 @@ app.use("/api/appointment", require("./routes/Appointment"));
 app.use("/api/invoice", require("./routes/Invoice"));
 app.use("/api/quotation", require("./routes/Quotation"));
 app.use("/api/workorder", require("./routes/WorkOrder"));
+app.use("/api/inspection", require("./routes/Inspection"));
 app.use("/api/address", require("./routes/Address"));
 app.use("/api/customervehicle", require("./routes/CustomerVehicle"));
 app.use("/api/payment", require("./routes/Payment"));

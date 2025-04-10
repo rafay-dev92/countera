@@ -101,7 +101,8 @@ function MonthlyReportForm({ open, close }) {
         try {
             const fetchedInvoices = await fetchInvoices(state.userToken);
             const totalInvoices = await fetchedInvoices.json();
-            setInvoices(totalInvoices.data.reverse());
+            const filteredInvoices = totalInvoices.data.filter(invoice => invoice.paymentStatus !== 'Void' && invoice.paymentStatus !== 'Refund');
+            setInvoices(filteredInvoices.reverse());
 
         } catch (error) {
             console.log(error.message);

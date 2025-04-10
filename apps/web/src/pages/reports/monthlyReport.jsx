@@ -4,7 +4,7 @@ import { State } from '@/state/Context';
 
 const MonthlyReportPreview = React.forwardRef(({ invoices, productsCategories, taxes }, ref) => {
     const INVOICE_TABLE_HEAD = ["Date", "Invoice", "Total", ...productsCategories, ...taxes];
-
+    console.log("INVOICES", invoices);
     const { state } = State();
     const calculateTaxes = (products) => {
         const productTaxes = {};

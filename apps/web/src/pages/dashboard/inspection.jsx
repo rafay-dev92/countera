@@ -75,8 +75,8 @@ export function Inspection() {
 
     // check if redirected from customer page
     useEffect(() => {
-        if (state.inspection.selected) {
-            const selected = state.inspection.selected;
+        if (state.inspection?.selected) {
+            const selected = state.inspection?.selected;
             setSelectedCustomer(selected.Customer);
             setSelectedVehicle(selected.Customer.Vehicle.find(vehicle => vehicle.id === selected.CustomerVehicleId));
             setValues({ ['customer']: selected.CustomerId, ['vehicle']: selected.CustomerVehicleId, data: JSON.parse(selected.data) });
@@ -286,7 +286,7 @@ export function Inspection() {
                                         <h1 className="text-xl font-semibold">{state.business.name}</h1>
                                     </div>
                                     <p className="text-sm font-medium">
-                                        Inspection Date: {state.inspection.selected
+                                        Inspection Date: {state.inspection?.selected
                                             ? new Date(state.inspection.selected.createdAt).toLocaleDateString()
                                             : currentDate}
                                     </p> 
@@ -353,7 +353,7 @@ export function Inspection() {
                             </table>
                         </div>
                         <div className="flex justify-end gap-3 m-4">
-                            {!state.inspection.selected && (
+                            {!state.inspection?.selected && (
                                 <Button onClick={() => onSubmit(values)} type='submit' className="bg-blue-800 hover:bg-blue-900 text-white font-bold py-2 px-4 rounded">
                                     Submit & Print
                                 </Button>

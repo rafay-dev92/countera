@@ -13,7 +13,7 @@ import { fetchProductsCategories } from "@/services/fetchProductCategories";
 import { fetchCustomers } from "@/services/fetchCustomers";
 
 const schema = Yup.object().shape({
-    customer: Yup.string().required("Customer is required"),
+    customer: Yup.string().required("Customer is required"),    
 });
 
 function SalesByCustomerForm({ open, close }) {
@@ -74,9 +74,9 @@ function SalesByCustomerForm({ open, close }) {
     };
 
     const getCustomers = async () => {
-    const fetchedCustomers = await fetchCustomers(state.userToken);
-    const customersData = await fetchedCustomers.json();
-    setCustomers(customersData);
+        const fetchedCustomers = await fetchCustomers(state.userToken);
+        const customersData = await fetchedCustomers.json();
+        setCustomers(customersData);
     };
 
     const getTaxes = async () => {

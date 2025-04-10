@@ -70,7 +70,9 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
       // separating image from product data
       const { image, ...restItemData } = selectedItem;
       if (image !== 'null') setProductPreviewPic(image);
-      formikProps.setValues(selectedItem);
+      setValues({
+        ...restItemData,
+        category: selectedItem.CategoryId})
       setSelectedTaxes(selectedItem.Tax.map((tax) => (tax.id)))
       setEdit(true);
     }
@@ -84,7 +86,6 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
   const getProductCategories = async () => {
     const fetchedProductCategories = await fetchProductsCategories(state.userToken);
     const productCategoriesData = await fetchedProductCategories.json();
-  console.log("categories: ", productCategoriesData)
     setProductCategories(productCategoriesData);
   };
 

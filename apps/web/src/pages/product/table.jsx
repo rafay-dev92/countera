@@ -73,7 +73,6 @@ export function Product() {
     const getProducts = async () => {
         try {
             const products = await (await fetchProducts(state.userToken)).json();
-            console.log(products);
             setFinalItems(products);
             setLoading(false);
         } catch (error) {

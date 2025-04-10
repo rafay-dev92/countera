@@ -5,26 +5,15 @@ import { State } from "@/state/Context";
 import { toast } from "react-toastify";
 import { Dialog } from "@material-tailwind/react";
 import { fetchInvoices } from "@/services/fetchInvoices";
-import { fetchProducts } from '@/services/fetchProducts';
-import MonthlyReportPreview from "./monthlyReport";
-import ReactToPrint from "react-to-print";
-import { fetchTaxes } from "@/services/fetchTaxes";
-import { fetchProductsCategories } from "@/services/fetchProductCategories";
 
 const schema = Yup.object().shape({
     month: Yup.string().required("Month is required"),
 });
 
-function MonthlyReportForm({ open, close }) {
-    const printRef = useRef();
+function MonthlyReportForm({ open, close, setReportData }) {
     const reactToPrintTriggerRef = useRef();
     const { state } = State();
-    const [products, setProducts] = useState([]);
-    const [productsCategories, setProductsCategories] = useState([]);
-    const [taxes, setTaxes] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
-    const [showPrint, setShowPrint] = useState(false);
-    const [reportData, setReportData] = useState([]);
     const [invoices, setInvoices] = useState([]);
     const handleClose = () => {
         clearForm(formikProps);
@@ -53,8 +42,13 @@ function MonthlyReportForm({ open, close }) {
             const filteredInvoices = invoices?.filter(invoice => {
                 return new Date(invoice.createdAt) >= startDate && new Date(invoice.createdAt) <= endDate;
             });
+            if (filteredInvoices.length === 0) {
+                showToastMessage('info', 'No invoices found for this month');
+                setIsLoading(false);
+                handleClose();
+                return;
+            }
             setReportData(filteredInvoices);
-            setShowPrint(true);
             setTimeout(() => {
                 reactToPrintTriggerRef.current?.click();
             }, 100);
@@ -67,35 +61,6 @@ function MonthlyReportForm({ open, close }) {
             handleClose();
         }
     };
-
-    const getTaxes = async () => {
-        try {
-            const res = await fetchTaxes(state.userToken);
-            const taxes = await res.json();
-            setTaxes(taxes.map(tax => tax.name));
-        } catch (error) {
-            console.log(error);
-            toast.error("Something went wrong")
-        }
-    }
-
-    const getProducts = async () => {
-        try {
-            const products = await (await fetchProducts(state.userToken)).json();
-            setProducts(products.map(product => product.name));
-        } catch (error) {
-            console.log(error.message);
-        }
-    }
-
-    const getProductCategories = async () => {
-        try {
-            const productsCategories = await (await fetchProductsCategories(state.userToken)).json();
-            setProductsCategories(productsCategories.map(cat => cat.name));
-        } catch (error) {
-            console.log(error.message);
-        }
-    }
 
     const getInvoices = async () => {
         try {
@@ -111,8 +76,6 @@ function MonthlyReportForm({ open, close }) {
     };
 
     useEffect(() => {
-        getTaxes();
-        getProductCategories();
         getInvoices();
     }, []);
 
@@ -224,22 +187,6 @@ function MonthlyReportForm({ open, close }) {
                     </form>
                 )}
             </Dialog>
-            {showPrint && (
-                <>
-                    <MonthlyReportPreview
-                        ref={printRef}
-                        invoices={reportData}
-                        productsCategories={productsCategories}
-                        taxes={taxes}
-                    />
-                    <div className="hidden">
-                        <ReactToPrint
-                            trigger={() => <button ref={reactToPrintTriggerRef}>Print</button>}
-                            content={() => printRef.current}
-                        />
-                    </div>
-                </>
-            )}
         </>
     );
 }

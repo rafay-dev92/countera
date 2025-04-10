@@ -70,7 +70,7 @@ export function Inspection() {
 
     const handleDel = (index) => {
         const newData = values.data.filter(item => item !== values.data[index]);
-        setValues({...values, data: newData})
+        setValues({ ...values, data: newData })
     }
 
     // check if redirected from customer page
@@ -236,11 +236,23 @@ export function Inspection() {
                                 {showCustomerSuggestions && (
                                     <ul className="d-block absolute z-50 bg-white border border-slate-700 w-full top-full mt-1 overflow-y-auto min-h-24 max-h-48 ">
                                         {customers.length > 0 ?
-                                            customers.filter(customer => `${customer.firstName.toLowerCase()} ${customer.lastName.toLowerCase()}`.includes(values.customer.trim().toLowerCase())).map((customer) => (
-                                                <li key={customer.id} className="cursor-pointer px-2 py-1 rounded-sm hover:bg-gray-200" onClick={() => { handleCustomerChange(customer) }}>
-                                                    {customer.firstName} {customer.lastName}
-                                                </li>
-                                            ))
+                                            customers
+                                                .filter(customer => {
+                                                    const searchTerm = values.customer.trim().toLowerCase();
+                                                    return (
+                                                        `${customer.firstName} ${customer.lastName}`.toLowerCase().includes(searchTerm) ||
+                                                        customer.phone?.toLowerCase().includes(searchTerm)
+                                                    );
+                                                })
+                                                .map(customer => (
+                                                    <li
+                                                        key={customer.id}
+                                                        className="cursor-pointer px-2 py-1 rounded-sm hover:bg-gray-200"
+                                                        onClick={() => handleCustomerChange(customer)}
+                                                    >
+                                                        {customer.firstName} {customer.lastName}
+                                                    </li>
+                                                ))
                                             :
                                             <li className="px-2 py-1 rounded-sm">No Customer</li>
                                         }
@@ -289,7 +301,7 @@ export function Inspection() {
                                         Inspection Date: {state.inspection?.selected
                                             ? new Date(state.inspection.selected.createdAt).toLocaleDateString()
                                             : currentDate}
-                                    </p> 
+                                    </p>
                                 </div>
 
                                 <div className='flex items-center justify-between mt-2 bg-gray-100 py-4 px-1'>

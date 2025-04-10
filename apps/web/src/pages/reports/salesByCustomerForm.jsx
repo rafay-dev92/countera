@@ -5,28 +5,17 @@ import { State } from "@/state/Context";
 import { toast } from "react-toastify";
 import { Dialog } from "@material-tailwind/react";
 import { fetchInvoices } from "@/services/fetchInvoices";
-import { fetchProducts } from '@/services/fetchProducts';
-import MonthlyReportPreview from "./monthlyReport";
-import ReactToPrint from "react-to-print";
-import { fetchTaxes } from "@/services/fetchTaxes";
-import { fetchProductsCategories } from "@/services/fetchProductCategories";
 import { fetchCustomers } from "@/services/fetchCustomers";
 
 const schema = Yup.object().shape({
-    customer: Yup.string().required("Customer is required"),    
+    customer: Yup.string().required("Customer is required"),
 });
 
-function SalesByCustomerForm({ open, close }) {
-    const printRef = useRef();
+function SalesByCustomerForm({ open, close, setReportData }) {
     const customerInputRef = useRef();
     const reactToPrintTriggerRef = useRef();
     const { state } = State();
-    const [products, setProducts] = useState([]);
-    const [productsCategories, setProductsCategories] = useState([]);
-    const [taxes, setTaxes] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
-    const [showPrint, setShowPrint] = useState(false);
-    const [reportData, setReportData] = useState([]);
     const [invoices, setInvoices] = useState([]);
 
     const [customers, setCustomers] = useState([]);
@@ -58,8 +47,13 @@ function SalesByCustomerForm({ open, close }) {
             const filteredInvoices = invoices?.filter(invoice => {
                 return invoice.CustomerId === values.customer;
             });
+            if (filteredInvoices.length === 0) {
+                showToastMessage('info', 'No invoices found for this customer');
+                setIsLoading(false);
+                handleClose();
+                return;
+            }
             setReportData(filteredInvoices);
-            setShowPrint(true);
             setTimeout(() => {
                 reactToPrintTriggerRef.current?.click();
             }, 100);
@@ -79,35 +73,6 @@ function SalesByCustomerForm({ open, close }) {
         setCustomers(customersData);
     };
 
-    const getTaxes = async () => {
-        try {
-            const res = await fetchTaxes(state.userToken);
-            const taxes = await res.json();
-            setTaxes(taxes.map(tax => tax.name));
-        } catch (error) {
-            console.log(error);
-            toast.error("Something went wrong")
-        }
-    }
-
-    const getProducts = async () => {
-        try {
-            const products = await (await fetchProducts(state.userToken)).json();
-            setProducts(products.map(product => product.name));
-        } catch (error) {
-            console.log(error.message);
-        }
-    }
-
-    const getProductCategories = async () => {
-        try {
-            const productsCategories = await (await fetchProductsCategories(state.userToken)).json();
-            setProductsCategories(productsCategories.map(cat => cat.name));
-        } catch (error) {
-            console.log(error.message);
-        }
-    }
-
     const getInvoices = async () => {
         try {
             const fetchedInvoices = await fetchInvoices(state.userToken);
@@ -123,31 +88,29 @@ function SalesByCustomerForm({ open, close }) {
 
     useEffect(() => {
         getCustomers();
-        getTaxes();
-        getProductCategories();
         getInvoices();
     }, []);
 
     const handleCustomerChange = (customer) => {
         setSelectedCustomer(customer);
         if (customer) {
-          setValues({ ['customer']: customer.id });
+            setValues({ ['customer']: customer.id });
         };
         setShowCustomerSuggestions(false);
-      };
+    };
 
     useEffect(() => {
         function handleClickOutside(event) {
-          if (customerInputRef.current && !customerInputRef.current.contains(event.target)) {
-            setShowCustomerSuggestions(false);
-          }         
+            if (customerInputRef.current && !customerInputRef.current.contains(event.target)) {
+                setShowCustomerSuggestions(false);
+            }
         }
-    
+
         document.addEventListener('mousedown', handleClickOutside);
         return () => {
-          document.removeEventListener('mousedown', handleClickOutside);
+            document.removeEventListener('mousedown', handleClickOutside);
         };
-      }, []);
+    }, []);
 
     const clearForm = (formikProps) => {
         formikProps.resetForm({
@@ -222,25 +185,37 @@ function SalesByCustomerForm({ open, close }) {
                                             name="customer"
                                             type="text"
                                             value={selectedCustomer ? `${selectedCustomer.firstName} ${selectedCustomer.lastName}` : values.customer}
-                                            onClick={() => { setShowCustomerSuggestions(true); setValues({['customer']: '' })}}
+                                            onClick={() => { setShowCustomerSuggestions(true); setValues({ ['customer']: '' }) }}
                                             onChange={(e) => { setSelectedCustomer(null); handleChange(e) }}
                                             onBlur={handleBlur}
                                             autoComplete="off"
                                             placeholder="Select Customer"
-                                        />                                        
+                                        />
                                         {showCustomerSuggestions && (
                                             <ul className="d-block absolute z-50 bg-white border border-slate-700 w-full top-full mt-1 overflow-y-auto min-h-24 max-h-48 ">
                                                 {customers.length > 0 ?
-                                                    customers.filter(customer => `${customer.firstName.toLowerCase()} ${customer.lastName.toLowerCase()}`.includes(values.customer.trim().toLowerCase())).map((customer) => (
-                                                        <li key={customer.id} className="cursor-pointer px-2 py-1 rounded-sm hover:bg-gray-200" onClick={() => { handleCustomerChange(customer) }}>
-                                                            {customer.firstName} {customer.lastName}
-                                                        </li>
-                                                    ))
+                                                    customers
+                                                        .filter(customer => {
+                                                            const searchTerm = values.customer.trim().toLowerCase();
+                                                            return (
+                                                                `${customer.firstName} ${customer.lastName}`.toLowerCase().includes(searchTerm) ||
+                                                                customer.phone?.toLowerCase().includes(searchTerm)
+                                                            );
+                                                        })
+                                                        .map(customer => (
+                                                            <li
+                                                                key={customer.id}
+                                                                className="cursor-pointer px-2 py-1 rounded-sm hover:bg-gray-200"
+                                                                onClick={() => handleCustomerChange(customer)}
+                                                            >
+                                                                {customer.firstName} {customer.lastName}
+                                                            </li>
+                                                        ))
                                                     :
                                                     <li className="px-2 py-1 rounded-sm">No Customer</li>
                                                 }
                                             </ul>
-                                        )}       
+                                        )}
                                     </div>
                                 </div>
                                 <div className="flex items-center justify-end space-x-2 sticky bg-gradient-to-br from-gray-800 to-gray-700">
@@ -270,22 +245,6 @@ function SalesByCustomerForm({ open, close }) {
                     </form>
                 )}
             </Dialog>
-            {showPrint && (
-                <>
-                    <MonthlyReportPreview
-                        ref={printRef}
-                        invoices={reportData}
-                        productsCategories={productsCategories}
-                        taxes={taxes}
-                    />
-                    <div className="hidden">
-                        <ReactToPrint
-                            trigger={() => <button ref={reactToPrintTriggerRef}>Print</button>}
-                            content={() => printRef.current}
-                        />
-                    </div>
-                </>
-            )}
         </>
     );
 }

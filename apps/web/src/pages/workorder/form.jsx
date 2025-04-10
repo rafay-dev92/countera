@@ -583,7 +583,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedWorkOrder, setS
                   </button>
                 </div>
 
-                {state?.workorder?.isViewOpen ? (                    
+                {state?.workorder?.isViewOpen ? (
                   <ViewWorkOrder workOrderData={printWorkOrder} setWorkOrderData={setPrintWorkOrder} componentRef={componentRef} appliedTaxes={appliedTaxes} setEdit={setEdit} close={handleClose} />
                 ) : (
                   <div className="overflow-y-auto h-[80vh] overflow-x-hidden p-2">
@@ -617,11 +617,23 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedWorkOrder, setS
                           {showCustomerSuggestions && (
                             <ul className="d-block absolute z-50 bg-white border border-slate-700 w-[70%] mt-1 ml-2 overflow-y-auto min-h-24 max-h-48 ">
                               {customers.length > 0 ?
-                                customers.filter(customer => `${customer.firstName.toLowerCase()} ${customer.lastName.toLowerCase()}`.includes(values.customer.trim().toLowerCase())).map((customer) => (
-                                  <li key={customer.id} className="cursor-pointer px-2 py-1 rounded-sm hover:bg-gray-200" onClick={() => { handleCustomerChange(customer) }}>
-                                    {customer.firstName} {customer.lastName}
-                                  </li>
-                                ))
+                                customers
+                                  .filter(customer => {
+                                    const searchTerm = values.customer.trim().toLowerCase();
+                                    return (
+                                      `${customer.firstName} ${customer.lastName}`.toLowerCase().includes(searchTerm) ||
+                                      customer.phone?.toLowerCase().includes(searchTerm)
+                                    );
+                                  })
+                                  .map(customer => (
+                                    <li
+                                      key={customer.id}
+                                      className="cursor-pointer px-2 py-1 rounded-sm hover:bg-gray-200"
+                                      onClick={() => handleCustomerChange(customer)}
+                                    >
+                                      {customer.firstName} {customer.lastName}
+                                    </li>
+                                  ))
                                 :
                                 <li className="px-2 py-1 rounded-sm">No Customer</li>
                               }

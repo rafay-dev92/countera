@@ -60,7 +60,7 @@ function TaxForm({ taxData, setTaxData, open, close, refresh, setRefresh }) {
                 }
             }
             else {
-                const res = await updateTax(selectedItem.id, updatedData, state.userToken);
+                const res = await updateTax(taxData.id, updatedData, state.userToken);
                 const tax = await res.json();
                 if (res.status === 200) {
                     toast.success(tax.message)
@@ -78,7 +78,7 @@ function TaxForm({ taxData, setTaxData, open, close, refresh, setRefresh }) {
             handleClose();
         } catch (error) {
             console.log(error)
-            showToastMessage('error', 'Something went wrong')
+            toast.error('Something went wrong')
             setRefresh(!refresh);
             setIsLoading(false);
             handleClose();

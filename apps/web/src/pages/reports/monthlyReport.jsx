@@ -3,10 +3,11 @@ import { Typography } from "@material-tailwind/react";
 import { State } from '@/state/Context';
 
 const MonthlyReportPreview = React.forwardRef(({ invoices, productsCategories, taxes }, ref) => {
+    // const productsCategoriesPrices = productsCategories.map(category => { return `${category} Price` });
     const INVOICE_TABLE_HEAD = ["Date", "Invoice", "Total", ...productsCategories, ...taxes];
-    console.log("INVOICES", invoices);
     const { state } = State();
-    const calculateTaxes = (products) => {
+    const calculateTaxes = (products, customerType) => {
+        if (customerType === 'business') return {};
         const productTaxes = {};
 
         products.forEach((product) => {
@@ -29,22 +30,45 @@ const MonthlyReportPreview = React.forwardRef(({ invoices, productsCategories, t
 
     const productTotals = productsCategories.map(category =>
         invoices.reduce((sum, invoice) => {
-            const matchedProduct = invoice.Product?.find(p => p.Category.name === category);
-            return sum + (matchedProduct?.invoice_product?.quantity || 0);
+            const matchedProduct = invoice.Product ? invoice.Product.find(p => p.Category?.name === category) : {};
+            const quantity = matchedProduct?.invoice_product?.quantity || 0;
+            const price = matchedProduct?.price || 0;
+            return sum + (price * quantity);
         }, 0)
     );
 
     const taxTotals = taxes.map(tax => {
         const value = invoices.reduce((sum, invoice) => {
-            const productTaxes = calculateTaxes(invoice.Product);
+            const productTaxes = calculateTaxes(invoice.Product, invoice.Customer?.customerType);
             const matchingKey = Object.keys(productTaxes)?.find(key => key.split('_')[0] === tax);
             return sum + (matchingKey ? productTaxes[matchingKey] || 0 : 0);
         }, 0);
         return { name: tax, value };
     });
 
+    const taxablePartsTotal = invoices.reduce((sum, invoice) => {
+        const matchedProducts = invoice.Product?.filter(p => p.taxable) || [];
+        matchedProducts.forEach(matchedProduct => {            
+            const quantity = matchedProduct?.invoice_product?.quantity || 0;
+            const price = matchedProduct?.price || 0;
+            sum += price * quantity;
+        });
+        return sum;
+    }, 0);
+
+    const nonTaxableLabourTotal = invoices.reduce((sum, invoice) => {
+        const matchedProducts = invoice.Product?.filter(p => !p.taxable);
+        matchedProducts.forEach(matchedProduct => {            
+            const quantity = matchedProduct?.invoice_product?.quantity || 0;
+            const price = matchedProduct?.price || 0;
+            sum += price * quantity;
+        });
+        return sum;
+    }, 0);
+
     return (
-        <div ref={ref} className="text-black bg-white hidden print:block print:p-0">
+        // <div ref={ref} className="text-black bg-white hidden print:block print:p-0">
+        <div ref={ref} className="text-black bg-white border-2 mt-4 print:mt-0 print:border-0 print:p-0">
             <div className='p-4'>
                 {/* <h1 className="text-3xl font-bold text-center mb-4">Monthly Sales Report</h1> */}
                 <div className="flex gap-1">
@@ -83,7 +107,7 @@ const MonthlyReportPreview = React.forwardRef(({ invoices, productsCategories, t
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
                         {invoices?.map((item, index) => {
-                            const productTaxes = calculateTaxes(item.Product);
+                            const productTaxes = calculateTaxes(item.Product, item.Customer?.customerType);
                             return (
                                 <tr key={index}>
                                     <td className="p-4 border-b border-blue-gray-50">
@@ -113,17 +137,44 @@ const MonthlyReportPreview = React.forwardRef(({ invoices, productsCategories, t
                                             {item.totalAmount}
                                         </Typography>
                                     </td>
-                                    {productsCategories.map((category, idx) => (
-                                        <td key={idx} className="p-4 border-b border-blue-gray-50">
-                                            <Typography
-                                                variant="small"
-                                                color="blue-gray"
-                                                className="font-normal leading-none"
-                                            >
-                                                {item.Product?.find(item => item.Category.name === category)?.invoice_product?.quantity || 0}
-                                            </Typography>
-                                        </td>
-                                    ))}
+                                    {productsCategories.map((category, idx) => {
+                                        const price = item.Product?.find(item => item.Category.name === category)?.price || 0;
+                                        const quantity = item.Product?.find(item => item.Category.name === category)?.invoice_product?.quantity || 0;
+                                        return (
+                                            <td key={idx} className="p-4 border-b border-blue-gray-50">
+                                                <Typography
+                                                    variant="small"
+                                                    color="blue-gray"
+                                                    className="font-normal leading-none"
+                                                >
+                                                    <div className="text-sm leading-5 text-blue-gray-700 whitespace-nowrap">
+                                                        <div><span className="font-medium">Price:</span> {price}</div>
+                                                        <div><span className="font-medium">Quantity:</span> {quantity}</div>
+                                                        <div><span className="font-medium">Total:</span> {price * quantity}</div>
+                                                    </div>
+                                                    {/* {`P:${price} Q:${quantity} T:${price * quantity}`} */}
+                                                    {/* {item.Product?.find(item => item.Category.name === category)?.invoice_product?.quantity || 0} */}
+                                                </Typography>
+                                            </td>
+                                        )
+                                    })}
+                                    {/* {productsCategoriesPrices.map((category, idx) => {
+                                        // console.log(category.split(' ').slice(0, -1).join(' '))
+                                        const price = item.Product?.find(item => item.Category.name === category.split(' ').slice(0, -1).join(' '))?.price || 0;
+                                        const quantity = item.Product?.find(item => item.Category.name === category.split(' ').slice(0, -1).join(' '))?.invoice_product?.quantity || 0;
+                                        // console.log("PRICE", price, "QUANTITY", quantity);
+                                        return (
+                                            <td key={idx} className="p-4 border-b border-blue-gray-50">
+                                                <Typography
+                                                    variant="small"
+                                                    color="blue-gray"
+                                                    className="font-normal leading-none"
+                                                >
+                                                    {price * quantity}
+                                                </Typography>
+                                            </td>
+                                        )
+                                    })} */}
                                     {taxes.map((tax, idx) => {
                                         const matchingKey = Object.keys(productTaxes)?.find(key => key.split('_')[0] === tax);
                                         const value = matchingKey ? productTaxes[matchingKey] || 0 : 0;
@@ -165,30 +216,34 @@ const MonthlyReportPreview = React.forwardRef(({ invoices, productsCategories, t
                         ))}
                     </tr>
                 </table>
-                
+
                 {/* Summary */}
                 <div className="mt-10 border border-gray-400 p-4 rounded-md w-full justify-start max-w-md mr-auto">
                     <h2 className="text-lg font-semibold text-center mb-2">{state.business.name}</h2>
                     <div className="grid grid-cols gap-y-2 gap-x-4 text-sm border-t border-gray-300 pt-2">
-                        {/* <span className="font-medium">Taxable sales parts:</span>
+                    <div className='flex justify-between'>
+                        <span className="font-medium">Taxable sales parts:</span>
                         <span className="text-right">{taxablePartsTotal.toFixed(2)}</span>
-
+                    </div>
+                    <div className='flex justify-between'>
                         <span className="font-medium">Non-taxable sales labour:</span>
                         <span className="text-right">{nonTaxableLabourTotal.toFixed(2)}</span>
-
+                    </div>
+                    <div className='flex justify-between'>
                         <span className="font-medium">Non-taxable sales - wholesales:</span>
-                        <span className="text-right">0.00</span> */}
-
+                        <span className="text-right">0.00</span>
+                    </div>
                         {taxTotals.map((total, idx) => (
                             <div key={idx} className='flex justify-between'>
-                            <span className="font-medium">{total.name} collected:</span>
-                            <span className="text-right">{total.value.toFixed(2)}</span>
+                                <span className="font-medium">{total.name} collected:</span>
+                                <span className="text-right">{total.value.toFixed(2)}</span>
                             </div>
-                        ))}                        
+                        ))}
                     </div>
                     <div className="border-t mt-3 pt-2 font-bold text-md flex justify-between">
                         <span>Gross Monthly Sales:</span>
-                        <span>{taxTotals.reduce((sum, tax) => sum + tax.value, 0).toFixed(2)}</span>
+                        {/* <span>{taxTotals.reduce((sum, tax) => sum + tax.value, 0).toFixed(2)}</span> */}
+                        {invoices.reduce((sum, item) => sum + item.totalAmount, 0).toFixed(2)}
                     </div>
                 </div>
             </div>

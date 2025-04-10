@@ -116,7 +116,7 @@ export function Customers() {
     setSelectedRows(newSelectedRows);
   };
 
-  const filteredRows = finalItems.filter(
+  const filteredRows = finalItems?.filter(
     ({ firstName, lastName, phone }) =>
       firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       lastName.toLowerCase().includes(searchQuery.toLowerCase()) ||

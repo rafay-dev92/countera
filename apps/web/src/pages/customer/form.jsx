@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { useEffect } from "react";
-import { useFormik } from "formik";
+import { setIn, useFormik } from "formik";
 import * as Yup from "yup";
-import { Dialog } from "@material-tailwind/react";
+import { Button, Dialog } from "@material-tailwind/react";
 import { addCustomer } from "@/services/addCustomer";
 import { updateCustomer } from "@/services/updateCustomer";
 import { toast } from "react-toastify";
@@ -15,6 +15,7 @@ import { fetchCustomer } from "@/services/fetchCustomer";
 import { TrashIcon } from "@heroicons/react/24/solid";
 import { delCustomerVehicle } from "@/services/delCustomerVehicle";
 import { useConfirm } from "@/context/confirmContext";
+import { useNavigate } from "react-router-dom";
 
 
 const addressSchema = Yup.object().shape({
@@ -37,20 +38,21 @@ const schema = Yup.object().shape({
 });
 
 const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setRefresh }) => {
-
-  const { state } = State();
+  const router = useNavigate();
+  const { state, dispatch } = State();
   const confirm = useConfirm();
   const [isLoading, setIsLoading] = useState(false);
   const [edit, setEdit] = useState(false);
   const [currentVehicle, setCurrentVehicle] = useState(null);
-
+  const [inspections, setInspections] = useState([]);
+  const [selectedInspection, setSelectedInspection] = useState(null);
   // for customer form
   const [isOpen, setIsOpen] = useState(false);
 
   const openPopup = () => {
-    if (state.userInfo.Permission.some(obj => obj.name === "IS_CASHIER" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) 
+    if (state.userInfo.Permission.some(obj => obj.name === "IS_CASHIER" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN"))
       setIsOpen(true);
-    else 
+    else
       toast.error("You are not allowed to add a customer")
   };
 
@@ -79,6 +81,7 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
 
   useEffect(() => {
     if (selectedItem) {
+      setInspections(selectedItem.Inspection);
       formikProps.setValues(selectedItem);
       setEdit(true);
     }
@@ -178,6 +181,16 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
       handleClose();
     }
   };
+
+  // open inspection
+  const openInspection = () => {
+    if (selectedInspection) {
+      const inspection = inspections.find((inspection) => inspection.id === selectedInspection);
+      const updatedInspection = { ...inspection, Customer: selectedItem };
+      dispatch({ type: 'SET_INSPECTION_DATA', payload: updatedInspection })
+      router('/dashboard/inspection');
+    }
+  }
 
   // edit vehicle
   const handleEditVehicle = (vehicle) => {
@@ -442,7 +455,7 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
                     </div>
 
                     <div className="basis-[33.33%]">
-                      
+
                     </div>
                   </div>
 
@@ -516,7 +529,7 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
                     </div>
                   </div>
                   {edit && (
-                    <div className="my-4 flex items-center w-full">
+                    <div className="my-4 flex flex-col w-full">
                       <div className="basis-[10%] ">
                         <div className="flex items-center">
                           <label className="p-1 font-bold">Vehicles</label>
@@ -552,11 +565,36 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
                           values.Vehicle.map((vehicle) => (
                             <div className="flex items-center gap-4 w-fit h-fit border px-2 py-1 m-1 rounded-md whitespace-nowrap">
                               <span onClick={() => handleEditVehicle(vehicle)} className="hover:underline cursor-pointer">{vehicle.make} {vehicle.model} {vehicle.year}</span>
-                              <TrashIcon className="h-4 w-4 text-red-500 cursor-pointer" onClick={() => {deleteVehicle(vehicle.id)}} />
+                              <TrashIcon className="h-4 w-4 text-red-500 cursor-pointer" onClick={() => { deleteVehicle(vehicle.id) }} />
                             </div>
                           ))
                         }
                       </div>
+                      {inspections.length > 0 && (
+                        <div className="flex flex-col gap-2 basis-[90%]">
+                          <span className="font-bold mx-1 mt-2">Inspections</span>
+                          <select
+                            className="w-full px-3 py-2 border rounded"
+                            onChange={(e) => setSelectedInspection(e.target.value)}
+                          >
+                            <option value="">Select an Inspection</option>
+                            {inspections?.map((inspection) => {
+                              const matchedVehicle = values.Vehicle.find(
+                                (vehicle) => vehicle.id === inspection.CustomerVehicleId
+                              );
+
+                              return (
+                                <option key={inspection.id} value={inspection.id}>
+                                  {`${inspection.createdAt.split('T')[0]} (${matchedVehicle ? matchedVehicle.make + " " + matchedVehicle.model : "Unknown Vehicle"})`}
+                                </option>
+                              );
+                            })}
+                          </select>
+                          {selectedInspection && (
+                            <Button onClick={openInspection} className='bg-blue-600 w-fit ms-auto'>Open</Button>
+                          )}
+                        </div>
+                      )}
                     </div>
                   )}
 
@@ -609,10 +647,10 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
                     className="w-32 bg-gray-600 hover:bg-gray-900 text-white font-bold py-2 px-4"
                     type="submit"
                   >
-                    {!isLoading? 
-                      <span>{edit ? "Update" : "Save" }</span> : 
+                    {!isLoading ?
+                      <span>{edit ? "Update" : "Save"}</span> :
                       <div className="flex items-center justify-center h-fit">
-                          <div className="w-6 h-6 border-4 border-gray-500 border-t-transparent rounded-full animate-spin"></div>
+                        <div className="w-6 h-6 border-4 border-gray-500 border-t-transparent rounded-full animate-spin"></div>
                       </div>
                     }
                   </button>

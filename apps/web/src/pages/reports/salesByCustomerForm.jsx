@@ -221,8 +221,8 @@ function SalesByCustomerForm({ open, close }) {
                                             name="customer"
                                             type="text"
                                             value={selectedCustomer ? `${selectedCustomer.firstName} ${selectedCustomer.lastName}` : values.customer}
-                                            onClick={() => { setShowCustomerSuggestions(true); setValues({ ['customer']: '' })}}
-                                            onChange={(e) => { setSelectedCustomer(null); setSelectedVehicle(null); setVehicleOdometer(''), handleChange(e) }}
+                                            onClick={() => { setShowCustomerSuggestions(true); setValues({['customer']: '' })}}
+                                            onChange={(e) => { setSelectedCustomer(null); handleChange(e) }}
                                             onBlur={handleBlur}
                                             autoComplete="off"
                                             placeholder="Select Customer"

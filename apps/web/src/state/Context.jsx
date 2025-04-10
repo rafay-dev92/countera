@@ -24,6 +24,9 @@ const Context = ({children}) => {
         },
         workorder: {
             isViewOpen: false,
+        },
+        inspection: {
+            selected: null,
         }
     }
     const [state, dispatch] = useReducer(Reducer, initialState)

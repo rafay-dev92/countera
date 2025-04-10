@@ -64,7 +64,14 @@ export const Reducer = (state, action) => {
                 workorder: {
                     isViewOpen: action.payload
                 }
-            })            
+            })      
+        case 'SET_INSPECTION_DATA':
+            return ({
+                ...state,
+                inspection: {
+                    selected: action.payload
+                }
+            })       
         case 'RESET':
             return ({
                 Settings: {

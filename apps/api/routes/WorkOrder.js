@@ -122,7 +122,7 @@ router.get("/:id", fetchUser, async (req, res) => {
 
 router.post("/create", fetchUser, async (req, res) => {
   try {
-    const workOrderData = req.body.workorderData;
+    const workOrderData = req.body.workOrderData;
     if (!("CustomerId" in workOrderData)) {
       return res.status(409).json({ message: "Customer Id is mandatory" });
     }

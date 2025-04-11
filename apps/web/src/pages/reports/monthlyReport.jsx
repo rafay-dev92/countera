@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Typography } from "@material-tailwind/react";
 import { State } from '@/state/Context';
+import { StarIcon } from '@heroicons/react/24/solid';
 
 const MonthlyReportPreview = React.forwardRef(({ invoices, productsCategories, taxes }, ref) => {
     // const productsCategoriesPrices = productsCategories.map(category => { return `${category} Price` });
@@ -47,6 +48,20 @@ const MonthlyReportPreview = React.forwardRef(({ invoices, productsCategories, t
     });
 
     const taxablePartsTotal = invoices.reduce((sum, invoice) => {
+        const isCustomerTaxExempt = invoice.Customer?.customerType === 'business';
+        if (isCustomerTaxExempt) return sum;
+        const matchedProducts = invoice.Product?.filter(p => p.taxable) || [];
+        matchedProducts.forEach(matchedProduct => {            
+            const quantity = matchedProduct?.invoice_product?.quantity || 0;
+            const price = matchedProduct?.price || 0;
+            sum += price * quantity;
+        });
+        return sum;
+    }, 0);
+
+    const nonTaxableWholeSaleTotal = invoices.reduce((sum, invoice) => {
+        const isCustomerTaxExempt = invoice.Customer?.customerType === 'business';
+        if (!isCustomerTaxExempt) return sum;
         const matchedProducts = invoice.Product?.filter(p => p.taxable) || [];
         matchedProducts.forEach(matchedProduct => {            
             const quantity = matchedProduct?.invoice_product?.quantity || 0;
@@ -116,7 +131,7 @@ const MonthlyReportPreview = React.forwardRef(({ invoices, productsCategories, t
                                             color="blue-gray"
                                             className="font-normal leading-none"
                                         >
-                                            {item.createdAt.split("T")[0]}
+                                           {item.Customer?.customerType === 'business'? <StarIcon className='w-3.5 h-3.5 mb-1 text-blue-600 inline' /> : null} {item.createdAt.split("T")[0]}
                                         </Typography>
                                     </td>
                                     <td className="p-4 border-b border-blue-gray-50">
@@ -231,7 +246,7 @@ const MonthlyReportPreview = React.forwardRef(({ invoices, productsCategories, t
                     </div>
                     <div className='flex justify-between'>
                         <span className="font-medium">Non-taxable sales - wholesales:</span>
-                        <span className="text-right">0.00</span>
+                        <span className="text-right">{nonTaxableWholeSaleTotal.toFixed(2)}</span>
                     </div>
                         {taxTotals.map((total, idx) => (
                             <div key={idx} className='flex justify-between'>

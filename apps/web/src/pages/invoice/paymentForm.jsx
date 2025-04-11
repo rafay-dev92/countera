@@ -80,7 +80,7 @@ const PaymentForm = ({ open, close, totalAmount, totalAmountPaid, invoiceId, set
             ...prevValues,
             paidAmount: parseFloat((totalAmount - totalAmountPaid).toFixed(2)),
         }));
-    }, [totalAmount, totalAmountPaid]);
+    }, [totalAmount, totalAmountPaid, open]);
 
     return (
         <>
@@ -164,7 +164,7 @@ const PaymentForm = ({ open, close, totalAmount, totalAmountPaid, invoiceId, set
                                             )}
                                         </div>
                                     </div>
-
+                                    {values.paymentMethod === "Card" && (
                                     <div className="w-full">
                                         <label className="font-bold">Card Number (optional)</label> <br />
                                         <input
@@ -175,13 +175,9 @@ const PaymentForm = ({ open, close, totalAmount, totalAmountPaid, invoiceId, set
                                             value={values.cardNumber}
                                             onChange={handleChange}
                                             onBlur={handleBlur}
-                                        />
-                                        {(touched.cardNumber && errors.cardNumber) ? (
-                                            <div className="text-red-500">
-                                                {errors.cardNumber}
-                                            </div>
-                                        ) : (<div></div>)}
+                                        />                                        
                                     </div>
+                                    )}
                                 </div>
                                 <div className="flex items-center justify-end space-x-2 sticky bg-gradient-to-br from-gray-800 to-gray-700">
                                     <button

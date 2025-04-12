@@ -7,6 +7,8 @@ const upload = multer();
 
 router.post("/send/invoice", upload.single("pdf"), async (req, res) => {
   try {
+    if (req.body.customerEmail === "") return res.status(400).json({ message: "Customer Email is missing" });
+    if (req.body.businessEmail === "") return res.status(400).json({ message: "Business Email is missing" });
     const mailOptions = {
       from: req.body.businessEmail,
       to: req.body.customerEmail,
@@ -35,6 +37,9 @@ router.post("/send/invoice", upload.single("pdf"), async (req, res) => {
 
 router.post("/send/quotation", upload.single("pdf"), async (req, res) => {
     try {
+      if (req.body.customerEmail === "" || req.body.businessEmail === "") {
+        return res.status(400).json({ message: "Customer or Business Email is missing" });
+      }
       const mailOptions = {
         from: req.body.businessEmail,
         to: req.body.customerEmail,

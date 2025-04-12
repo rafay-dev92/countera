@@ -1,15 +1,5 @@
 import React, { useEffect, useState } from "react";
-import {
-    Button,
-    Dialog,
-    DialogHeader,
-    DialogBody,
-    DialogFooter,
-    Input,
-    Select,
-    Option,
-    Checkbox,
-} from "@material-tailwind/react";
+import { Dialog } from "@material-tailwind/react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { addTax } from "@/services/addTax";
@@ -186,7 +176,7 @@ function TaxForm({ taxData, setTaxData, open, close, refresh, setRefresh }) {
                                                 className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
                                                 id="rate"
                                                 name="rate"
-                                                type="text"
+                                                type="number"
                                                 value={values.rate}
                                                 onChange={handleChange}
                                                 onBlur={handleBlur}

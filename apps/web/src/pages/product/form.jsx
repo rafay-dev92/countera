@@ -22,17 +22,17 @@ const schema = Yup.object().shape({
   description: Yup.string(),
   taxable: Yup.boolean(true).required("Field is required"),
   image: Yup.mixed().notRequired().test(
-      'fileType',
-      'Only image files are allowed',
-      (value) => {
-        if (value == null || value === '') return true;
-        if (typeof value === 'string') return true;
-        return (
-          !value ||
-          (value && ['image/jpeg', 'image/png', 'image/gif'].includes(value.type.toLowerCase()))
-        );
-      }
-    )
+    'fileType',
+    'Only image files are allowed',
+    (value) => {
+      if (value == null || value === '') return true;
+      if (typeof value === 'string') return true;
+      return (
+        !value ||
+        (value && ['image/jpeg', 'image/png', 'image/gif'].includes(value.type.toLowerCase()))
+      );
+    }
+  )
 });
 const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedItem, setSelectedItem }) => {
 
@@ -72,7 +72,8 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
       if (image !== 'null') setProductPreviewPic(image);
       setValues({
         ...restItemData,
-        category: selectedItem.CategoryId})
+        category: selectedItem.CategoryId
+      })
       setSelectedTaxes(selectedItem.Tax.map((tax) => (tax.id)))
       setEdit(true);
     }
@@ -266,7 +267,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
                     ) : null}
                   </div>
                   <div className="basis-[50%] max-h-[150px] overflow-hidden max-w-fit">
-                    <img src={productPreviewPic? productPreviewPic : dummyImage} alt="Product" width={150} height={150} />
+                    <img src={productPreviewPic ? productPreviewPic : dummyImage} alt="Product" width={150} height={150} />
                   </div>
                 </div>
                 <div className="flex items-center justify-start space-x-4 mb-3 w-full">
@@ -291,6 +292,30 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
                     ) : (<div></div>)}
                   </div>
 
+                  <div className="basis-[30%]">
+                    <label className="font-bold">Category</label>
+                    <select
+                      className="w-full p-2 border border-gray-300 bg-inherit rounded-md"
+                      id="category"
+                      name="category"
+                      value={values.category}
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                    >
+                      <option value="">Select Category</option>
+                      {productCategories.map((category) => (
+                        <option key={category.id} value={category.id}>
+                          {category.name}
+                        </option>
+                      ))}
+                    </select>
+                    {touched.category && errors.category ? (
+                      <div className="text-red-500">
+                        {errors.category}
+                      </div>
+                    ) : (<div></div>)}
+                  </div>
+
                   <div className="basis-[35%]">
                     <label className="font-bold">Name</label> <br />
                     <input
@@ -307,30 +332,6 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
                         {errors.name}
                       </div>
                     )}
-                  </div>
-
-                  <div className="basis-[30%]">
-                    <label className="font-bold">Category</label>
-                    <select
-                      className="w-full p-2 border border-gray-300 bg-inherit rounded-md"
-                      id="category"
-                      name="category"
-                      value={values.category}
-                      onChange={handleChange}
-                      onBlur={handleBlur}
-                    >
-                      <option value="">Select Category</option>
-                      {productCategories.map((category) => (
-                        <option key={category.id} value={category.id}>
-                          {category.name}
-                        </option>
-                      ))}                      
-                    </select>
-                    {touched.category && errors.category ? (
-                      <div className="text-red-500">
-                        {errors.category}
-                      </div>
-                    ) : (<div></div>)}
                   </div>
 
                   <div className="basis-[15%]">
@@ -471,10 +472,10 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
                   className="w-32 bg-gray-600 hover:bg-gray-900 text-white font-bold py-2 px-4"
                   type="submit"
                 >
-                  {!isLoading? 
-                    <span>{edit ? "Update" : "Save" }</span> : 
+                  {!isLoading ?
+                    <span>{edit ? "Update" : "Save"}</span> :
                     <div className="flex items-center justify-center h-fit">
-                        <div className="w-6 h-6 border-4 border-gray-500 border-t-transparent rounded-full animate-spin"></div>
+                      <div className="w-6 h-6 border-4 border-gray-500 border-t-transparent rounded-full animate-spin"></div>
                     </div>
                   }
                 </button>

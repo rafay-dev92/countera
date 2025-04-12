@@ -91,12 +91,9 @@ const ViewInvoice = ({ printInvoice, setPrintInvoice, componentRef, appliedTaxes
 
             const res = await sendMail(formData, 'invoice');
             const data = await res.json();
-            if (res.status === 200) {
-                toast.success(data.message);
-            }
-            else {
-                toast.error(data.message);
-            }
+            if (res.status === 200) toast.success(data.message);
+            else if (res.status === 400) toast.info(data.message);
+            else toast.error(data.message);
             close();
         } catch (error) {
             console.log(error);

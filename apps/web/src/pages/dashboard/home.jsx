@@ -49,12 +49,15 @@ export function Home() {
         try {
             const fetchedInvoices = await fetchInvoices(state.userToken);
             let totalInvoices = await fetchedInvoices.json();
-            if (state.Settings.General.invoice === 'all') {
-            }
-            else if (state.Settings.General.invoice === 'current') {
-                totalInvoices = totalInvoices?.data.filter(invoice => invoice.current === true);
-            }
+            // if (state.Settings.General.invoice === 'all') {
+            // }
+            // else if (state.Settings.General.invoice === 'current') {
+                // totalInvoices = totalInvoices?.data.filter(invoice => invoice.current === true);
+            // }
 
+            totalInvoices = totalInvoices?.data.filter(invoice => invoice.paymentStatus === 'Paid' || invoice.paymentStatus === 'Unpaid');
+            console.log(currentDate);
+            console.log(totalInvoices);
             const invoicesWithCurrentDate = totalInvoices.filter(obj => obj.createdAt.split('T')[0] === currentDate);
             let money = 0;
             invoicesWithCurrentDate.forEach(invoice => {

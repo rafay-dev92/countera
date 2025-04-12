@@ -1,23 +1,23 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { MagnifyingGlassIcon, PlusCircleIcon } from "@heroicons/react/24/outline";
 import { TrashIcon } from "@heroicons/react/24/solid";
 import { Card, CardHeader, CardBody, CardFooter, Typography, Input, Button, Tooltip, IconButton, Spinner } from "@material-tailwind/react";
-import { toast } from "react-toastify";
+import PackageForm from "./packageForm";
 import { State } from "@/state/Context";
-import Form from "./form";
+import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
-import { fetchProductsCategories } from "@/services/fetchProductCategories";
-import { delProductCategory } from "@/services/delProductCategory";
 import { useConfirm } from "@/context/confirmContext";
+import { fetchPackages } from "@/services/fetchPackages";
+import { delPackage } from "@/services/delPackage";
 
-const TABLE_HEAD = ["Name", "Business", "Actions"];
+const TABLE_HEAD = ["Name", "Description", "Actions"];
 
-function ProductCategories() {
+function Packages() {
   const confirm = useConfirm();
   const { state } = State();
   const [loading, setLoading] = useState(true);
+  const [packages, setPackages] = useState([]);
   const [refresh, setRefresh] = useState(false);
-  const [categories, setCategories] = useState([]);
 
   // for edit of a vehicle 
   const [selectedItem, setSelectedItem] = useState(null);
@@ -31,40 +31,41 @@ function ProductCategories() {
   // Popup state
   const [isOpen, setIsOpen] = useState(false);
   const openPopup = () => {
-    setIsOpen(true);
+      setIsOpen(true);
   };
   const closePopup = () => {
-    setIsOpen(false);
+      setIsOpen(false);
   };
 
   useEffect(() => {
-    getProductCategories()
+    getPackages();
   }, [refresh])
 
-  const getProductCategories = async () => {
+  const getPackages = async () => {
     try {
-      const res = await fetchProductsCategories(state.userToken);
-      const categories = await res.json();
-      setCategories(categories);
-      setLoading(false)
+      const res = await fetchPackages(state.userToken);
+      const packages = await res.json();
+      setPackages(packages.data);
+      setLoading(false);
     } catch (error) {
+      console.log(error);
       toast.error("Something went wrong")
     }
   }
 
   // Function to handle deletion of selected items
-  const handleDelete = async (id) => {       
-    const confirmed = await confirm("Do you really want to delete this category?");
-    if (!confirmed) return;
+  const handleDelete = async (id) => {     
+    const confirmed = await confirm("Do you really want to delete this package?");
+    if (!confirmed) return;  
     if (state.userInfo.Permission.some(obj => obj.name === "CAN_DELETE" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
         try {
-            const res = await delProductCategory(id, state.userToken);
-            const user = await res.json();
+            const res = await delPackage(id, state.userToken);
+            const tax = await res.json();
             if (res.status === 200) {
-                toast.success(user.message)
+                toast.success(tax.message)
             }
             else if (res.status === 404) {
-                toast.info(user.message)
+                toast.info(tax.message)
             }
             else if (res.status === 500) {
                 toast.error("You must delete its foreign key relations first");
@@ -76,12 +77,12 @@ function ProductCategories() {
         }
     }
     else {
-        toast.error("You are not allowed to delete a user");
+        toast.error("You are not allowed to delete a tax");
     }
   };
 
   // Modify handleRowSelect to update the selected item's data
-  const handleEditUser = (index) => {
+  const handleEditPackage = (index) => {
     // Assuming currentItems holds the filtered rows for display
     if (state.userInfo.Permission.some(obj => obj.name === "CAN_UPDATE" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
         const selected = currentItems[index];
@@ -89,13 +90,13 @@ function ProductCategories() {
         openPopup();
     }
     else {
-        toast.error("You are not allowed to update a user");
+        toast.error("You are not allowed to update a tax");
     }
   };
 
-  const filteredRows = categories?.filter(
+  const filteredRows = packages.filter(
     ({ name }) =>
-      name.toLowerCase().includes(searchQuery.toLowerCase())     
+      name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -114,15 +115,15 @@ function ProductCategories() {
   }
   return (
     <>
-      <Card className="h-full w-full ">
+    <Card className="h-full w-full ">
         <CardHeader floated={false} shadow={false} className="rounded-none">
           <div className="flex flex-col md:flex-row items-center w-full h-max py-3">
             <div className="w-full md:w-2/5 flex items-center justify-center md:justify-start gap-2">
               <Typography variant="h5" color="blue-gray" className="flex items-center">
-                Product Categories
+                Packages
               </Typography>
               <PlusCircleIcon onClick={openPopup} className="ml-4 mr-1 h-7 w-7 text-blue-600 cursor-pointer" />
-              <span className="text-base">Add new Category</span>
+              <span className="text-base">Add new Package</span>
             </div>
             <div className="flex items-center mt-4 md:mt-0 md:ml-auto">
               <div className="w-full md:flex-1 md:mr-4">
@@ -170,7 +171,7 @@ function ProductCategories() {
               </tr>
             </thead>
             <tbody>
-              {currentItems.map(({ id, name }, index) => {
+              {currentItems.map(({ name, description, id }, index) => {
                 const isLast = index === currentItems.length - 1;
                 const classes = isLast
                   ? "p-2"
@@ -183,23 +184,23 @@ function ProductCategories() {
                         to="#"
                         className="text-blue-gray font-normal hover:underline"
                         onClick={() => {
-                          handleEditUser(index);
+                          handleEditPackage(index);
                         }}
                       >
                         {name}
                       </Link>
-                    </td>                   
+                    </td>
                     <td className={classes}>
                       <Typography
                         variant="small"
                         color="blue-gray"
                         className="font-normal"
                       >
-                        {state.business.name}
+                        {description.length > 30 ? description.substring(0, 30) + "..." : description}
                       </Typography>
-                    </td>
+                    </td>                   
                     <td className={classes}>
-                      <Tooltip content="Delete Category">
+                      <Tooltip content="Delete Package">
                         <IconButton variant="text" onClick={() => handleDelete(id)}>
                           <TrashIcon className="h-6 w-6 text-red-600" />
                         </IconButton>
@@ -240,9 +241,9 @@ function ProductCategories() {
         </CardFooter>
         
       </Card>
-      <Form open={isOpen} close={closePopup} selectedItem={selectedItem} setSelectedItem={setSelectedItem} refresh={refresh} setRefresh={setRefresh} />
+      <PackageForm packageData={selectedItem} setPackageData={setSelectedItem} open={isOpen} close={closePopup} refresh={refresh} setRefresh={setRefresh} />
     </>    
   );
 }
 
-export default ProductCategories;
+export default Packages;

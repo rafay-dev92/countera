@@ -6,10 +6,8 @@ import { Dialog } from "@material-tailwind/react";
 import { addCustomer } from "@/services/addCustomer";
 import { toast } from "react-toastify";
 import { State } from "@/state/Context";
-import { fetchBusinesses } from "@/services/fetchBusinesses";
 import { addAddress } from "@/services/addAddress";
-
-const phoneRgex = /^((\+92)?(0092)?(92)?(0)?)(3)([0-9]{9})$/gm;
+import { updateCustomer } from "@/services/updateCustomer";
 
 const addressSchema = Yup.object().shape({
   street: Yup.string().required("street is required"),
@@ -22,7 +20,7 @@ const schema = Yup.object().shape({
   firstName: Yup.string().required("First name is required"),
   lastName: Yup.string().required("Last name is required"),
   customerType: Yup.string().default('personal').required("Customer type is required"),
-  phone: Yup.string().matches(phoneRgex, "Please add a valid phone number").required("Mobile number is required"),
+  phone: Yup.string().required("Mobile number is required"),
   licenseNo: Yup.string(),
   email: Yup.string().email("Please add a valid email"),
   Address: addressSchema,
@@ -30,7 +28,7 @@ const schema = Yup.object().shape({
   taxable: Yup.boolean(true),
 });
 
-const CustomerForm = ({ open, close, refresh, setRefresh, setSelectedCustomer }) => {
+const CustomerForm = ({ open, close, refresh, setRefresh, selectedCustomer, setSelectedCustomer }) => {
 
   const { state } = State();
   const [isLoading, setIsLoading] = useState(false);
@@ -49,8 +47,35 @@ const CustomerForm = ({ open, close, refresh, setRefresh, setSelectedCustomer })
 
   const handleClose = () => {
     clearForm(formikProps);
+    setSelectedCustomer(null);
     close();
   };
+
+  function removeExtraAddressFields(obj) {
+    const { CustomerId, id, createdAt, updatedAt, ...rest } = obj;
+    return rest;
+  }
+
+  useEffect(() => {
+    if (selectedCustomer) {
+      setValues({
+        firstName: selectedCustomer.firstName,
+        lastName: selectedCustomer.lastName,
+        customerType: selectedCustomer.customerType,
+        phone: selectedCustomer.phone,
+        licenseNo: selectedCustomer.licenseNo,
+        email: selectedCustomer.email,
+        Address: {
+          street: selectedCustomer.Address.street,
+          city: selectedCustomer.Address.city,
+          state: selectedCustomer.Address.state,
+          zipcode: selectedCustomer.Address.zipcode
+        },
+        notes: selectedCustomer.notes,
+        taxable: selectedCustomer.taxable
+      });
+    }
+  }, [selectedCustomer]);
 
   const onSubmit = async (values) => {
     setIsLoading(true);
@@ -60,34 +85,75 @@ const CustomerForm = ({ open, close, refresh, setRefresh, setSelectedCustomer })
     if (updatedValues.customerType === 'business') updatedValues.taxable = false;
 
     try {
-      // separating user data
-      const { Address, ...customerData } = updatedValues
+      if (selectedCustomer) {
+        // separating user data
+        const { Address, ...customerData } = updatedValues
 
-      // saving customer
-      const res = await addCustomer(customerData, state.userToken);
-      const customer = await res.json();
-      if (res.status === 200) {
-        showToastMessage('success', customer.message)
+        const res = await updateCustomer(selectedCustomer.id, customerData, state.userToken);
+        const customer = await res.json();
+        if (res.status === 200) {
+          showToastMessage('success', customer.message)
+          // checking if address updated
+          const oldAddress = removeExtraAddressFields(customer.data.Address)
+          const newAddress = removeExtraAddressFields(Address);
+          const isAddressUpdated = Object.values(oldAddress).some(value => !Object.values(newAddress).includes(value));
 
-        // saving customer's address
-        Address.CustomerId = customer.data.id;
-        const addressRes = await addAddress(Address, state.userToken);
-        const address = await addressRes.json();
-        if (addressRes.status === 200) {
-          showToastMessage('success', address.message)
+          if (isAddressUpdated) {
+            const addressRes = await updateAddress(customer.data.Address.id, newAddress, state.userToken);
+            const address = await addressRes.json();
+
+            if (addressRes.status === 200) {
+              showToastMessage('success', address.message)
+            }
+            else if (addressRes.status === 404) {
+              showToastMessage('info', address.message)
+            }
+            else if (addressRes.status === 409) {
+              showToastMessage('error', address.message)
+            }
+          }
+        }
+        else if (res.status === 404) {
+          showToastMessage('info', customer.message)
         }
         else if (res.status === 409) {
-          showToastMessage('error', address.message)
+          showToastMessage('error', customer.message)
         }
+        setRefresh(!refresh);
+        setIsLoading(false);
+        handleClose();
       }
-      else if (res.status === 409) {
-        showToastMessage('error', customer.message)
+      else {
+
+        // separating user data
+        const { Address, ...customerData } = updatedValues
+
+        // saving customer
+        const res = await addCustomer(customerData, state.userToken);
+        const customer = await res.json();
+        if (res.status === 200) {
+          showToastMessage('success', customer.message)
+
+          // saving customer's address
+          Address.CustomerId = customer.data.id;
+          const addressRes = await addAddress(Address, state.userToken);
+          const address = await addressRes.json();
+          if (addressRes.status === 200) {
+            showToastMessage('success', address.message)
+          }
+          else if (res.status === 409) {
+            showToastMessage('error', address.message)
+          }
+        }
+        else if (res.status === 409) {
+          showToastMessage('error', customer.message)
+        }
+        console.log(customer.data)
+        setSelectedCustomer(customer.data);
+        setRefresh(!refresh);
+        setIsLoading(false);
+        handleClose();
       }
-      console.log(customer.data)
-      setSelectedCustomer(customer.data);
-      setRefresh(!refresh);
-      setIsLoading(false);
-      handleClose();
     } catch (error) {
       console.log(error)
       showToastMessage('error', 'Something went wrong')
@@ -176,7 +242,7 @@ const CustomerForm = ({ open, close, refresh, setRefresh, setSelectedCustomer })
                 <div className="flex items-center justify-between sticky bg-gradient-to-br from-gray-800 to-gray-700">
                   <div></div>
                   <div className="text-white text-center text-lg">
-                    NEW CUSTOMER
+                    {selectedCustomer ? "EDIT CUSTOMER" : "NEW CUSTOMER"}
                   </div>
                   <button
                     className=" bg-transparent hover:bg-gray-800 text-white font-bold py-2 px-4 rounded"
@@ -331,7 +397,7 @@ const CustomerForm = ({ open, close, refresh, setRefresh, setSelectedCustomer })
                     </div>
 
                     <div className="basis-[33.33%]">
-                      
+
                     </div>
                   </div>
 
@@ -454,10 +520,10 @@ const CustomerForm = ({ open, close, refresh, setRefresh, setSelectedCustomer })
                     className="w-32 bg-gray-600 hover:bg-gray-900 text-white font-bold py-2 px-4"
                     type="submit"
                   >
-                    {!isLoading? 
-                      <span>Save</span> : 
+                    {!isLoading ?
+                      <span>{selectedCustomer ? "Update" : "Save"}</span> :
                       <div className="flex items-center justify-center h-fit">
-                          <div className="w-6 h-6 border-4 border-gray-500 border-t-transparent rounded-full animate-spin"></div>
+                        <div className="w-6 h-6 border-4 border-gray-500 border-t-transparent rounded-full animate-spin"></div>
                       </div>
                     }
                   </button>

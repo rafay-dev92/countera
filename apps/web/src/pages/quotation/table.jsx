@@ -21,6 +21,7 @@ import { delQuotation } from "@/services/delQuotaion";
 import { toast } from "react-toastify";
 import { addInvoice } from "@/services/addInvoice";
 import { useConfirm } from "@/context/confirmContext";
+import CustomerForm from "../invoice/customerForm";
 
 const TABLE_HEAD = ["Quotation", "Customer", "Total", "Status", "Quotation Date", "Vehicle", "Actions"];
 
@@ -36,6 +37,9 @@ export function Quotation() {
     const [selectedQuotation, setSelectedQuotation] = useState(null);
     const [isOpen, setIsOpen] = useState(false);
     const [loading, setLoading] = useState(true);
+
+    const [isCustomerFormOpen, setIsCustomerFormOpen] = useState(false);
+    const [selectedCustomer, setSelectedCustomer] = useState(null);
 
     const showToastMessage = (type, message) => {
         if (type === 'success') {
@@ -104,6 +108,12 @@ export function Quotation() {
             toast.error("You are not allowed to delete a quotation");
         }
     };
+
+    const showCustomer = (index) => {
+        const selected = currentItems[index];
+        setIsCustomerFormOpen(true);
+        setSelectedCustomer(selected.Customer);
+      }
 
     const formatCreatedAt = (createdAt) => {
         const date = new Date(createdAt);
@@ -291,9 +301,9 @@ export function Quotation() {
                                             <Link
                                                 to="#"
                                                 className="text-blue-gray font-normal hover:underline"
-                                                // onClick={() => {
-                                                //     handleEditQuotation(index);
-                                                // }}
+                                                onClick={() => {
+                                                    showCustomer(index);
+                                                }}
                                             >
                                                 {Customer['firstName']} {Customer['lastName']}
                                             </Link>
@@ -398,6 +408,7 @@ export function Quotation() {
                 </CardFooter>
 
             </Card>
+            <CustomerForm open={isCustomerFormOpen} close={() => setIsCustomerFormOpen(false)} refresh={refresh} setRefresh={setRefresh} selectedCustomer={selectedCustomer} setSelectedCustomer={setSelectedCustomer} />
             <MyPopUpForm refresh={refresh} setRefresh={setRefresh} open={isOpen} close={closePopup} selectedQuotation={selectedQuotation} setSelectedQuotation={setSelectedQuotation} />
         </>
     );

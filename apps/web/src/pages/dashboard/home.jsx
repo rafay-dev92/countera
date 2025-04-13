@@ -56,8 +56,6 @@ export function Home() {
             // }
 
             totalInvoices = totalInvoices?.data.filter(invoice => invoice.paymentStatus === 'Paid' || invoice.paymentStatus === 'Unpaid');
-            console.log(currentDate);
-            console.log(totalInvoices);
             const invoicesWithCurrentDate = totalInvoices.filter(obj => obj.createdAt.split('T')[0] === currentDate);
             let money = 0;
             invoicesWithCurrentDate.forEach(invoice => {

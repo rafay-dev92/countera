@@ -22,6 +22,7 @@ import { toast } from "react-toastify";
 import { useConfirm } from "@/context/confirmContext";
 import { softDelInvoice } from "@/services/softDelInvoice";
 import { useDeleteInvoiceConfirm } from "@/context/deleteInvoiceConfirmContext";
+import CustomerForm from "./customerForm";
 
 const TABLE_HEAD = ["Invoice", "Customer", "Total", "Status", "Invoice Date", "Vehicle", "Actions"];
 
@@ -36,6 +37,9 @@ export function Invoice() {
   const [refresh, setRefresh] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  const [isCustomerFormOpen, setIsCustomerFormOpen] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
 
   const showToastMessage = (type, message) => {
     if (type === 'success') {
@@ -124,6 +128,12 @@ export function Invoice() {
       toast.error("You are not allowed to delete an invoice");
     }
   };
+
+  const showCustomer = (index) => {
+    const selected = currentItems[index];
+    setIsCustomerFormOpen(true);
+    setSelectedCustomer(selected.Customer);
+  }
 
   const formatCreatedAt = (createdAt) => {
     const date = new Date(createdAt);
@@ -251,15 +261,15 @@ export function Invoice() {
                       </Link>
                     </td>
                     <td className={classes}>
-                      <Typography
+                      <Link
                         to="#"
                         className="text-blue-gray font-normal hover:underline"
-                        // onClick={() => {
-                        //   handleEditInvoice(index);
-                        // }}
+                        onClick={() => {
+                          showCustomer(index);
+                        }}
                       >
                         {Customer['firstName']} {Customer['lastName']}
-                      </Typography>
+                      </Link>
                     </td>
 
                     <td className={classes}>
@@ -345,6 +355,7 @@ export function Invoice() {
           </div>
         </CardFooter>
       </Card>
+      <CustomerForm open={isCustomerFormOpen} close={() => setIsCustomerFormOpen(false)} refresh={refresh} setRefresh={setRefresh} selectedCustomer={selectedCustomer} setSelectedCustomer={setSelectedCustomer} />
       <MyPopUpForm refresh={refresh} setRefresh={setRefresh} open={isFormOpen} close={() => { setIsFormOpen(false); dispatch({ type: 'SET_INVOICE_FORM', payload: false }) }} />
     </>
   );

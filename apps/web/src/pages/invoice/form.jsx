@@ -272,7 +272,7 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
     }
   };
 
-  // get products
+  // get products packages
   const getProductsPackages = async () => {
     try {
       const fetchedPackages = await fetchPackages(state.userToken);
@@ -339,6 +339,7 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
       recalculateTaxes(updatedItems);
     }
   };
+
   // Handle product change
   const handleProductChange = async (index, quantity, selectedProId) => {
     const updatedItems = [...selectedProducts];
@@ -892,6 +893,7 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
                               <label className="p-2 font-bold">Packages</label> <br />
 
                               <select
+                                disabled={!selectedCustomer}
                                 className="w-48 lg:w-72 m-2 p-2 border border-gray-300 bg-inherit rounded-md"
                                 onChange={(e) => handlePackageChange(e.target.value)}
                               >

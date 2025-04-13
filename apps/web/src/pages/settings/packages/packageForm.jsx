@@ -173,24 +173,21 @@ function PackageForm({ packageData, setPackageData, open, close, refresh, setRef
 
         // Find the selected product details
         const selectedProductDetails = products.find((product) => product.id === selectedProId);
-
         if (selectedProductDetails) {
             updatedItems[index] = {
                 id: selectedProductDetails.id,
                 product: selectedProId,
                 name: selectedProductDetails.name,
-                quantity,
+                quantity: updatedItems[index].quantity,
                 price: selectedProductDetails.price,
                 taxable: selectedProductDetails.taxable,
                 Tax: selectedProductDetails.Tax,
-                description: "",
             };
         } else {
             // Reset the row if no product is found
             updatedItems[index] = {
                 id: "",
                 product: "",
-                description: "",
                 name: "",
                 quantity: 1,
                 price: 0,
@@ -208,7 +205,6 @@ function PackageForm({ packageData, setPackageData, open, close, refresh, setRef
             updatedItems.push({
                 id: "",
                 product: "",
-                description: "",
                 name: "",
                 quantity: 1,
                 price: 0,
@@ -224,7 +220,13 @@ function PackageForm({ packageData, setPackageData, open, close, refresh, setRef
     // Handle quantity change
     const handleQuantityChange = (index, quantity) => {
         const updatedItems = [...selectedProducts];
-        updatedItems[index].quantity = Number(quantity);
+
+        updatedItems.forEach((item, i) => {
+            if (i !== updatedItems.length - 1) {
+                item.quantity = Number(quantity);
+            }
+        });
+        // updatedItems[index].quantity = Number(quantity);
         
         // Recalculate taxes
         // recalculateTaxes(updatedItems);
@@ -336,12 +338,12 @@ function PackageForm({ packageData, setPackageData, open, close, refresh, setRef
 
     return (
         <>
-            <Dialog open={open} size="lg" >
+            <Dialog open={open} >
                 {open && (
                     <form autoComplete="new">
                         <div className="flex justify-center w-full">
-                            <div className="fixed top-0 left-0 w-full h-full flex items-center justify-center">
-                                <div className="bg-white rounded shadow-xl">
+                            {/* <div className="fixed top-0 left-0 w-full h-full flex items-center justify-center"> */}
+                                <div className="bg-white rounded shadow-xl w-full">
                                     <div className="flex items-center justify-between sticky bg-gradient-to-br from-gray-800 to-gray-700">
                                         <div></div>
                                         <div className="text-white text-center text-lg">
@@ -369,8 +371,8 @@ function PackageForm({ packageData, setPackageData, open, close, refresh, setRef
                                         </button>
                                     </div>
 
-                                    <div className="p-6 space-y-4 w-full max-h-[60vh] overflow-y-auto">
-                                        <div className="flex items-center justify-start space-x-4 w-90">
+                                    <div className="p-6 space-y-4 w-full overflow-y-auto">
+                                        <div className="flex items-center justify-start space-x-4 w-full">
                                             <div className="w-full">
                                                 <label className="font-bold">Name</label> <br />
                                                 <input
@@ -424,7 +426,8 @@ function PackageForm({ packageData, setPackageData, open, close, refresh, setRef
                                         </div>
 
                                         {/* Products */}
-                                        <table className="w-full border border-collapse">
+                                        <div className="overflow-auto max-h-48">
+                                        <table className="w-full border border-collapse table-auto mb-16">
                                             <thead className="bg-gray-100">
                                                 <tr>
                                                     <th className="p-2 border">Product</th>
@@ -434,7 +437,7 @@ function PackageForm({ packageData, setPackageData, open, close, refresh, setRef
                                                     <th className="p-2 border">Action</th>
                                                 </tr>
                                             </thead>
-                                            <tbody>
+                                            <tbody className="max-h-48 overflow-y-auto">
                                                 {selectedProducts.map((item, index) => (
                                                     <tr key={index} className="text-center">
                                                         <td className="p-2 border">
@@ -506,7 +509,7 @@ function PackageForm({ packageData, setPackageData, open, close, refresh, setRef
                                                 ))}
                                             </tbody>
                                         </table>
-
+                                        </div>
                                     </div>
                                     <div className="flex items-center justify-end space-x-2 sticky bg-gradient-to-br from-gray-800 to-gray-700">
                                         <button
@@ -531,7 +534,7 @@ function PackageForm({ packageData, setPackageData, open, close, refresh, setRef
                                         </button>
                                     </div>
                                 </div>
-                            </div>
+                            {/* </div> */}
                         </div>
                     </form>
                 )}

@@ -22,7 +22,7 @@ import { useConfirm } from "@/context/confirmContext";
 import { fetchWorkOrders } from "@/services/fetchWorkOrders";
 import { delWorkOrder } from "@/services/delWorkOrder";
 
-const TABLE_HEAD = ["Customer", "Total", "Status", "WorkOrder Date", "Vehicle", "Actions"];
+const TABLE_HEAD = ["WorkOrder", "Customer", "Total", "Status", "WorkOrder Date", "Vehicle", "Actions"];
 
 export function WorkOrder() {
     const confirm = useConfirm();
@@ -266,7 +266,7 @@ export function WorkOrder() {
                             </tr>
                         </thead>
                         <tbody>
-                            {currentItems.map(({ id, Customer, totalAmount, status, createdAt, CustomerVehicle }, index) => {
+                            {currentItems.map(({ id, workOrderNumber, Customer, totalAmount, status, createdAt, CustomerVehicle }, index) => {
                                 const isLast = index === currentItems.length - 1;
                                 const classes = isLast
                                     ? "p-4"
@@ -280,6 +280,18 @@ export function WorkOrder() {
                                                 onClick={() => {
                                                     handleEditWorkOrder(index);
                                                 }}
+                                            >
+                                                WOR{`${workOrderNumber}`.padStart(4, '0')}
+                                            </Link>
+                                        </td>
+
+                                        <td className={classes}>
+                                            <Link
+                                                to="#"
+                                                className="text-blue-gray font-normal hover:underline"
+                                                // onClick={() => {
+                                                //     handleEditWorkOrder(index);
+                                                // }}
                                             >
                                                 {Customer['firstName']} {Customer['lastName']}
                                             </Link>

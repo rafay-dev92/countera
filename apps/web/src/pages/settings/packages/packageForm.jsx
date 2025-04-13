@@ -11,7 +11,7 @@ import { XCircleIcon } from "@heroicons/react/24/outline";
 
 const schema = Yup.object().shape({
     name: Yup.string().required("Name is required"),
-    quantity: Yup.number().required("Quantity is required").min(1, "Quantity must be at least 1"),
+    // quantity: Yup.number().required("Quantity is required").min(1, "Quantity must be at least 1"),
     description: Yup.string(),
 });
 
@@ -30,7 +30,6 @@ function PackageForm({ packageData, setPackageData, open, close, refresh, setRef
     const [productSearchText, setProductSearchText] = useState("");
     const [showProductSuggestions, setShowProductSuggestions] = useState(false);
     const [appliedTaxes, setAppliedTaxes] = useState({});
-
 
     useEffect(() => {
         if (packageData) {
@@ -88,16 +87,16 @@ function PackageForm({ packageData, setPackageData, open, close, refresh, setRef
         const updatedData = { ...values, BusinessId: state.business.id }
 
         // remove the last empty product
-        selectedProducts.pop();
-
+        // selectedProducts.pop();
+        const updatedProducts = selectedProducts.slice(0, selectedProducts.length - 1);
         // check if the product is empty
-        if (selectedProducts.length === 0) {
+        if (updatedProducts.length === 0) {
             toast.error("Please select a product");
             setIsLoading(false);
             return;
         }
 
-        const selectedProductIds = selectedProducts.map((product) => `${product.id}:${product.quantity}`);
+        const selectedProductIds = updatedProducts.map((product) => `${product.id}:${product.quantity}`);
         const data = {
             packageData: updatedData,
             products: selectedProductIds,
@@ -164,13 +163,13 @@ function PackageForm({ packageData, setPackageData, open, close, refresh, setRef
             (prod) => prod.id === selectedProId
         );
 
-        // if (existingProductIndex !== -1) {
-        //     // If the product already exists, update its quantity
-        //     handleQuantityChange(existingProductIndex, selectedProducts[existingProductIndex].quantity + quantity);
-        //     updatedItems[index].product = ""; // Reset the current row
-        //     setSelectedProducts(updatedItems);
-        //     return;
-        // }
+        if (existingProductIndex !== -1) {
+            // If the product already exists, update its quantity
+            handleQuantityChange(existingProductIndex, selectedProducts[existingProductIndex].quantity + quantity);
+            updatedItems[index].product = ""; // Reset the current row
+            setSelectedProducts(updatedItems);
+            return;
+        }
 
         // Find the selected product details
         const selectedProductDetails = products.find((product) => product.id === selectedProId);
@@ -180,7 +179,7 @@ function PackageForm({ packageData, setPackageData, open, close, refresh, setRef
                 id: selectedProductDetails.id,
                 product: selectedProId,
                 name: selectedProductDetails.name,
-                quantity: values.quantity,
+                quantity,
                 price: selectedProductDetails.price,
                 taxable: selectedProductDetails.taxable,
                 Tax: selectedProductDetails.Tax,
@@ -193,7 +192,7 @@ function PackageForm({ packageData, setPackageData, open, close, refresh, setRef
                 product: "",
                 description: "",
                 name: "",
-                // quantity: 1,
+                quantity: 1,
                 price: 0,
                 taxable: false,
                 Tax: [],
@@ -211,7 +210,7 @@ function PackageForm({ packageData, setPackageData, open, close, refresh, setRef
                 product: "",
                 description: "",
                 name: "",
-                // quantity: 1,
+                quantity: 1,
                 price: 0,
                 taxable: false,
                 Tax: [],
@@ -226,7 +225,7 @@ function PackageForm({ packageData, setPackageData, open, close, refresh, setRef
     const handleQuantityChange = (index, quantity) => {
         const updatedItems = [...selectedProducts];
         updatedItems[index].quantity = Number(quantity);
-
+        
         // Recalculate taxes
         // recalculateTaxes(updatedItems);
 
@@ -297,18 +296,18 @@ function PackageForm({ packageData, setPackageData, open, close, refresh, setRef
         formikProps.resetForm({
             values: {
                 name: "",
-                quantity: 1,
+                // quantity: 1,
                 description: "",
             },
             errors: {
                 name: "",
-                quantity: 1,
+                // quantity: 1,
                 description: "",
             },
         });
         setSelectedProducts([{
             product: "",
-            // quantity: 1,
+            quantity: 1,
             price: 0,
             taxable: false
         }]);
@@ -320,7 +319,7 @@ function PackageForm({ packageData, setPackageData, open, close, refresh, setRef
     const formikProps = useFormik({
         initialValues: {
             name: "",
-            quantity: 1,
+            // quantity: 1,
             description: "",
         },
         validationSchema: schema,
@@ -370,9 +369,9 @@ function PackageForm({ packageData, setPackageData, open, close, refresh, setRef
                                         </button>
                                     </div>
 
-                                    <div className="p-6 space-y-4 w-full">
+                                    <div className="p-6 space-y-4 w-full max-h-[60vh] overflow-y-auto">
                                         <div className="flex items-center justify-start space-x-4 w-90">
-                                            <div className="basis-[50%]">
+                                            <div className="w-full">
                                                 <label className="font-bold">Name</label> <br />
                                                 <input
                                                     className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
@@ -389,7 +388,7 @@ function PackageForm({ packageData, setPackageData, open, close, refresh, setRef
                                                     </div>
                                                 ) : (<div></div>)}
                                             </div>
-                                            <div className="basis-[50%]">
+                                            {/* <div className="basis-[50%]">
                                                 <label className="font-bold">Quantity Of Each</label> <br />
                                                 <input
                                                     className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
@@ -398,7 +397,7 @@ function PackageForm({ packageData, setPackageData, open, close, refresh, setRef
                                                     min={1}
                                                     type="number"
                                                     value={values.quantity}
-                                                    onChange={handleChange}
+                                                    onChange={(e) => {setFieldValue("quantity", e.target.value); handleQuantityChange(index, e.target.value)}}
                                                     onBlur={handleBlur}
                                                 />
                                                 {(touched.quantity && errors.quantity) ? (
@@ -406,7 +405,7 @@ function PackageForm({ packageData, setPackageData, open, close, refresh, setRef
                                                         {errors.quantity}
                                                     </div>
                                                 ) : (<div></div>)}
-                                            </div>
+                                            </div> */}
                                         </div>
                                         <div className="flex items-center justify-start space-x-4">
                                             <div className="w-full">
@@ -429,7 +428,7 @@ function PackageForm({ packageData, setPackageData, open, close, refresh, setRef
                                             <thead className="bg-gray-100">
                                                 <tr>
                                                     <th className="p-2 border">Product</th>
-                                                    {/* <th className="p-2 border">Quantity</th> */}
+                                                    <th className="p-2 border">Quantity</th>
                                                     <th className="p-2 border">Price</th>
                                                     <th className="p-2 border">Total</th>
                                                     <th className="p-2 border">Action</th>
@@ -449,7 +448,7 @@ function PackageForm({ packageData, setPackageData, open, close, refresh, setRef
                                                                         name="product"
                                                                         type="text"
                                                                         value={selectedProducts[index].name || productSearchText}
-                                                                        onClick={() => { values.quantity && setShowProductSuggestions(true) }}
+                                                                        onClick={() => { setShowProductSuggestions(true) }}
                                                                         onChange={(e) => setProductSearchText(e.target.value)}
                                                                         onBlur={handleBlur}
                                                                         autoComplete="off"
@@ -481,7 +480,7 @@ function PackageForm({ packageData, setPackageData, open, close, refresh, setRef
                                                             )}
                                                         </td>
 
-                                                        {/* <td className="p-2 border">
+                                                        <td className="p-2 border">
                                                         <input
                                                             type="number"
                                                             min={1}
@@ -489,11 +488,11 @@ function PackageForm({ packageData, setPackageData, open, close, refresh, setRef
                                                             value={item.quantity}
                                                             onChange={(e) => handleQuantityChange(index, e.target.value)}
                                                         />
-                                                    </td> */}
+                                                    </td>
 
                                                         <td className="p-2 border">{item.price}</td>
 
-                                                        <td className="p-2 border">{calculateAmount(item.price, values.quantity)}</td>
+                                                        <td className="p-2 border">{calculateAmount(item.price, item.quantity)}</td>
 
                                                         <td className="p-2 border">
                                                             {index !== (selectedProducts.length - 1) && (

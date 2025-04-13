@@ -23,7 +23,7 @@ import { useConfirm } from "@/context/confirmContext";
 import { softDelInvoice } from "@/services/softDelInvoice";
 import { useDeleteInvoiceConfirm } from "@/context/deleteInvoiceConfirmContext";
 
-const TABLE_HEAD = ["Customer", "Total", "Status", "Invoice Date", "Vehicle", "Actions"];
+const TABLE_HEAD = ["Invoice", "Customer", "Total", "Status", "Invoice Date", "Vehicle", "Actions"];
 
 export function Invoice() {
   const confirm = useConfirm();
@@ -232,13 +232,14 @@ export function Invoice() {
               </tr>
             </thead>
             <tbody>
-              {currentItems?.map(({ id, Customer, paymentStatus, totalAmount, createdAt, CustomerVehicle }, index) => {
+              {currentItems?.map(({ id, invoiceNumber, Customer, paymentStatus, totalAmount, createdAt, CustomerVehicle }, index) => {
                 const isLast = index === currentItems.length - 1;
                 const classes = isLast
                   ? "p-4"
                   : "p-4 border-b border-blue-gray-50";
                 return (
                   <tr key={id}>
+
                     <td className={classes}>
                       <Link
                         to="#"
@@ -247,8 +248,19 @@ export function Invoice() {
                           handleEditInvoice(index);
                         }}
                       >
-                        {Customer['firstName']} {Customer['lastName']}
+                        INV{`${invoiceNumber}`.padStart(4, '0')}
                       </Link>
+                    </td>
+                    <td className={classes}>
+                      <Typography
+                        to="#"
+                        className="text-blue-gray font-normal hover:underline"
+                        // onClick={() => {
+                        //   handleEditInvoice(index);
+                        // }}
+                      >
+                        {Customer['firstName']} {Customer['lastName']}
+                      </Typography>
                     </td>
 
                     <td className={classes}>
@@ -264,7 +276,7 @@ export function Invoice() {
                     <td className={classes}>
                       <Typography
                         variant="small"
-                        color={paymentStatus === "Paid"? "green" : paymentStatus==="Partially Paid"? "orange" : "red"}
+                        color={paymentStatus === "Paid" ? "green" : paymentStatus === "Partially Paid" ? "orange" : "red"}
                         className="font-normal"
                       >
                         {paymentStatus}
@@ -334,7 +346,7 @@ export function Invoice() {
           </div>
         </CardFooter>
       </Card>
-      <MyPopUpForm refresh={refresh} setRefresh={setRefresh} open={isFormOpen} close={() => {setIsFormOpen(false); dispatch({ type: 'SET_INVOICE_FORM', payload: false })}} />
+      <MyPopUpForm refresh={refresh} setRefresh={setRefresh} open={isFormOpen} close={() => { setIsFormOpen(false); dispatch({ type: 'SET_INVOICE_FORM', payload: false }) }} />
     </>
   );
 }   

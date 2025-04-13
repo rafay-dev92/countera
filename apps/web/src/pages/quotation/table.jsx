@@ -22,7 +22,7 @@ import { toast } from "react-toastify";
 import { addInvoice } from "@/services/addInvoice";
 import { useConfirm } from "@/context/confirmContext";
 
-const TABLE_HEAD = ["Customer", "Total", "Status", "Quotation Date", "Vehicle", "Actions"];
+const TABLE_HEAD = ["Quotation", "Customer", "Total", "Status", "Quotation Date", "Vehicle", "Actions"];
 
 export function Quotation() {
     const confirm = useConfirm();
@@ -155,11 +155,11 @@ export function Quotation() {
         const selectedProductIds = quotationData?.Product?.map((product) => `${product.id}:${product.quotation_product?.quantity}`);
         const data = {
             invoiceData: {
-              totalAmount: quotationData.totalAmount,
-              paymentStatus: "Unpaid",
-              CustomerId: quotationData.CustomerId,
-              CustomerVehicleId: quotationData.CustomerVehicleId,
-              BusinessId: state.business.id
+                totalAmount: quotationData.totalAmount,
+                paymentStatus: "Unpaid",
+                CustomerId: quotationData.CustomerId,
+                CustomerVehicleId: quotationData.CustomerVehicleId,
+                BusinessId: state.business.id
             },
             "products": selectedProductIds,
         };
@@ -266,13 +266,14 @@ export function Quotation() {
                             </tr>
                         </thead>
                         <tbody>
-                            {currentItems.map(({ id, Customer, totalAmount, approved, createdAt, CustomerVehicle }, index) => {
+                            {currentItems.map(({ id, quotationNumber, Customer, totalAmount, approved, createdAt, CustomerVehicle }, index) => {
                                 const isLast = index === currentItems.length - 1;
                                 const classes = isLast
                                     ? "p-4"
                                     : "p-4 border-b border-blue-gray-50";
                                 return (
                                     <tr key={id}>
+
                                         <td className={classes}>
                                             <Link
                                                 to="#"
@@ -280,6 +281,19 @@ export function Quotation() {
                                                 onClick={() => {
                                                     handleEditQuotation(index);
                                                 }}
+                                            >
+                                                QUT{`${quotationNumber}`.padStart(4, '0')}
+                                            </Link>
+                                        </td>
+
+
+                                        <td className={classes}>
+                                            <Link
+                                                to="#"
+                                                className="text-blue-gray font-normal hover:underline"
+                                                // onClick={() => {
+                                                //     handleEditQuotation(index);
+                                                // }}
                                             >
                                                 {Customer['firstName']} {Customer['lastName']}
                                             </Link>
@@ -297,10 +311,10 @@ export function Quotation() {
                                         <td className={classes}>
                                             <Typography
                                                 variant="small"
-                                                color={approved? "green" : "red"}
+                                                color={approved ? "green" : "red"}
                                                 className="font-normal"
                                             >
-                                                {approved? 'Approved' : 'Pending'}
+                                                {approved ? 'Approved' : 'Pending'}
                                             </Typography>
                                         </td>
                                         <td className={classes}>

@@ -7,7 +7,7 @@ import AdminPanel from "./pages/admin";
 function App() {
   return (
     <>
-    <ToastContainer />
+    <ToastContainer className="!z-[99999]" />
     <Routes>
       <Route path="/super-admin/*" element={<AdminPanel />} />
       <Route path="/dashboard/*" element={<Dashboard />} />

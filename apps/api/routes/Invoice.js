@@ -16,6 +16,10 @@ require("dotenv").config();
 
 router.get("/", fetchUser, async (req, res) => {
   try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const offset = (page - 1) * limit;
+
     const userId = req.user.id;
     const user = await User.findOne({
       where: {
@@ -26,9 +30,19 @@ router.get("/", fetchUser, async (req, res) => {
     });
 
     if (user) {
-      const invoices = await Invoice.findAll({
-        where: { BusinessId: user.dataValues.BusinessId },
+      const whereCondition = user
+        ? {
+            BusinessId: user.dataValues.BusinessId,
+            paymentStatus: { [Op.notIn]: ["Void", "Refund"] },
+          }
+        : {};
+
+      const { count, rows } = await Invoice.findAndCountAll({
+        where: whereCondition,
+        distinct: true,
         order: [["createdAt", "DESC"]],
+        limit,
+        offset,
         include: [
           {
             model: Customer,
@@ -55,44 +69,49 @@ router.get("/", fetchUser, async (req, res) => {
           },
         ],
       });
+
       return res.json({
         message: "Invoices fetched successfully",
-        data: invoices,
+        data: rows,
+        total: count,
+        page,
+        limit,
+        totalPages: Math.ceil(count / limit),
       });
     }
 
-    const invoices = await Invoice.findAll({
-      order: [["createdAt", "DESC"]],
-      include: [
-        {
-          model: Customer,
-          as: "Customer",
-          include: ["Address", "Vehicle"],
-        },
-        {
-          model: CustomerVehicle,
-          as: "CustomerVehicle",
-        },
-        {
-          model: Product,
-          as: "Product",
-          through: "invoice_product",
-          include: ["Tax", "Category"],
-        },
-        {
-          model: Business,
-          as: "Business",
-        },
-        {
-          model: Payment,
-          as: "Payments",
-        },
-      ],
-    });
-    return res.json({
-      message: "Invoices fetched successfully",
-      data: invoices,
-    });
+    // const invoices = await Invoice.findAll({
+    //   order: [["createdAt", "DESC"]],
+    //   include: [
+    //     {
+    //       model: Customer,
+    //       as: "Customer",
+    //       include: ["Address", "Vehicle"],
+    //     },
+    //     {
+    //       model: CustomerVehicle,
+    //       as: "CustomerVehicle",
+    //     },
+    //     {
+    //       model: Product,
+    //       as: "Product",
+    //       through: "invoice_product",
+    //       include: ["Tax", "Category"],
+    //     },
+    //     {
+    //       model: Business,
+    //       as: "Business",
+    //     },
+    //     {
+    //       model: Payment,
+    //       as: "Payments",
+    //     },
+    //   ],
+    // });
+    // return res.json({
+    //   message: "Invoices fetched successfully",
+    //   data: invoices,
+    // });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -349,7 +368,7 @@ router.put("/update/:id", fetchUser, async (req, res) => {
 router.delete("/delete/:id/:status", fetchUser, async (req, res) => {
   try {
     const invoice = await Invoice.findByPk(req.params.id, {
-      include: [        
+      include: [
         {
           model: Payment,
           as: "Payments",
@@ -371,10 +390,11 @@ router.delete("/delete/:id/:status", fetchUser, async (req, res) => {
         );
       } catch (error) {
         console.error(error);
-        return res.status(500).json({ message: "Error deleting invoice payments" });      
-      }      
-    }
-    else {
+        return res
+          .status(500)
+          .json({ message: "Error deleting invoice payments" });
+      }
+    } else {
       if (req.params.status === "Refund") {
         return res.status(409).json({ message: "Invoice already refunded" });
       }

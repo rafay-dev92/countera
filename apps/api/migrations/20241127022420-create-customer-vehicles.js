@@ -28,15 +28,15 @@ module.exports = {
       },
       engineSize: {
         type: Sequelize.STRING,
-        allowNull: false,
+        allowNull: true,
       },
       licenseNo: {
         type: Sequelize.STRING,
-        allowNull: false,
+        allowNull: true,
       },
       color: {
         type: Sequelize.STRING,
-        allowNull: false,
+        allowNull: true,
       },
       notes: {
         type: Sequelize.TEXT,

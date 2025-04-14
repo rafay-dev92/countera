@@ -26,15 +26,15 @@ module.exports= (sequelize) => {
         },
         engineSize: {
             type: DataTypes.STRING,
-            allowNull: false,
+            allowNull: true,
         },
         licenseNo: {
             type: DataTypes.STRING,
-            allowNull: false,
+            allowNull: true,
         },
         color: {
             type: DataTypes.STRING,
-            allowNull: false,
+            allowNull: true,
         },
         notes: {
             type: DataTypes.TEXT,

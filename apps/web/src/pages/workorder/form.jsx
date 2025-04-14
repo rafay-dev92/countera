@@ -28,6 +28,7 @@ import { updateCustomerVehicle } from "@/services/updateCustomerVehicle";
 import { addWorkOrder } from "@/services/addWorkOrder";
 import { updateWorkOrder } from "@/services/updateWorkOrder";
 import ViewWorkOrder from "./viewWorkOrder";
+import { fetchPackages } from "@/services/fetchPackages";
 
 const TABLE_HEAD = [
   "Product",
@@ -57,6 +58,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedWorkOrder, setS
   const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [taxes, setTaxes] = useState([]);
   const [products, setProducts] = useState([]);
+  const [productsPackages, setProductsPackages] = useState([]);
   const [selectedProducts, setSelectedProducts] = useState([{
     product: "",
     quantity: 1,
@@ -78,6 +80,9 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedWorkOrder, setS
 
   // product suggestions
   const [productSearchText, setProductSearchText] = useState("");
+
+  // product packages
+  const [selectedPackage, setSelectedPackage] = useState("");
 
   const closeCustomerVehicleForm = () => {
     setIsCustomerVehicleFormOpen(false);
@@ -137,6 +142,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedWorkOrder, setS
 
   useEffect(() => {
     getProducts();
+    getProductsPackages();
     getCustomers();
     getTaxes();
   }, [refresh]);
@@ -250,6 +256,86 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedWorkOrder, setS
     } catch (error) {
       setIsLoading(false);
       console.log(error);
+    }
+  };
+
+  // get products packages
+  const getProductsPackages = async () => {
+    try {
+      const fetchedPackages = await fetchPackages(state.userToken);
+      const packagesData = await fetchedPackages.json();
+      setProductsPackages(packagesData.data);
+    } catch (error) {
+      console.log(error.message);
+      showToastMessage('error', 'Something went wrong');
+    }
+  };
+
+  const handlePackageChange = async (packageId) => {
+    if (packageId) {
+      const selectedPackage = productsPackages.find((pkg) => pkg.id === packageId);
+      if (selectedPackage) {
+        const updatedItems = [...selectedProducts];
+
+        // Remove empty row (if present at the end)
+        if (updatedItems.length && updatedItems[updatedItems.length - 1].product === "") {
+          updatedItems.pop();
+        }
+
+        console.log("Selected Package: ", updatedItems);
+        selectedPackage.Product.forEach((product) => {
+          const existingIndex = updatedItems.findIndex(p => p.product === product.id);
+          if (existingIndex !== -1) {
+            // Product already exists – update quantity
+            updatedItems[existingIndex].quantity += product.package_product.quantity;
+          } else {
+            // Product doesn't exist – add it
+            updatedItems.push({
+              id: product.id + "-" + Math.random(), // Unique ID for React list key
+              product: product.id,
+              name: product.name,
+              quantity: product.package_product.quantity,
+              price: product.price,
+              taxable: product.taxable,
+              Tax: product.Tax,
+              description: "",
+            });
+          }
+        });
+
+        // Add empty row for manual entry
+        updatedItems.push({
+          id: "",
+          product: "",
+          description: "",
+          name: "",
+          quantity: 1,
+          price: 0,
+          taxable: false,
+          Tax: [],
+        });
+
+        setSelectedProducts(updatedItems);
+        setProductSearchText("");
+        recalculateTaxes(updatedItems);
+        setSelectedPackage(""); // Reset dropdown to default
+      }
+    } else {
+      // Reset to default row only
+      const updatedItems = [{
+        id: "",
+        product: "",
+        description: "",
+        name: "",
+        quantity: 1,
+        price: 0,
+        taxable: false,
+        Tax: [],
+      }];
+      setSelectedProducts(updatedItems);
+      setProductSearchText("");
+      recalculateTaxes(updatedItems);
+      setSelectedPackage("");
     }
   };
 
@@ -586,7 +672,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedWorkOrder, setS
                 {state?.workorder?.isViewOpen ? (
                   <ViewWorkOrder workOrderData={printWorkOrder} setWorkOrderData={setPrintWorkOrder} componentRef={componentRef} appliedTaxes={appliedTaxes} setEdit={setEdit} close={handleClose} />
                 ) : (
-                  <div className="overflow-y-auto h-[80vh] overflow-x-hidden p-2">
+                  <div className="overflow-y-auto h-[85vh] overflow-x-hidden p-2">
                     <div className="flex gap-4">
                       <div className="basis-[40%] max-w-[40%]">
                         <div className="relative mb-7" ref={customerInputRef}>
@@ -819,9 +905,32 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedWorkOrder, setS
                               /> <br />
                             </div>
                           </div>
-                          <div className="flex flex-col ml-3 place-self-end">
-                            <div className="text-5xl mt-5">
-                              <h1>$  {calculateTotalAmountWithTax()}</h1>
+                          <div className="flex flex-col gap-4">
+                            <div className="mt-4">
+                              <label className="p-2 font-bold">Packages</label> <br />
+
+                              <select
+                                value={selectedPackage}
+                                disabled={!selectedCustomer}
+                                className="w-48 lg:w-72 m-2 p-2 border border-gray-300 bg-inherit rounded-md"
+                                onChange={(e) => {
+                                  setSelectedPackage(e.target.value);
+                                  handlePackageChange(e.target.value);
+                                }}
+                              >
+                                <option value="">Select Package</option>
+                                {productsPackages?.length > 0 ? productsPackages.map((packageItem) => (
+                                  <option key={packageItem.id} value={packageItem.id}>
+                                    {packageItem.name}
+                                  </option>
+                                )) : <option value="">No Package</option>}
+                              </select>
+                            </div>
+                            <div className="text-5xl mt-5 ms-2">
+                              <h1>${calculateTotalAmountWithTax()}</h1>
+                            </div>
+
+                            <div className="mt-3">
                             </div>
                           </div>
                         </div>

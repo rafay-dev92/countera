@@ -132,7 +132,7 @@ const printView = React.forwardRef(({view, quotationData, appliedTaxes}, ref) =>
                             <span className="text-xs p-2">Model</span>
                         </div>
                         <div className="flex flex-col divide-y">
-                            <span className="text-xs p-2">{quotationData?.CustomerVehicle.licenseNo}</span>
+                            <span className="text-xs p-2">{quotationData?.CustomerVehicle.licenseNo? quotationData?.CustomerVehicle.licenseNo : 'N/A'}</span>
                             <span className="text-xs p-2">{quotationData?.CustomerVehicle.odometer}</span>
                             <span className="text-xs p-2">{quotationData?.CustomerVehicle.year}</span>
                             <span className="text-xs p-2">{quotationData?.CustomerVehicle.make}</span>

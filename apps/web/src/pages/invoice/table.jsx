@@ -34,12 +34,18 @@ export function Invoice() {
   const [invoices, setInvoices] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
+  const [totalCount, setTotalCount] = useState(0);
   const [refresh, setRefresh] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const [isCustomerFormOpen, setIsCustomerFormOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
+
+  // pagination
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
 
   const showToastMessage = (type, message) => {
     if (type === 'success') {
@@ -55,13 +61,16 @@ export function Invoice() {
 
   const getInvoices = async () => {
     try {
-      const fetchedInvoices = await fetchInvoices(state.userToken);
-      const totalInvoices = await fetchedInvoices.json();
+      const response = await fetchInvoices(state.userToken, currentPage, itemsPerPage);
+      const totalInvoices = await response.json();
       setInvoices(
         totalInvoices.data?.filter(
           invoice => invoice.paymentStatus !== 'Refund' && invoice.paymentStatus !== 'Void'
         )
       );
+
+      console.log(totalInvoices);
+      setTotalCount(totalInvoices.total || 0);
       setLoading(false);
     } catch (error) {
       console.log(error.message);
@@ -71,7 +80,7 @@ export function Invoice() {
 
   useEffect(() => {
     getInvoices();
-  }, [refresh]);
+  }, [refresh, currentPage, itemsPerPage]);
 
   const handleEditInvoice = (index) => {
     if (state.userInfo.Permission.some(obj => obj.name === "CAN_EDIT_INVOICE" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
@@ -151,7 +160,7 @@ export function Invoice() {
         Customer['firstName'].toLowerCase().includes(searchQuery.toLowerCase()) ||
         Customer['lastName'].toLowerCase().includes(searchQuery.toLowerCase())
     );
-    currentItems = filteredRows?.slice(indexOfFirstItem, indexOfLastItem);
+    currentItems = filteredRows.slice(indexOfFirstItem, indexOfLastItem);
   }
 
   const handleItemsPerPageChange = (event) => {
@@ -179,7 +188,7 @@ export function Invoice() {
   }
   return (
     <>
-      <Card className="h-full w-full ">
+      <Card className="h-full w-full">
         <CardHeader floated={false} shadow={false} className="rounded-none">
           <div className="mb-4 sm:mb-0 flex items-center">
             <Typography variant="h5" color="blue-gray" className="flex items-center">
@@ -198,7 +207,7 @@ export function Invoice() {
                 />
               </div>
               <div className="flex gap-2 lg:gap-4">
-                <Button className="w-full bg-blue-900 lg:w-auto" size="md" onClick={openPopup} >
+                <Button className="w-full bg-blue-900 lg:w-auto" size="md" onClick={openPopup}>
                   New
                 </Button>
               </div>
@@ -225,15 +234,8 @@ export function Invoice() {
             <thead>
               <tr>
                 {TABLE_HEAD.map((head) => (
-                  <th
-                    key={head}
-                    className="border-y border-blue-gray-100 bg-blue-gray-50/50 p-4"
-                  >
-                    <Typography
-                      variant="small"
-                      color="blue-gray"
-                      className="font-normal leading-none opacity-70"
-                    >
+                  <th key={head} className="border-y border-blue-gray-100 bg-blue-gray-50/50 p-4">
+                    <Typography variant="small" color="blue-gray" className="font-normal leading-none opacity-70">
                       {head}
                     </Typography>
                   </th>
@@ -241,21 +243,16 @@ export function Invoice() {
               </tr>
             </thead>
             <tbody>
-              {currentItems?.map(({ id, invoiceNumber, Customer, paymentStatus, totalAmount, createdAt, CustomerVehicle }, index) => {
-                const isLast = index === currentItems.length - 1;
-                const classes = isLast
-                  ? "p-4"
-                  : "p-4 border-b border-blue-gray-50";
+              {invoices?.map(({ id, invoiceNumber, Customer, paymentStatus, totalAmount, createdAt, CustomerVehicle }, index) => {
+                const isLast = index === invoices.length - 1;
+                const classes = isLast ? "p-4" : "p-4 border-b border-blue-gray-50";
                 return (
                   <tr key={id}>
-
                     <td className={classes}>
                       <Link
                         to="#"
                         className="text-blue-gray font-normal hover:underline"
-                        onClick={() => {
-                          handleEditInvoice(index);
-                        }}
+                        onClick={() => handleEditInvoice(index)}
                       >
                         INV{`${invoiceNumber}`.padStart(4, '0')}
                       </Link>
@@ -264,90 +261,70 @@ export function Invoice() {
                       <Link
                         to="#"
                         className="text-blue-gray font-normal hover:underline"
-                        onClick={() => {
-                          showCustomer(index);
-                        }}
+                        onClick={() => showCustomer(index)}
                       >
                         {Customer['firstName']} {Customer['lastName']}
                       </Link>
                     </td>
-
                     <td className={classes}>
-                      <Typography
-                        variant="small"
-                        color="blue-gray"
-                        className="font-normal"
-                      >
+                      <Typography variant="small" color="blue-gray" className="font-normal">
                         {totalAmount}
                       </Typography>
                     </td>
-
                     <td className={classes}>
                       <Typography
                         variant="small"
-                        color={paymentStatus === "Paid" ? "green" : paymentStatus === "Partially Paid" ? "orange" : "red"}
+                        color={
+                          paymentStatus === "Paid"
+                            ? "green"
+                            : paymentStatus === "Partially Paid"
+                              ? "orange"
+                              : "red"
+                        }
                         className="font-normal"
                       >
                         {paymentStatus}
                       </Typography>
                     </td>
-
                     <td className={classes}>
-                      <Typography
-                        variant="small"
-                        color="blue-gray"
-                        className="font-normal "
-                      >
+                      <Typography variant="small" color="blue-gray" className="font-normal">
                         {formatCreatedAt(createdAt)}
                       </Typography>
                     </td>
-
                     <td className={classes}>
-                      <Typography
-                        variant="small"
-                        color="blue-gray"
-                        className="font-normal "
-                      >
+                      <Typography variant="small" color="blue-gray" className="font-normal">
                         {`${CustomerVehicle['make']} ${CustomerVehicle['model']} ${CustomerVehicle['year']}`}
                       </Typography>
                     </td>
-
                     <td className={classes}>
                       <Tooltip content="Delete Invoice">
-                        <IconButton variant="text" onClick={() => {
-                          handleDeleteInvoice(index)
-                        }}>
+                        <IconButton variant="text" onClick={() => handleDeleteInvoice(index)}>
                           <TrashIcon className="h-6 w-6 text-red-500" />
                         </IconButton>
                       </Tooltip>
                     </td>
                   </tr>
                 );
-              },
-              )}
+              })}
             </tbody>
           </table>
         </CardBody>
+
         <CardFooter className="flex items-center justify-between border-t border-blue-gray-50 p-4">
           <Typography variant="small" color="blue-gray" className="font-normal">
-            Showing {indexOfFirstItem + 1} - {Math.min(indexOfLastItem, filteredRows?.length)} of {filteredRows?.length}
+            Showing {(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, totalCount)} of {totalCount}
           </Typography>
           <Typography variant="small" color="blue-gray" className="font-normal">
-            Page {currentPage} of {Math.ceil(filteredRows?.length / itemsPerPage)}
+            Page {currentPage} of {Math.ceil(totalCount / itemsPerPage)}
           </Typography>
           <div className="flex gap-2">
-            <Button
-              variant="outlined"
-              size="sm"
-              disabled={currentPage === 1}
-              onClick={() => paginate(currentPage - 1)}
-            >
+            <Button variant="outlined" size="sm" disabled={currentPage === 1} onClick={() => paginate(currentPage - 1)}>
               Previous
             </Button>
             <Button
               variant="outlined"
               size="sm"
-              disabled={indexOfLastItem >= filteredRows?.length}
+              disabled={currentPage >= Math.ceil(totalCount / itemsPerPage)}
               onClick={() => paginate(currentPage + 1)}
             >
               Next
@@ -355,6 +332,7 @@ export function Invoice() {
           </div>
         </CardFooter>
       </Card>
+
       <CustomerForm open={isCustomerFormOpen} close={() => setIsCustomerFormOpen(false)} refresh={refresh} setRefresh={setRefresh} selectedCustomer={selectedCustomer} setSelectedCustomer={setSelectedCustomer} />
       <MyPopUpForm refresh={refresh} setRefresh={setRefresh} open={isFormOpen} close={() => { setIsFormOpen(false); dispatch({ type: 'SET_INVOICE_FORM', payload: false }) }} />
     </>

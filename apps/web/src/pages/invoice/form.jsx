@@ -82,6 +82,9 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
   // product suggestions
   const [productSearchText, setProductSearchText] = useState("");
 
+  // product packages
+  const [selectedPackage, setSelectedPackage] = useState("");
+
   const closeCustomerVehicleForm = () => {
     setIsCustomerVehicleFormOpen(false);
   };
@@ -289,23 +292,33 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
       const selectedPackage = productsPackages.find((pkg) => pkg.id === packageId);
       if (selectedPackage) {
         const updatedItems = [...selectedProducts];
-        const selectedProductDetails = selectedPackage.Product.map((product) => ({
-          id: product.id,
-          product: product.id,
-          name: product.name,
-          quantity: product.package_product.quantity,
-          price: product.price,
-          taxable: product.taxable,
-          Tax: product.Tax,
-          description: "",
-        }));
-        // Clear the selected products array
-        updatedItems.length = 0;
-        // Add the selected package products to the selected products array
-        selectedProductDetails.forEach((product) => {
-          updatedItems.push(product);
+
+        // Remove empty row (if present at the end)
+        if (updatedItems.length && updatedItems[updatedItems.length - 1].product === "") {
+          updatedItems.pop();
+        }
+
+        selectedPackage.Product.forEach((product) => {
+          const existingIndex = updatedItems.findIndex(p => p.product === product.id);
+          if (existingIndex !== -1) {
+            // Product already exists – update quantity
+            updatedItems[existingIndex].quantity += product.package_product.quantity;
+          } else {
+            // Product doesn't exist – add it
+            updatedItems.push({
+              id: product.id + "-" + Math.random(),
+              product: product.id,
+              name: product.name,
+              quantity: product.package_product.quantity,
+              price: product.price,
+              taxable: product.taxable,
+              Tax: product.Tax,
+              description: "",
+            });
+          }
         });
-        // Add an empty row at the end
+
+        // Add empty row for manual entry
         updatedItems.push({
           id: "",
           product: "",
@@ -316,15 +329,15 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
           taxable: false,
           Tax: [],
         });
+
         setSelectedProducts(updatedItems);
         setProductSearchText("");
         recalculateTaxes(updatedItems);
+        setSelectedPackage(""); // Reset dropdown to default
       }
     } else {
-      // If no package is selected, reset the selected products
-      const updatedItems = [...selectedProducts];
-      updatedItems.length = 0;
-      updatedItems.push({
+      // Reset to default row only
+      const updatedItems = [{
         id: "",
         product: "",
         description: "",
@@ -333,10 +346,11 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
         price: 0,
         taxable: false,
         Tax: [],
-      });
+      }];
       setSelectedProducts(updatedItems);
       setProductSearchText("");
       recalculateTaxes(updatedItems);
+      setSelectedPackage("");
     }
   };
 
@@ -590,6 +604,7 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
       taxable: false
     }])
     setAppliedTaxes({});
+    setSelectedPackage("");
   };
 
   const formikProps = useFormik({
@@ -661,7 +676,7 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
                 {state?.invoice?.isViewOpen ? (
                   <ViewInvoice printInvoice={printInvoice} setPrintInvoice={setPrintInvoice} componentRef={componentRef} appliedTaxes={appliedTaxes} setEdit={setEdit} close={handleClose} />
                 ) : (
-                  <div className="overflow-y-auto h-[80vh] overflow-x-hidden p-2">
+                  <div className="overflow-y-auto h-[85vh] overflow-x-hidden p-2">
                     <div className="flex gap-4">
                       <div className="basis-[40%] max-w-[40%]">
                         <div className="relative mb-7" ref={customerInputRef}>
@@ -893,9 +908,13 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
                               <label className="p-2 font-bold">Packages</label> <br />
 
                               <select
+                                value={selectedPackage}
                                 disabled={!selectedCustomer}
                                 className="w-48 lg:w-72 m-2 p-2 border border-gray-300 bg-inherit rounded-md"
-                                onChange={(e) => handlePackageChange(e.target.value)}
+                                onChange={(e) => {
+                                  setSelectedPackage(e.target.value);
+                                  handlePackageChange(e.target.value);
+                                }}
                               >
                                 <option value="">Select Package</option>
                                 {productsPackages?.length > 0 ? productsPackages.map((packageItem) => (

@@ -29,7 +29,7 @@ const CustomerVehicleForm = ({ open, close, refresh, setRefresh, CustomerId, get
 
     // set the years to be displayed in the year select input
     const startYear = import.meta.env.VITE_START_YEAR;
-    const endYear = import.meta.env.VITE_END_YEAR;
+    const endYear = new Date().getFullYear()+1;
     const years = [];
     for (let year = endYear; year >= startYear; year--) {
         years.push(year);
@@ -222,7 +222,7 @@ const CustomerVehicleForm = ({ open, close, refresh, setRefresh, CustomerId, get
                             <div className="p-6">
                                 <div className="flex items-center justify-start space-x-4">
 
-                                    <div>
+                                    <div className="basis-1/3 max-w-33.33%"> 
                                         <label className="font-bold">Year</label> <br />
                                         <select
                                             className="w-full p-2 border border-gray-300 rounded-md text-black font-small"
@@ -245,7 +245,7 @@ const CustomerVehicleForm = ({ open, close, refresh, setRefresh, CustomerId, get
                                         ) : (<div></div>)}
                                     </div>
 
-                                    <div className="relative" ref={vehicleInputRef}>
+                                    <div className="relative basis-1/3 max-w-33.33%" ref={vehicleInputRef}>
                                         <label className="font-bold">Vehicle</label> <br />
                                         <input
                                             className="w-full p-2 border border-gray-300 rounded-md text-black font-small"
@@ -310,7 +310,7 @@ const CustomerVehicleForm = ({ open, close, refresh, setRefresh, CustomerId, get
                                             </ul>
                                         )}
                                     </div> */}
-                                    <div>
+                                    <div className="basis-1/3 max-w-33.33%">
                                         <label className="font-bold">Odometer</label> <br />
                                         <input
                                             className="w-full p-2 border border-gray-300 rounded-md text-black font-small"

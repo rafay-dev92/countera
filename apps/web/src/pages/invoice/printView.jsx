@@ -109,14 +109,14 @@ const printView = React.forwardRef(({ view, printInvoice, appliedTaxes }, ref) =
                     </div>
                     <div className="flex border border-black-2">
                         <div className="flex flex-col divide-y">
-                            <span className="text-xs p-2">License No:</span>
+                            <span className="text-xs p-2">License No</span>
                             <span className="text-xs p-2">Odometer</span>
                             <span className="text-xs p-2">Year</span>
                             <span className="text-xs p-2">Make</span>
                             <span className="text-xs p-2">Model</span>
                         </div>
                         <div className="flex flex-col divide-y">
-                            <span className="text-xs p-2">{printInvoice?.CustomerVehicle.licenseNo}</span>
+                            <span className="text-xs p-2">{printInvoice?.CustomerVehicle.licenseNo? printInvoice?.CustomerVehicle.licenseNo : 'N/A'}</span>
                             <span className="text-xs p-2">{printInvoice?.CustomerVehicle.odometer}</span>
                             <span className="text-xs p-2">{printInvoice?.CustomerVehicle.year}</span>
                             <span className="text-xs p-2">{printInvoice?.CustomerVehicle.make}</span>

@@ -13,8 +13,8 @@ const schema = Yup.object().shape({
     year: Yup.number().required("Year is required"),
     vehicle: Yup.string().required("Vehicle is required"),
     odometer: Yup.number().required("Odometer is required"),
-    licenseNo: Yup.string().required("license No. is required"),
-    engineSize: Yup.number().required("Engine Size is required"),
+    licenseNo: Yup.string(),
+    engineSize: Yup.number(),
     color: Yup.string(),
     notes: Yup.string(),
 });

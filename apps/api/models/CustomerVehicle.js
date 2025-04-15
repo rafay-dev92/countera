@@ -32,6 +32,10 @@ module.exports= (sequelize) => {
             type: DataTypes.STRING,
             allowNull: true,
         },
+        vinNo: {
+            type: DataTypes.STRING,
+            allowNull: true,
+        },
         color: {
             type: DataTypes.STRING,
             allowNull: true,

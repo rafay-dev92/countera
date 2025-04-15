@@ -14,6 +14,7 @@ const schema = Yup.object().shape({
     vehicle: Yup.string().required("Vehicle is required"),
     odometer: Yup.number().required("Odometer is required"),
     licenseNo: Yup.string(),
+    vinNo: Yup.string(),
     engineSize: Yup.number(),
     color: Yup.string(),
     notes: Yup.string(),
@@ -60,6 +61,7 @@ const CustomerVehicleForm = ({ open, close, refresh, setRefresh, CustomerId, get
                 vehicle: `${selectedVehicle.make} ${selectedVehicle.model}`,
                 odometer: selectedVehicle.odometer,
                 licenseNo: selectedVehicle.licenseNo,
+                vinNo: selectedVehicle.vinNo,
                 engineSize: selectedVehicle.engineSize,
                 color: selectedVehicle.color,
                 notes: selectedVehicle.notes,
@@ -132,8 +134,9 @@ const CustomerVehicleForm = ({ open, close, refresh, setRefresh, CustomerId, get
                 year: "",
                 vehicle: "",
                 odometer: "",
-                license: "",
-                engine_size: "",
+                licenseNo: "",
+                vinNo: "",
+                engineSize: "",
                 color: "",
                 notes: "",                
             },
@@ -141,8 +144,9 @@ const CustomerVehicleForm = ({ open, close, refresh, setRefresh, CustomerId, get
                 year: "",
                 vehicle: "",
                 odometer: "",
-                license: "",
-                engine_size: "",
+                licenseNo: "",
+                vinNo: "",
+                engineSize: "",
                 color: "",
                 notes: "",  
             },
@@ -154,8 +158,9 @@ const CustomerVehicleForm = ({ open, close, refresh, setRefresh, CustomerId, get
             year: "",
             vehicle: "",
             odometer: "",
-            license: "",
-            engine_size: "",
+            licenseNo: "",
+            vinNo: "",
+            engineSize: "",
             color: "",
             notes: "",  
         },
@@ -187,7 +192,7 @@ const CustomerVehicleForm = ({ open, close, refresh, setRefresh, CustomerId, get
     }, []);
 
     return (
-        <Dialog open={open}>
+        <Dialog open={open} size="lg">
             {open && (
                 <form onSubmit={handleSubmit} autoComplete="new" >
                     <div className="fixed top-0 left-0 w-full h-full flex items-center justify-center">
@@ -331,7 +336,7 @@ const CustomerVehicleForm = ({ open, close, refresh, setRefresh, CustomerId, get
                                 </div>
 
                                 <div className="flex items-center justify-start space-x-4 mt-4">
-                                    <div>
+                                    <div className="basis-1/3 max-w-33.33%">
                                         <label className="font-bold">License No.</label> <br />
                                         <input
                                             className="w-full p-2 border border-gray-300 rounded-md text-black font-small"
@@ -346,6 +351,24 @@ const CustomerVehicleForm = ({ open, close, refresh, setRefresh, CustomerId, get
                                         {touched.licenseNo && errors.licenseNo ? (
                                             <div className="text-red-500">
                                                 {errors.licenseNo}
+                                            </div>
+                                        ) : (<div></div>)}
+                                    </div>
+                                    <div className="basis-1/3 max-w-33.33%">
+                                        <label className="font-bold">Vin No.</label> <br />
+                                        <input
+                                            className="w-full p-2 border border-gray-300 rounded-md text-black font-small"
+                                            id="vinNo"
+                                            name="vinNo"
+                                            type="text"
+                                            value={values.vinNo}
+                                            onChange={(e) => handleInputChange('vinNo', e)}
+                                            onBlur={handleBlur}
+                                            autoComplete="off"
+                                        />
+                                        {touched.vinNo && errors.vinNo ? (
+                                            <div className="text-red-500">
+                                                {errors.vinNo}
                                             </div>
                                         ) : (<div></div>)}
                                     </div>

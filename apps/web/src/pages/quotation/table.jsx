@@ -113,7 +113,7 @@ export function Quotation() {
         const selected = currentItems[index];
         setIsCustomerFormOpen(true);
         setSelectedCustomer(selected.Customer);
-      }
+    }
 
     const formatCreatedAt = (createdAt) => {
         const date = new Date(createdAt);

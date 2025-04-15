@@ -79,6 +79,12 @@ const CustomerForm = ({ open, close, refresh, setRefresh, selectedCustomer, setS
 
   const onSubmit = async (values) => {
     setIsLoading(true);
+
+    if (values.customerType === 'business' && !values.licenseNo) {
+      showToastMessage('error', 'License number is required for business customer')
+      setIsLoading(false);
+      return;
+    }
     const updatedValues = { ...values, BusinessId: state.business.id };
 
     // setting taxable to false for business customer

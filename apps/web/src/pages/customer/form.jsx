@@ -106,8 +106,16 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
     setIsLoading(true);
     const updatedValues = { ...values, BusinessId: state.business.id };
 
+    if (values.customerType === 'business' && !values.licenseNo) {
+      showToastMessage('error', 'License number is required for business customer')
+      setIsLoading(false);
+      return;
+    }
+
     // setting taxable to false for business customer
     if (updatedValues.customerType === 'business') updatedValues.taxable = false;
+    else updatedValues.taxable = true;
+    
     try {
       if (!edit) {
         // separating user data

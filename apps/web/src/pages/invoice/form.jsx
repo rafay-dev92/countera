@@ -84,6 +84,9 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
 
   // product packages
   const [selectedPackage, setSelectedPackage] = useState("");
+  const [showPackageModal, setShowPackageModal] = useState(false);
+  const [packagePreview, setPackagePreview] = useState(null);
+  const [modalQuantity, setModalQuantity] = useState(1);
 
   const closeCustomerVehicleForm = () => {
     setIsCustomerVehicleFormOpen(false);
@@ -287,70 +290,14 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
     }
   };
 
-  const handlePackageChange = async (packageId) => {
+  const handlePackageChange = (packageId) => {
     if (packageId) {
-      const selectedPackage = productsPackages.find((pkg) => pkg.id === packageId);
-      if (selectedPackage) {
-        const updatedItems = [...selectedProducts];
-
-        // Remove empty row (if present at the end)
-        if (updatedItems.length && updatedItems[updatedItems.length - 1].product === "") {
-          updatedItems.pop();
-        }
-
-        selectedPackage.Product.forEach((product) => {
-          const existingIndex = updatedItems.findIndex(p => p.product === product.id);
-          if (existingIndex !== -1) {
-            // Product already exists – update quantity
-            updatedItems[existingIndex].quantity += product.package_product.quantity;
-          } else {
-            // Product doesn't exist – add it
-            updatedItems.push({
-              id: product.id + "-" + Math.random(),
-              product: product.id,
-              name: product.name,
-              quantity: product.package_product.quantity,
-              price: product.price,
-              taxable: product.taxable,
-              Tax: product.Tax,
-              description: "",
-            });
-          }
-        });
-
-        // Add empty row for manual entry
-        updatedItems.push({
-          id: "",
-          product: "",
-          description: "",
-          name: "",
-          quantity: 1,
-          price: 0,
-          taxable: false,
-          Tax: [],
-        });
-
-        setSelectedProducts(updatedItems);
-        setProductSearchText("");
-        recalculateTaxes(updatedItems);
-        setSelectedPackage(""); // Reset dropdown to default
+      const selected = productsPackages.find((pkg) => pkg.id === packageId);
+      if (selected) {
+        setPackagePreview(selected);
+        setModalQuantity(selected.Product[0].package_product.quantity);
+        setShowPackageModal(true);
       }
-    } else {
-      // Reset to default row only
-      const updatedItems = [{
-        id: "",
-        product: "",
-        description: "",
-        name: "",
-        quantity: 1,
-        price: 0,
-        taxable: false,
-        Tax: [],
-      }];
-      setSelectedProducts(updatedItems);
-      setProductSearchText("");
-      recalculateTaxes(updatedItems);
-      setSelectedPackage("");
     }
   };
 
@@ -1104,7 +1051,7 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
                             <h1>Subtotal</h1>
                           </div>
                           <div className="text-1xl">
-                            <h1>{totalAmount} $</h1>
+                            <h1>${totalAmount}</h1>
                           </div>
                         </div>
 
@@ -1113,7 +1060,7 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
                             <div key={ind} className="flex justify-between">
                               <span className="rounded w-min p-2 whitespace-nowrap basis-[50%]" >{`${tax.split('_')[0]} (${tax.split('_')[1]}${tax.split('_')[2]})`}</span>
                               <span className="w-fit p-2 rounded-md basis-[33.33%]" >{ }</span>
-                              <span className="text-1xl p-2 w-fit text-right basis-[50%]">{tax.split('_')[2] === '%' ? appliedTaxes[tax].toFixed(2) : appliedTaxes[tax]} $</span>
+                              <span className="text-1xl p-2 w-fit text-right basis-[50%]">{tax.split('_')[2] === '%' ? `$${appliedTaxes[tax].toFixed(2)}` : `$${appliedTaxes[tax]}`}</span>
                             </div>
                           ))}
                         </div>
@@ -1147,7 +1094,7 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
                             <h1>Total</h1>
                           </div>
                           <div className="text-1xl">
-                            <h1>{calculateTotalAmountWithTax()} $</h1>
+                            <h1>${calculateTotalAmountWithTax()}</h1>
                           </div>
                         </div>
                       </div>
@@ -1208,6 +1155,109 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
       <CustomerForm open={isCustomerFormOpen} close={closeCustomerForm} refresh={refresh} setRefresh={setRefresh} setSelectedCustomer={setSelectedCustomer} />
       {selectedCustomer ? <CustomerVehicleForm open={isCustomerVehicleFormOpen} close={closeCustomerVehicleForm} refresh={refresh} setRefresh={setRefresh} CustomerId={selectedCustomer?.id} getCustomerDetails={getCustomerDetails} /> : null}
       {printInvoice && Object.keys(printInvoice).length > 0 ? <PrintView view={false} printInvoice={printInvoice} ref={componentRef} appliedTaxes={appliedTaxes} /> : null}
+
+        {/* Package Preview Modal */}
+      {showPackageModal && packagePreview && (
+        <div className="fixed inset-0 z-[10000] bg-black/50 flex items-center justify-center">
+           <div
+            className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-300 ease-out animate-fadeIn"
+          />
+          <div className="relative bg-white p-6 rounded-xl shadow-2xl z-[10000]
+                 transition-transform duration-300 ease-out animate-scaleIn w-[90%] max-w-xl max-h-[90%] overflow-y-auto">
+            <h2 className="text-lg font-bold mb-4">Package: {packagePreview.name}</h2>
+
+            <div className="space-y-3 max-h-64 overflow-y-auto">
+              {packagePreview.Product.map((product) => (
+                <div
+                  key={product.id}
+                  className="flex justify-between items-center border p-2 rounded-md"
+                >
+                  <div>
+                    <p className="font-medium">{product.name}</p>
+                    <p className="text-sm text-gray-500">Original Quantity: {product.package_product.quantity}</p>
+                    <p className="text-sm text-gray-500">Price: ${product.price}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-4">
+              <label className="block font-medium">Update Quantity</label>
+              <input
+                type="number"
+                min={1}
+                value={modalQuantity}
+                onChange={(e) => e.target.value > 0 ? setModalQuantity(Number(e.target.value)) : setModalQuantity(e.target.value)}
+                className="w-full p-2 border rounded-md mt-1"
+              />
+            </div>
+
+            <div className="flex justify-end mt-6 space-x-4">
+              <button
+                onClick={() => {
+                  setShowPackageModal(false);
+                  setPackagePreview(null);
+                  setSelectedPackage("");
+                }}
+                className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+              >
+                Discard
+              </button>
+              <button
+                disabled={modalQuantity < 1}
+                onClick={() => {
+                  const updatedItems = [...selectedProducts];
+
+                  // Remove empty row (if present at the end)
+                  if (updatedItems.length && updatedItems[updatedItems.length - 1].product === "") {
+                    updatedItems.pop();
+                  }
+
+                  packagePreview.Product.forEach((product) => {
+                    const existingIndex = updatedItems.findIndex(p => p.product === product.id);
+                    if (existingIndex !== -1) {
+                      updatedItems[existingIndex].quantity += modalQuantity;
+                    } else {
+                      updatedItems.push({
+                        id: product.id + "-" + Math.random(),
+                        product: product.id,
+                        name: product.name,
+                        quantity: modalQuantity,
+                        price: product.price,
+                        taxable: product.taxable,
+                        Tax: product.Tax,
+                        description: "",
+                      });
+                    }
+                  });
+
+                  // Add an empty row again
+                  updatedItems.push({
+                    id: "",
+                    product: "",
+                    description: "",
+                    name: "",
+                    quantity: 1,
+                    price: 0,
+                    taxable: false,
+                    Tax: [],
+                  });
+
+                  setSelectedProducts(updatedItems);
+                  recalculateTaxes(updatedItems);
+                  setProductSearchText("");
+                  setSelectedPackage("");
+                  setShowPackageModal(false);
+                  setPackagePreview(null);
+                }}
+                className={`px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 ${modalQuantity < 1 ? "opacity-50 cursor-not-allowed" : ""}`}
+              >
+                Add to Invoice
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };

@@ -21,6 +21,7 @@ import { addInvoice } from "@/services/addInvoice";
 import { useConfirm } from "@/context/confirmContext";
 import { fetchWorkOrders } from "@/services/fetchWorkOrders";
 import { delWorkOrder } from "@/services/delWorkOrder";
+import CustomerForm from "../invoice/customerForm";
 
 const TABLE_HEAD = ["WorkOrder", "Customer", "Total", "Status", "WorkOrder Date", "Vehicle", "Actions"];
 
@@ -36,6 +37,9 @@ export function WorkOrder() {
     const [selectedWorkOrder, setSelectetWorkOrder] = useState(null);
     const [isOpen, setIsOpen] = useState(false);
     const [loading, setLoading] = useState(true);
+
+    const [isCustomerFormOpen, setIsCustomerFormOpen] = useState(false);
+    const [selectedCustomer, setSelectedCustomer] = useState(null);
 
     const showToastMessage = (type, message) => {
         if (type === 'success') {
@@ -105,6 +109,11 @@ export function WorkOrder() {
         }
     };
 
+    const showCustomer = (index) => {
+        const selected = currentItems[index];
+        setIsCustomerFormOpen(true);
+        setSelectedCustomer(selected.Customer);
+    }
     const formatCreatedAt = (createdAt) => {
         const date = new Date(createdAt);
         return date.toLocaleString();
@@ -289,9 +298,9 @@ export function WorkOrder() {
                                             <Link
                                                 to="#"
                                                 className="text-blue-gray font-normal hover:underline"
-                                                // onClick={() => {
-                                                //     handleEditWorkOrder(index);
-                                                // }}
+                                                onClick={() => {
+                                                    showCustomer(index);
+                                                }}
                                             >
                                                 {Customer['firstName']} {Customer['lastName']}
                                             </Link>
@@ -396,6 +405,7 @@ export function WorkOrder() {
                 </CardFooter>
 
             </Card>
+            <CustomerForm open={isCustomerFormOpen} close={() => setIsCustomerFormOpen(false)} refresh={refresh} setRefresh={setRefresh} selectedCustomer={selectedCustomer} setSelectedCustomer={setSelectedCustomer} />
             <MyPopUpForm refresh={refresh} setRefresh={setRefresh} open={isOpen} close={closePopup} selectedWorkOrder={selectedWorkOrder} setSelectetWorkOrder={setSelectetWorkOrder} />
         </>
     );

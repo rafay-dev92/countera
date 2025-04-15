@@ -3,7 +3,7 @@ import PrintView from "./printView";
 import { toast } from "react-toastify";
 import { State } from "@/state/Context";
 import ReactToPrint from "react-to-print";
-import { updateQuotation as updateWorkOrder } from "@/services/updateQuotation";
+import { updateWorkOrder } from "@/services/updateWorkOrder";
 import { addInvoice } from "@/services/addInvoice";
 import { useNavigate } from "react-router-dom";
 import { sendMail } from "@/services/sendMail";

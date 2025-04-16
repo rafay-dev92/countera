@@ -37,6 +37,11 @@ module.exports= (sequelize) => {
             type: DataTypes.INTEGER,
             allowNull: false,
         },
+        timezone: {
+            type: DataTypes.STRING,
+            allowNull: true,
+            defaultValue: 'UTC',
+        },
         licenseNumber: {
             type: DataTypes.STRING,
             allowNull: true,

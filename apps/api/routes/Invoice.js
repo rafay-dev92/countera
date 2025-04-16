@@ -16,9 +16,31 @@ require("dotenv").config();
 
 router.get("/", fetchUser, async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
-    const offset = (page - 1) * limit;
+    const { page = 1, limit = 10, filters } = req.query;
+
+    const parsedFilters = JSON.parse(filters);
+    const { CustomerId, paymentStatus, startDate, endDate, isReport, order } =
+      parsedFilters;
+    const selectedFilters = {};
+
+    if (Array.isArray(paymentStatus) && paymentStatus.length > 0) {
+      selectedFilters.paymentStatus = {
+        [Op.in]: paymentStatus,
+      };
+    }
+    if (CustomerId) selectedFilters.CustomerId = CustomerId;
+
+    if (startDate && endDate) {
+      const parsedStartDate = new Date(startDate);
+      const parsedEndDate = new Date(endDate);
+
+      if (!isNaN(parsedStartDate) && !isNaN(parsedEndDate)) {
+        selectedFilters.createdAt = {
+          [Op.gte]: parsedStartDate,
+          [Op.lte]: parsedEndDate,
+        };
+      }
+    }
 
     const userId = req.user.id;
     const user = await User.findOne({
@@ -29,20 +51,22 @@ router.get("/", fetchUser, async (req, res) => {
       },
     });
 
-    if (user) {
-      const whereCondition = user
-        ? {
-            BusinessId: user.dataValues.BusinessId,
-            paymentStatus: { [Op.notIn]: ["Void", "Refund"] },
-          }
-        : {};
+    if (!user) {
+      return res.status(404).json({ message: "User not found", data: [] });
+    }
 
-      const { count, rows } = await Invoice.findAndCountAll({
+    const whereCondition = {
+      ...selectedFilters,
+      BusinessId: user.BusinessId,
+    };
+
+    const sortOrder = order ? [["createdAt", order]] : [["createdAt", "DESC"]];
+    const parsedIsReport = isReport ? true : false;
+
+    if (parsedIsReport) {
+      const invoices = await Invoice.findAll({
         where: whereCondition,
-        distinct: true,
-        order: [["createdAt", "DESC"]],
-        limit,
-        offset,
+        order: sortOrder,
         include: [
           {
             model: Customer,
@@ -50,69 +74,65 @@ router.get("/", fetchUser, async (req, res) => {
             include: ["Address", "Vehicle"],
           },
           {
-            model: CustomerVehicle,
-            as: "CustomerVehicle",
-          },
-          {
             model: Product,
             as: "Product",
             through: "invoice_product",
             include: ["Tax", "Category"],
           },
-          {
-            model: Business,
-            as: "Business",
-          },
-          {
-            model: Payment,
-            as: "Payments",
-          },
         ],
       });
 
       return res.json({
-        message: "Invoices fetched successfully",
-        data: rows,
-        total: count,
-        page,
-        limit,
-        totalPages: Math.ceil(count / limit),
+        message: "Invoices fetched successfully (report)",
+        data: invoices,
       });
     }
 
-    // const invoices = await Invoice.findAll({
-    //   order: [["createdAt", "DESC"]],
-    //   include: [
-    //     {
-    //       model: Customer,
-    //       as: "Customer",
-    //       include: ["Address", "Vehicle"],
-    //     },
-    //     {
-    //       model: CustomerVehicle,
-    //       as: "CustomerVehicle",
-    //     },
-    //     {
-    //       model: Product,
-    //       as: "Product",
-    //       through: "invoice_product",
-    //       include: ["Tax", "Category"],
-    //     },
-    //     {
-    //       model: Business,
-    //       as: "Business",
-    //     },
-    //     {
-    //       model: Payment,
-    //       as: "Payments",
-    //     },
-    //   ],
-    // });
-    // return res.json({
-    //   message: "Invoices fetched successfully",
-    //   data: invoices,
-    // });
+    const offset = (page - 1) * limit;
+
+    const { count, rows } = await Invoice.findAndCountAll({
+      where: whereCondition,
+      distinct: true,
+      order: sortOrder,
+      limit: Number(limit),
+      offset: Number(offset),
+      include: [
+        {
+          model: Customer,
+          as: "Customer",
+          include: ["Address", "Vehicle"],
+        },
+        {
+          model: CustomerVehicle,
+          as: "CustomerVehicle",
+        },
+        {
+          model: Product,
+          as: "Product",
+          through: "invoice_product",
+          include: ["Tax", "Category"],
+        },
+        {
+          model: Business,
+          as: "Business",
+        },
+        {
+          model: Payment,
+          as: "Payments",
+        },
+      ],
+    });
+
+    return res.json({
+      message: "Invoices fetched successfully",
+      data: rows,
+      total: count,
+      page: Number(page),
+      limit: Number(limit),
+      totalPages: Math.ceil(count / limit),
+    });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ message: error.message });
   }
 });
@@ -227,43 +247,7 @@ router.put("/update/:id", fetchUser, async (req, res) => {
     if (!invoice) {
       return res.status(404).json({ message: "Invoice not found" });
     }
-
-    // if (invoice.dataValues.realInvoiceId === null) {
-    // Update the status of original Invoice
-    // if (invoice.dataValues.current) {
-    // let oldInvoiceData = invoice.dataValues;
-    // oldInvoiceData = { ...oldInvoiceData, current: false };
-    // await invoice.update(invoice);
-
-    // Create a new Invoice
-    // invoiceData = {
-    //   ...invoiceData,
-    //   invoiceData: {
-    //     ...invoiceData.invoiceData,
-    //     current: true,
-    //     realInvoiceId: oldInvoiceData.id,
-    //   },
-    // };
-    // try {
-    // const newInvoice = await Invoice.create(invoiceData.invoiceData);
-    // if (invoiceData.products.length !== 0) {
-    //   invoiceData.products.map(async (item) => {
-    //     const product = await Product.findByPk(item.split(":")[0]);
-    //     await newInvoice.addProduct(product, {
-    //       through: { quantity: item.split(":")[1] },
-    //     });
-    //   });
-    // }
-    //   return res
-    //     .status(200)
-    //     .json({ message: "Invoice updated successfully" });
-    // } catch (error) {
-    //   return res.status(500).json({ message: "Something went wrong" });
-    // }
-    // }
-    // return res.status(409).json({ message: "Invoice updated successfully" });
-    // }
-
+   
     if (req.body?.products && req.body?.products.length > 0) {
       try {
         req.body.products.forEach(async (newProduct) => {
@@ -314,16 +298,6 @@ router.put("/update/:id", fetchUser, async (req, res) => {
           })
         );
       }
-
-      // const addItems = req.body.products.filter(prod =>
-      //     !invoice.Product.some(item => item.dataValues.id === prod.split(':')[0]));
-
-      // if (addItems.length !== 0) {
-      //     addItems.forEach(async (item) => {
-      //         const product = await Product.findByPk(item.split(':')[0]);
-      //         await invoice.addProduct(product, { through: { quantity: item.split(':')[1] } });
-      //     });
-      // }
     }
 
     await invoice.update(req.body.invoiceData);
@@ -395,10 +369,10 @@ router.delete("/delete/:id/:status", fetchUser, async (req, res) => {
           .json({ message: "Error deleting invoice payments" });
       }
     } else {
-      if (req.params.status === "Refund") {
+      if (invoice.paymentStatus === "Refund") {
         return res.status(409).json({ message: "Invoice already refunded" });
       }
-      if (req.params.status === "Void") {
+      if (invoice.paymentStatus === "Void") {
         return res.status(409).json({ message: "Invoice already voided" });
       }
     }

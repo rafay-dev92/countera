@@ -7,10 +7,10 @@ import { Dialog } from "@material-tailwind/react";
 import { fetchInvoices } from "@/services/fetchInvoices";
 
 const schema = Yup.object().shape({
-    month: Yup.string().required("Month is required"),
+    date: Yup.string().required("Date is required"),
 });
 
-function MonthlyReportForm({ open, close, setReportData }) {
+function DailySalesReportForm({ open, close, setReportData }) {
     const reactToPrintTriggerRef = useRef();
     const { state } = State();
     const [isLoading, setIsLoading] = useState(false);
@@ -36,14 +36,25 @@ function MonthlyReportForm({ open, close, setReportData }) {
     const onSubmit = async (values) => {
         setIsLoading(true);
         try {
-            const startDate = new Date(values.month);
-            const endDate = new Date(startDate.getFullYear(), startDate.getMonth() + 1, 0);
+            const targetDate = new Date(values.date);
+            if (targetDate > new Date()) {
+                showToastMessage('info', 'Date cannot be in the future');
+                setIsLoading(false);
+                handleClose();
+                return;
+            }
+
+            const formatDate = (dateObj) => {
+                return dateObj.toISOString().split('T')[0];
+            };
 
             const filteredInvoices = invoices?.filter(invoice => {
-                return new Date(invoice.createdAt) >= startDate && new Date(invoice.createdAt) <= endDate;
+                const invoiceDate = formatDate(new Date(invoice.createdAt));
+                const selectedDate = formatDate(targetDate);
+                return invoiceDate === selectedDate;
             });
             if (filteredInvoices.length === 0) {
-                showToastMessage('info', 'No invoices found for this month');
+                showToastMessage('info', 'No invoices found for this date');
                 setIsLoading(false);
                 handleClose();
                 return;
@@ -81,17 +92,17 @@ function MonthlyReportForm({ open, close, setReportData }) {
     const clearForm = (formikProps) => {
         formikProps.resetForm({
             values: {
-                month: '',
+                date: '',
             },
             errors: {
-                month: '',
+                date: '',
             },
         });
     };
 
     const formikProps = useFormik({
         initialValues: {
-            month: '',
+            date: '',
         },
         validationSchema: schema,
         onSubmit,
@@ -142,19 +153,19 @@ function MonthlyReportForm({ open, close, setReportData }) {
 
                                 <div className="w-[25vw] p-6 space-y-4">
                                     <div >
-                                        <label className="font-bold">Month</label> <br />
+                                        <label className="font-bold">Date</label> <br />
                                         <input
                                             className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
-                                            id="month"
-                                            name="month"
-                                            type="month"
-                                            value={values.month}
+                                            id="date"
+                                            name="date"
+                                            type="date"
+                                            value={values.date}
                                             onChange={handleChange}
                                             onBlur={handleBlur}
                                         />
-                                        {(touched.month && errors.month) ? (
+                                        {(touched.date && errors.date) ? (
                                             <div className="text-red-500">
-                                                {errors.month}
+                                                {errors.date}
                                             </div>
                                         ) : (<div></div>)}
                                     </div>
@@ -190,4 +201,4 @@ function MonthlyReportForm({ open, close, setReportData }) {
     );
 }
 
-export default MonthlyReportForm;
+export default DailySalesReportForm;

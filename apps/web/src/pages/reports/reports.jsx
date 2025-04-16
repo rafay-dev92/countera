@@ -9,6 +9,7 @@ import { toast } from 'react-toastify';
 import ReactToPrint from "react-to-print";
 import { fetchTaxes } from "@/services/fetchTaxes";
 import { fetchProductsCategories } from "@/services/fetchProductCategories";
+import DailySalesReportForm from './dailySalesReportForm';
 
 export function Reports() {
     const printRef = useRef();
@@ -18,6 +19,7 @@ export function Reports() {
 
     const [isMonthlyReportOpen, setIsMonthlyReportOpen] = useState(false);
     const [isCustomerReportOpen, setIsCustomerReportOpen] = useState(false);
+    const [isDailySalesOpen, setIsDailySalesOpen] = useState(false);
     const [reportData, setReportData] = useState([]);
 
     const getTaxes = async () => {
@@ -61,7 +63,10 @@ export function Reports() {
                         <h2 className="text-lg font-semibold text-gray-800">Monthly Reports</h2>
                         <Button onClick={() => setIsMonthlyReportOpen(true)} className='cursor-pointer mt-3 p-2 hover:bg-gray-600 hover:text-white w-full text-center font-medium rounded'>Generate</Button>
                     </CardBody>
-
+                    <CardBody className="border-2 border-gray-300 rounded-lg flex flex-col items-center justify-center">
+                        <h2 className="text-lg font-semibold text-gray-800">Daily Sales Reports</h2>
+                        <Button onClick={() => setIsDailySalesOpen(true)} className='cursor-pointer mt-3 p-2 hover:bg-gray-600 hover:text-white w-full text-center font-medium rounded'>Generate</Button>
+                    </CardBody>
                     <CardBody className="border-2 border-gray-300 rounded-lg flex flex-col items-center justify-center">
                         <h2 className="text-lg font-semibold text-gray-800">Customer Sales Reports</h2>
                         <Button onClick={() => setIsCustomerReportOpen(true)} className='cursor-pointer mt-3 p-2 hover:bg-gray-600 hover:text-white w-full text-center font-medium rounded'>Generate</Button>
@@ -70,6 +75,7 @@ export function Reports() {
             </Card>
             <MonthlyReportForm open={isMonthlyReportOpen} close={() => setIsMonthlyReportOpen(false)} setReportData={setReportData} />
             <SalesByCustomerForm open={isCustomerReportOpen} close={() => setIsCustomerReportOpen(false)} setReportData={setReportData} />
+            <DailySalesReportForm open={isDailySalesOpen} close={() => setIsDailySalesOpen(false)} setReportData={setReportData} />
             {reportData.length > 0 && (
                 <div className='flex flex-col justify-center mt-4'>
                     <div className='flex justify-end'>

@@ -69,7 +69,6 @@ export function Invoice() {
         )
       );
 
-      console.log(totalInvoices);
       setTotalCount(totalInvoices.total || 0);
       setLoading(false);
     } catch (error) {

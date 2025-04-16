@@ -1,6 +1,7 @@
-export async function fetchInvoices(token, page = 1, limit = 10) {
+export async function fetchInvoices(token, page = 1, limit = 10, filters = {}) {
+    const queryParams = new URLSearchParams({ page, limit, filters: JSON.stringify(filters) }).toString();
     try {
-        const invoices = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/invoice?page=${page}&limit=${limit}`, {
+        const invoices = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/invoice?${queryParams}`, {
             method: "GET",
             headers: {
                 "auth-token": token

@@ -5,16 +5,15 @@ import { State } from "@/state/Context";
 import { toast } from "react-toastify";
 import { Dialog } from "@material-tailwind/react";
 import { fetchInvoices } from "@/services/fetchInvoices";
+import moment from 'moment-timezone';
 
 const schema = Yup.object().shape({
     date: Yup.string().required("Date is required"),
 });
 
 function DailySalesReportForm({ open, close, setReportData }) {
-    const reactToPrintTriggerRef = useRef();
     const { state } = State();
     const [isLoading, setIsLoading] = useState(false);
-    const [invoices, setInvoices] = useState([]);
     const handleClose = () => {
         clearForm(formikProps);
         close();
@@ -36,33 +35,22 @@ function DailySalesReportForm({ open, close, setReportData }) {
     const onSubmit = async (values) => {
         setIsLoading(true);
         try {
-            const targetDate = new Date(values.date);
-            if (targetDate > new Date()) {
-                showToastMessage('info', 'Date cannot be in the future');
-                setIsLoading(false);
-                handleClose();
-                return;
-            }
+            const selectedDate = new Date(values.date);
+            const timezone = state.business.timezone;
+            const startDate = moment.tz(selectedDate, timezone).startOf('day').utc().toDate();
+            const endDate = moment.tz(selectedDate, timezone).endOf('day').utc().toDate();
 
-            const formatDate = (dateObj) => {
-                return dateObj.toISOString().split('T')[0];
-            };
+            const filters = { paymentStatus: ['Paid', 'Partially Paid', 'Unpaid'], startDate, endDate, isReport: true, order: 'ASC' }
+            const fetchedInvoices = await fetchInvoices(state.userToken, null, null, filters);
+            const totalInvoices = await fetchedInvoices.json();
 
-            const filteredInvoices = invoices?.filter(invoice => {
-                const invoiceDate = formatDate(new Date(invoice.createdAt));
-                const selectedDate = formatDate(targetDate);
-                return invoiceDate === selectedDate;
-            });
-            if (filteredInvoices.length === 0) {
+            if (totalInvoices?.data?.length === 0) {
                 showToastMessage('info', 'No invoices found for this date');
                 setIsLoading(false);
                 handleClose();
                 return;
             }
-            setReportData(filteredInvoices);
-            setTimeout(() => {
-                reactToPrintTriggerRef.current?.click();
-            }, 100);
+            setReportData(totalInvoices?.data);
             setIsLoading(false);
             handleClose();
         } catch (error) {
@@ -72,22 +60,6 @@ function DailySalesReportForm({ open, close, setReportData }) {
             handleClose();
         }
     };
-
-    const getInvoices = async () => {
-        try {
-            const fetchedInvoices = await fetchInvoices(state.userToken);
-            const totalInvoices = await fetchedInvoices.json();
-            setInvoices(totalInvoices?.data?.reverse());
-
-        } catch (error) {
-            console.log(error.message);
-            showToastMessage('error', "Something went wrong");
-        }
-    };
-
-    useEffect(() => {
-        getInvoices();
-    }, []);
 
     const clearForm = (formikProps) => {
         formikProps.resetForm({
@@ -127,7 +99,7 @@ function DailySalesReportForm({ open, close, setReportData }) {
                                 <div className="flex items-center justify-between sticky bg-gradient-to-br from-gray-800 to-gray-700">
                                     <div></div>
                                     <div className="text-lg text-white font-medium" >
-                                        Monthly Report
+                                        Daily Sales Report
                                     </div>
                                     <button
                                         className="bg-transparent hover:bg-gray-800 text-white font-bold py-2 px-4 rounded"

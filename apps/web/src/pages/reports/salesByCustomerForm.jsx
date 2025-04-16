@@ -13,10 +13,8 @@ const schema = Yup.object().shape({
 
 function SalesByCustomerForm({ open, close, setReportData }) {
     const customerInputRef = useRef();
-    const reactToPrintTriggerRef = useRef();
     const { state } = State();
     const [isLoading, setIsLoading] = useState(false);
-    const [invoices, setInvoices] = useState([]);
 
     const [customers, setCustomers] = useState([]);
     const [selectedCustomer, setSelectedCustomer] = useState(null);
@@ -44,19 +42,16 @@ function SalesByCustomerForm({ open, close, setReportData }) {
     const onSubmit = async (values) => {
         setIsLoading(true);
         try {
-            const filteredInvoices = invoices?.filter(invoice => {
-                return invoice.CustomerId === values.customer;
-            });
-            if (filteredInvoices.length === 0) {
+            const filters = {paymentStatus: ['Paid', 'Partially Paid', 'Unpaid'], CustomerId: values.customer, isReport: true, order: 'ASC'}
+
+            const fetchedInvoices = await fetchInvoices(state.userToken, null, null, filters);
+            const totalInvoices = await fetchedInvoices.json();
+            if (totalInvoices?.data?.length === 0) {
                 showToastMessage('info', 'No invoices found for this customer');
                 setIsLoading(false);
-                handleClose();
                 return;
             }
-            setReportData(filteredInvoices);
-            setTimeout(() => {
-                reactToPrintTriggerRef.current?.click();
-            }, 100);
+            setReportData(totalInvoices?.data);
             setIsLoading(false);
             handleClose();
         } catch (error) {
@@ -73,22 +68,8 @@ function SalesByCustomerForm({ open, close, setReportData }) {
         setCustomers(customersData);
     };
 
-    const getInvoices = async () => {
-        try {
-            const fetchedInvoices = await fetchInvoices(state.userToken);
-            const totalInvoices = await fetchedInvoices.json();
-            const filteredInvoices = totalInvoices.data.filter(invoice => invoice.paymentStatus !== 'Void' && invoice.paymentStatus !== 'Refund');
-            setInvoices(filteredInvoices.reverse());
-
-        } catch (error) {
-            console.log(error.message);
-            showToastMessage('error', "Something went wrong");
-        }
-    };
-
     useEffect(() => {
         getCustomers();
-        getInvoices();
     }, []);
 
     const handleCustomerChange = (customer) => {

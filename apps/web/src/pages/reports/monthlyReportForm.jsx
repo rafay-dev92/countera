@@ -5,16 +5,15 @@ import { State } from "@/state/Context";
 import { toast } from "react-toastify";
 import { Dialog } from "@material-tailwind/react";
 import { fetchInvoices } from "@/services/fetchInvoices";
+import moment from 'moment-timezone';
 
 const schema = Yup.object().shape({
     month: Yup.string().required("Month is required"),
 });
 
 function MonthlyReportForm({ open, close, setReportData }) {
-    const reactToPrintTriggerRef = useRef();
     const { state } = State();
     const [isLoading, setIsLoading] = useState(false);
-    const [invoices, setInvoices] = useState([]);
     const handleClose = () => {
         clearForm(formikProps);
         close();
@@ -36,22 +35,32 @@ function MonthlyReportForm({ open, close, setReportData }) {
     const onSubmit = async (values) => {
         setIsLoading(true);
         try {
-            const startDate = new Date(values.month);
-            const endDate = new Date(startDate.getFullYear(), startDate.getMonth() + 1, 0);
+            const timezone = state.business.timezone;
+            const selectedMonth = new Date(values.month);
 
-            const filteredInvoices = invoices?.filter(invoice => {
-                return new Date(invoice.createdAt) >= startDate && new Date(invoice.createdAt) <= endDate;
-            });
-            if (filteredInvoices.length === 0) {
+            const startDate = moment.tz({
+                year: selectedMonth.getFullYear(),
+                month: selectedMonth.getMonth(),
+                day: 1
+            }, timezone).startOf('day').utc().toDate();
+
+            const endDate = moment.tz({
+                year: selectedMonth.getFullYear(),
+                month: selectedMonth.getMonth(),
+                day: moment(selectedMonth).daysInMonth()
+            }, timezone).endOf('day').utc().toDate();
+            const filters = { paymentStatus: ['Paid', 'Partially Paid', 'Unpaid'], startDate, endDate, isReport: true, order: 'ASC' }
+
+            // fetch invoices
+            const fetchedInvoices = await fetchInvoices(state.userToken, null, null, filters);
+            const totalInvoices = await fetchedInvoices.json();
+
+            if (totalInvoices?.data.length === 0) {
                 showToastMessage('info', 'No invoices found for this month');
                 setIsLoading(false);
-                handleClose();
                 return;
             }
-            setReportData(filteredInvoices);
-            setTimeout(() => {
-                reactToPrintTriggerRef.current?.click();
-            }, 100);
+            setReportData(totalInvoices?.data);
             setIsLoading(false);
             handleClose();
         } catch (error) {
@@ -61,22 +70,6 @@ function MonthlyReportForm({ open, close, setReportData }) {
             handleClose();
         }
     };
-
-    const getInvoices = async () => {
-        try {
-            const fetchedInvoices = await fetchInvoices(state.userToken);
-            const totalInvoices = await fetchedInvoices.json();
-            setInvoices(totalInvoices?.data?.reverse());
-
-        } catch (error) {
-            console.log(error.message);
-            showToastMessage('error', "Something went wrong");
-        }
-    };
-
-    useEffect(() => {
-        getInvoices();
-    }, []);
 
     const clearForm = (formikProps) => {
         formikProps.resetForm({

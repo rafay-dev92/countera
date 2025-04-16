@@ -61,13 +61,10 @@ export function Invoice() {
 
   const getInvoices = async () => {
     try {
-      const response = await fetchInvoices(state.userToken, currentPage, itemsPerPage);
+      const filters = { paymentStatus: ["Paid", "Partially Paid", "Unpaid"] };
+      const response = await fetchInvoices(state.userToken, currentPage, itemsPerPage, filters);
       const totalInvoices = await response.json();
-      setInvoices(
-        totalInvoices.data?.filter(
-          invoice => invoice.paymentStatus !== 'Refund' && invoice.paymentStatus !== 'Void'
-        )
-      );
+      setInvoices(totalInvoices?.data)
 
       setTotalCount(totalInvoices.total || 0);
       setLoading(false);
@@ -280,7 +277,7 @@ export function Invoice() {
                               ? "orange"
                               : "red"
                         }
-                        className="font-normal"
+                        className="font-medium"
                       >
                         {paymentStatus}
                       </Typography>

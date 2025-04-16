@@ -322,7 +322,7 @@ export function Quotation() {
                                             <Typography
                                                 variant="small"
                                                 color={approved ? "green" : "red"}
-                                                className="font-normal"
+                                                className="font-medium"
                                             >
                                                 {approved ? 'Approved' : 'Pending'}
                                             </Typography>

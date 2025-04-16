@@ -1185,7 +1185,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
                       updatedItems[existingIndex].quantity += modalQuantity;
                     } else {
                       updatedItems.push({
-                        id: product.id + "-" + Math.random(),
+                        id: product.id,
                         product: product.id,
                         name: product.name,
                         quantity: modalQuantity,

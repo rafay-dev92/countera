@@ -123,6 +123,12 @@ const MonthlyReportPreview = React.forwardRef(({ invoices, productsCategories, t
                     <tbody className="bg-white divide-y divide-gray-200">
                         {invoices?.map((item, index) => {
                             const productTaxes = calculateTaxes(item.Product, item.Customer?.customerType);
+                            const formattedDate = new Date(item.createdAt).toLocaleDateString("en-PK", {
+                                timeZone: "Asia/Karachi", // Adjusts to Pakistan Standard Time
+                                year: "numeric",
+                                month: "2-digit",
+                                day: "2-digit",
+                            });
                             return (
                                 <tr key={index}>
                                     <td className="p-4 border-b border-blue-gray-50">
@@ -131,7 +137,7 @@ const MonthlyReportPreview = React.forwardRef(({ invoices, productsCategories, t
                                             color="blue-gray"
                                             className="font-normal leading-none"
                                         >
-                                           {item.Customer?.customerType === 'business'? <StarIcon className='w-3.5 h-3.5 mb-1 text-blue-600 inline' /> : null} {item.createdAt.split("T")[0]}
+                                           {item.Customer?.customerType === 'business'? <StarIcon className='w-3.5 h-3.5 mb-1 text-blue-600 inline' /> : null} {formattedDate}
                                         </Typography>
                                     </td>
                                     <td className="p-4 border-b border-blue-gray-50">

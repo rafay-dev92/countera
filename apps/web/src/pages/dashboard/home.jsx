@@ -18,9 +18,11 @@ import { fetchInvoices } from '@/services/fetchInvoices';
 import { State } from '@/state/Context';
 import { fetchCustomers } from '@/services/fetchCustomers';
 import { fetchProducts } from '@/services/fetchProducts';
+import moment from 'moment-timezone';
 
 export function Home() {
     const { state } = State();
+    const timezone = state.business.timezone;
     const [loading, setLoading] = useState(true);
     const [cardsData, setCardsData] = useState(statisticsCardsData);
 
@@ -47,7 +49,11 @@ export function Home() {
 
     const getInvoices = async () => {
         try {
-            const fetchedInvoices = await fetchInvoices(state.userToken);
+            const currentDate = moment().tz(timezone).format('YYYY-MM-DD');
+            const startDate = moment.tz(currentDate, timezone).startOf('day').utc().toDate();
+            const endDate = moment.tz(currentDate, timezone).endOf('day').utc().toDate();
+
+            const fetchedInvoices = await fetchInvoices(state.userToken, null, null, { paymentStatus: ['Paid', 'Partially Paid', 'Unpaid'], startDate, endDate, isReport: true });
             let totalInvoices = await fetchedInvoices.json();
             // if (state.Settings.General.invoice === 'all') {
             // }
@@ -55,12 +61,13 @@ export function Home() {
                 // totalInvoices = totalInvoices?.data.filter(invoice => invoice.current === true);
             // }
 
-            totalInvoices = totalInvoices?.data.filter(invoice => invoice.paymentStatus === 'Paid' || invoice.paymentStatus === 'Unpaid');
-            const invoicesWithCurrentDate = totalInvoices.filter(obj => obj.createdAt.split('T')[0] === currentDate);
-            let money = 0;
-            invoicesWithCurrentDate.forEach(invoice => {
-                money += Number(invoice.totalAmount)
-            })
+            const invoicesWithCurrentDate = totalInvoices?.data?.filter(obj => {
+                const invoiceDate = moment(obj.createdAt).tz(timezone).format('YYYY-MM-DD');
+                return invoiceDate === currentDate;
+            });
+            const money = invoicesWithCurrentDate.reduce((sum, invoice) => {
+                return sum + Number(invoice.totalAmount || 0);
+            }, 0);
 
             const newArray = [...cardsData];
 

@@ -319,7 +319,7 @@ export function WorkOrder() {
                                             <Typography
                                                 variant="small"
                                                 color={status === 'Finished'? "green" : "red"}
-                                                className="font-normal"
+                                                className="font-medium"
                                             >
                                                 {status}
                                             </Typography>

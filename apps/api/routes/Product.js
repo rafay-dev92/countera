@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { Product, Tax, User } = require("../models");
+const { Product, Tax, User, Product_Category } = require("../models");
 const fetchUser = require("../middlewares/fetchUser");
 require("dotenv").config();
 const multer = require("multer");
@@ -38,8 +38,11 @@ router.get("/", fetchUser, async (req, res) => {
             as: "Tax",
             through: "product_tax",
           },
+          {
+            model: Product_Category,
+            as: "Category",
+          },
         ],
-        order: [["createdAt", "ASC"]],
       });
       return res.status(200).json(products);
     }

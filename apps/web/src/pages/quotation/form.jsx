@@ -175,25 +175,28 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
         selectedProd = [aProd, ...selectedProd];
       })
 
-      if (selectedQuotation?.Customer?.taxable) {
-        const productTaxes = {};
-        selectedProd.forEach((product) => {
-          product.Tax?.forEach((productTax) => {
-            const key = `${productTax.name}_${productTax.rate}_${productTax.type}`;
+      const productTaxes = {};
+      selectedProd.forEach((product) => {
+        product.Tax?.forEach((productTax) => {
+          const key = `${productTax.name}_${productTax.rate}_${productTax.type}`;
 
-            if (!productTaxes[key]) {
-              productTaxes[key] = 0;
-            }
+          if (!productTaxes[key]) {
+            productTaxes[key] = 0;
+          }
 
-            if (productTax.type === "%") {
-              productTaxes[key] += product.price * product.quantity * (productTax.rate / 100);
-            } else {
-              productTaxes[key] += product.quantity * productTax.rate;
-            }
-          });
+          if (productTax.name === 'Sales Tax' && !selectedQuotation?.Customer?.taxable) {
+            return; // Skip Sales Tax calculation for non-taxable customers
+          }
+
+          if (productTax.type === "%") {
+            productTaxes[key] += product.price * product.quantity * (productTax.rate / 100);
+          } else {
+            productTaxes[key] += product.quantity * productTax.rate;
+          }
         });
-        setAppliedTaxes(productTaxes);
-      }
+      });
+      setAppliedTaxes(productTaxes);
+
       setSelectedProducts(selectedProd);
       // setSelectedQuotation(null)
     }
@@ -390,11 +393,6 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
 
   // Recalculate taxes
   const recalculateTaxes = (products) => {
-    if (!selectedCustomer?.taxable) {
-      setAppliedTaxes({});
-      return;
-    }
-
     const productTaxes = {};
 
     products.forEach((product) => {
@@ -403,6 +401,10 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
 
         if (!productTaxes[key]) {
           productTaxes[key] = 0;
+        }
+
+        if (productTax.name === 'Sales Tax' && !selectedCustomer?.taxable) {
+          return; // Skip Sales Tax calculation for non-taxable customers
         }
 
         if (productTax.type === "%") {

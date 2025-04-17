@@ -176,26 +176,29 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
         selectedProd = [aProd, ...selectedProd];
       })
 
-      if (state?.invoice?.viewData?.Customer?.taxable) {
-        const productTaxes = {};
+      const productTaxes = {};
 
-        selectedProd.forEach((product) => {
-          product.Tax?.forEach((productTax) => {
-            const key = `${productTax.name}_${productTax.rate}_${productTax.type}`;
+      selectedProd.forEach((product) => {
+        product.Tax?.forEach((productTax) => {
+          const key = `${productTax.name}_${productTax.rate}_${productTax.type}`;
 
-            if (!productTaxes[key]) {
-              productTaxes[key] = 0;
-            }
+          if (!productTaxes[key]) {
+            productTaxes[key] = 0;
+          }
 
-            if (productTax.type === "%") {
-              productTaxes[key] += product.price * product.quantity * (productTax.rate / 100);
-            } else {
-              productTaxes[key] += product.quantity * productTax.rate;
-            }
-          });
+          if (productTax.name === 'Sales Tax' && !state?.invoice?.viewData?.Customer?.taxable) {
+            return; // Skip Sales Tax calculation for non-taxable customers
+          }
+
+          if (productTax.type === "%") {
+            productTaxes[key] += product.price * product.quantity * (productTax.rate / 100);
+          } else {
+            productTaxes[key] += product.quantity * productTax.rate;
+          }
         });
-        setAppliedTaxes(productTaxes);
-      }
+      });
+      setAppliedTaxes(productTaxes);
+
 
       setSelectedProducts(selectedProd);
     }
@@ -396,11 +399,6 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
 
   // Recalculate taxes
   const recalculateTaxes = (products) => {
-    if (!selectedCustomer?.taxable) {
-      setAppliedTaxes({});
-      return;
-    }
-
     const productTaxes = {};
 
     products.forEach((product) => {
@@ -409,6 +407,10 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
 
         if (!productTaxes[key]) {
           productTaxes[key] = 0;
+        }
+
+        if (productTax.name === 'Sales Tax' && !selectedCustomer?.taxable) {
+          return; // Skip Sales Tax calculation for non-taxable customers
         }
 
         if (productTax.type === "%") {
@@ -1156,10 +1158,10 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
       {selectedCustomer ? <CustomerVehicleForm open={isCustomerVehicleFormOpen} close={closeCustomerVehicleForm} refresh={refresh} setRefresh={setRefresh} CustomerId={selectedCustomer?.id} getCustomerDetails={getCustomerDetails} /> : null}
       {printInvoice && Object.keys(printInvoice).length > 0 ? <PrintView view={false} printInvoice={printInvoice} ref={componentRef} appliedTaxes={appliedTaxes} /> : null}
 
-        {/* Package Preview Modal */}
+      {/* Package Preview Modal */}
       {showPackageModal && packagePreview && (
         <div className="fixed inset-0 z-[10000] bg-black/50 flex items-center justify-center">
-           <div
+          <div
             className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-300 ease-out animate-fadeIn"
           />
           <div className="relative bg-white p-6 rounded-xl shadow-2xl z-[10000]

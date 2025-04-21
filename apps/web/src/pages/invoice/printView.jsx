@@ -21,7 +21,7 @@ const printView = React.forwardRef(({ view, printInvoice, appliedTaxes }, ref) =
     const calculateTotalAmount = (products) => {
         let total = 0;
         products?.forEach((item) => {
-            total += calculateAmount(item.price, item.invoice_product.quantity);
+            total += calculateAmount(item.invoice_product.price, item.invoice_product.quantity);
         });
         return total;
     };
@@ -172,7 +172,7 @@ const printView = React.forwardRef(({ view, printInvoice, appliedTaxes }, ref) =
                                             color="blue-gray"
                                             className="font-normal leading-none"
                                         >
-                                            {item.price}
+                                            {item.invoice_product.price}
                                         </Typography>
                                     </td>
                                     <td className="p-4 border-b border-blue-gray-50">
@@ -188,7 +188,7 @@ const printView = React.forwardRef(({ view, printInvoice, appliedTaxes }, ref) =
                                             color="blue-gray"
                                             className="font-normal leading-none"
                                         >
-                                            {calculateAmount(item.price, item.invoice_product.quantity)}
+                                            {calculateAmount(item.invoice_product.price, item.invoice_product.quantity)}
                                         </Typography>
                                     </td>
                                 </tr>

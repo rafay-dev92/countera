@@ -224,7 +224,7 @@ const CustomerVehicleForm = ({ open, close, refresh, setRefresh, CustomerId, get
                                 </button>
                             </div>
 
-                            <div className="p-6">
+                            <div className="p-6 2xl:w-[40vw] xl:w-[60vw] lg:w-[80vw] w-[80vw]">
                                 <div className="flex items-center justify-start space-x-4">
 
                                     <div className="basis-1/3 max-w-33.33%"> 

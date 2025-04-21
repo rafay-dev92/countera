@@ -167,7 +167,7 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
           product: prod.id,
           id: prod.id,
           name: prod.name,
-          price: prod.price,
+          price: prod.invoice_product.price,
           quantity: prod.invoice_product.quantity,
           taxable: prod.taxable,
           Tax: prod.Tax,
@@ -181,15 +181,15 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
       selectedProd.forEach((product) => {
         product.Tax?.forEach((productTax) => {
           const key = `${productTax.name}_${productTax.rate}_${productTax.type}`;
-
-          if (!productTaxes[key]) {
-            productTaxes[key] = 0;
-          }
-
+          
           if (productTax.name === 'Sales Tax' && !state?.invoice?.viewData?.Customer?.taxable) {
             return; // Skip Sales Tax calculation for non-taxable customers
           }
 
+          if (!productTaxes[key]) {
+            productTaxes[key] = 0;
+          }
+          console.log(product)
           if (productTax.type === "%") {
             productTaxes[key] += product.price * product.quantity * (productTax.rate / 100);
           } else {
@@ -207,9 +207,13 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
   // handle submit
   const onSubmit = async (values) => {
     setIsLoading(true);
-    const selectedProductIds = selectedProducts.map((product) => `${product.id}:${product.quantity}:${product.description}`);
-    // remove the last empty product
-    selectedProductIds.pop();
+    
+    const selectedProductIds = selectedProducts.map((product) => ({
+      id: product.id,
+      quantity: product.quantity,
+      description: product.description || '',
+      price: product.price
+    })).filter(product => product.id); // Remove empty products
 
     if (selectedVehicle?.odometer < vehicleOdometer) {
       try {
@@ -229,16 +233,14 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
         CustomerId: selectedCustomer.id,
         CustomerVehicleId: selectedVehicle.id,
         comments: values.comments,
-        BusinessId: null
+        BusinessId: state.business.id
       },
-      "products": selectedProductIds,
+      products: selectedProductIds,
     };
-
-    const updatedData = { ...data, invoiceData: { ...data.invoiceData, BusinessId: state.business.id } };
 
     try {
       if (edit) {
-        const res = await updateInvoice(invoiceId, updatedData, state.userToken)
+        const res = await updateInvoice(invoiceId, data, state.userToken)
         const invoice = await res.json();
         setPrintInvoice(invoice?.data);
         if (res.status === 200) {
@@ -252,7 +254,7 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
         }
       }
       else {
-        const res = await addInvoice(updatedData, state.userToken)
+        const res = await addInvoice(data, state.userToken)
         const invoice = await res.json();
         setPrintInvoice(invoice?.data);
         if (res.status === 200) {
@@ -307,7 +309,6 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
   // Handle product change
   const handleProductChange = async (index, quantity, selectedProId) => {
     const updatedItems = [...selectedProducts];
-
     // Check if the selected product already exists in the list
     const existingProductIndex = selectedProducts.findIndex(
       (prod) => prod.id === selectedProId
@@ -382,6 +383,17 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
     setSelectedProducts(updatedItems);
   };
 
+  // Handle price change
+  const handlePriceChange = (index, price) => {
+    const updatedItems = [...selectedProducts];
+    updatedItems[index].price = Number(price);
+
+    // Recalculate taxes
+    recalculateTaxes(updatedItems);
+
+    setSelectedProducts(updatedItems);
+  };
+
   // Handle removing a product
   const handleRemoveProduct = (index) => {
     const updatedItems = [...selectedProducts];
@@ -405,12 +417,12 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
       product.Tax?.forEach((productTax) => {
         const key = `${productTax.name}_${productTax.rate}_${productTax.type}`;
 
-        if (!productTaxes[key]) {
-          productTaxes[key] = 0;
-        }
-
         if (productTax.name === 'Sales Tax' && !selectedCustomer?.taxable) {
           return; // Skip Sales Tax calculation for non-taxable customers
+        }
+
+        if (!productTaxes[key]) {
+          productTaxes[key] = 0;
         }
 
         if (productTax.type === "%") {
@@ -449,12 +461,13 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
       setVehicleOdometer(customer.Vehicle[0]?.odometer);
       setValues({ ...values, ['customer']: `${customer.firstName} ${customer.lastName}`, ['vehicle']: customer.Vehicle[0].id })
     };
-    setSelectedProducts([{
-      product: "",
-      quantity: 1,
-      price: 0,
-      taxable: false
-    }]);
+    // setSelectedProducts([{
+    //   product: "",
+    //   quantity: 1,
+    //   price: 0,
+    //   taxable: false
+    // }]);
+    // setAppliedTaxes({});
     setShowCustomerSuggestions(false);
   };
 
@@ -988,43 +1001,50 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
                                     </div>
                                   }
                                 </td>
-                                <td className="p-4 border-b border-blue-gray-50">
-                                  <input
-                                    type="number"
-                                    min={1}
-                                    className="w-14 p-2 border rounded-md text-black"
-                                    value={item.quantity}
-                                    onChange={(e) =>
-                                      handleQuantityChange(index, e.target.value)
-                                    }
-                                  />
-                                </td>
-                                <td className="p-4 border-b border-blue-gray-50">
-                                  <Typography
-                                    variant="small"
-                                    color="blue-gray"
-                                    className="font-normal opacity-70"
-                                  >
-                                    {item.price}
-                                  </Typography>
-                                </td>
-                                <td className="p-4 border-b border-blue-gray-50">
-                                  <input
-                                    type="checkbox"
-                                    checked={selectedCustomer?.taxable && item.taxable}
-                                    readOnly
-                                  />
-                                </td>
-                                <td className="p-4 border-b border-blue-gray-50">
-                                  <Typography
-                                    variant="small"
-                                    color="blue-gray"
-                                    className="font-normal opacity-70"
-                                  >
-
-                                    {calculateAmount(item.price, item.quantity)}
-                                  </Typography>
-                                </td>
+                                {index !== (selectedProducts.length - 1) && (
+                                  <>
+                                    <td className="p-4 border-b border-blue-gray-50">
+                                      <input
+                                        type="number"
+                                        min={1}
+                                        className="w-14 p-2 border rounded-md text-black"
+                                        value={item.quantity}
+                                        onChange={(e) =>
+                                          handleQuantityChange(index, e.target.value)
+                                        }
+                                      />
+                                    </td>
+                                    <td className="p-4 border-b border-blue-gray-50">
+                                      <input
+                                        type="number"
+                                        min={0}
+                                        step="0.01"
+                                        className="w-24 p-2 border rounded-md text-black"
+                                        value={item.price === 0 ? '' : item.price}
+                                        placeholder="0.00"
+                                        onChange={(e) =>
+                                          handlePriceChange(index, e.target.value)
+                                        }
+                                      />
+                                    </td>
+                                    <td className="p-4 border-b border-blue-gray-50">
+                                      <input
+                                        type="checkbox"
+                                        checked={selectedCustomer?.taxable && item.taxable}
+                                        readOnly
+                                      />
+                                    </td>
+                                    <td className="p-4 border-b border-blue-gray-50">
+                                      <Typography
+                                        variant="small"
+                                        color="blue-gray"
+                                        className="font-normal opacity-70"
+                                      >
+                                        {calculateAmount(item.price, item.quantity)}
+                                      </Typography>
+                                    </td>
+                                  </>
+                                )}
                                 <td className="p-4 border-b border-blue-gray-50 text-center px-4 py-2">
                                   {index !== selectedProducts.length - 1 ?
                                     <XCircleIcon

@@ -332,7 +332,7 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
                   </button>
                 </div>
 
-                <div className="w-[50vw] p-6 space-y-3">
+                <div className="2xl:w-[50vw] xl:w-[60vw] lg:w-[70vw] md:w-[80vw] w-[90vw] p-6 space-y-3">
                   <div className="flex justify-around">
                     <div className="flex space-x-4">
                       <label className="flex items-center cursor-pointer">

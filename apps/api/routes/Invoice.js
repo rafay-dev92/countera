@@ -189,14 +189,19 @@ router.post("/create", fetchUser, async (req, res) => {
     }
 
     const newInvoice = await Invoice.create(invoiceData);
-    if (req.body.products.length !== 0) {
+    if (req.body.products && req.body.products.length !== 0) {
       await Promise.all(
-        req.body.products.map(async (item) => {
-          const product = await Product.findByPk(item.split(":")[0]);
-          const description = item.split(":")[2];
-          await newInvoice.addProduct(product, {
-            through: { quantity: item.split(":")[1], description },
-          });
+        req.body.products.map(async (product) => {
+          const productRecord = await Product.findByPk(product.id);
+          if (productRecord) {
+            await newInvoice.addProduct(productRecord, {
+              through: { 
+                quantity: product.quantity,
+                description: product.description,
+                price: product.price
+              },
+            });
+          }
         })
       );
     }

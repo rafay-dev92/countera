@@ -12,6 +12,11 @@ module.exports = (sequelize) => {
             defaultValue: '',
             allowNull: true
         },
+        price: {
+            type: DataTypes.FLOAT,
+            defaultValue: 0,
+            allowNull: false
+        }
     },{
         tableName: 'invoice_product'
     });

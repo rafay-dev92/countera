@@ -28,12 +28,14 @@ export function Home() {
 
     const currentDate = new Date().toISOString().split('T')[0];
     useEffect(() => {
-        getInvoices();
+        if (timezone) {
+            getInvoices();            
+        }
         getCustomers();
         getProducts();
 
         setLoading(false);
-    }, [])
+    }, [timezone]);
 
     const showToastMessage = (type, message) => {
         if (type === 'success') {

@@ -961,7 +961,7 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
                                     :
                                     <div ref={productInputRef} className="relative w-fit">
                                       <input
-                                        className="w-80 h-[97%] m-2 p-2 border border-gray-300 rounded-md text-gray-600 font-small"
+                                        className="w-80 h-[97%] m-2 p-2 border border-gray-500 rounded-md text-gray-600 font-small"
                                         id="product"
                                         name="product"
                                         type="text"

@@ -11,7 +11,8 @@ import { updateCustomerVehicle } from "@/services/updateCustomerVehicle";
 
 const schema = Yup.object().shape({
     year: Yup.number().required("Year is required"),
-    vehicle: Yup.string().required("Vehicle is required"),
+    make: Yup.string().required("Make is required"),
+    model: Yup.string().required("Model is required"),
     odometer: Yup.number().required("Odometer is required"),
     licenseNo: Yup.string(),
     vinNo: Yup.string(),
@@ -21,12 +22,14 @@ const schema = Yup.object().shape({
 });
 
 const CustomerVehicleForm = ({ open, close, refresh, setRefresh, CustomerId, getCustomerDetails, selectedVehicle }) => {
-    const vehicleInputRef = useRef(null);
+    const makeInputRef = useRef(null);
+    const modelInputRef = useRef(null);
     const { state } = State();
     const [isLoading, setIsLoading] = useState(false);
     const [edit, setEdit] = useState(false);
     const [vehicles, setVehicles] = useState([]);
-    const [showVehicleSuggestions, setShowVehicleSuggestions] = useState(false);
+    const [showMakeSuggestions, setShowMakeSuggestions] = useState(false);
+    const [showModelSuggestions, setShowModelSuggestions] = useState(false);
 
     // set the years to be displayed in the year select input
     const startYear = import.meta.env.VITE_START_YEAR;
@@ -58,17 +61,31 @@ const CustomerVehicleForm = ({ open, close, refresh, setRefresh, CustomerId, get
         if (selectedVehicle) {
             setValues({
                 year: selectedVehicle.year, 
-                vehicle: `${selectedVehicle.make} ${selectedVehicle.model}`,
+                make: selectedVehicle.make,
+                model: selectedVehicle.model,
                 odometer: selectedVehicle.odometer,
                 licenseNo: selectedVehicle.licenseNo,
                 vinNo: selectedVehicle.vinNo,
                 engineSize: selectedVehicle.engineSize,
                 color: selectedVehicle.color,
                 notes: selectedVehicle.notes,
-            })
+            });
             setEdit(true);
+        } else {
+            setValues({
+                year: "",
+                make: "",
+                model: "",
+                odometer: "",
+                licenseNo: "",
+                vinNo: "",
+                engineSize: "",
+                color: "",
+                notes: "",
+            });
+            setEdit(false);
         }
-    }, [selectedVehicle]);
+    }, [selectedVehicle, open]);
 
     const onSubmit = async (values) => {
         setIsLoading(true);
@@ -132,31 +149,35 @@ const CustomerVehicleForm = ({ open, close, refresh, setRefresh, CustomerId, get
         formikProps.resetForm({
             values: {
                 year: "",
-                vehicle: "",
+                make: "",
+                model: "",
                 odometer: "",
                 licenseNo: "",
                 vinNo: "",
                 engineSize: "",
                 color: "",
-                notes: "",                
+                notes: "",
             },
             errors: {
                 year: "",
-                vehicle: "",
+                make: "",
+                model: "",
                 odometer: "",
                 licenseNo: "",
                 vinNo: "",
                 engineSize: "",
                 color: "",
-                notes: "",  
+                notes: "",
             },
         });
+        setEdit(false);
     };
 
     const formikProps = useFormik({
         initialValues: {
             year: "",
-            vehicle: "",
+            make: "",
+            model: "",
             odometer: "",
             licenseNo: "",
             vinNo: "",
@@ -179,9 +200,12 @@ const CustomerVehicleForm = ({ open, close, refresh, setRefresh, CustomerId, get
     } = formikProps;
 
     useEffect(() => {
-        function handleClickOutside(event) {
-            if (vehicleInputRef.current && !vehicleInputRef.current.contains(event.target)) {
-                setShowVehicleSuggestions(false);
+        function handleClickOutside(event) {           
+            if (makeInputRef.current && !makeInputRef.current.contains(event.target)) {
+                setShowMakeSuggestions(false);
+            }
+            if (modelInputRef.current && !modelInputRef.current.contains(event.target)) {
+                setShowModelSuggestions(false);
             }
         }
 
@@ -227,7 +251,7 @@ const CustomerVehicleForm = ({ open, close, refresh, setRefresh, CustomerId, get
                             <div className="p-6 2xl:w-[40vw] xl:w-[60vw] lg:w-[80vw] w-[80vw]">
                                 <div className="flex items-center justify-start space-x-4">
 
-                                    <div className="basis-1/3 max-w-33.33%"> 
+                                    <div className="basis-[20%] max-w-20%"> 
                                         <label className="font-bold">Year</label> <br />
                                         <select
                                             className="w-full p-2 border border-gray-300 rounded-md text-black font-small"
@@ -250,72 +274,91 @@ const CustomerVehicleForm = ({ open, close, refresh, setRefresh, CustomerId, get
                                         ) : (<div></div>)}
                                     </div>
 
-                                    <div className="relative basis-1/3 max-w-33.33%" ref={vehicleInputRef}>
-                                        <label className="font-bold">Vehicle</label> <br />
-                                        <input
-                                            className="w-full p-2 border border-gray-300 rounded-md text-black font-small"
-                                            id="vehicle"
-                                            name="vehicle"
-                                            type="text"
-                                            value={values.vehicle}
-                                            onClick={() => setShowVehicleSuggestions(true)}
-                                            onChange={handleChange}
-                                            onBlur={handleBlur}
-                                            autoComplete="off"
-                                        />
+                                    <div className="relative basis-[60%] max-w-60%">
+                                        <div className="flex items-center gap-2">
+                                            <div ref={makeInputRef} className="relative">
+                                                <label className="font-bold">Make</label> <br />
+                                                <input
+                                                    className="w-full p-2 border border-gray-300 rounded-md text-black font-small"
+                                                    id="make"
+                                                    name="make"
+                                                    type="text"
+                                                    value={values.make}
+                                                    onClick={() => setShowMakeSuggestions(true)}
+                                                    onChange={handleChange}
+                                                    onBlur={handleBlur}
+                                                    autoComplete="off"
+                                                />
+                                                {showMakeSuggestions && (
+                                                    <ul className="absolute left-0 right-0 z-50 bg-white border border-slate-700 w-full mt-1 overflow-y-auto min-h-24 max-h-48">
+                                                        {vehicles.length > 0 ?
+                                                            [...new Set(vehicles.map(v => v.make))].map((make) => (
+                                                                <li 
+                                                                    key={make} 
+                                                                    className="cursor-pointer px-2 py-1 rounded-sm hover:bg-gray-200" 
+                                                                    onClick={() => { 
+                                                                        setValues({...values, make: make, model: ''}); 
+                                                                        setShowMakeSuggestions(false);
+                                                                        setShowModelSuggestions(true);
+                                                                    }}
+                                                                >
+                                                                    {make}
+                                                                </li>
+                                                            ))
+                                                            :
+                                                            <Spinner className="mx-auto my-auto h-6 w-6 text-blue-900/50" />
+                                                        }
+                                                    </ul>
+                                                )}
+                                            </div>
 
-                                        {(touched.make && errors.make) ? (
+                                            <div ref={modelInputRef} className="relative">
+                                                <label className="font-bold">Model</label> <br />
+                                                <input
+                                                    className="w-full p-2 border border-gray-300 rounded-md text-black font-small disabled:bg-gray-100"
+                                                    id="model"
+                                                    name="model"
+                                                    type="text"
+                                                    value={values.model}
+                                                    onClick={() => values.make && setShowModelSuggestions(true)}
+                                                    onChange={handleChange}
+                                                    onBlur={handleBlur}
+                                                    autoComplete="off"
+                                                    disabled={!values.make}
+                                                    placeholder={!values.make ? "Select make first" : "Select model"}
+                                                />
+                                                {showModelSuggestions && values.make && (
+                                                    <ul className="absolute left-0 right-0 z-50 bg-white border border-slate-700 w-full mt-1 overflow-y-auto min-h-24 max-h-48">
+                                                        {vehicles.length > 0 ?
+                                                            vehicles
+                                                                .filter(vehicle => vehicle.make === values.make)
+                                                                .map((vehicle) => (
+                                                                    <li 
+                                                                        key={vehicle.id} 
+                                                                        className="cursor-pointer px-2 py-1 rounded-sm hover:bg-gray-200" 
+                                                                        onClick={() => { 
+                                                                            setValues({...values, model: vehicle.model}); 
+                                                                            setShowModelSuggestions(false);
+                                                                        }}
+                                                                    >
+                                                                        {vehicle.model}
+                                                                    </li>
+                                                                ))
+                                                            :
+                                                            <Spinner className="mx-auto my-auto h-6 w-6 text-blue-900/50" />
+                                                        }
+                                                    </ul>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* {(touched.make && errors.make) ? (
                                             <div className="text-red-500">
                                                 {errors.make}
                                             </div>
-                                        ) : (<div></div>)}
-                                        {showVehicleSuggestions && (
-                                            <ul className="d-block absolute z-50 bg-white border border-slate-700 w-full mt-1 overflow-y-auto min-h-24 max-h-48">
-                                                {vehicles.length > 0 ?
-                                                    vehicles.filter(vehicle => `${vehicle.make.toLowerCase()} ${vehicle.model.toLowerCase()}`.includes(values.vehicle.trim().toLowerCase())).map((vehicle) => (
-                                                        <li key={vehicle.id} className="cursor-pointer px-2 py-1 rounded-sm hover:bg-gray-200" onClick={() => { setValues({...values, vehicle: `${vehicle.make} ${vehicle.model}`}); setShowVehicleSuggestions(false)}}>
-                                                            {vehicle.make} {vehicle.model}
-                                                        </li>
-                                                    ))
-                                                    :
-                                                    <Spinner className="mx-auto my-auto h-6 w-6 text-blue-900/50" />
-                                                }
-                                            </ul>
-                                        )}
+                                        ) : (<div></div>)} */}
                                     </div>
-                                    {/* <div className="relative" ref={modelInputRef}>
-                                        <label className="font-bold">Model</label> <br />
-                                        <input
-                                            className="w-full p-2 border border-gray-300 rounded-md text-black font-small"
-                                            id="model"
-                                            name="model"
-                                            type="text"
-                                            value={values.model}
-                                            onClick={() => setShowModelSuggestions(true)}
-                                            onChange={(e) => handleInputChange('model', e)}
-                                            onBlur={handleBlur}
-                                            autoComplete="off"
-                                            disabled={values.make !== '' && values.year !== '' ? false : true}
-                                        />
-                                        {touched.model && errors.model ? (
-                                            <div className="text-red-500">
-                                                {errors.model}
-                                            </div>
-                                        ) : (<div></div>)}
-                                        {showModelSuggestions && (
-                                            <ul className="d-block absolute z-50 bg-white border border-slate-700 w-full mt-1 overflow-y-auto max-h-48">
-                                                {modelLoading ?
-                                                    <Spinner className="mx-auto my-auto h-6 w-6 text-blue-900/50" />
-                                                    :
-                                                    filteredModels.map((model) => (
-                                                        <li key={model.model_name} className="cursor-pointer px-2 py-1 rounded-sm hover:bg-gray-200" onClick={() => { setValues({ ...values, model: model.model_name }); setFilteredModels([]); setShowModelSuggestions(false) }}>
-                                                            {model.model_name}
-                                                        </li>
-                                                    ))}
-                                            </ul>
-                                        )}
-                                    </div> */}
-                                    <div className="basis-1/3 max-w-33.33%">
+                                    <div className="basis-[20%] max-w-20%">
                                         <label className="font-bold">Odometer</label> <br />
                                         <input
                                             className="w-full p-2 border border-gray-300 rounded-md text-black font-small"
@@ -328,7 +371,7 @@ const CustomerVehicleForm = ({ open, close, refresh, setRefresh, CustomerId, get
                                             autoComplete="off"
                                         />
                                         {touched.odometer && errors.odometer ? (
-                                            <div className="text-red-500">
+                                            <div className="text-red-500 text-xs mt-1">
                                                 {errors.odometer}
                                             </div>
                                         ) : (<div></div>)}

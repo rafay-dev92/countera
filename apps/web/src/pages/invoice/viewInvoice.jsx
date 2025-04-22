@@ -118,10 +118,10 @@ const ViewInvoice = ({ printInvoice, setPrintInvoice, componentRef, appliedTaxes
 
     return (
         <>
-            <div className="overflow-y-auto h-[85vh] overflow-x-hidden p-2">
+            <div className="overflow-y-auto h-[90vh] overflow-x-hidden p-2">
                 <div className="flex h-full">
                     <div className="basis-[80%]">
-                        <div className="max-h-[80vh] overflow-y-auto">
+                        <div className="max-h-[88vh] overflow-y-auto">
                             {printInvoice && Object.keys(printInvoice).length > 0 ? <PrintView view={true} printInvoice={printInvoice} ref={componentRef} appliedTaxes={appliedTaxes} /> : null}
                         </div>
                     </div>

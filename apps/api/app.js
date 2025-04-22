@@ -1,9 +1,10 @@
 const express = require("express");
 const cors = require("cors");
+const cron = require('node-cron');
+const path = require('path');
+const { exec } = require('child_process');
 const app = express();
 const fs = require("fs");
-
-const path = require("path");
 
 const productDir = path.join(__dirname, "uploads/products");
 const businessDir = path.join(__dirname, "uploads/business");
@@ -18,6 +19,36 @@ if (!fs.existsSync(businessDir)) {
 } else {
   console.log("Images directory already exists");
 }
+
+// Create backups directory if it doesn't exist
+const backupDir = path.join(__dirname, "backups");
+if (!fs.existsSync(backupDir)) {
+  fs.mkdirSync(backupDir, { recursive: true });
+  console.log("Backups directory created");
+}
+
+// Schedule backup to run at 12 AM (midnight) every day
+cron.schedule('0 0 * * *', () => {
+  const now = new Date();
+  console.log(`[${now.toISOString()}] Starting scheduled database backup...`);
+  const backupScript = path.join(__dirname, 'scripts', 'backup.js');
+  
+  exec(`node ${backupScript}`, (error, stdout, stderr) => {
+    const endTime = new Date();
+    if (error) {
+      console.error(`[${endTime.toISOString()}] Backup failed: ${error.message}`);
+      return;
+    }
+    if (stderr) {
+      console.error(`[${endTime.toISOString()}] Backup stderr: ${stderr}`);
+      return;
+    }
+    console.log(`[${endTime.toISOString()}] Backup completed successfully`);
+    if (stdout) {
+      console.log(`[${endTime.toISOString()}] Backup output: ${stdout}`);
+    }
+  });
+});
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));

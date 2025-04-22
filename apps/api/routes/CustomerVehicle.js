@@ -8,7 +8,7 @@ router.get("/customer/:id", fetchUser, async (req, res) => {
   try {
     const vehicles = await CustomerVehicle.findAll({
       where: { CustomerId: req.params.id },
-      order: [['createdAt', 'DESC']],
+      order: [["createdAt", "DESC"]],
     });
     res.status(200).json(vehicles);
   } catch (error) {
@@ -31,20 +31,7 @@ router.get("/:id", fetchUser, async (req, res) => {
 
 router.post("/create", fetchUser, async (req, res) => {
   try {
-    let data = req.body;  
-    const { vehicle, year, CustomerId } = req.body;
-    let [make, model] = vehicle.split(" ");
-    make = make.trim();
-    model = model.trim();
-    // const existingVehicle = await CustomerVehicle.findOne({
-    //   where: { make: make, model: model, year: year, CustomerId: CustomerId },
-    // });
-    // if (existingVehicle) {
-    //   return res.status(409).json({ message: "Vehicle already exists" });
-    // }
-
-    data = { ...data, make, model };
-    delete data.vehicle;
+    let data = req.body;
     await CustomerVehicle.create(data);
     return res.status(200).json({ message: "Vehicle added successfully" });
   } catch (error) {

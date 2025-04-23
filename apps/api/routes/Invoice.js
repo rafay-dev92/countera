@@ -254,10 +254,12 @@ router.put("/update/:id", fetchUser, async (req, res) => {
     }
    
     if (req.body?.products && req.body?.products.length > 0) {
-      try {
+      try {        
         req.body.products.forEach(async (newProduct) => {
-          const productId = newProduct.split(":")[0];
-          const newQuantity = newProduct.split(":")[1];
+          const productId = newProduct.id;
+          const newQuantity = newProduct.quantity;
+          const newDescription = newProduct.description;
+          const newPrice = newProduct.price;
 
           // Check if the product exists in the current products
           const existingProduct = invoice.Product.find(
@@ -267,7 +269,7 @@ router.put("/update/:id", fetchUser, async (req, res) => {
           if (existingProduct) {
             // If the product exists, update the quantity in the junction table
             await invoice_product.update(
-              { quantity: newQuantity },
+              { quantity: newQuantity, description: newDescription, price: newPrice },
               {
                 where: {
                   InvoiceId: invoice.id,
@@ -281,6 +283,8 @@ router.put("/update/:id", fetchUser, async (req, res) => {
               InvoiceId: invoice.id,
               ProductId: productId,
               quantity: newQuantity,
+              description: newDescription,
+              price: newPrice,
             });
           }
         });
@@ -291,14 +295,14 @@ router.put("/update/:id", fetchUser, async (req, res) => {
       const deletedItems = invoice.Product.filter(
         (orgProd) =>
           !req.body.products.some(
-            (item) => item.split(":")[0] === orgProd.dataValues.id
+            (item) => item.id === orgProd.dataValues.id
           )
       ).map((changeItem) => changeItem.dataValues.id);
 
       if (deletedItems.length !== 0) {
         await Promise.all(
           deletedItems.map(async (item) => {
-            const product = await Product.findByPk(item.split(":")[0]);
+            const product = await Product.findByPk(item.id);
             await invoice.removeProduct(product);
           })
         );

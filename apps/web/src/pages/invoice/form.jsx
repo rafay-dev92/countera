@@ -390,7 +390,6 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
 
     // Recalculate taxes
     recalculateTaxes(updatedItems);
-
     setSelectedProducts(updatedItems);
   };
 
@@ -488,9 +487,9 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
   const calculateTotalAmount = () => {
     let total = 0;
     selectedProducts.forEach((item) => {
-      total += calculateAmount(item.price, item.quantity);
+      total += parseFloat(calculateAmount(item.price, item.quantity));
     });
-    return total;
+    return total.toFixed(2);
   };
 
   // calculate tax amount
@@ -1013,7 +1012,7 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
                                         min={0}
                                         step="0.01"
                                         className="w-24 p-2 border rounded-md text-black"
-                                        value={item.price === 0 ? '' : item.price}
+                                        value={item.price == 0 ? '' : item.price}
                                         placeholder="0.00"
                                         onChange={(e) =>
                                           handlePriceChange(index, e.target.value)

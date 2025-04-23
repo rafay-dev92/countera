@@ -229,7 +229,7 @@ const printView = React.forwardRef(({ view, printInvoice, appliedTaxes }, ref) =
                         </div>
                         <div className="flex items-center border divide-x">
                             <h1 className="basis-[50%] max-w-[50%] text-1xl p-2">Total</h1>
-                            <h1 className="basis-[50%] max-w-[50%] text-1xl p-2">${printInvoice?.totalAmount}</h1>
+                            <h1 className="basis-[50%] max-w-[50%] text-1xl p-2">${printInvoice?.totalAmount.toFixed(2)}</h1>
                         </div>
 
                         <div className="p-2 border mt-5 text-center font-medium">

@@ -15,15 +15,17 @@ const printView = React.forwardRef(({ view, printInvoice, appliedTaxes }, ref) =
     };
 
     const calculateAmount = (price, quantity) => {
-        return price * quantity;
+        const unitPrice = parseFloat(price) || 0;
+        const qty = parseFloat(quantity) || 0;
+        return (unitPrice * qty).toFixed(2);
     };
 
     const calculateTotalAmount = (products) => {
         let total = 0;
         products?.forEach((item) => {
-            total += calculateAmount(item.invoice_product.price, item.invoice_product.quantity);
+            total += parseFloat(calculateAmount(item.invoice_product.price, item.invoice_product.quantity));
         });
-        return total;
+        return total.toFixed(2);
     };
 
     if (Object.keys(printInvoice).length > 0) {

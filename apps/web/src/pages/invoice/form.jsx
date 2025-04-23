@@ -115,6 +115,7 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
     dispatch({ type: 'SET_INVOICE_VIEW_DATA', payload: null });
     setSelectedProducts([{
       product: "",
+      description: "",
       quantity: 1,
       price: 0,
       taxable: false
@@ -189,7 +190,6 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
           if (!productTaxes[key]) {
             productTaxes[key] = 0;
           }
-          console.log(product)
           if (productTax.type === "%") {
             productTaxes[key] += product.price * product.quantity * (productTax.rate / 100);
           } else {
@@ -437,7 +437,9 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
 
   // calculate amount
   const calculateAmount = (price, quantity) => {
-    return price * quantity;
+    const unitPrice = parseFloat(price) || 0;
+    const qty = parseFloat(quantity) || 0;
+    return (unitPrice * qty).toFixed(2);
   };
 
   // get customers
@@ -463,6 +465,7 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
     };
     // setSelectedProducts([{
     //   product: "",
+    //   description: "",
     //   quantity: 1,
     //   price: 0,
     //   taxable: false
@@ -504,7 +507,9 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
 
   // calculate total amount with tax
   const calculateTotalAmountWithTax = () => {
-    return (totalAmount + calculateTotalTaxAmount()).toFixed(2);
+    const amount = parseFloat(totalAmount) || 0;
+    const tax = parseFloat(calculateTotalTaxAmount()) || 0;
+    return (amount + tax).toFixed(2);
   };
 
   useEffect(() => {
@@ -561,6 +566,7 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
     setVehicleOdometer('');
     setSelectedProducts([{
       product: "",
+      description: "",
       quantity: 1,
       price: 0,
       taxable: false
@@ -741,7 +747,7 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
                       </div>
 
                       <div className="w-full lg:w-[55%]">
-                        <div className="space-y-4">
+                        <div className="">
                           <div className="flex flex-col lg:flex-row gap-4">
                             <div className="w-full lg:w-1/2">
                               <div className="flex items-center pl-2">
@@ -1060,7 +1066,7 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
                             <h1>Subtotal</h1>
                           </div>
                           <div className="text-1xl">
-                            <h1>${totalAmount}</h1>
+                            <h1>${parseFloat(totalAmount).toFixed(2)}</h1>
                           </div>
                         </div>
 

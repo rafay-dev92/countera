@@ -156,7 +156,7 @@ export function Invoice() {
         Customer['firstName'].toLowerCase().includes(searchQuery.toLowerCase()) ||
         Customer['lastName'].toLowerCase().includes(searchQuery.toLowerCase())
     );
-    currentItems = filteredRows.slice(indexOfFirstItem, indexOfLastItem);
+    currentItems = filteredRows?.slice(indexOfFirstItem, indexOfLastItem);
   }
 
   const handleItemsPerPageChange = (event) => {

@@ -146,7 +146,7 @@ export function Quotation() {
     };
 
     const openPopup = () => {
-        if (state.userInfo.Permission.some(obj => obj.name === "CAN_CREATE_QUOTATION" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
+        if (state.userInfo?.Permission?.some(obj => obj.name === "CAN_CREATE_QUOTATION" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
             setIsOpen(true);
         }
         else {
@@ -162,7 +162,12 @@ export function Quotation() {
         const confirmed = await confirm("Do you really want to create an invoice from this quotation?");
         if (!confirmed) return;
         setLoading(true)
-        const selectedProductIds = quotationData?.Product?.map((product) => `${product.id}:${product.quotation_product?.quantity}`);
+        const selectedProductIds = quotationData?.Product?.map((product) => ({
+            id: product.id,
+            quantity: product.quotation_product.quantity,
+            description: product.description || '',
+            price: product.price
+          })).filter(product => product.id);
         const data = {
             invoiceData: {
                 totalAmount: quotationData.totalAmount,

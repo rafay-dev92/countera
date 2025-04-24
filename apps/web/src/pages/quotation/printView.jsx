@@ -7,40 +7,20 @@ const PRODUCT_TABLE_HEAD = ["Product", "Quantity", "Price", "Tax", "Amount"]
 
 const printView = React.forwardRef(({view, quotationData, appliedTaxes}, ref) =>  {
     const quotationDate = new Date(quotationData?.createdAt);
-    const [taxes, setTaxes] = useState([]);
-
-    const formatCreatedAt = (createdAt) => {
-        const date = new Date(createdAt);
-        return date.toLocaleString();
-    };
 
     const calculateAmount = (price, quantity) => {
-        return price * quantity;
+        const unitPrice = parseFloat(price) || 0;
+        const qty = parseFloat(quantity) || 0;
+        return (unitPrice * qty).toFixed(2);
     };
 
     const calculateTotalAmount = (products) => {
         let total = 0;
         products.forEach((item) => {
-            total += calculateAmount(item.price, item.quotation_product.quantity);
+            total += parseFloat(calculateAmount(item.quotation_product.price, item.quotation_product.quantity));
         });
-        return total;
+        return total.toFixed(2);
     };
-
-    useEffect(() => {
-        if (!quotationData?.Product || !quotationData?.Customer) return;
-        const updatedTaxes = [];
-        quotationData.Product.forEach((prod) => {
-            if (quotationData.Customer.taxable) {
-                prod.Tax?.forEach((productTax) => {
-                    if (!updatedTaxes.some((tax) => tax.id === productTax.id)) {
-                        updatedTaxes.push(productTax);
-                    }
-                });
-            }
-        });
-
-        setTaxes(updatedTaxes);
-    }, [])
 
     if (quotationData && Object.keys(quotationData).length > 0) {
         return (
@@ -188,7 +168,7 @@ const printView = React.forwardRef(({view, quotationData, appliedTaxes}, ref) =>
                                             color="blue-gray"
                                             className="font-normal leading-none"
                                         >
-                                            {item.price}
+                                            {item.quotation_product.price}
                                         </Typography>
                                     </td>
                                     <td className="p-4 border-b border-blue-gray-50">
@@ -204,7 +184,7 @@ const printView = React.forwardRef(({view, quotationData, appliedTaxes}, ref) =>
                                             color="blue-gray"
                                             className="font-normal leading-none"
                                         >
-                                            {calculateAmount(item.price, item.quotation_product.quantity)}
+                                            {calculateAmount(item.quotation_product.price, item.quotation_product.quantity)}
                                         </Typography>
                                     </td>
                                 </tr>

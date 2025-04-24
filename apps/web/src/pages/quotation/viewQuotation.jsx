@@ -64,7 +64,14 @@ const ViewQuotation = ({ quotationData, setQuotationData, componentRef, appliedT
         const confirmed = await confirm("Do you really want to create an invoice from this quotation?");
         if (!confirmed) return;
         setIsLoading({ ...isLoading, createInvoice: true });
-        const selectedProductIds = quotationData?.Product?.map((product) => `${product.id}:${product.quotation_product?.quantity}`);
+        // const selectedProductIds = quotationData?.Product?.map((product) => `${product.id}:${product.quotation_product?.quantity}`);
+        const selectedProductIds = quotationData?.Product?.map((product) => ({
+            id: product.id,
+            quantity: product.quotation_product.quantity,
+            description: product.description || '',
+            price: product.price
+          })).filter(product => product.id);
+
         const data = {
             invoiceData: {
                 totalAmount: quotationData.totalAmount,
@@ -167,10 +174,10 @@ const ViewQuotation = ({ quotationData, setQuotationData, componentRef, appliedT
 
     return (
         <>
-            <div className="overflow-y-auto h-[80vh] overflow-x-hidden p-2">
+            <div className="overflow-y-auto h-[90vh] overflow-x-hidden p-2">
                 <div className="flex h-full">
                     <div className="basis-[80%]">
-                        <div className="max-h-[75vh] overflow-y-auto">
+                        <div className="max-h-[88vh] overflow-y-auto">
                             {quotationData && Object.keys(quotationData).length > 0 ? <PrintView view={true} quotationData={quotationData} ref={componentRef} appliedTaxes={appliedTaxes} /> : null}
                         </div>
                     </div>

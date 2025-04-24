@@ -182,7 +182,7 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
       selectedProd.forEach((product) => {
         product.Tax?.forEach((productTax) => {
           const key = `${productTax.name}_${productTax.rate}_${productTax.type}`;
-          
+
           if (productTax.name === 'Sales Tax' && !state?.invoice?.viewData?.Customer?.taxable) {
             return; // Skip Sales Tax calculation for non-taxable customers
           }
@@ -207,7 +207,7 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
   // handle submit
   const onSubmit = async (values) => {
     setIsLoading(true);
-    
+
     const selectedProductIds = selectedProducts.map((product) => ({
       id: product.id,
       quantity: product.quantity,
@@ -918,142 +918,138 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
                       </div>
                     </div>
 
-                    {/* <Card className=" w-full">
-                      <CardBody className="p-2"> */}
-                        <table className="w-full min-w-max table-auto text-left my-2">
-                          <thead>
-                            <tr>
-                              {TABLE_HEAD.map((head) => (
-                                <th
-                                  key={head}
-                                  className="border-y border-blue-gray-100 bg-blue-gray-50/50 p-4"
-                                >
+                    <table className="w-full min-w-max table-auto text-left my-2">
+                      <thead>
+                        <tr>
+                          {TABLE_HEAD.map((head) => (
+                            <th
+                              key={head}
+                              className="border-y border-blue-gray-100 bg-blue-gray-50/50 p-4"
+                            >
+                              <Typography
+                                variant="small"
+                                color="blue-gray"
+                                className="font-normal leading-none opacity-70"
+                              >
+                                {head}
+                              </Typography>
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {selectedProducts.map((item, index) => (
+                          <tr key={index}>
+                            <td className="p-4 border-b border-blue-gray-50">
+                              {index !== (selectedProducts.length - 1) ?
+                                <div className="flex flex-col">
+                                  <div className="w-80 h-[97%] mx-2 p-2 border border-gray-300 rounded-md text-gray-600 font-small">
+                                    {item.name}
+                                  </div>
+                                  {/* Product description */}
+                                  <div>
+                                    <input
+                                      id="description"
+                                      name="description"
+                                      className="w-80 h-[30%] mx-2 p-1 rounded-md text-gray-600 text-xs focus:outline-none "
+                                      type="text"
+                                      value={item.description}
+                                      onChange={(e) => { setSelectedProducts((prev) => { const newProducts = [...prev]; newProducts[index].description = e.target.value; return newProducts }) }}
+                                      onBlur={handleBlur}
+                                      autoComplete="off"
+                                      placeholder="Description"
+                                    />
+                                  </div>
+                                </div>
+                                :
+                                <div ref={productInputRef} className="relative w-fit">
+                                  <input
+                                    className="w-80 h-[97%] m-2 p-2 border border-gray-300 rounded-md text-gray-600 font-small"
+                                    id="product"
+                                    name="product"
+                                    type="text"
+                                    value={selectedProducts[index].name ? selectedProducts[index].name : productSearchText}
+                                    onClick={() => { selectedCustomer && setShowProductSuggestions(true) }}
+                                    onChange={(e) => setProductSearchText(e.target.value)}
+                                    onBlur={handleBlur}
+                                    autoComplete="off"
+                                    placeholder="Select Product"
+                                  />
+                                  {showProductSuggestions && (
+                                    <ul className="absolute left-0 right-0 z-50 bg-white border border-slate-700 mt-1 ml-2 overflow-y-auto min-h-24 max-h-48 w-80">
+                                      {products?.length > 0 ?
+                                        products.filter(product => `${product.name}`.toLowerCase().includes(productSearchText)).map((product) => (
+                                          <li key={product.id} className="cursor-pointer px-2 py-1 rounded-sm hover:bg-gray-200" onClick={() => { handleProductChange(index, item.quantity, product.id), setShowProductSuggestions(false) }}>
+                                            {product?.name}
+                                          </li>
+                                        ))
+                                        :
+                                        <li className="px-2 py-1 rounded-sm">No Product</li>
+                                      }
+                                    </ul>
+                                  )}
+                                </div>
+                              }
+                            </td>
+                            {/* {index !== (selectedProducts.length - 1) && (
+                              <> */}
+                                <td className="p-4 border-b border-blue-gray-50">
+                                  <input
+                                    type="number"
+                                    min={1}
+                                    className="w-14 p-2 border rounded-md text-black"
+                                    value={item.quantity}
+                                    onChange={(e) =>
+                                      handleQuantityChange(index, e.target.value)
+                                    }
+                                  />
+                                </td>
+                                <td className="p-4 border-b border-blue-gray-50">
+                                  <input
+                                    type="number"
+                                    min={0}
+                                    step="0.01"
+                                    className="w-24 p-2 border rounded-md text-black"
+                                    value={item.price == 0 ? '' : item.price}
+                                    placeholder="0.00"
+                                    onChange={(e) =>
+                                      handlePriceChange(index, e.target.value)
+                                    }
+                                  />
+                                </td>
+                                <td className="p-4 border-b border-blue-gray-50">
+                                  <input
+                                    type="checkbox"
+                                    checked={selectedCustomer?.taxable && item.taxable}
+                                    readOnly
+                                  />
+                                </td>
+                                <td className="p-4 border-b border-blue-gray-50">
                                   <Typography
                                     variant="small"
                                     color="blue-gray"
-                                    className="font-normal leading-none opacity-70"
+                                    className="font-normal opacity-70"
                                   >
-                                    {head}
+                                    {calculateAmount(item.price, item.quantity)}
                                   </Typography>
-                                </th>
-                              ))}
-                            </tr>
-                          </thead>
-                          <tbody className="bg-white divide-y divide-gray-200">
-                            {selectedProducts.map((item, index) => (
-                              <tr key={index}>
-                                <td className="p-4 ">
-                                  {index !== (selectedProducts.length - 1) ?
-                                    <div className="flex flex-col">
-                                      <div className="w-80 h-[97%] mx-2 p-2 border border-gray-300 rounded-md text-gray-600 font-small">
-                                        {item.name}
-                                      </div>
-                                      {/* Product description */}
-                                      <div>
-                                        <input
-                                          id="description"
-                                          name="description"
-                                          className="w-80 h-[30%] mx-2 p-1 rounded-md text-gray-600 text-xs focus:outline-none "
-                                          type="text"
-                                          value={item.description}
-                                          onChange={(e) => { setSelectedProducts((prev) => { const newProducts = [...prev]; newProducts[index].description = e.target.value; return newProducts }) }}
-                                          onBlur={handleBlur}
-                                          autoComplete="off"
-                                          placeholder="Description"
-                                        />
-                                      </div>
-                                    </div>
-                                    :
-                                    <div ref={productInputRef} className="relative w-fit">
-                                      <input
-                                        className="w-80 h-[97%] m-2 p-2 border border-gray-500 rounded-md text-gray-600 font-small"
-                                        id="product"
-                                        name="product"
-                                        type="text"
-                                        value={selectedProducts[index].name ? selectedProducts[index].name : productSearchText}
-                                        onClick={() => { selectedCustomer && setShowProductSuggestions(true) }}
-                                        onChange={(e) => setProductSearchText(e.target.value)}
-                                        onBlur={handleBlur}
-                                        autoComplete="off"
-                                        placeholder="Select Product"
-                                      />
-                                      {showProductSuggestions && (
-                                        <ul className="absolute left-0 right-0 z-50 bg-white border border-slate-700 mt-1 ml-2 overflow-y-auto min-h-24 max-h-48 w-80">
-                                          {products?.length > 0 ?
-                                            products.filter(product => `${product.name}`.toLowerCase().includes(productSearchText)).map((product) => (
-                                              <li key={product.id} className="cursor-pointer px-2 py-1 rounded-sm hover:bg-gray-200" onClick={() => { handleProductChange(index, item.quantity, product.id), setShowProductSuggestions(false) }}>
-                                                {product?.name}
-                                              </li>
-                                            ))
-                                            :
-                                            <li className="px-2 py-1 rounded-sm">No Product</li>
-                                          }
-                                        </ul>
-                                      )}
-                                    </div>
-                                  }
                                 </td>
-                                {index !== (selectedProducts.length - 1) && (
-                                  <>
-                                    <td className="p-4">
-                                      <input
-                                        type="number"
-                                        min={1}
-                                        className="w-14 p-2 border rounded-md text-black"
-                                        value={item.quantity}
-                                        onChange={(e) =>
-                                          handleQuantityChange(index, e.target.value)
-                                        }
-                                      />
-                                    </td>
-                                    <td className="p-4 border-b border-blue-gray-50">
-                                      <input
-                                        type="number"
-                                        min={0}
-                                        step="0.01"
-                                        className="w-24 p-2 border rounded-md text-black"
-                                        value={item.price == 0 ? '' : item.price}
-                                        placeholder="0.00"
-                                        onChange={(e) =>
-                                          handlePriceChange(index, e.target.value)
-                                        }
-                                      />
-                                    </td>
-                                    <td className="p-4 border-b border-blue-gray-50">
-                                      <input
-                                        type="checkbox"
-                                        checked={selectedCustomer?.taxable && item.taxable}
-                                        readOnly
-                                      />
-                                    </td>
-                                    <td className="p-4 border-b border-blue-gray-50">
-                                      <Typography
-                                        variant="small"
-                                        color="blue-gray"
-                                        className="font-normal opacity-70"
-                                      >
-                                        {calculateAmount(item.price, item.quantity)}
-                                      </Typography>
-                                    </td>
-                                  </>
-                                )}
-                                <td className="p-4 text-center px-4 py-2">
-                                  {index !== selectedProducts.length - 1 ?
-                                    <XCircleIcon
-                                      onClick={() => handleRemoveProduct(index)}
-                                      className="h-6 w-6 text-gray-600 hover:text-red-500 cursor-pointer"
-                                    />
-                                    :
-                                    null
-                                  }
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
+                              {/* </>
+                            )} */}
+                            <td className="p-4 border-b border-blue-gray-50 text-center px-4 py-2">
+                              {index !== selectedProducts.length - 1 ?
+                                <XCircleIcon
+                                  onClick={() => handleRemoveProduct(index)}
+                                  className="h-6 w-6 text-gray-600 hover:text-red-500 cursor-pointer"
+                                />
+                                :
+                                null
+                              }
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
 
-                        </table>
-                      {/* </CardBody> */}
-                    {/* </Card> */}
+                    </table>
 
                     <div className="flex">
                       <div className="basis-[50%] max-w-[50%]">
@@ -1104,10 +1100,10 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
                       </div> */}
 
                         <div className="flex items-center justify-between p-2 font-medium text-black bg-yellow-700">
-                          <div className="text-1xl">
+                          <div className="text-md">
                             <h1>Total</h1>
                           </div>
-                          <div className="text-1xl">
+                          <div className="text-md">
                             <h1>${calculateTotalAmountWithTax()}</h1>
                           </div>
                         </div>
@@ -1162,7 +1158,6 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
                 }
               </div>
             </div>
-
           </form>
         )}
       </Dialog>

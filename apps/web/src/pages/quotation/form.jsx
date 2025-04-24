@@ -61,6 +61,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
   const [productsPackages, setProductsPackages] = useState([]);
   const [selectedProducts, setSelectedProducts] = useState([{
     product: "",
+    description: "",
     quantity: 1,
     price: 0,
     taxable: false
@@ -115,6 +116,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
     setPrintQuotation([])
     setSelectedProducts([{
       product: "",
+      description: "",
       quantity: 1,
       price: 0,
       taxable: false
@@ -167,10 +169,11 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
           product: prod.id,
           id: prod.id,
           name: prod.name,
-          price: prod.price,
+          price: prod.quotation_product.price,
           quantity: prod.quotation_product.quantity,
           taxable: prod.taxable,
           Tax: prod.Tax,
+          description: prod.quotation_product.description,
         }
         selectedProd = [aProd, ...selectedProd];
       })
@@ -180,12 +183,12 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
         product.Tax?.forEach((productTax) => {
           const key = `${productTax.name}_${productTax.rate}_${productTax.type}`;
 
-          if (!productTaxes[key]) {
-            productTaxes[key] = 0;
-          }
-
           if (productTax.name === 'Sales Tax' && !selectedQuotation?.Customer?.taxable) {
             return; // Skip Sales Tax calculation for non-taxable customers
+          }
+
+          if (!productTaxes[key]) {
+            productTaxes[key] = 0;
           }
 
           if (productTax.type === "%") {
@@ -206,8 +209,14 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
   // handle submit
   const onSubmit = async (values) => {
     setIsLoading(true);
-    const selectedProductIds = selectedProducts.map((product) => `${product.id}:${product.quantity}`);
-    selectedProductIds.pop();
+    // const selectedProductIds = selectedProducts.map((product) => `${product.id}:${product.quantity}`);
+    // selectedProductIds.pop();
+    const selectedProductIds = selectedProducts.map((product) => ({
+      id: product.id,
+      quantity: product.quantity,
+      description: product.description || '',
+      price: product.price
+    })).filter(product => product.id); // Remove empty products
 
     if (selectedVehicle?.odometer < vehicleOdometer) {
       try {
@@ -330,12 +339,14 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
         price: selectedProductDetails.price,
         taxable: selectedProductDetails.taxable,
         Tax: selectedProductDetails.Tax,
+        description: "",
       };
     } else {
       // Reset the row if no product is found
       updatedItems[index] = {
         id: "",
         product: "",
+        description: "",
         name: "",
         quantity: 1,
         price: 0,
@@ -353,6 +364,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
       updatedItems.push({
         id: "",
         product: "",
+        description: "",
         name: "",
         quantity: 1,
         price: 0,
@@ -369,6 +381,17 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
   const handleQuantityChange = (index, quantity) => {
     const updatedItems = [...selectedProducts];
     updatedItems[index].quantity = Number(quantity);
+
+    // Recalculate taxes
+    recalculateTaxes(updatedItems);
+
+    setSelectedProducts(updatedItems);
+  };
+
+  // Handle price change
+  const handlePriceChange = (index, price) => {
+    const updatedItems = [...selectedProducts];
+    updatedItems[index].price = Number(price);
 
     // Recalculate taxes
     recalculateTaxes(updatedItems);
@@ -399,12 +422,12 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
       product.Tax?.forEach((productTax) => {
         const key = `${productTax.name}_${productTax.rate}_${productTax.type}`;
 
-        if (!productTaxes[key]) {
-          productTaxes[key] = 0;
-        }
-
         if (productTax.name === 'Sales Tax' && !selectedCustomer?.taxable) {
           return; // Skip Sales Tax calculation for non-taxable customers
+        }
+
+        if (!productTaxes[key]) {
+          productTaxes[key] = 0;
         }
 
         if (productTax.type === "%") {
@@ -420,7 +443,9 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
 
   // calculate amount
   const calculateAmount = (price, quantity) => {
-    return price * quantity;
+    const unitPrice = parseFloat(price) || 0;
+    const qty = parseFloat(quantity) || 0;
+    return (unitPrice * qty).toFixed(2);
   };
 
   // handle taxable change
@@ -451,12 +476,14 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
       setVehicleOdometer(customer.Vehicle[0]?.odometer);
       setValues({ ...values, ['customer']: `${customer.firstName} ${customer.lastName}`, ['vehicle']: customer.Vehicle[0].id })
     };
-    setSelectedProducts([{
-      product: "",
-      quantity: 1,
-      price: 0,
-      taxable: false
-    }]);
+    // setSelectedProducts([{
+    //   product: "",
+    //   description: "",
+    //   quantity: 1,
+    //   price: 0,
+    //   taxable: false
+    // }]);
+    // setAppliedTaxes({});
     setShowCustomerSuggestions(false);
   };
 
@@ -474,9 +501,9 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
   const calculateTotalAmount = () => {
     let total = 0;
     selectedProducts.forEach((item) => {
-      total += calculateAmount(item.price, item.quantity);
+      total += parseFloat(calculateAmount(item.price, item.quantity));
     });
-    return total;
+    return total.toFixed(2);
   };
 
   // calculate tax amount
@@ -493,7 +520,9 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
 
   // calculate total amount with tax
   const calculateTotalAmountWithTax = () => {
-    return (totalAmount + calculateTotalTaxAmount()).toFixed(2);
+    const amount = parseFloat(totalAmount) || 0;
+    const tax = parseFloat(calculateTotalTaxAmount()) || 0;
+    return (amount + tax).toFixed(2);
   };
 
   useEffect(() => {
@@ -550,6 +579,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
     setVehicleOdometer('');
     setSelectedProducts([{
       product: "",
+      description: "",
       quantity: 1,
       price: 0,
       taxable: false
@@ -592,8 +622,8 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
       <Dialog open={open} size="lg">
         {open && (
           <form onSubmit={handleSubmit}>
-            <div className="">
-              <div className="bg-white rounded shadow-xl">
+            <div className="flex justify-center items-center h-[90vh]">
+              <div className="bg-white rounded shadow-xl w-[95vw] md:w-[95vw] lg:w-[95vw] xl:w-[80vw] 2xl:w-[65vw] mx-auto">
                 <div className="flex items-center justify-between sticky bg-gradient-to-br from-gray-800 to-gray-700">
                   <div></div>
                   <div className="text-white text-center text-lg">
@@ -624,9 +654,9 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
                 {state?.quotation?.isViewOpen ? (
                   <ViewQuotation quotationData={printQuotation} setQuotationData={setPrintQuotation} componentRef={componentRef} appliedTaxes={appliedTaxes} setEdit={setEdit} close={handleClose} />
                 ) : (
-                  <div className="overflow-y-auto h-[85vh] overflow-x-hidden p-2">
-                    <div className="flex gap-4">
-                      <div className="basis-[40%] max-w-[40%]">
+                  <div className="overflow-y-auto h-[85vh] overflow-x-hidden p-4 md:p-6 w-[95vw] md:w-[95vw] lg:w-[95vw] xl:w-[80vw] 2xl:w-[65vw]">
+                    <div className="flex flex-col lg:flex-row gap-4">
+                      <div className="w-full lg:w-[35%]">
                         <div className="relative mb-7" ref={customerInputRef}>
                           <div className="flex items-center pl-2">
                             <label className="font-bold">Customer</label>
@@ -634,380 +664,402 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
                               <PlusCircleIcon className="h-5 w-5 text-blue-600 cursor-pointer" />
                             </IconButton>
                           </div>
-                          <input
-                            className="w-[70%] h-[97%] m-2 p-2 border border-gray-300 rounded-md text-gray-600 font-small"
-                            id="customer"
-                            name="customer"
-                            type="text"
-                            value={selectedCustomer ? `${selectedCustomer.firstName} ${selectedCustomer.lastName}` : values.customer}
-                            onClick={() => { setShowCustomerSuggestions(true); setValues({ ...values, ['customer']: '' }) }}
-                            onChange={(e) => { setSelectedCustomer(null); setSelectedVehicle(null); setVehicleOdometer(''), handleChange(e) }}
-                            onBlur={handleBlur}
-                            autoComplete="off"
-                            placeholder="Select Customer"
-                          />
-
-                          {/* {(touched.customer && errors.customer) ? (
-                          <div className="text-red-500">
-                            {errors.customer}
-                          </div>
-                        ) : (<div></div>)} */}
-                          {showCustomerSuggestions && (
-                            <ul className="d-block absolute z-50 bg-white border border-slate-700 w-[70%] mt-1 ml-2 overflow-y-auto min-h-24 max-h-48 ">
-                              {customers.length > 0 ?
-                                customers
-                                  .filter(customer => {
-                                    const searchTerm = values.customer.trim().toLowerCase();
-                                    return (
-                                      `${customer.firstName} ${customer.lastName}`.toLowerCase().includes(searchTerm) ||
-                                      customer.phone?.toLowerCase().includes(searchTerm)
-                                    );
-                                  })
-                                  .map(customer => (
-                                    <li
-                                      key={customer.id}
-                                      className="cursor-pointer px-2 py-1 rounded-sm hover:bg-gray-200"
-                                      onClick={() => handleCustomerChange(customer)}
-                                    >
-                                      {customer.firstName} {customer.lastName}
-                                    </li>
-                                  ))
-                                :
-                                <li className="px-2 py-1 rounded-sm">No Customer</li>
-                              }
-                            </ul>
-                          )}
-                        </div>
-
-                        <label className="p-2 font-bold">Name</label> <br />
-                        <input
-                          className="w-48 lg:w-72 m-2 p-2 border border-gray-300 rounded-md text-black"
-                          id="email"
-                          name="email"
-                          type="email"
-                          value={selectedCustomer ? `${selectedCustomer.firstName} ${selectedCustomer.lastName}` : ''}
-                          disabled
-                        /> <br />
-
-                        <label className="p-2 font-bold">Email</label> <br />
-                        <input
-                          className="w-48 lg:w-72 m-2 p-2 border border-gray-300 rounded-md text-black"
-                          id="email"
-                          name="email"
-                          type="email"
-                          value={selectedCustomer ? selectedCustomer.email : ''}
-                          disabled
-                        /> <br />
-
-                        <label className="p-2 font-bold">Phone</label> <br />
-
-                        <input
-                          className="w-48 lg:w-72 m-2 p-2 border border-gray-300 rounded-md text-black"
-                          id="phone"
-                          name="phone"
-                          type="text"
-                          value={selectedCustomer ? selectedCustomer.phone : ''}
-                          disabled
-                        /> <br />
-                        <div>
-                          <label className="p-2 font-bold">Address</label> <br />
-
-                          <textarea
-                            className="w-48 lg:w-80 m-2 p-2 border border-gray-300 rounded-md text-black"
-                            id="address"
-                            name="address"
-                            type="text"
-                            value={selectedCustomer ? `${selectedCustomer.Address?.street}, ${selectedCustomer.Address?.city}` : ''}
-                            disabled
-                          />
-                        </div>
-                      </div>
-
-                      <div className="basis-[60%] max-w-[60%]">
-                        <div className="flex items-center">
-                          <div>
-                            <div className="flex items-center pl-2">
-                              <label className="font-bold">Vehicle</label>
-                              <IconButton variant="text" onClick={() => selectedCustomer && setIsCustomerVehicleFormOpen(true)}>
-                                <PlusCircleIcon className="h-5 w-5 text-blue-600 cursor-pointer" />
-                              </IconButton>
-                            </div>
-                            <select
-                              id="vehicle"
-                              name="vehicle"
-                              className="w-48 lg:w-72 m-2 p-2 border border-gray-300 bg-inherit rounded-md"
-                              value={values.vehicle}
-                              onChange={(e) =>
-                                handleVehicleChange(e.target.value)
-                              }
-                              onBlur={handleBlur}
-                            >
-
-                              {selectedCustomer && selectedCustomer.Vehicle?.length > 0 ? selectedCustomer.Vehicle?.map((vehicle) => (
-                                <option
-                                  key={vehicle.id}
-                                  value={vehicle.id}
-                                >
-                                  {vehicle.make} {vehicle.model} {vehicle.year}
-                                </option>
-                              ))
-                                :
-                                <option value="">Select Vehicle</option>
-                              }
-                            </select>
-                            {touched.vehicle && errors.vehicle ? (
-                              <div className="text-red-500">
-                                {errors.vehicle}
-                              </div>
-                            ) : (<div></div>)} <br />
-                          </div>
-                          <div className="ml-3">
-                            <label className="p-2 font-bold">Comments</label> <br />
-                            <textarea
-                              className="w-48 lg:w-80 m-2 p-2 border border-gray-300 rounded-md text-black"
-                              id="comments"
-                              name="comments"
+                          <div className="px-2 relative">
+                            <input
+                              className="w-full h-[97%] p-2 border border-gray-300 rounded-md text-gray-600 font-small"
+                              id="customer"
+                              name="customer"
                               type="text"
-                              value={values.comments}
-                              onChange={handleChange}
+                              value={selectedCustomer ? `${selectedCustomer.firstName} ${selectedCustomer.lastName}` : values.customer}
+                              onClick={() => { setShowCustomerSuggestions(true); setValues({ ...values, ['customer']: '' }) }}
+                              onChange={(e) => { setSelectedCustomer(null); setSelectedVehicle(null); setVehicleOdometer(''), handleChange(e) }}
+                              onBlur={handleBlur}
+                              autoComplete="off"
+                              placeholder="Select Customer"
+                            />
+                            {showCustomerSuggestions && (
+                              <ul className="absolute left-0 right-0 z-50 bg-white border border-slate-700 mt-1 overflow-y-auto min-h-24 max-h-48">
+                                {customers.length > 0 ?
+                                  customers
+                                    .filter(customer => {
+                                      const searchTerm = values.customer.trim().toLowerCase();
+                                      return (
+                                        `${customer.firstName} ${customer.lastName}`.toLowerCase().includes(searchTerm) ||
+                                        customer.phone?.toLowerCase().includes(searchTerm)
+                                      );
+                                    })
+                                    .map(customer => (
+                                      <li
+                                        key={customer.id}
+                                        className="cursor-pointer px-2 py-1 rounded-sm hover:bg-gray-200"
+                                        onClick={() => handleCustomerChange(customer)}
+                                      >
+                                        {customer.firstName} {customer.lastName}
+                                      </li>
+                                    ))
+                                  :
+                                  <li className="px-2 py-1 rounded-sm">No Customer</li>
+                                }
+                              </ul>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="space-y-4 px-2">
+                          <div>
+                            <label className="font-bold">Name</label>
+                            <input
+                              className="w-full p-2 border border-gray-300 rounded-md text-black"
+                              id="email"
+                              name="email"
+                              type="email"
+                              value={selectedCustomer ? `${selectedCustomer.firstName} ${selectedCustomer.lastName}` : ''}
+                              disabled
+                            />
+                          </div>
+
+                          <div>
+                            <label className="font-bold">Email</label>
+                            <input
+                              className="w-full p-2 border border-gray-300 rounded-md text-black"
+                              id="email"
+                              name="email"
+                              type="email"
+                              value={selectedCustomer ? selectedCustomer.email : ''}
+                              disabled
+                            />
+                          </div>
+
+                          <div>
+                            <label className="font-bold">Phone</label>
+                            <input
+                              className="w-full p-2 border border-gray-300 rounded-md text-black"
+                              id="phone"
+                              name="phone"
+                              type="text"
+                              value={selectedCustomer ? selectedCustomer.phone : ''}
+                              disabled
+                            />
+                          </div>
+
+                          <div>
+                            <label className="font-bold">Address</label>
+                            <textarea
+                              className="w-full p-2 border border-gray-300 rounded-md text-black"
+                              id="address"
+                              name="address"
+                              type="text"
+                              value={selectedCustomer ? `${selectedCustomer.Address?.street}, ${selectedCustomer.Address?.city}` : ''}
+                              disabled
                             />
                           </div>
                         </div>
-                        <div className="flex gap-5">
-                          <div className="flex flex-col">
-                            <div>
-                              <label className="p-2 font-bold">Make</label> <br />
-                              <input
-                                className="w-48 lg:w-72 m-2 p-2 border border-gray-300 rounded-md text-black"
-                                id="make"
-                                name="make"
-                                type="text"
-                                value={selectedVehicle ? selectedVehicle.make : ''}
-                                disabled
-                              /> <br />
-                            </div>
+                      </div>
 
-                            <div>
-                              <label className="p-2 font-bold">Model</label> <br />
-                              <input
-                                className="w-48 lg:w-72 m-2 p-2 border border-gray-300 rounded-md text-black"
-                                id="model"
-                                name="model"
-                                type="text"
-                                value={selectedVehicle ? selectedVehicle.model : ''}
-                                disabled
-                              /> <br />
-                            </div>
-                          </div>
-                          <div className="flex flex-col" >
-                            <div>
-                              <label className="p-2 font-bold">Year</label> <br />
-                              <input
-                                className="w-48 lg:w-72 m-2 p-2 border border-gray-300 rounded-md text-black"
-                                id="year"
-                                name="year"
-                                type="number"
-                                value={selectedVehicle ? selectedVehicle.year : ''}
-                                disabled
-                              /> <br />
-                            </div>
-
-                            <div>
-                              <label className="p-2 font-bold">Color</label> <br />
-                              <input
-                                className="w-48 lg:w-72 m-2 p-2 border border-gray-300 rounded-md text-black"
-                                id="color"
-                                name="color"
-                                type="text"
-                                value={selectedVehicle ? selectedVehicle.color : ''}
-                                disabled
-                              /> <br />
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="flex gap-5">
-                          <div className="flex flex-col" >
-                            <div>
+                      <div className="w-full lg:w-[55%]">
+                        <div className="">
+                          <div className="flex flex-col lg:flex-row gap-4">
+                            <div className="w-full lg:w-1/2">
                               <div className="flex items-center pl-2">
-                                <label className="font-bold">Odometer</label> <br />
-                                <IconButton variant='text' onClick={() => setVehicleOdometer(selectedVehicle?.odometer)}>
-                                  <ArrowUturnLeftIcon className="h-5 w-5 text-blue-600 cursor-pointer" />
+                                <label className="font-bold">Vehicle</label>
+                                <IconButton variant="text" onClick={() => selectedCustomer && setIsCustomerVehicleFormOpen(true)}>
+                                  <PlusCircleIcon className="h-5 w-5 text-blue-600 cursor-pointer" />
                                 </IconButton>
                               </div>
-                              <input
-                                className="w-48 lg:w-72 m-2 p-2 border border-gray-300 rounded-md text-black"
-                                id="year"
-                                name="year"
-                                type="number"
-                                value={vehicleOdometer}
-                                onChange={(e) => setVehicleOdometer(e.target.value)}
-                              /> <br />
+                              <div className="px-2">
+                                <select
+                                  id="vehicle"
+                                  name="vehicle"
+                                  className="w-full p-2 border border-gray-300 bg-inherit rounded-md"
+                                  value={values.vehicle}
+                                  onChange={(e) =>
+                                    handleVehicleChange(e.target.value)
+                                  }
+                                  onBlur={handleBlur}
+                                >
+                                  {selectedCustomer && selectedCustomer.Vehicle?.length > 0 ? selectedCustomer.Vehicle?.map((vehicle) => (
+                                    <option key={vehicle.id} value={vehicle.id}>
+                                      {vehicle.make} {vehicle.model} {vehicle.year}
+                                    </option>
+                                  )) : <option value="">Select Vehicle</option>}
+                                </select>
+                              </div>
                             </div>
 
-                            <div>
-                              <label className="p-2 font-bold">License No.</label> <br />
-                              <input
-                                className="w-48 lg:w-72 m-2 p-2 border border-gray-300 rounded-md text-black"
-                                id="color"
-                                name="color"
-                                type="text"
-                                value={selectedVehicle ? selectedVehicle.licenseNo : ''}
-                                disabled
-                              /> <br />
+                            <div className="w-full lg:w-1/2">
+                              <label className="font-bold pl-2">Comments</label>
+                              <div className="px-2">
+                                <textarea
+                                  className="w-full p-2 border border-gray-300 rounded-md text-black"
+                                  id="comments"
+                                  name="comments"
+                                  type="text"
+                                  value={values.comments}
+                                  onChange={handleChange}
+                                />
+                              </div>
                             </div>
                           </div>
-                          {/* <div className="flex flex-col ml-3 place-self-end">
-                            <div className="text-5xl mt-5">
-                              <h1>$  {calculateTotalAmountWithTax()}</h1>
-                            </div>
-                          </div> */}
-                          <div className="flex flex-col gap-4">
-                            <div className="mt-4">
-                              <label className="p-2 font-bold">Packages</label> <br />
 
-                              <select
-                                value={selectedPackage}
-                                disabled={!selectedCustomer}
-                                className="w-48 lg:w-72 m-2 p-2 border border-gray-300 bg-inherit rounded-md"
-                                onChange={(e) => {
-                                  setSelectedPackage(e.target.value);
-                                  handlePackageChange(e.target.value);
-                                }}
-                              >
-                                <option value="">Select Package</option>
-                                {productsPackages?.length > 0 ? productsPackages.map((packageItem) => (
-                                  <option key={packageItem.id} value={packageItem.id}>
-                                    {packageItem.name}
-                                  </option>
-                                )) : <option value="">No Package</option>}
-                              </select>
-                            </div>
-                            <div className="text-5xl mt-5 ms-2">
-                              <h1>${calculateTotalAmountWithTax()}</h1>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div className="space-y-4">
+                              <div>
+                                <label className="pl-2 font-bold">Make</label>
+                                <div className="px-2">
+                                  <input
+                                    className="w-full p-2 border border-gray-300 rounded-md text-black"
+                                    id="make"
+                                    name="make"
+                                    type="text"
+                                    value={selectedVehicle ? selectedVehicle.make : ''}
+                                    disabled
+                                  />
+                                </div>
+                              </div>
+
+                              <div>
+                                <label className="pl-2 font-bold">Model</label>
+                                <div className="px-2">
+                                  <input
+                                    className="w-full p-2 border border-gray-300 rounded-md text-black"
+                                    id="model"
+                                    name="model"
+                                    type="text"
+                                    value={selectedVehicle ? selectedVehicle.model : ''}
+                                    disabled
+                                  />
+                                </div>
+                              </div>
                             </div>
 
-                            <div className="mt-3">
+                            <div className="space-y-4">
+                              <div>
+                                <label className="pl-2 font-bold">Year</label>
+                                <div className="px-2">
+                                  <input
+                                    className="w-full p-2 border border-gray-300 rounded-md text-black"
+                                    id="year"
+                                    name="year"
+                                    type="number"
+                                    value={selectedVehicle ? selectedVehicle.year : ''}
+                                    disabled
+                                  />
+                                </div>
+                              </div>
+
+                              <div>
+                                <label className="pl-2 font-bold">Color</label>
+                                <div className="px-2">
+                                  <input
+                                    className="w-full p-2 border border-gray-300 rounded-md text-black"
+                                    id="color"
+                                    name="color"
+                                    type="text"
+                                    value={selectedVehicle ? selectedVehicle.color : ''}
+                                    disabled
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div className="space-y-4">
+                              <div>
+                                <div className="flex items-center pl-2">
+                                  <label className="font-bold">Odometer</label>
+                                  <IconButton variant='text' onClick={() => setVehicleOdometer(selectedVehicle?.odometer)}>
+                                    <ArrowUturnLeftIcon className="h-5 w-5 text-blue-600 cursor-pointer" />
+                                  </IconButton>
+                                </div>
+                                <div className="px-2">
+                                  <input
+                                    className="w-full p-2 border border-gray-300 rounded-md text-black"
+                                    id="year"
+                                    name="year"
+                                    type="number"
+                                    value={vehicleOdometer}
+                                    onChange={(e) => setVehicleOdometer(e.target.value)}
+                                  />
+                                </div>
+                              </div>
+
+                              <div>
+                                <label className="pl-2 font-bold">License No.</label>
+                                <div className="px-2">
+                                  <input
+                                    className="w-full p-2 border border-gray-300 rounded-md text-black"
+                                    id="color"
+                                    name="color"
+                                    type="text"
+                                    value={selectedVehicle ? selectedVehicle.licenseNo : ''}
+                                    disabled
+                                  />
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="space-y-12 mt-3">
+                              <div>
+                                <label className="p-2 font-bold">Packages</label> <br />
+                                <div className="px-2">
+                                  <select
+                                    value={selectedPackage}
+                                    disabled={!selectedCustomer}
+                                    className="w-full p-2 border border-gray-300 bg-inherit rounded-md"
+                                    onChange={(e) => {
+                                      setSelectedPackage(e.target.value);
+                                      handlePackageChange(e.target.value);
+                                    }}
+                                  >
+                                    <option value="">Select Package</option>
+                                    {productsPackages?.length > 0 ? productsPackages.map((packageItem) => (
+                                      <option key={packageItem.id} value={packageItem.id}>
+                                        {packageItem.name}
+                                      </option>
+                                    )) : <option value="">No Package</option>}
+                                  </select>
+                                </div>
+                              </div>
+
+                              <div className="text-5xl text-right">
+                                <h1>${calculateTotalAmountWithTax()}</h1>
+                              </div>
                             </div>
                           </div>
                         </div>
-
                       </div>
                     </div>
 
-                    <Card className=" w-full">
-                      <CardBody className="p-2">
-                        <table className="w-full min-w-max table-auto text-left ">
-                          <thead>
-                            <tr>
-                              {TABLE_HEAD.map((head) => (
-                                <th
-                                  key={head}
-                                  className="border-y border-blue-gray-100 bg-blue-gray-50/50 p-4"
-                                >
-                                  <Typography
-                                    variant="small"
-                                    color="blue-gray"
-                                    className="font-normal leading-none opacity-70"
-                                  >
-                                    {head}
-                                  </Typography>
-                                </th>
-                              ))}
-                            </tr>
-                          </thead>
-                          <tbody className="bg-white divide-y divide-gray-200">
-                            {selectedProducts.map((item, index) => (
-                              <tr key={index}>
-                                <td className="p-4 border-b border-blue-gray-50">
-                                  {index !== (selectedProducts.length - 1) ?
-                                    <div className="w-[70%] h-[97%] m-2 p-2 border border-gray-300 rounded-md text-gray-600 font-small">
-                                      {item.name}
-                                    </div>
-                                    :
-                                    <div ref={productInputRef}>
-                                      <input
-                                        className="w-[70%] h-[97%] mx-2 p-2 border border-gray-300 rounded-md text-gray-600 font-small"
-                                        id="product"
-                                        name="product"
-                                        type="text"
-                                        value={selectedProducts[index].name ? selectedProducts[index].name : productSearchText}
-                                        onClick={() => { selectedCustomer && setShowProductSuggestions(true) }}
-                                        onChange={(e) => setProductSearchText(e.target.value)}
-                                        onBlur={handleBlur}
-                                        autoComplete="off"
-                                        placeholder="Select Product"
-                                      />
-                                      {showProductSuggestions && (
-                                        <ul className="d-block absolute z-50 bg-white border border-slate-700 w-[27%] mt-1 ml-2 overflow-y-auto min-h-24 max-h-48">
-                                          {products?.length > 0 ?
-                                            products.filter(product => `${product.name}`.toLowerCase().includes(productSearchText)).map((product) => (
-                                              <li key={product.id} className="cursor-pointer px-2 py-1 rounded-sm hover:bg-gray-200" onClick={() => { handleProductChange(index, item.quantity, product.id), setShowProductSuggestions(false) }}>
-                                                {product?.name}
-                                              </li>
-                                            ))
-                                            :
-                                            <li className="px-2 py-1 rounded-sm">No Product</li>
-                                          }
-                                        </ul>
-                                      )}
-                                    </div>
-                                  }
-                                </td>
-                                <td className="p-4 border-b border-blue-gray-50">
-                                  <input
-                                    type="number"
-                                    min={1}
-                                    className="w-14 p-2 border rounded-md text-black"
-                                    value={item.quantity}
-                                    onChange={(e) =>
-                                      handleQuantityChange(index, e.target.value)
-                                    }
-                                  />
-                                </td>
-                                <td className="p-4 border-b border-blue-gray-50">
-                                  <Typography
-                                    variant="small"
-                                    color="blue-gray"
-                                    className="font-normal opacity-70"
-                                  >
-                                    {item.price}
-                                  </Typography>
-                                </td>
-                                <td className="p-4 border-b border-blue-gray-50">
-                                  <input
-                                    type="checkbox"
-                                    checked={selectedCustomer?.taxable && item.taxable}
-                                    readOnly
-                                  />
-                                </td>
-                                <td className="p-4 border-b border-blue-gray-50">
-                                  <Typography
-                                    variant="small"
-                                    color="blue-gray"
-                                    className="font-normal opacity-70"
-                                  >
-
-                                    {calculateAmount(item.price, item.quantity)}
-                                  </Typography>
-                                </td>
-                                <td className="p-4 border-b border-blue-gray-50 text-center px-4 py-2">
-                                  {index !== selectedProducts.length - 1 ?
-                                    <XCircleIcon
-                                      onClick={() => handleRemoveProduct(index)}
-                                      className="h-6 w-6 text-gray-600 hover:text-red-500 cursor-pointer"
+                    <table className="w-full min-w-max table-auto text-left my-2">
+                      <thead>
+                        <tr>
+                          {TABLE_HEAD.map((head) => (
+                            <th
+                              key={head}
+                              className="border-y border-blue-gray-100 bg-blue-gray-50/50 p-4"
+                            >
+                              <Typography
+                                variant="small"
+                                color="blue-gray"
+                                className="font-normal leading-none opacity-70"
+                              >
+                                {head}
+                              </Typography>
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {selectedProducts.map((item, index) => (
+                          <tr key={index}>
+                            <td className="p-4 border-b border-blue-gray-50">
+                              {index !== (selectedProducts.length - 1) ?
+                                <div className="flex flex-col">
+                                  <div className="w-80 h-[97%] mx-2 p-2 border border-gray-300 rounded-md text-gray-600 font-small">
+                                    {item.name}
+                                  </div>
+                                  {/* Product description */}
+                                  <div>
+                                    <input
+                                      id="description"
+                                      name="description"
+                                      className="w-80 h-[30%] mx-2 p-1 rounded-md text-gray-600 text-xs focus:outline-none "
+                                      type="text"
+                                      value={item.description}
+                                      onChange={(e) => { setSelectedProducts((prev) => { const newProducts = [...prev]; newProducts[index].description = e.target.value; return newProducts }) }}
+                                      onBlur={handleBlur}
+                                      autoComplete="off"
+                                      placeholder="Description"
                                     />
-                                    :
-                                    null
-                                  }
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
+                                  </div>
+                                </div>
+                                :
+                                <div ref={productInputRef} className="relative w-fit">
+                                  <input
+                                    className="w-80 h-[97%] m-2 p-2 border border-gray-300 rounded-md text-gray-600 font-small"
+                                    id="product"
+                                    name="product"
+                                    type="text"
+                                    value={selectedProducts[index].name ? selectedProducts[index].name : productSearchText}
+                                    onClick={() => { selectedCustomer && setShowProductSuggestions(true) }}
+                                    onChange={(e) => setProductSearchText(e.target.value)}
+                                    onBlur={handleBlur}
+                                    autoComplete="off"
+                                    placeholder="Select Product"
+                                  />
+                                  {showProductSuggestions && (
+                                    <ul className="absolute left-0 right-0 z-50 bg-white border border-slate-700 mt-1 ml-2 overflow-y-auto min-h-24 max-h-48 w-80">
+                                      {products?.length > 0 ?
+                                        products.filter(product => `${product.name}`.toLowerCase().includes(productSearchText)).map((product) => (
+                                          <li key={product.id} className="cursor-pointer px-2 py-1 rounded-sm hover:bg-gray-200" onClick={() => { handleProductChange(index, item.quantity, product.id), setShowProductSuggestions(false) }}>
+                                            {product?.name}
+                                          </li>
+                                        ))
+                                        :
+                                        <li className="px-2 py-1 rounded-sm">No Product</li>
+                                      }
+                                    </ul>
+                                  )}
+                                </div>
+                              }
+                            </td>
+                            <td className="p-4 border-b border-blue-gray-50">
+                              <input
+                                type="number"
+                                min={1}
+                                className="w-14 p-2 border rounded-md text-black"
+                                value={item.quantity}
+                                onChange={(e) =>
+                                  handleQuantityChange(index, e.target.value)
+                                }
+                              />
+                            </td>
+                            <td className="p-4 border-b border-blue-gray-50">
+                              <input
+                                type="number"
+                                min={0}
+                                step="0.01"
+                                className="w-24 p-2 border rounded-md text-black"
+                                value={item.price === 0 ? '' : item.price}
+                                placeholder="0.00"
+                                onChange={(e) =>
+                                  handlePriceChange(index, e.target.value)
+                                }
+                              />
+                            </td>
+                            <td className="p-4 border-b border-blue-gray-50">
+                              <input
+                                type="checkbox"
+                                checked={selectedCustomer?.taxable && item.taxable}
+                                readOnly
+                              />
+                            </td>
+                            <td className="p-4 border-b border-blue-gray-50">
+                              <Typography
+                                variant="small"
+                                color="blue-gray"
+                                className="font-normal opacity-70"
+                              >
 
-                        </table>
-                      </CardBody>
-                    </Card>
+                                {calculateAmount(item.price, item.quantity)}
+                              </Typography>
+                            </td>
+                            <td className="p-4 border-b border-blue-gray-50 text-center px-4 py-2">
+                              {index !== selectedProducts.length - 1 ?
+                                <XCircleIcon
+                                  onClick={() => handleRemoveProduct(index)}
+                                  className="h-6 w-6 text-gray-600 hover:text-red-500 cursor-pointer"
+                                />
+                                :
+                                null
+                              }
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+
+                    </table>
 
                     <div className="flex">
                       <div className="basis-[50%] max-w-[50%]">
@@ -1015,10 +1067,10 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
 
                       <div className="basis-[50%] max-w-[50%] border my-4 font-normal">
                         <div className="flex justify-between p-2">
-                          <div className="text-1xl">
+                          <div className="text-md">
                             <h1>Subtotal</h1>
                           </div>
-                          <div className="text-1xl">
+                          <div className="text-md">
                             <h1>${totalAmount}</h1>
                           </div>
                         </div>
@@ -1057,10 +1109,10 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
                       </div> */}
 
                         <div className="flex items-center justify-between p-2 font-medium text-black bg-yellow-700">
-                          <div className="text-1xl">
+                          <div className="text-md">
                             <h1>Total</h1>
                           </div>
-                          <div className="text-1xl">
+                          <div className="text-md">
                             <h1>${calculateTotalAmountWithTax()}</h1>
                           </div>
                         </div>
@@ -1220,7 +1272,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
                 }}
                 className={`px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 ${modalQuantity < 1 ? "opacity-50 cursor-not-allowed" : ""}`}
               >
-                Add to Invoice
+                Add to Quote
               </button>
             </div>
           </div>

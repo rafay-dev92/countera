@@ -15,15 +15,17 @@ const printView = React.forwardRef(({view, workOrderData, appliedTaxes}, ref) =>
     };
 
     const calculateAmount = (price, quantity) => {
-        return price * quantity;
+        const unitPrice = parseFloat(price) || 0;
+        const qty = parseFloat(quantity) || 0;
+        return (unitPrice * qty).toFixed(2);
     };
 
     const calculateTotalAmount = (products) => {
         let total = 0;
         products.forEach((item) => {
-            total += calculateAmount(item.price, item.workorder_product.quantity);
+            total += parseFloat(calculateAmount(item.workorder_product.price, item.workorder_product.quantity));
         });
-        return total;
+        return total.toFixed(2);
     };
 
     useEffect(() => {
@@ -203,7 +205,7 @@ const printView = React.forwardRef(({view, workOrderData, appliedTaxes}, ref) =>
                                             color="blue-gray"
                                             className="font-normal leading-none"
                                         >
-                                            {calculateAmount(item.price, item.workorder_product.quantity)}
+                                            {calculateAmount(item.workorder_product.price, item.workorder_product.quantity)}
                                         </Typography>
                                     </td>
                                 </tr>

@@ -167,10 +167,10 @@ const ViewWorkOrder = ({ workOrderData, setWorkOrderData, componentRef, appliedT
 
     return (
         <>
-            <div className="overflow-y-auto h-[80vh] overflow-x-hidden p-2">
+            <div className="overflow-y-auto h-[90vh] overflow-x-hidden p-2">
                 <div className="flex h-full">
                     <div className="basis-[80%]">
-                        <div className="max-h-[75vh] overflow-y-auto">
+                        <div className="max-h-[88vh] overflow-y-auto">
                             {workOrderData && Object.keys(workOrderData).length > 0 ? <PrintView view={true} workOrderData={workOrderData} ref={componentRef} appliedTaxes={appliedTaxes} /> : null}
                         </div>
                     </div>

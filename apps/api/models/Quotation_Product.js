@@ -6,6 +6,16 @@ module.exports = (sequelize) => {
             type: DataTypes.INTEGER,
             defaultValue: 1,
             allowNull: false
+        },
+        description: {
+            type: DataTypes.STRING,
+            defaultValue: '',
+            allowNull: true
+        },
+        price: {
+            type: DataTypes.FLOAT,
+            defaultValue: 0,
+            allowNull: false
         }
     },{
         tableName: 'quotation_product'

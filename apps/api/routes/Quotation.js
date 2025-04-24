@@ -127,13 +127,19 @@ router.post("/create", fetchUser, async (req, res) => {
     }
 
     const newQuotation = await Quotation.create(quotationData);
-    if (req.body.products.length !== 0) {
+    if (req.body.products && req.body.products.length !== 0) {
       await Promise.all(
-        req.body.products.map(async (item) => {
-          const product = await Product.findByPk(item.split(":")[0]);
-          await newQuotation.addProduct(product, {
-            through: { quantity: item.split(":")[1] },
-          });
+        req.body.products.map(async (product) => {
+          const productRecord = await Product.findByPk(product.id);
+          if (productRecord) {
+            await newQuotation.addProduct(productRecord, {
+              through: {
+                quantity: product.quantity,
+                description: product.description,
+                price: product.price,
+              },
+            });
+          }
         })
       );
     }
@@ -185,8 +191,10 @@ router.put("/update/:id", fetchUser, async (req, res) => {
     if (req.body?.products && req.body?.products.length > 0) {
       try {
         req.body.products.forEach(async (newProduct) => {
-          const productId = newProduct.split(":")[0];
-          const newQuantity = newProduct.split(":")[1];
+          const productId = newProduct.id;
+          const newQuantity = newProduct.quantity;
+          const newDescription = newProduct.description;
+          const newPrice = newProduct.price;
 
           // Check if the product exists in the current products
           const existingProduct = quotation.Product.find(
@@ -196,7 +204,7 @@ router.put("/update/:id", fetchUser, async (req, res) => {
           if (existingProduct) {
             // If the product exists, update the quantity in the junction table
             const res = await quotation_product.update(
-              { quantity: newQuantity },
+              { quantity: newQuantity, description: newDescription, price: newPrice },
               {
                 where: {
                   QuotationId: quotation.id,
@@ -210,6 +218,8 @@ router.put("/update/:id", fetchUser, async (req, res) => {
               QuotationId: quotation.id,
               ProductId: productId,
               quantity: newQuantity,
+              description: newDescription,
+              price: newPrice,
             });
           }
         });
@@ -220,14 +230,14 @@ router.put("/update/:id", fetchUser, async (req, res) => {
       const deletedItems = quotation.Product.filter(
         (orgProd) =>
           !req.body.products.some(
-            (item) => item.split(":")[0] === orgProd.dataValues.id
+            (item) => item.id === orgProd.dataValues.id
           )
       ).map((changeItem) => changeItem.dataValues.id);
 
       if (deletedItems.length !== 0) {
         await Promise.all(
           deletedItems.map(async (item) => {
-            const product = await Product.findByPk(item.split(":")[0]);
+            const product = await Product.findByPk(item.id);
             await quotation.removeProduct(product);
           })
         );

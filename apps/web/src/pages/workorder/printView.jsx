@@ -189,7 +189,7 @@ const printView = React.forwardRef(({view, workOrderData, appliedTaxes}, ref) =>
                                             color="blue-gray"
                                             className="font-normal leading-none"
                                         >
-                                            {item.price}
+                                            {item.workorder_product.price}
                                         </Typography>
                                     </td>
                                     <td className="p-4 border-b border-blue-gray-50">

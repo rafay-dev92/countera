@@ -67,7 +67,6 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
     taxable: false
   }]);
   const [totalAmount, setTotalAmount] = useState(0);
-  const [invoiceId, setInvoiceId] = useState('');
   const [edit, setEdit] = useState(false);
   const [printQuotation, setPrintQuotation] = useState([]);
   const [appliedTaxes, setAppliedTaxes] = useState({});
@@ -155,7 +154,6 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
   useEffect(() => {
     if (selectedQuotation) {
       setPrintQuotation(selectedQuotation);
-      setInvoiceId(selectedQuotation.id)
       setSelectedCustomer(selectedQuotation.Customer)
       setSelectedVehicle(selectedQuotation.CustomerVehicle)
       setVehicleOdometer(selectedQuotation.CustomerVehicle?.odometer)
@@ -243,7 +241,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
 
     try {
       if (edit) {
-        const res = await updateQuotation(invoiceId, updatedData, state.userToken)
+        const res = await updateQuotation(printQuotation.id, updatedData, state.userToken)
         const quotation = await res.json();
         setPrintQuotation(quotation?.data);
         if (res.status === 200) {
@@ -901,7 +899,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
 
                             <div className="space-y-12 mt-3">
                               <div>
-                                <label className="p-2 font-bold">Packages</label> <br />
+                                <label className="p-2 font-bold">Packages</label>
                                 <div className="px-2">
                                   <select
                                     value={selectedPackage}

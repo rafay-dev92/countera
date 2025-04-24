@@ -223,6 +223,7 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
         }
       } catch (error) {
         console.log(error)
+        showToastMessage('error', 'Vehicle odometer update failed');
       }
     }
 
@@ -240,7 +241,7 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
 
     try {
       if (edit) {
-        const res = await updateInvoice(invoiceId, data, state.userToken)
+        const res = await updateInvoice(printInvoice.id, data, state.userToken)
         const invoice = await res.json();
         setPrintInvoice(invoice?.data);
         if (res.status === 200) {

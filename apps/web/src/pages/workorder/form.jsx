@@ -67,7 +67,6 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedWorkOrder, setS
     taxable: false
   }]);
   const [totalAmount, setTotalAmount] = useState(0);
-  const [invoiceId, setInvoiceId] = useState('');
   const [edit, setEdit] = useState(false);
   const [printWorkOrder, setPrintWorkOrder] = useState([]);
   const [appliedTaxes, setAppliedTaxes] = useState({});
@@ -155,7 +154,6 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedWorkOrder, setS
   useEffect(() => {
     if (selectedWorkOrder) {
       setPrintWorkOrder(selectedWorkOrder);
-      setInvoiceId(selectedWorkOrder.id)
       setSelectedCustomer(selectedWorkOrder.Customer)
       setSelectedVehicle(selectedWorkOrder.CustomerVehicle)
       setVehicleOdometer(selectedWorkOrder.CustomerVehicle?.odometer)
@@ -241,7 +239,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedWorkOrder, setS
 
     try {
       if (edit) {
-        const res = await updateWorkOrder(invoiceId, updatedData, state.userToken)
+        const res = await updateWorkOrder(printWorkOrder.id, updatedData, state.userToken)
         const workorder = await res.json();
         setPrintWorkOrder(workorder?.data);
         if (res.status === 200) {

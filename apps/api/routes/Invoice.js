@@ -79,6 +79,10 @@ router.get("/", fetchUser, async (req, res) => {
             through: "invoice_product",
             include: ["Tax", "Category"],
           },
+          {
+            model: Payment,
+            as: "Payments",
+          },
         ],
       });
 

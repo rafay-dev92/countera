@@ -11,6 +11,7 @@ import { fetchTaxes } from "@/services/fetchTaxes";
 import { fetchProductsCategories } from "@/services/fetchProductCategories";
 import DailySalesReportForm from './dailySalesReportForm';
 import ProductSalesForm from './productSalesForm';
+import CustomerReportPreview from './customerReportReview';
 
 export function Reports() {
     const printRef = useRef();
@@ -20,6 +21,7 @@ export function Reports() {
 
     const [isMonthlyReportOpen, setIsMonthlyReportOpen] = useState(false);
     const [isCustomerReportOpen, setIsCustomerReportOpen] = useState(false);
+    const [showCustomerReport, setShowCustomerReport] = useState(false);
     const [isDailySalesOpen, setIsDailySalesOpen] = useState(false);
     const [isProductReportOpen, setIsProductReportOpen] = useState(false);
     const [reportData, setReportData] = useState([]);
@@ -71,7 +73,7 @@ export function Reports() {
                     </CardBody>
                     <CardBody className="border-2 border-gray-300 rounded-lg flex flex-col items-center justify-center">
                         <h2 className="text-lg font-semibold text-gray-800">Customer Sales Reports</h2>
-                        <Button onClick={() => setIsCustomerReportOpen(true)} className='cursor-pointer mt-3 p-2 hover:bg-gray-600 hover:text-white w-full text-center font-medium rounded'>Generate</Button>
+                        <Button onClick={() => {setIsCustomerReportOpen(true); setShowCustomerReport(true);}} className='cursor-pointer mt-3 p-2 hover:bg-gray-600 hover:text-white w-full text-center font-medium rounded'>Generate</Button>
                     </CardBody>
                     {/* <CardBody className="border-2 border-gray-300 rounded-lg flex flex-col items-center justify-center">
                         <h2 className="text-lg font-semibold text-gray-800">Product Sales Reports</h2>
@@ -86,18 +88,27 @@ export function Reports() {
             {reportData.length > 0 && (
                 <div className='flex flex-col justify-center mt-4'>
                     <div className='flex justify-end'>
-                        <Button onClick={() => setReportData([])} className="bg-red-800 hover:bg-red-900 text-white font-bold py-2 px-4 rounded mr-2">Close</Button>
+                        <Button onClick={() => {setReportData([]); setShowCustomerReport(false);}} className="bg-red-800 hover:bg-red-900 text-white font-bold py-2 px-4 rounded mr-2">Close</Button>
                         <ReactToPrint
                             trigger={() => <Button className="bg-blue-800 hover:bg-blue-900 text-white font-bold py-2 px-4 rounded">Print</Button>}
                             content={() => printRef.current}
                         />
                     </div>
-                    <MonthlyReportPreview
-                        ref={printRef}
-                        invoices={reportData}
-                        productsCategories={productsCategories}
-                        taxes={taxes}
-                    />
+                    {showCustomerReport ? (
+                        <CustomerReportPreview
+                            ref={printRef}
+                            invoices={reportData}
+                            productsCategories={productsCategories}
+                            taxes={taxes}
+                        />
+                    ) : (
+                        <MonthlyReportPreview
+                            ref={printRef}
+                            invoices={reportData}
+                            productsCategories={productsCategories}
+                            taxes={taxes}
+                        />
+                    )}
                 </div>
             )}
         </>

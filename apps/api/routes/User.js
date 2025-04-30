@@ -147,10 +147,10 @@ router.post("/login", async (req, res) => {
     };
 
     const token = jwt.sign(data, process.env.JWT_SECRET, {
-      expiresIn: 12 * 60 * 60,
+      expiresIn: 2 * 60 * 60,
     });
 
-    res.send({ token: token, sessionExpire: Date.now() + 12 * 60 * 60 * 1000 });
+    res.send({ token: token, sessionExpire: Date.now() + 2 * 60 * 60 * 1000 });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Error login user" });

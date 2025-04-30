@@ -17,6 +17,11 @@ module.exports = (sequelize) => {
             type: DataTypes.FLOAT,
             allowNull: false,
         },
+        discount: {
+            type: DataTypes.FLOAT,
+            allowNull: false,
+            defaultValue: 0,
+        },
         paymentStatus: {
             type: DataTypes.STRING,
             allowNull: false,

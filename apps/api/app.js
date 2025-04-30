@@ -82,10 +82,10 @@ app.use("/api/customervehicle", require("./routes/CustomerVehicle"));
 app.use("/api/payment", require("./routes/Payment"));
 app.use("/api/mail", require("./routes/Mail"));
 
-app.listen(5000, (error) => {
+app.listen(3000, (error) => {
   if (!error)
     console.log(
-      `Server is Successfully Running, and App is listening on http://localhost:${5000}`
+      `Server is Successfully Running, and App is listening on http://localhost:${3000}`
     );
   else console.log("Error occurred, server can't start", error);
 });

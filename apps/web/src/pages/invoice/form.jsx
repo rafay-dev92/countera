@@ -67,7 +67,7 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
     taxable: false
   }]);
   const [totalAmount, setTotalAmount] = useState(0);
-  const [invoiceId, setInvoiceId] = useState('');
+  const [discount, setDiscount] = useState(0);
   const [edit, setEdit] = useState(false);
   const [printInvoice, setPrintInvoice] = useState([]);
   const [appliedTaxes, setAppliedTaxes] = useState({});
@@ -110,6 +110,7 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
 
   // close popup
   const handleClose = () => {
+    setDiscount(0);
     setSelectedCustomer(null)
     setSelectedVehicle(null)
     dispatch({ type: 'SET_INVOICE_VIEW_DATA', payload: null });
@@ -155,7 +156,7 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
     if (state?.invoice?.viewData) {
       const selectedInvoice = state.invoice.viewData;
       setPrintInvoice(selectedInvoice);
-      setInvoiceId(selectedInvoice.id)
+      setDiscount(selectedInvoice.discount)
       setSelectedCustomer(selectedInvoice.Customer)
       setSelectedVehicle(selectedInvoice.CustomerVehicle)
       setVehicleOdometer(selectedInvoice.CustomerVehicle?.odometer)
@@ -229,7 +230,8 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
 
     const data = {
       invoiceData: {
-        totalAmount: calculateTotalAmountWithTax(),
+        totalAmount: calculateTotalAmountWithTax() - discount,
+        discount: discount,
         paymentStatus: "Unpaid",
         CustomerId: selectedCustomer.id,
         CustomerVehicleId: selectedVehicle.id,
@@ -1058,10 +1060,10 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
 
                       <div className="basis-[50%] max-w-[50%] border my-1 font-normal">
                         <div className="flex justify-between p-2">
-                          <div className="text-1xl">
+                          <div className="text-md">
                             <h1>Subtotal</h1>
                           </div>
-                          <div className="text-1xl">
+                          <div className="text-md">
                             <h1>${parseFloat(totalAmount).toFixed(2)}</h1>
                           </div>
                         </div>
@@ -1075,7 +1077,30 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
                             </div>
                           ))}
                         </div>
-
+                        <div className="flex justify-between p-2">
+                          <div className="text-md">
+                            <h1>Discount</h1>
+                          </div>
+                          <div className="text-md">
+                            <input
+                              type="number"
+                              min={0}
+                              className="w-fit no-spinner text-right"
+                              value={discount === 0 ? '' : discount}
+                              onChange={(e) => {
+                                const enteredValue = Number(e.target.value);
+                                const maxDiscount = totalAmount * 0.25;
+                            
+                                if (enteredValue <= maxDiscount) {
+                                  setDiscount(enteredValue);
+                                } else {
+                                  setDiscount(maxDiscount);
+                                }
+                              }}
+                            
+                            />
+                          </div>
+                        </div>
                         {/* <div className="flex justify-between mx-10">
                         <div className="w-min" >
                           <select
@@ -1094,7 +1119,7 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
                                 {tax.name}
                               </option>
                             ))}
-                          </select>
+                           </select>
                         </div>
                         
                         <div></div>                        
@@ -1105,7 +1130,7 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
                             <h1>Total</h1>
                           </div>
                           <div className="text-md">
-                            <h1>${calculateTotalAmountWithTax()}</h1>
+                            <h1>${calculateTotalAmountWithTax() - discount}</h1>
                           </div>
                         </div>
                       </div>

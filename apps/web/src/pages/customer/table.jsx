@@ -74,8 +74,15 @@ export function Customers() {
     try {
       const res = await fetchCustomers(state.userToken);
       const customers = await res.json(); 
-      setFinalItems(customers);
-      setLoading(false);
+
+      if (res.status === 200) {
+        setFinalItems(customers);
+        setLoading(false);
+      }
+      else {
+        showToastMessage('error', customers.error)
+        setLoading(false);
+      }
     } catch (error) {
       console.log(error.message);
       showToastMessage('error', 'Something went wrong')

@@ -63,19 +63,24 @@ export function Home() {
                 // totalInvoices = totalInvoices?.data.filter(invoice => invoice.current === true);
             // }
 
-            const invoicesWithCurrentDate = totalInvoices?.data?.filter(obj => {
-                const invoiceDate = moment(obj.createdAt).tz(timezone).format('YYYY-MM-DD');
-                return invoiceDate === currentDate;
-            });
+            if (fetchedInvoices.status === 200) {
+                const invoicesWithCurrentDate = totalInvoices?.data?.filter(obj => {
+                    const invoiceDate = moment(obj.createdAt).tz(timezone).format('YYYY-MM-DD');
+                    return invoiceDate === currentDate;
+                });
             const money = invoicesWithCurrentDate.reduce((sum, invoice) => {
                 return sum + Number(invoice.totalAmount || 0);
             }, 0);
 
             const newArray = [...cardsData];
 
-            newArray[0].value = `$${money.toFixed(2)}`;
-            newArray[1].value = invoicesWithCurrentDate.length;
-            setCardsData(newArray)
+                newArray[0].value = `$${money.toFixed(2)}`;
+                newArray[1].value = invoicesWithCurrentDate.length;
+                setCardsData(newArray)
+            }
+            else {
+                showToastMessage('error', totalInvoices.error)
+            }
 
         } catch (error) {
             console.log(error.message);
@@ -87,10 +92,14 @@ export function Home() {
         try {
             const res = await fetchCustomers(state.userToken);
             const customers = await res.json();
-
-            const newArray = [...cardsData];
-            newArray[2].value = customers.length
-            setCardsData(newArray)
+            if (res.status === 200) {
+                const newArray = [...cardsData];
+                newArray[2].value = customers.length
+                setCardsData(newArray)
+            }
+            else {
+                showToastMessage('error', customers.error)
+            }
 
         } catch (error) {
             console.log(error.message);
@@ -102,10 +111,14 @@ export function Home() {
         try {
             const res = await fetchProducts(state.userToken);
             const products = await res.json();
-
-            const newArray = [...cardsData];
-            newArray[3].value = products.length
-            setCardsData(newArray)
+            if (res.status === 200) {
+                const newArray = [...cardsData];
+                newArray[3].value = products.length
+                setCardsData(newArray)
+            }
+            else {
+                showToastMessage('error', products.error)
+            }
         } catch (error) {
             console.log(error.message);
             showToastMessage('error', "Something went wrong");

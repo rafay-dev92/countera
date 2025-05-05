@@ -12,6 +12,7 @@ const {
 } = require("../models");
 const fetchUser = require("../middlewares/fetchUser");
 const { Op } = require("sequelize");
+const moment = require("moment");
 require("dotenv").config();
 
 router.get("/", fetchUser, async (req, res) => {
@@ -31,8 +32,8 @@ router.get("/", fetchUser, async (req, res) => {
     if (CustomerId) selectedFilters.CustomerId = CustomerId;
 
     if (startDate && endDate) {
-      const parsedStartDate = new Date(startDate);
-      const parsedEndDate = new Date(endDate);
+      const parsedStartDate = moment.utc(startDate).toDate();
+      const parsedEndDate = moment.utc(endDate).toDate();
 
       if (!isNaN(parsedStartDate) && !isNaN(parsedEndDate)) {
         selectedFilters.createdAt = {
@@ -199,10 +200,10 @@ router.post("/create", fetchUser, async (req, res) => {
           const productRecord = await Product.findByPk(product.id);
           if (productRecord) {
             await newInvoice.addProduct(productRecord, {
-              through: { 
+              through: {
                 quantity: product.quantity,
                 description: product.description,
-                price: product.price
+                price: product.price,
               },
             });
           }
@@ -256,9 +257,9 @@ router.put("/update/:id", fetchUser, async (req, res) => {
     if (!invoice) {
       return res.status(404).json({ message: "Invoice not found" });
     }
-   
+
     if (req.body?.products && req.body?.products.length > 0) {
-      try {        
+      try {
         req.body.products.forEach(async (newProduct) => {
           const productId = newProduct.id;
           const newQuantity = newProduct.quantity;
@@ -273,7 +274,11 @@ router.put("/update/:id", fetchUser, async (req, res) => {
           if (existingProduct) {
             // If the product exists, update the quantity in the junction table
             await invoice_product.update(
-              { quantity: newQuantity, description: newDescription, price: newPrice },
+              {
+                quantity: newQuantity,
+                description: newDescription,
+                price: newPrice,
+              },
               {
                 where: {
                   InvoiceId: invoice.id,
@@ -298,9 +303,7 @@ router.put("/update/:id", fetchUser, async (req, res) => {
 
       const deletedItems = invoice.Product.filter(
         (orgProd) =>
-          !req.body.products.some(
-            (item) => item.id === orgProd.dataValues.id
-          )
+          !req.body.products.some((item) => item.id === orgProd.dataValues.id)
       ).map((changeItem) => changeItem.dataValues.id);
 
       if (deletedItems.length !== 0) {

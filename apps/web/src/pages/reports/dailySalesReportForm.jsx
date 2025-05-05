@@ -35,10 +35,10 @@ function DailySalesReportForm({ open, close, setReportData }) {
     const onSubmit = async (values) => {
         setIsLoading(true);
         try {
-            const selectedDate = new Date(values.date);
             const timezone = state.business.timezone;
-            const startDate = moment.tz(selectedDate, timezone).startOf('day').utc().toDate();
-            const endDate = moment.tz(selectedDate, timezone).endOf('day').utc().toDate();
+            
+            const startDate = moment.tz(values.date, timezone).startOf('day').utc().toDate();
+            const endDate = moment.tz(values.date, timezone).endOf('day').utc().toDate();
 
             const filters = { paymentStatus: ['Paid', 'Partially Paid', 'Unpaid'], startDate, endDate, isReport: true, order: 'ASC' }
             const fetchedInvoices = await fetchInvoices(state.userToken, null, null, filters);

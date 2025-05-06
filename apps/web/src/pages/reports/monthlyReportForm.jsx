@@ -6,6 +6,8 @@ import { toast } from "react-toastify";
 import { Dialog } from "@material-tailwind/react";
 import { fetchInvoices } from "@/services/fetchInvoices";
 import moment from 'moment-timezone';
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 const schema = Yup.object().shape({
     month: Yup.string().required("Month is required"),
@@ -97,6 +99,7 @@ function MonthlyReportForm({ open, close, setReportData }) {
         handleBlur,
         handleChange,
         handleSubmit,
+        setFieldValue,
     } = formikProps;
 
     return (
@@ -134,16 +137,15 @@ function MonthlyReportForm({ open, close, setReportData }) {
                                 </div>
 
                                 <div className="w-[25vw] p-6 space-y-4">
-                                    <div >
-                                        <label className="font-bold">Month</label> <br />
-                                        <input
-                                            className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
-                                            id="month"
-                                            name="month"
-                                            type="month"
-                                            value={values.month}
-                                            onChange={handleChange}
+                                    <div className="flex flex-col gap-1">
+                                        <label className="font-bold">Month</label>
+                                        <DatePicker
+                                            selected={values.month}
+                                            onChange={(date) => setFieldValue("month", date)}
                                             onBlur={handleBlur}
+                                            dateFormat="yyyy-MM"
+                                            showMonthYearPicker
+                                            className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
                                         />
                                         {(touched.month && errors.month) ? (
                                             <div className="text-red-500">

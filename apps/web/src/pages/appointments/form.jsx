@@ -6,6 +6,8 @@ import { useFormik } from "formik";
 import * as Yup from "yup";
 import { State } from "@/state/Context";
 import { toast } from "react-toastify";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 const schema = Yup.object().shape({
     customerName: Yup.string().required("Name is required"),
@@ -21,7 +23,6 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, close, refresh, 
     const { state } = State();
     const [currentDate, setCurrentDate] = useState(getCurrentDateTimeForInput());
     const [edit, setEdit] = useState(false);
-    const [error, setError] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
 
     const handleClose = () => {
@@ -89,15 +90,6 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, close, refresh, 
         }, 1000)
     }, []);
 
-    useEffect(() => {
-    }, [error])
-
-    const setErrorFalse = () => {
-        setTimeout(() => {
-            setError(false)
-        }, 5000)
-    }
-
     function getCurrentDateTimeForInput() {
         const now = new Date();
         const year = now.getFullYear();
@@ -112,8 +104,7 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, close, refresh, 
     const onSubmit = async (values) => {
         setIsLoading(true);
         const inputDateTime = new Date(values.startDateTime); // assumes ISO format string
-        const inputDate = inputDateTime.toISOString().split('T')[0];
-
+        const inputDate = inputDateTime.toLocaleDateString('en-CA'); // format to YYYY-MM-DD;
         const inputStartTime =
             inputDateTime.getHours() * 60 + inputDateTime.getMinutes();
 
@@ -149,8 +140,6 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, close, refresh, 
 
         if (inputStartTime <= currentTime && inputDate === currDate) {
             showToastMessage('error', 'Start time must be ahead of current time')
-            setError(true);
-            setErrorFalse();
             setIsLoading(false);
             close();
             return;
@@ -247,6 +236,7 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, close, refresh, 
         handleBlur,
         handleChange,
         handleSubmit,
+        setFieldValue,
     } = formikProps;
 
     return (
@@ -258,7 +248,7 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, close, refresh, 
                             <div className="bg-white rounded shadow-xl">
                                 <div className="flex items-center justify-between sticky bg-gradient-to-br from-gray-800 to-gray-700">
                                     <div></div>
-                                    <div className={error ? 'text-red-500 text-center text-lg' : 'text-white text-center text-lg'} >
+                                    <div className={'text-white text-center text-lg'} >
                                         {edit ? "EDIT APPOINTMENT" : "NEW APPOINTMENT"}
                                     </div>
                                     <button
@@ -321,15 +311,18 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, close, refresh, 
                                         </div>
                                         <div className="basis-[33.33%]">
                                             <label className="font-bold">Start Date & Time</label> <br />
-                                            <input
-                                                className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
+                                            <DatePicker
                                                 id="startDateTime"
                                                 name="startDateTime"
-                                                type="datetime-local"
-                                                min={currentDate}
-                                                value={values.startDateTime}
-                                                onChange={handleChange}
+                                                selected={values.startDateTime}
+                                                onChange={(date) => setFieldValue("startDateTime", date)}
                                                 onBlur={handleBlur}
+                                                showTimeSelect
+                                                timeFormat="HH:mm"
+                                                timeIntervals={15}
+                                                dateFormat="yyyy-MM-dd HH:mm"
+                                                minDate={new Date()} // if you want to prevent selecting past dates
+                                                className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
                                             />
                                             {(touched.startDateTime && errors.startDateTime) ? (
                                                 <div className="text-red-500">

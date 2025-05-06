@@ -6,6 +6,8 @@ import { toast } from "react-toastify";
 import { Dialog } from "@material-tailwind/react";
 import { fetchInvoices } from "@/services/fetchInvoices";
 import moment from 'moment-timezone';
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 const schema = Yup.object().shape({
     date: Yup.string().required("Date is required"),
@@ -36,10 +38,9 @@ function DailySalesReportForm({ open, close, setReportData }) {
         setIsLoading(true);
         try {
             const timezone = state.business.timezone;
-            
             const startDate = moment.tz(values.date, timezone).startOf('day').utc().toDate();
             const endDate = moment.tz(values.date, timezone).endOf('day').utc().toDate();
-
+            console.log(startDate, endDate)
             const filters = { paymentStatus: ['Paid', 'Partially Paid', 'Unpaid'], startDate, endDate, isReport: true, order: 'ASC' }
             const fetchedInvoices = await fetchInvoices(state.userToken, null, null, filters);
             const totalInvoices = await fetchedInvoices.json();
@@ -87,6 +88,7 @@ function DailySalesReportForm({ open, close, setReportData }) {
         handleBlur,
         handleChange,
         handleSubmit,
+        setFieldValue
     } = formikProps;
 
     return (
@@ -124,17 +126,15 @@ function DailySalesReportForm({ open, close, setReportData }) {
                                 </div>
 
                                 <div className="w-[25vw] p-6 space-y-4">
-                                    <div >
-                                        <label className="font-bold">Date</label> <br />
-                                        <input
-                                            className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
-                                            id="date"
-                                            name="date"
-                                            type="date"
-                                            value={values.date}
-                                            onChange={handleChange}
+                                    <div className="flex flex-col gap-1">
+                                        <label className="font-bold">Date</label>
+                                        <DatePicker
+                                            selected={values.date}
+                                            onChange={(date) => setFieldValue("date", date)}
                                             onBlur={handleBlur}
-                                        />
+                                            className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
+                                            dateFormat="yyyy-MM-dd"
+                                        />                
                                         {(touched.date && errors.date) ? (
                                             <div className="text-red-500">
                                                 {errors.date}

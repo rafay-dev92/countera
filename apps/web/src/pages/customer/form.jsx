@@ -19,17 +19,17 @@ import { useNavigate } from "react-router-dom";
 
 
 const addressSchema = Yup.object().shape({
-  street: Yup.string().required("street is required"),
-  city: Yup.string().required("city is required"),
-  state: Yup.string().required("state is required"),
-  zipcode: Yup.string().required("zip code is required"),
-});
+  street: Yup.string(),
+  city: Yup.string(),
+  state: Yup.string(),
+  zipcode: Yup.string(),
+}).nullable(true).default(undefined);
 
 const schema = Yup.object().shape({
   firstName: Yup.string().required("First name is required"),
   lastName: Yup.string().required("Last name is required"),
   customerType: Yup.string().default('personal').required("Customer type is required"),
-  phone: Yup.string().required("Mobile number is required"),
+  phone: Yup.string(),
   licenseNo: Yup.string(),
   email: Yup.string().email("Please add a valid email"),
   Address: addressSchema,
@@ -116,7 +116,7 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
     // setting taxable to false for business customer
     if (updatedValues.customerType === 'business') updatedValues.taxable = false;
     else updatedValues.taxable = true;
-    
+
     try {
       if (!edit) {
         // separating user data
@@ -129,14 +129,16 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
           showToastMessage('success', customer.message)
 
           // saving customer's address
-          Address.CustomerId = customer.data.id;
-          const addressRes = await addAddress(Address, state.userToken);
-          const address = await addressRes.json();
-          if (addressRes.status === 200) {
-            showToastMessage('success', address.message)
-          }
-          else if (res.status === 409) {
-            showToastMessage('error', address.message)
+          if (Address) {
+            Address.CustomerId = customer.data.id;
+            const addressRes = await addAddress(Address, state.userToken);
+            const address = await addressRes.json();
+            if (addressRes.status === 200) {
+              showToastMessage('success', address.message)
+            }
+            else if (res.status === 409) {
+              showToastMessage('error', address.message)
+            }
           }
         }
         else if (res.status === 409) {
@@ -152,22 +154,44 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
         if (res.status === 200) {
           showToastMessage('success', customer.message)
           // checking if address updated
-          const oldAddress = removeExtraAddressFields(customer.data.Address)
-          const newAddress = removeExtraAddressFields(Address);
-          const isAddressUpdated = Object.values(oldAddress).some(value => !Object.values(newAddress).includes(value));
+          if (Address) {
+            let isAddressUpdated = false;
+            if (customer.data.Address) {
+              const oldAddress = removeExtraAddressFields(customer.data.Address)
+              const newAddress = removeExtraAddressFields(Address);
+              isAddressUpdated = Object.values(oldAddress).some(value => !Object.values(newAddress).includes(value));
+          
+              if (isAddressUpdated) {
+                if (newAddress.zipcode === "") {
+                  newAddress.zipcode = null;
+                }
+                const addressRes = await updateAddress(customer.data.Address.id, newAddress, state.userToken);
+                const address = await addressRes.json();
 
-          if (isAddressUpdated) {
-            const addressRes = await updateAddress(customer.data.Address.id, newAddress, state.userToken);
-            const address = await addressRes.json();
-
-            if (addressRes.status === 200) {
-              showToastMessage('success', address.message)
+                if (addressRes.status === 200) {
+                  showToastMessage('success', address.message)
+                }
+                else if (addressRes.status === 404) {
+                  showToastMessage('info', address.message)
+                }
+                else if (addressRes.status === 409) {
+                  showToastMessage('error', address.message)
+                }
+                else if (addressRes.status === 500) {
+                  showToastMessage('error', address.message)
+                }
+              }
             }
-            else if (addressRes.status === 404) {
-              showToastMessage('info', address.message)
-            }
-            else if (addressRes.status === 409) {
-              showToastMessage('error', address.message)
+            else {
+              Address.CustomerId = selectedItem.id;
+              const addressRes = await addAddress(Address, state.userToken);
+              const address = await addressRes.json();
+              if (addressRes.status === 200) {
+                showToastMessage('success', address.message)
+              }
+              else if (addressRes.status === 409) {
+                showToastMessage('error', address.message)
+              }
             }
           }
         }

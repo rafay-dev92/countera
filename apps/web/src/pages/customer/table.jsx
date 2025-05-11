@@ -204,6 +204,8 @@ export function Customers() {
     setIsOpen(false);
   };
 
+  console.log(currentItems)
+
   if (loading) {
     return <Spinner className="mx-auto mt-[30vh] h-10 w-10 text-gray-900/50" />
   }
@@ -284,7 +286,7 @@ export function Customers() {
               </tr>
             </thead>
             <tbody>
-              {currentItems.map(({ firstName, lastName, email, phone, address, taxable, id, Business }, index) => {
+              {currentItems.map(({ firstName, lastName, email, phone, Address, taxable, id, Business }, index) => {
                 const isLast = index === currentItems.length - 1;
                 const classes = isLast
                   ? "p-4"
@@ -334,7 +336,7 @@ export function Customers() {
                         color="blue-gray"
                         className="font-normal opacity-70"
                       >
-                        {address}
+                        {Address && `${Address.street}, ${Address.city}, ${Address.state}, ${Address.zipcode}`}
                       </Typography>
                     </td>
                     <td className={classes}>

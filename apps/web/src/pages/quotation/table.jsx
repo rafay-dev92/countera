@@ -167,13 +167,14 @@ export function Quotation() {
             quantity: product.quotation_product.quantity,
             description: product.description || '',
             price: product.price
-          })).filter(product => product.id);
+        })).filter(product => product.id);
         const data = {
             invoiceData: {
                 totalAmount: quotationData.totalAmount,
-                paymentStatus: "Unpaid",
+                // paymentStatus: "Unpaid",
                 CustomerId: quotationData.CustomerId,
                 CustomerVehicleId: quotationData.CustomerVehicleId,
+                comments: quotationData.comments,
                 BusinessId: state.business.id
             },
             "products": selectedProductIds,

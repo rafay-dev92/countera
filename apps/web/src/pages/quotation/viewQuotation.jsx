@@ -68,16 +68,17 @@ const ViewQuotation = ({ quotationData, setQuotationData, componentRef, appliedT
         const selectedProductIds = quotationData?.Product?.map((product) => ({
             id: product.id,
             quantity: product.quotation_product.quantity,
-            description: product.description || '',
-            price: product.price
+            description: product.quotation_product.description || '',
+            price: product.quotation_product.price
           })).filter(product => product.id);
 
         const data = {
             invoiceData: {
                 totalAmount: quotationData.totalAmount,
-                paymentStatus: "Unpaid",
+                // paymentStatus: "Unpaid",
                 CustomerId: quotationData.CustomerId,
                 CustomerVehicleId: quotationData.CustomerVehicleId,
+                comments: quotationData.comments,
                 BusinessId: state.business.id
             },
             "products": selectedProductIds,

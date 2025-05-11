@@ -34,7 +34,7 @@ const schema = Yup.object().shape({
     }
   )
 });
-const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedItem, setSelectedItem }) => {
+const ProductForm = ({ refresh, setRefresh, open, close, selectedItem, setSelectedItem }) => {
 
   const { state } = State();
   const [isLoading, setIsLoading] = useState(false);
@@ -47,7 +47,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
   const handleClose = () => {
     clearForm(formikProps);
     setEdit(false);
-    setSelectedItem(null);
+    setSelectedItem && setSelectedItem(null);
     setSelectedTaxes([]);
     setProductPreviewPic(null);
     close();
@@ -215,8 +215,8 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
   } = formikProps;
 
   return (
-    <Dialog open={open}>
-      {open && (
+    <Dialog open={state.product?.openForm}>
+      {state.product?.openForm && (
         <form onSubmit={handleSubmit} autoComplete="new">
           <div className="">
             <div className="bg-white rounded shadow-xl">
@@ -487,4 +487,4 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
     </Dialog>
   );
 };
-export default MyPopUpForm;
+export default ProductForm;

@@ -109,7 +109,7 @@ const ViewInvoice = ({ printInvoice, setPrintInvoice, componentRef, appliedTaxes
                 if (paidAmount === printInvoice.totalAmount && printInvoice.paymentStatus !== "Paid") {
                     setInvoiceStatus(printInvoice.id, "Paid");
                 }
-                else if (paidAmount > 0 && paidAmount < printInvoice.totalAmount) {
+                else if (paidAmount > 0 && paidAmount < printInvoice.totalAmount && printInvoice.paymentStatus !== "Partially Paid") {
                     setInvoiceStatus(printInvoice.id, "Partially Paid");
                 }
             }

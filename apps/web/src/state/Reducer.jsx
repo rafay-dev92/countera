@@ -71,6 +71,13 @@ export const Reducer = (state, action) => {
                 inspection: {
                     selected: action.payload
                 }
+            })
+        case 'SET_PRODUCT_DATA':
+            return ({
+                ...state,
+                product: {
+                    openForm: action.payload
+                }
             })       
         case 'RESET':
             return ({

@@ -31,7 +31,7 @@ const printView = React.forwardRef(({ view, printInvoice, appliedTaxes }, ref) =
     if (Object.keys(printInvoice).length > 0) {
         return (
             <div ref={ref} className={`min-h-screen flex flex-col ${!view ? "hidden print:flex print:min-h-screen" : ""}`}>
-                <div className="grid grid-cols-3 border divide-x">
+                <div className="grid grid-cols-3 divide-x border-b">
                     <div className="col-span-1 flex flex-col p-2">
                         <span className="text-[12px] font-normal ">{printInvoice?.Business.address}</span>
                         <span className="text-[12px] font-normal ">{printInvoice?.Business.city}, {printInvoice?.Business.state}, {printInvoice?.Business.zipcode}</span>
@@ -49,7 +49,7 @@ const printView = React.forwardRef(({ view, printInvoice, appliedTaxes }, ref) =
                         <span className="text-[12px]">Permit No: {printInvoice?.Business.permitNumber}</span>
                     </div>
                 </div>
-                <div className="grid grid-cols-2 border divide-x">
+                <div className="grid grid-cols-2 divide-x">
                     <div className="col-span-1 flex flex-col gap-1 p-2">
                         <h2 className="text-xs font-semibold underline">Vehicle Info:</h2>
                         <div className="grid grid-cols-2 gap-2">
@@ -83,9 +83,9 @@ const printView = React.forwardRef(({ view, printInvoice, appliedTaxes }, ref) =
                         <h2 className="text-xs font-semibold underline">Bill To:</h2>
                         <div className="flex flex-col">
                             <span className="text-xs">{printInvoice?.Customer.firstName} {printInvoice?.Customer.lastName}</span>
-                            <span className="text-xs">{printInvoice?.Customer.Address.street}</span>
-                            <span className="text-xs">{printInvoice?.Customer.Address.city}, {printInvoice?.Customer.Address.state}, {printInvoice?.Customer.Address.zipcode}</span>
-                            <span className="text-xs">Phone: {printInvoice?.Customer.phone}</span>
+                            <span className="text-xs">{printInvoice?.Customer?.Address && printInvoice?.Customer.Address.street}</span>
+                            <span className="text-xs">{printInvoice?.Customer?.Address && `${printInvoice?.Customer?.Address?.city}, ${printInvoice?.Customer?.Address?.state}, ${printInvoice?.Customer?.Address?.zipcode}`}</span>
+                            <span className="text-xs">{printInvoice?.Customer?.phone && `Phone: ${printInvoice?.Customer.phone}`}</span>
                         </div>
 
                     </div>
@@ -204,6 +204,11 @@ const printView = React.forwardRef(({ view, printInvoice, appliedTaxes }, ref) =
                                 </div>
                             ))}
                         </div>
+                        
+                        <div className="flex items-center border divide-x text-xs">
+                            <h1 className="basis-[50%] max-w-[50%] p-1">Total</h1>
+                            <h1 className="basis-[50%] max-w-[50%] p-1">${parseFloat(printInvoice?.totalAmount.toFixed(2)) + parseFloat(printInvoice?.discount)}</h1>
+                        </div>
 
                         <div className="flex items-center justify-center border divide-x text-xs">
                             <h1 className="basis-[50%] max-w-[50%] p-1">Discount</h1>
@@ -211,7 +216,7 @@ const printView = React.forwardRef(({ view, printInvoice, appliedTaxes }, ref) =
                         </div>
 
                         <div className="flex items-center border divide-x text-xs">
-                            <h1 className="basis-[50%] max-w-[50%] p-1 font-semibold">Total</h1>
+                            <h1 className="basis-[50%] max-w-[50%] p-1 font-semibold">Grand Total</h1>
                             <h1 className="basis-[50%] max-w-[50%] p-1 font-semibold">${printInvoice?.totalAmount.toFixed(2)}</h1>
                         </div>
 

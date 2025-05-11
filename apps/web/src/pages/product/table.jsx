@@ -16,7 +16,7 @@ import {
 } from "@material-tailwind/react";
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import MyPopUpForm from "./form";
+import ProductForm from "../../utils/forms/productForm";
 import { fetchProducts } from "@/services/fetchProducts";
 import { delProduct } from "@/services/delProduct";
 import { toast } from 'react-toastify';
@@ -27,7 +27,7 @@ const TABLE_HEAD = ["Name", "Price", "Cost", "ItemCode", "Type", "Taxable", "Act
 
 export function Product() {
     const confirm = useConfirm();
-    const {state} = State();
+    const { state, dispatch } = State();
     const [selectAll, setSelectAll] = useState(false);
     const [selectedRows, setSelectedRows] = useState([]);
     const [searchQuery, setSearchQuery] = useState("");
@@ -183,14 +183,24 @@ export function Product() {
     const [isOpen, setIsOpen] = useState(false);
     const openPopup = () => {
         if (state.userInfo.Permission.some(obj => obj.name === "CAN_ADD_PRODUCT" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
-            setIsOpen(true);
+
+            // setIsOpen(true);
+            dispatch({
+                type: "SET_PRODUCT_DATA",
+                payload:
+                    true,
+            });
         }
         else {
             toast.error("You are not allowed to add a product")
         }
     };
     const closePopup = () => {
-        setIsOpen(false);
+        // setIsOpen(false);
+        dispatch({
+            type: "SET_PRODUCT_DATA",
+            payload: false
+        });
     };
 
     if (loading) {
@@ -380,7 +390,7 @@ export function Product() {
                 </CardFooter>
 
             </Card>
-            <MyPopUpForm refresh={refresh} setRefresh={setRefresh} open={isOpen} close={closePopup} selectedItem={selectedItem} setSelectedItem={setSelectedItem} />
+            <ProductForm refresh={refresh} setRefresh={setRefresh} open={isOpen} close={closePopup} selectedItem={selectedItem} setSelectedItem={setSelectedItem} />
         </>
     );
 }

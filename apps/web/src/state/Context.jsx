@@ -27,6 +27,9 @@ const Context = ({children}) => {
         },
         inspection: {
             selected: null,
+        },
+        product: {
+            openForm: false,
         }
     }
     const [state, dispatch] = useReducer(Reducer, initialState)

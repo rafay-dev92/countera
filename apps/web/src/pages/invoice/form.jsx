@@ -8,6 +8,7 @@ import {
   CardBody,
   Dialog,
   IconButton,
+  Button,
 } from "@material-tailwind/react";
 import {
   XCircleIcon
@@ -29,6 +30,7 @@ import CustomerForm from "./customerForm";
 import { updateCustomerVehicle } from "@/services/updateCustomerVehicle";
 import ViewInvoice from "./viewInvoice";
 import { fetchPackages } from "@/services/fetchPackages";
+import ProductForm from "../../utils/forms/productForm";
 
 const TABLE_HEAD = [
   "Product",
@@ -111,6 +113,7 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
   // close popup
   const handleClose = () => {
     setDiscount(0);
+    setProductSearchText("");
     setSelectedCustomer(null)
     setSelectedVehicle(null)
     dispatch({ type: 'SET_INVOICE_VIEW_DATA', payload: null });
@@ -232,7 +235,7 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
       invoiceData: {
         totalAmount: calculateTotalAmountWithTax() - discount,
         discount: discount,
-        paymentStatus: "Unpaid",
+        // paymentStatus: "Unpaid",
         CustomerId: selectedCustomer.id,
         CustomerVehicleId: selectedVehicle.id,
         comments: values.comments,
@@ -741,7 +744,7 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
                               id="address"
                               name="address"
                               type="text"
-                              value={selectedCustomer ? `${selectedCustomer.Address?.street}, ${selectedCustomer.Address?.city}` : ''}
+                              value={selectedCustomer?.Address ? `${selectedCustomer.Address?.street}, ${selectedCustomer.Address?.city}` : ''}
                               disabled
                             />
                           </div>
@@ -980,63 +983,116 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
                                   />
                                   {showProductSuggestions && (
                                     <ul className="absolute left-0 right-0 z-50 bg-white border border-slate-700 mt-1 ml-2 overflow-y-auto min-h-24 max-h-48 w-80">
-                                      {products?.length > 0 ?
-                                        products.filter(product => `${product.name}`.toLowerCase().includes(productSearchText)).map((product) => (
-                                          <li key={product.id} className="cursor-pointer px-2 py-1 rounded-sm hover:bg-gray-200" onClick={() => { handleProductChange(index, item.quantity, product.id), setShowProductSuggestions(false) }}>
-                                            {product?.name}
-                                          </li>
-                                        ))
-                                        :
-                                        <li className="px-2 py-1 rounded-sm">No Product</li>
-                                      }
+                                      {products?.length > 0 ? (
+                                        products
+                                          .filter(product =>
+                                            product?.name?.toLowerCase().includes(productSearchText.toLowerCase())
+                                          )
+                                          .map(product => (
+                                            <li
+                                              key={product.id}
+                                              className="cursor-pointer px-2 py-1 rounded-sm hover:bg-gray-200"
+                                              onClick={() => {
+                                                handleProductChange(index, item.quantity, product.id);
+                                                setShowProductSuggestions(false);
+                                              }}
+                                            >
+                                              {product.name}
+                                            </li>
+                                          ))
+                                          .concat(
+                                            products.filter(product =>
+                                              product?.name?.toLowerCase().includes(productSearchText.toLowerCase())
+                                            ).length === 0
+                                              ? [
+                                                <li key="no-product" className="px-2 py-1 rounded-sm flex justify-between items-center">
+                                                  <span>No Product Found</span>
+                                                  <Button
+                                                    className="rounded"
+                                                    size="sm"
+                                                    color="blue"
+                                                    onClick={() => {
+                                                      setShowProductSuggestions(false);
+                                                      dispatch({
+                                                        type: "SET_PRODUCT_DATA",
+                                                        payload:
+                                                          true,
+                                                      });
+                                                    }}
+                                                  >
+                                                    Add New Product
+                                                  </Button>
+                                                </li>
+                                              ]
+                                              : []
+                                          )
+                                      ) : (
+                                        <li className="px-2 py-1 rounded-sm flex justify-between items-center">
+                                          <span>No Product Found</span>
+                                          <Button
+                                            className="rounded"
+                                            size="sm"
+                                            color="blue"
+                                            onClick={() => {
+                                              setShowProductSuggestions(false);
+                                              dispatch({
+                                                type: "SET_PRODUCT_DATA",
+                                                payload:
+                                                  true,
+                                              });
+                                            }}
+                                          >
+                                            Add New Product
+                                          </Button>
+                                        </li>
+                                      )}
                                     </ul>
+
                                   )}
                                 </div>
                               }
                             </td>
-                            {/* {index !== (selectedProducts.length - 1) && (
-                              <> */}
-                                <td className="p-4 border-b border-blue-gray-50">
-                                  <input
-                                    type="number"
-                                    min={1}
-                                    className="w-14 p-2 border rounded-md text-black"
-                                    value={item.quantity}
-                                    onChange={(e) =>
-                                      handleQuantityChange(index, e.target.value)
-                                    }
-                                  />
-                                </td>
-                                <td className="p-4 border-b border-blue-gray-50">
-                                  <input
-                                    type="number"
-                                    min={0}
-                                    step="0.01"
-                                    className="w-24 p-2 border rounded-md text-black"
-                                    value={item.price == 0 ? '' : item.price}
-                                    placeholder="0.00"
-                                    onChange={(e) =>
-                                      handlePriceChange(index, e.target.value)
-                                    }
-                                  />
-                                </td>
-                                <td className="p-4 border-b border-blue-gray-50">
-                                  <input
-                                    type="checkbox"
-                                    checked={selectedCustomer?.taxable && item.taxable}
-                                    readOnly
-                                  />
-                                </td>
-                                <td className="p-4 border-b border-blue-gray-50">
-                                  <Typography
-                                    variant="small"
-                                    color="blue-gray"
-                                    className="font-normal opacity-70"
-                                  >
-                                    {calculateAmount(item.price, item.quantity)}
-                                  </Typography>
-                                </td>
-                              {/* </>
+                            <td className="p-4 border-b border-blue-gray-50">
+                              <input
+                                type="number"
+                                min={1}
+                                className="w-14 p-2 border rounded-md text-black"
+                                value={item.quantity}
+                                onChange={(e) =>
+                                  handleQuantityChange(index, e.target.value)
+                                }
+                              />
+                            </td>
+                            <td className="p-4 border-b border-blue-gray-50">
+                              <input
+                                type="number"
+                                min={0}
+                                step="0.01"
+                                className="w-24 p-2 border rounded-md text-black"
+                                value={item.price == 0 ? '' : item.price}
+                                placeholder="0.00"
+                                onChange={(e) =>
+                                  handlePriceChange(index, e.target.value)
+                                }
+                              />
+                            </td>
+                            <td className="p-4 border-b border-blue-gray-50">
+                              <input
+                                type="checkbox"
+                                checked={selectedCustomer?.taxable && item.taxable}
+                                readOnly
+                              />
+                            </td>
+                            <td className="p-4 border-b border-blue-gray-50">
+                              <Typography
+                                variant="small"
+                                color="blue-gray"
+                                className="font-normal opacity-70"
+                              >
+                                {calculateAmount(item.price, item.quantity)}
+                              </Typography>
+                            </td>
+                            {/* </>
                             )} */}
                             <td className="p-4 border-b border-blue-gray-50 text-center px-4 py-2">
                               {index !== selectedProducts.length - 1 ?
@@ -1090,14 +1146,14 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
                               onChange={(e) => {
                                 const enteredValue = Number(e.target.value);
                                 const maxDiscount = totalAmount * 0.25;
-                            
+
                                 if (enteredValue <= maxDiscount) {
                                   setDiscount(enteredValue);
                                 } else {
                                   setDiscount(maxDiscount);
                                 }
                               }}
-                            
+
                             />
                           </div>
                         </div>
@@ -1190,6 +1246,7 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
       <CustomerForm open={isCustomerFormOpen} close={closeCustomerForm} refresh={refresh} setRefresh={setRefresh} setSelectedCustomer={setSelectedCustomer} />
       {selectedCustomer ? <CustomerVehicleForm open={isCustomerVehicleFormOpen} close={closeCustomerVehicleForm} refresh={refresh} setRefresh={setRefresh} CustomerId={selectedCustomer?.id} getCustomerDetails={getCustomerDetails} /> : null}
       {printInvoice && Object.keys(printInvoice).length > 0 ? <PrintView view={false} printInvoice={printInvoice} ref={componentRef} appliedTaxes={appliedTaxes} /> : null}
+      <ProductForm open={state?.product?.openForm} close={() => dispatch({ type: "SET_PRODUCT_DATA", payload: false })} refresh={refresh} setRefresh={setRefresh} selectedItem={null} setSelectedItem={null} />
 
       {/* Package Preview Modal */}
       {showPackageModal && packagePreview && (

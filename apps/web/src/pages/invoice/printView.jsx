@@ -3,7 +3,7 @@ import { Typography } from "@material-tailwind/react";
 import PaidImg from "@/assets/paid.png";
 
 const INVOICE_TABLE_HEAD = ["Customer", "Status", "Payment Method", "Total"];
-const PRODUCT_TABLE_HEAD = ["Product", "Quantity", "Price", "Tax", "Amount"]
+const PRODUCT_TABLE_HEAD = ["Product", "Quantity", "Unit Price", "Tax", "Total Price"]
 
 const printView = React.forwardRef(({ view, printInvoice, appliedTaxes }, ref) => {
 
@@ -91,7 +91,7 @@ const printView = React.forwardRef(({ view, printInvoice, appliedTaxes }, ref) =
                     </div>
                 </div>
 
-                <div className="w-full p-2 text-sm">
+                <div className="w-full px-2 text-sm">
                     <table className="w-full min-w-max table-auto text-left">
                         <thead>
                             <tr>
@@ -166,10 +166,11 @@ const printView = React.forwardRef(({ view, printInvoice, appliedTaxes }, ref) =
 
                 </div>
 
-                <div className="flex p-2 text-xs mt-auto">
+                <div className="flex p-2 text-xs mt-auto border-t">
                     {/* Terms and Conditions */}
                     <div className="basis-[50%] max-w-[50%] h-full p-2">
-                        <div className="flex flex-col justify-end items-start h-full gap-2">
+                        Notes: {printInvoice.notes}
+                        {/* <div className="flex flex-col justify-end items-start h-full gap-2">
                             <div className="basis-[80%] flex flex-col">
                                 <h1 className="font-medium text-sm mb-1">Terms & Conditions</h1>
                                 <p className="text-xs border py-3 px-2 w-[90%] leading-relaxed">
@@ -182,19 +183,19 @@ const printView = React.forwardRef(({ view, printInvoice, appliedTaxes }, ref) =
                                 </p>
                             </div>
                             <h2 className="basis-[20%] font-semibold text-sm italic">Thank You For Your Business!</h2>
-                        </div>
+                        </div> */}
                     </div>
 
                     {/* Financial Summary */}
                     <div className="basis-[50%] max-w-[50%]">
-                        <div className="flex items-center justify-center border divide-x text-xs">
+                        <div className="flex items-center justify-center border-t border-x divide-x text-xs">
                             <h1 className="basis-[50%] max-w-[50%] p-1">Subtotal</h1>
                             <h1 className="basis-[50%] max-w-[50%] p-1">${calculateTotalAmount(printInvoice.Product)}</h1>
                         </div>
 
                         <div className="flex flex-col text-xs">
                             {Object.keys(appliedTaxes).map((tax, ind) => (
-                                <div key={ind} className="flex border divide-x">
+                                <div key={ind} className="flex border-t border-x divide-x">
                                     <span className="max-w-[50%] w-min p-1 whitespace-nowrap basis-[50%]">
                                         {`${tax.split('_')[0]} (${tax.split('_')[1]}${tax.split('_')[2]})`}
                                     </span>
@@ -204,20 +205,20 @@ const printView = React.forwardRef(({ view, printInvoice, appliedTaxes }, ref) =
                                 </div>
                             ))}
                         </div>
-                        
-                        <div className="flex items-center border divide-x text-xs">
+
+                        <div className="flex items-center border-t border-x divide-x text-xs">
                             <h1 className="basis-[50%] max-w-[50%] p-1">Total</h1>
                             <h1 className="basis-[50%] max-w-[50%] p-1">${parseFloat(printInvoice?.totalAmount.toFixed(2)) + parseFloat(printInvoice?.discount)}</h1>
                         </div>
 
-                        <div className="flex items-center justify-center border divide-x text-xs">
+                        <div className="flex items-center justify-center border-t border-x divide-x text-xs">
                             <h1 className="basis-[50%] max-w-[50%] p-1">Discount</h1>
                             <h1 className="basis-[50%] max-w-[50%] p-1">${printInvoice?.discount}</h1>
                         </div>
 
                         <div className="flex items-center border divide-x text-xs">
-                            <h1 className="basis-[50%] max-w-[50%] p-1 font-semibold">Grand Total</h1>
-                            <h1 className="basis-[50%] max-w-[50%] p-1 font-semibold">${printInvoice?.totalAmount.toFixed(2)}</h1>
+                            <h1 className="basis-[50%] max-w-[50%] p-1 font-medium">Grand Total</h1>
+                            <h1 className="basis-[50%] max-w-[50%] p-1 font-medium">${printInvoice?.totalAmount.toFixed(2)}</h1>
                         </div>
 
                         <div className="p-1 border mt-2 text-center font-medium text-xs">
@@ -228,7 +229,7 @@ const printView = React.forwardRef(({ view, printInvoice, appliedTaxes }, ref) =
                             printInvoice.Payments.map((payment, index) => {
                                 const date = new Date(payment.createdAt);
                                 return (
-                                    <div key={index} className="flex items-center border divide-x text-xs">
+                                    <div key={index} className="flex items-center border-b border-x divide-x text-xs">
                                         <h1 className="basis-[50%] max-w-[50%] p-1">
                                             {payment.paymentMethod} on {date.toLocaleDateString("en-US")}
                                         </h1>
@@ -244,6 +245,28 @@ const printView = React.forwardRef(({ view, printInvoice, appliedTaxes }, ref) =
                                 <h1 className="basis-[50%] max-w-[50%] p-1">$0.00</h1>
                             </div>
                         )}
+                    </div>
+                </div>
+                <div className="flex flex-col justify-center border-t border-gray-300 p-2 gap-8">
+                    <div className="flex flex-col justify-end items-start h-full w-full gap-2">
+                        <div className="flex flex-col">
+                            <h1 className="font-medium text-xs mb-1">Terms & Conditions</h1>
+                            <p className="text-[9px] py-1 leading-relaxed uppercase">
+                                you agree to the following terms and conditions. Our platform facilitates the purchase and sale
+                                of vehicle auto parts. All products are subject to availability and provided "as is." We are not
+                                responsible for any misuse or improper installation of parts. Returns and refunds are subject to
+                                our policies, which may change without notice. By continuing to use our services, you agree to
+                                comply with all applicable laws and regulations. For further inquiries, please contact our
+                                support team.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="text-xs flex w-full">
+                        <p className="whitespace-nowrap">I acknowledge that above and receipt to the invoice</p>
+                        <div className=" border-t border-gray-500 mt-3 ms-2 w-full">
+                            <p className="text-xs text-black text-center mt-1">(Customer Signature)</p>
+                        </div>
                     </div>
                 </div>
             </div>

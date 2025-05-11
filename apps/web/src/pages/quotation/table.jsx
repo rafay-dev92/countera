@@ -175,6 +175,7 @@ export function Quotation() {
                 CustomerId: quotationData.CustomerId,
                 CustomerVehicleId: quotationData.CustomerVehicleId,
                 comments: quotationData.comments,
+                notes: quotationData.notes,
                 BusinessId: state.business.id
             },
             "products": selectedProductIds,

@@ -5,6 +5,7 @@ import { Dialog } from "@material-tailwind/react";
 import { State } from '@/state/Context';
 import { fetchInvoice } from '@/services/fetchInvoice';
 import { updateInvoice } from '@/services/updateInvoice';
+import { toast } from 'react-toastify';
 
 const schema = Yup.object().shape({
     notes: Yup.string(),
@@ -13,27 +14,22 @@ const schema = Yup.object().shape({
 const NotesForm = ({ open, close, invoiceId, setPrintInvoice, currentValue }) => {
     const { state } = State();
     const [isLoading, setIsLoading] = useState(false);
-    
+
     const onSubmit = async (values) => {
         setIsLoading(true);
-        if (values.notes === "") {
-            return;
-        }
-        try {
-            const data = {
-                invoiceData: {
-                    notes: values.notes,
-                }
+        const data = {
+            invoiceData: {
+                notes: values.notes,
             }
-            const res = await updateInvoice(invoiceId, data, state.userToken);
-            const invoice = await res.json();
-            if (res.status === 200) {
-                setPrintInvoice(invoice.data);
-            }
-            handleClose();
-        } catch (error) {
-            console.log(error);
         }
+        const res = await updateInvoice(invoiceId, data, state.userToken);
+        const invoice = await res.json();
+        console.log(invoice)
+        if (res.status === 200) {
+            setPrintInvoice(invoice.data);
+        }
+        if (res.status === 500) toast.error(invoice.message)
+        handleClose();
         setIsLoading(false);
     }
 

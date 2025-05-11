@@ -73,7 +73,7 @@ export function Customers() {
   const getCustomers = async () => {
     try {
       const res = await fetchCustomers(state.userToken);
-      const customers = await res.json(); 
+      const customers = await res.json();
 
       if (res.status === 200) {
         setFinalItems(customers);
@@ -203,8 +203,6 @@ export function Customers() {
   const closePopup = () => {
     setIsOpen(false);
   };
-
-  console.log(currentItems)
 
   if (loading) {
     return <Spinner className="mx-auto mt-[30vh] h-10 w-10 text-gray-900/50" />
@@ -336,7 +334,12 @@ export function Customers() {
                         color="blue-gray"
                         className="font-normal opacity-70"
                       >
-                        {Address && `${Address.street}, ${Address.city}, ${Address.state}, ${Address.zipcode}`}
+                        {Address && [
+                          Address.street,
+                          Address.city,
+                          Address.state,
+                          Address.zipcode
+                        ].filter(Boolean).join(', ')}                      
                       </Typography>
                     </td>
                     <td className={classes}>
@@ -348,7 +351,7 @@ export function Customers() {
                           <TrashIcon className="h-6 w-6 text-red-600" />
                         </IconButton>
                       </Tooltip>
-                    </td>                    
+                    </td>
                   </tr>
                 );
               },

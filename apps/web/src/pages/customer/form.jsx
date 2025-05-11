@@ -19,10 +19,10 @@ import { useNavigate } from "react-router-dom";
 
 
 const addressSchema = Yup.object().shape({
-  street: Yup.string(),
-  city: Yup.string(),
-  state: Yup.string(),
-  zipcode: Yup.string(),
+  street: Yup.string().nullable(true).default(null),
+  city: Yup.string().nullable(true).default(null),
+  state: Yup.string().nullable(true).default(null),
+  zipcode: Yup.number().nullable(true).default(null),
 }).nullable(true).default(undefined);
 
 const schema = Yup.object().shape({
@@ -131,6 +131,9 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
           // saving customer's address
           if (Address) {
             Address.CustomerId = customer.data.id;
+            // if (Address.zipcode === "") {
+            //   Address.zipcode = null;
+            // }
             const addressRes = await addAddress(Address, state.userToken);
             const address = await addressRes.json();
             if (addressRes.status === 200) {
@@ -159,8 +162,7 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
             if (customer.data.Address) {
               const oldAddress = removeExtraAddressFields(customer.data.Address)
               const newAddress = removeExtraAddressFields(Address);
-              isAddressUpdated = Object.values(oldAddress).some(value => !Object.values(newAddress).includes(value));
-          
+              isAddressUpdated = Object.values(oldAddress).some(value => !Object.values(newAddress).includes(value)) || Object.values(newAddress).some(value => !Object.values(oldAddress).includes(value));
               if (isAddressUpdated) {
                 if (newAddress.zipcode === "") {
                   newAddress.zipcode = null;
@@ -264,10 +266,10 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
         licenseNo: "",
         email: "",
         Address: {
-          street: "",
-          city: "",
-          state: "",
-          zipcode: ""
+          street: null,
+          city: null,
+          state: null,
+          zipcode: null
         },
         notes: "",
         taxable: true,
@@ -280,10 +282,10 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
         licenseNo: "",
         email: "",
         Address: {
-          street: "",
-          city: "",
-          state: "",
-          zipcode: ""
+          street: null,
+          city: null,
+          state: null,
+          zipcode: null
         },
         notes: "",
         taxable: true,
@@ -300,10 +302,10 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
       licenseNo: "",
       email: "",
       Address: {
-        street: "",
-        city: "",
-        state: "",
-        zipcode: ""
+        street: null,
+        city: null,
+        state: null,
+        zipcode: null
       },
       notes: "",
       taxable: true,

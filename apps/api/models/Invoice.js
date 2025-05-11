@@ -25,6 +25,13 @@ module.exports = (sequelize) => {
         paymentStatus: {
             type: DataTypes.STRING,
             allowNull: false,
+            defaultValue: 'Unpaid',
+            validate: {
+                isIn: {
+                    args: [['Paid', 'Partially Paid', 'Unpaid']],
+                    msg: "Payment status must be either 'Paid', 'Partially Paid', or 'Unpaid'"
+                }
+            }
         },
         notes: {
             type: DataTypes.STRING,

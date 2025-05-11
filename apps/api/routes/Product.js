@@ -92,7 +92,7 @@ router.post("/create", fetchUser, upload.single("image"), async (req, res) => {
       where: { 
         [Op.or]: [
           {name: productData.name, BusinessId: productData.BusinessId},
-          {itemCode: productData.itemCode, BusinessId: productData.BusinessId}
+          // {itemCode: productData.itemCode, BusinessId: productData.BusinessId}
         ]
       }
     });

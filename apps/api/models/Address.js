@@ -10,19 +10,19 @@ module.exports= (sequelize) => {
         },
         street: {
             type: DataTypes.STRING,
-            allowNull: false,
+            allowNull: true,
         },
         city: {
             type: DataTypes.STRING,
-            allowNull: false,
+            allowNull: true,
         },
         state: {
             type: DataTypes.STRING,
-            allowNull: false,
+            allowNull: true,
         },
         zipcode: {
             type: DataTypes.INTEGER,
-            allowNull: false,
+            allowNull: true,
         },
         CustomerId: {
             type: DataTypes.UUID,

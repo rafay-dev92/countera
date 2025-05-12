@@ -28,8 +28,8 @@ module.exports = (sequelize) => {
             defaultValue: 'Unpaid',
             validate: {
                 isIn: {
-                    args: [['Paid', 'Partially Paid', 'Unpaid']],
-                    msg: "Payment status must be either 'Paid', 'Partially Paid', or 'Unpaid'"
+                    args: [['Paid', 'Partially Paid', 'Unpaid', 'Void', 'Refund']],
+                    msg: "Payment status must be either 'Paid', 'Partially Paid', 'Unpaid', 'Void', or 'Refund'"
                 }
             }
         },

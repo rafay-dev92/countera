@@ -147,17 +147,17 @@ export function Home() {
         return <Spinner className="mx-auto mt-[30vh] h-10 w-10 text-gray-900/50" />
     }
     return (
-        <Card className="h-full w-full">
-            <CardHeader floated={false} shadow={false} className="rounded-none">
+        <div className="h-full w-full">
+            <div floated={false} shadow={false} className="rounded-none">
                 <div className="mb-4 sm:mb-0 flex items-center">
                     <Typography variant="h5" color="blue-gray" className="flex items-center">
                         <HomeIcon className="h-10 w-10 text-blueGray-500 ml-2 mb-4" />
                         Home
                     </Typography>
                 </div>
-            </CardHeader>
-            <CardBody className="p-4 px-0">
-                <div className="mt-12">
+            </div>
+            <div className="p-4 px-0">
+                <div className="mt-2">
                     <div className="mb-12 grid gap-y-10 gap-x-6 md:grid-cols-2 xl:grid-cols-4">
                         {cardsData.length !== 0 && (cardsData.map(({ icon, title, footer, ...rest }) => (
                             <StatisticsCard
@@ -194,8 +194,8 @@ export function Home() {
                         ))}
                     </div>
                 </div>
-            </CardBody>
-        </Card>
+            </div>
+        </div>
     );
 };
 

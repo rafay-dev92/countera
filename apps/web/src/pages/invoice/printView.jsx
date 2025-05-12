@@ -166,10 +166,13 @@ const printView = React.forwardRef(({ view, printInvoice, appliedTaxes }, ref) =
 
                 </div>
 
-                <div className="flex p-2 text-xs mt-auto border-t">
+                <div className="border-y py-1 w-full flex items-center justify-center mt-auto">
+                    <h4 className="text-sm font-medium italic">Invoice Summary</h4>
+                </div>
+                <div className="flex p-2 text-xs">
                     {/* Terms and Conditions */}
                     <div className="basis-[50%] max-w-[50%] h-full p-2">
-                        Notes: {printInvoice.notes}
+                        Notes: {printInvoice.notes ? printInvoice.notes : 'N/A'}
                         {/* <div className="flex flex-col justify-end items-start h-full gap-2">
                             <div className="basis-[80%] flex flex-col">
                                 <h1 className="font-medium text-sm mb-1">Terms & Conditions</h1>
@@ -188,37 +191,48 @@ const printView = React.forwardRef(({ view, printInvoice, appliedTaxes }, ref) =
 
                     {/* Financial Summary */}
                     <div className="basis-[50%] max-w-[50%]">
-                        <div className="flex items-center justify-center border-t border-x divide-x text-xs">
-                            <h1 className="basis-[50%] max-w-[50%] p-1">Subtotal</h1>
-                            <h1 className="basis-[50%] max-w-[50%] p-1">${calculateTotalAmount(printInvoice.Product)}</h1>
+                        <div className="border-x border-t divide-y">
+                            <div className="flex justify-between px-2 py-1">
+                                <span>Subtotal</span>
+                                <span>${calculateTotalAmount(printInvoice.Product)}</span>
+                            </div>
+
                         </div>
 
                         <div className="flex flex-col text-xs">
                             {Object.keys(appliedTaxes).map((tax, ind) => (
-                                <div key={ind} className="flex border-t border-x divide-x">
-                                    <span className="max-w-[50%] w-min p-1 whitespace-nowrap basis-[50%]">
-                                        {`${tax.split('_')[0]} (${tax.split('_')[1]}${tax.split('_')[2]})`}
-                                    </span>
-                                    <span className="max-w-[50%] p-1 basis-[50%]">
-                                        ${tax.split('_')[2] === '%' ? appliedTaxes[tax].toFixed(2) : appliedTaxes[tax]}
-                                    </span>
+                                <div key={ind} className="border-t border-x divide-y">
+                                    <div className="flex justify-between px-2 py-1">                                    
+                                        <span className="">
+                                            {`${tax.split('_')[0]} (${tax.split('_')[1]}${tax.split('_')[2]})`}
+                                        </span>
+                                        <span className="">
+                                            ${tax.split('_')[2] === '%' ? appliedTaxes[tax].toFixed(2) : appliedTaxes[tax]}
+                                        </span>
+                                    </div>
                                 </div>
                             ))}
                         </div>
 
-                        <div className="flex items-center border-t border-x divide-x text-xs">
-                            <h1 className="basis-[50%] max-w-[50%] p-1">Total</h1>
-                            <h1 className="basis-[50%] max-w-[50%] p-1">${parseFloat(printInvoice?.totalAmount.toFixed(2)) + parseFloat(printInvoice?.discount)}</h1>
+                        <div className="border-t border-x divide-y text-xs">
+                            <div className="flex justify-between px-2 py-1">
+                                <span className="">Total</span>
+                                <span className="">${parseFloat(printInvoice?.totalAmount.toFixed(2)) + parseFloat(printInvoice?.discount)}</span>
+                            </div>
                         </div>
 
-                        <div className="flex items-center justify-center border-t border-x divide-x text-xs">
-                            <h1 className="basis-[50%] max-w-[50%] p-1">Discount</h1>
-                            <h1 className="basis-[50%] max-w-[50%] p-1">${printInvoice?.discount}</h1>
+                        <div className="border-t border-x divide-y text-xs">
+                            <div className="flex justify-between px-2 py-1">
+                                <span className="">Discount</span>
+                                <span className="">${printInvoice?.discount}</span>
+                            </div>
                         </div>
 
-                        <div className="flex items-center border divide-x text-xs">
-                            <h1 className="basis-[50%] max-w-[50%] p-1 font-medium">Grand Total</h1>
-                            <h1 className="basis-[50%] max-w-[50%] p-1 font-medium">${printInvoice?.totalAmount.toFixed(2)}</h1>
+                        <div className=" border divide-y text-xs">
+                            <div className="flex justify-between px-2 py-1 font-medium">
+                                <span className="">Grand Total</span>
+                                <span className="">${printInvoice?.totalAmount.toFixed(2)}</span>
+                            </div>
                         </div>
 
                         <div className="p-1 border mt-2 text-center font-medium text-xs">
@@ -229,20 +243,24 @@ const printView = React.forwardRef(({ view, printInvoice, appliedTaxes }, ref) =
                             printInvoice.Payments.map((payment, index) => {
                                 const date = new Date(payment.createdAt);
                                 return (
-                                    <div key={index} className="flex items-center border-b border-x divide-x text-xs">
-                                        <h1 className="basis-[50%] max-w-[50%] p-1">
-                                            {payment.paymentMethod} on {date.toLocaleDateString("en-US")}
-                                        </h1>
-                                        <h1 className="basis-[50%] max-w-[50%] p-1">
-                                            ${payment.paidAmount}
-                                        </h1>
+                                    <div key={index} className="border-b border-x divide-x text-xs">
+                                        <div className="flex justify-between px-2 py-1">
+                                            <span className="">
+                                                {payment.paymentMethod} on {date.toLocaleDateString("en-US")}
+                                            </span>
+                                            <span className="">
+                                                ${payment.paidAmount}
+                                            </span>
+                                        </div>
                                     </div>
                                 );
                             })
                         ) : (
-                            <div className="flex items-center border divide-x text-xs">
-                                <h1 className="basis-[50%] max-w-[50%] p-1">N/A</h1>
-                                <h1 className="basis-[50%] max-w-[50%] p-1">$0.00</h1>
+                            <div className="border-b border-x divide-x text-xs">
+                                <div className="flex justify-between px-2 py-1">
+                                    <span className="">N/A</span>
+                                    <span className="">$0.00</span>
+                                </div>
                             </div>
                         )}
                     </div>

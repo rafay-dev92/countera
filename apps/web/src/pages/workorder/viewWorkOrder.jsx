@@ -64,13 +64,21 @@ const ViewWorkOrder = ({ workOrderData, setWorkOrderData, componentRef, appliedT
         const confirmed = await confirm("Are you sure you want to create an invoice for this work order?");
         if (!confirmed) return;
         setIsLoading({ ...isLoading, createInvoice: true });
-        const selectedProductIds = workOrderData?.Product?.map((product) => `${product.id}:${product.workorder_product?.quantity}`);
+        const selectedProductIds = workOrderData?.Product?.map((product) => ({
+            id: product.id,
+            quantity: product.workorder_product.quantity,
+            description: product.workorder_product.description || '',
+            price: product.workorder_product.price
+        })).filter(product => product.id);
+
         const data = {
             invoiceData: {
                 totalAmount: workOrderData.totalAmount,
-                paymentStatus: "Unpaid",
+                // paymentStatus: "Unpaid",
                 CustomerId: workOrderData.CustomerId,
                 CustomerVehicleId: workOrderData.CustomerVehicleId,
+                comments: workOrderData.comments,
+                notes: workOrderData.notes,
                 BusinessId: state.business.id
             },
             "products": selectedProductIds,

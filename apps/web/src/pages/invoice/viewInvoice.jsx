@@ -11,9 +11,12 @@ import { jsPDF } from "jspdf";
 import { sendMail } from "@/services/sendMail";
 import NotesForm from "./notesForm";
 import { useConfirm } from "@/context/confirmContext";
+import { useDeleteInvoiceConfirm } from "@/context/deleteInvoiceConfirmContext";
+import { softDelInvoice } from "@/services/softDelInvoice";
 
 const ViewInvoice = ({ printInvoice, setPrintInvoice, componentRef, appliedTaxes, setEdit, close }) => {
     const confirm = useConfirm();
+    const confirmDeleteInvoice = useDeleteInvoiceConfirm();
     const { state, dispatch } = State();
     const [isPaymentFormOpen, setIsPaymentFormOpen] = useState(false);
     const [isNotesFormOpen, setIsNotesFormOpen] = useState(false);
@@ -28,27 +31,63 @@ const ViewInvoice = ({ printInvoice, setPrintInvoice, componentRef, appliedTaxes
     //     setAccordianOpen(openAccordian === index ? null : index);
     // };
 
+    const showToastMessage = (type, message) => {
+        if (type === 'success') {
+            toast.success(message)
+        }
+        else if (type === 'info') {
+            toast.info(message)
+        }
+        else {
+            toast.error(message)
+        }
+    };
+
     // Delete Invoice
     const handleDel = async () => {
-        const confirmed = await confirm();
-        if (!confirmed) return;
+        const result = await confirmDeleteInvoice();
+        if (result === null) return;
+
         setIsLoading({ ...isLoading, delete: true });
         try {
-            const res = await delInvoice(printInvoice.id, state.userToken);
+            const res = await softDelInvoice(printInvoice.id, result, state.userToken);
             const invoice = await res.json();
             if (res.status === 200) {
-                toast.success(invoice.message)
+                showToastMessage('success', invoice.message)
             }
             else if (res.status === 404) {
-                toast.info(invoice.message)
+                showToastMessage('info', invoice.message)
+            }
+            else if (res.status === 409) {
+                showToastMessage('info', invoice.message)
             }
         } catch (error) {
             console.log(error)
-            toast.error("Something went wrong");
+            showToastMessage('error', "Something went wrong");
         }
         setIsLoading({ ...isLoading, delete: false });
         close();
     }
+
+    // const confirmed = await confirm();
+    // if (!confirmed) return;
+    // setIsLoading({ ...isLoading, delete: true });
+    // try {
+    //     const res = await delInvoice(printInvoice.id, state.userToken);
+    //     const invoice = await res.json();
+    //     if (res.status === 200) {
+    //         toast.success(invoice.message)
+    //     }
+    //     else if (res.status === 404) {
+    //         toast.info(invoice.message)
+    //     }
+    // } catch (error) {
+    //     console.log(error)
+    //     toast.error("Something went wrong");
+    // }
+    // setIsLoading({ ...isLoading, delete: false });
+    // close();
+    // }
 
     const setInvoiceStatus = async (id, status) => {
         try {
@@ -142,7 +181,7 @@ const ViewInvoice = ({ printInvoice, setPrintInvoice, componentRef, appliedTaxes
                                 <div onClick={() => printInvoice?.paymentStatus !== 'Paid' && setIsPaymentFormOpen(true)} className={`w-full py-2 mx-auto ${printInvoice?.paymentStatus !== 'Paid' ? "hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer" : "text-green-500 font-bold"}`}>{printInvoice?.paymentStatus !== 'Paid' ? 'Pay' : 'Paid'}</div>
                                 <div onClick={() => { dispatch({ type: 'SET_INVOICE_VIEW', payload: false }); setEdit(true) }} className="w-full py-2 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer">Edit</div>
                                 <div onClick={() => setIsNotesFormOpen(true)} className="w-full py-2 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer">Notes</div>
-                                {!isLoading.delete ?                                
+                                {!isLoading.delete ?
                                     <div onClick={handleDel} className="w-full py-2 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer">Delete</div>
                                     :
                                     <div className="flex items-center justify-center h-fit py-2.5">

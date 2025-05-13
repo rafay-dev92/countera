@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { HomeIcon } from '@heroicons/react/24/solid';
+import { ClockIcon, HomeIcon } from '@heroicons/react/24/solid';
 import {
     Typography,
     Card,
@@ -19,23 +19,41 @@ import { State } from '@/state/Context';
 import { fetchCustomers } from '@/services/fetchCustomers';
 import { fetchProducts } from '@/services/fetchProducts';
 import moment from 'moment-timezone';
+import { fetchMonthlySales } from '@/services/fetchMontlySales';
 
 export function Home() {
     const { state } = State();
     const timezone = state.business.timezone;
     const [loading, setLoading] = useState(true);
     const [cardsData, setCardsData] = useState(statisticsCardsData);
+    const [chartsData, setChartsData] = useState(statisticsChartsData);
 
     const currentDate = new Date().toISOString().split('T')[0];
     useEffect(() => {
         if (timezone) {
-            getInvoices();            
+            getInvoices();
         }
         getCustomers();
         getProducts();
 
         setLoading(false);
     }, [timezone]);
+
+    useEffect(() => {
+        const dailySalesData = async () => {
+            const res = await fetchMonthlySales(state.userToken);
+            const data = await res.json();
+            if (res.status === 200) {
+                setChartsData(prev => {
+                    const newArray = [...prev];                
+                    newArray[1].chart.series[0].data = data?.values;
+                    newArray[1].chart.options.xaxis.categories = data?.months;
+                    return newArray;
+                });
+            }
+        };
+        dailySalesData()
+    }, []);
 
     const showToastMessage = (type, message) => {
         if (type === 'success') {
@@ -60,7 +78,7 @@ export function Home() {
             // if (state.Settings.General.invoice === 'all') {
             // }
             // else if (state.Settings.General.invoice === 'current') {
-                // totalInvoices = totalInvoices?.data.filter(invoice => invoice.current === true);
+            // totalInvoices = totalInvoices?.data.filter(invoice => invoice.current === true);
             // }
 
             if (fetchedInvoices.status === 200) {
@@ -68,11 +86,11 @@ export function Home() {
                     const invoiceDate = moment(obj.createdAt).tz(timezone).format('YYYY-MM-DD');
                     return invoiceDate === currentDate;
                 });
-            const money = invoicesWithCurrentDate.reduce((sum, invoice) => {
-                return sum + Number(invoice.totalAmount || 0);
-            }, 0);
+                const money = invoicesWithCurrentDate.reduce((sum, invoice) => {
+                    return sum + Number(invoice.totalAmount || 0);
+                }, 0);
 
-            const newArray = [...cardsData];
+                const newArray = [...cardsData];
 
                 newArray[0].value = `$${money.toFixed(2)}`;
                 newArray[1].value = invoicesWithCurrentDate.length;
@@ -177,7 +195,7 @@ export function Home() {
                         )))}
                     </div>
                     <div className="mb-6 grid grid-cols-1 gap-y-12 gap-x-6 md:grid-cols-2 xl:grid-cols-3">
-                        {statisticsChartsData.map((props) => (
+                        {chartsData.map((props) => (
                             <StatisticsChart
                                 key={props.title}
                                 {...props}

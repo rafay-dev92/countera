@@ -2,7 +2,7 @@ import {
   BanknotesIcon,
   PencilSquareIcon,
   UsersIcon,
-  ChartBarIcon,
+  CubeIcon,
 } from "@heroicons/react/24/solid";
 
 export const statisticsCardsData = [
@@ -19,7 +19,7 @@ export const statisticsCardsData = [
   },
   {
     color: "gray",
-    icon: UsersIcon,
+    icon: PencilSquareIcon,
     title: "Today's Invoices",
     value: "0",
     footer: {
@@ -30,7 +30,7 @@ export const statisticsCardsData = [
   },
   {
     color: "gray",
-    icon: PencilSquareIcon,
+    icon: UsersIcon,
     title: "Total Customers",
     value: "0",
     footer: {
@@ -41,7 +41,7 @@ export const statisticsCardsData = [
   },
   {
     color: "gray",
-    icon: ChartBarIcon,
+    icon: CubeIcon,
     title: "Total Products",
     value: "0",
     footer: {

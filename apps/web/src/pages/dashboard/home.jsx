@@ -53,7 +53,7 @@ export function Home() {
             }
         };
         dailySalesData()
-    }, []);
+    }, [state.userToken]);
 
     const showToastMessage = (type, message) => {
         if (type === 'success') {

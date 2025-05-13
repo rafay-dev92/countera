@@ -57,6 +57,13 @@ const dailySalesChart = {
         "Dec",
       ],
     },
+    yaxis: {
+      labels: {
+        formatter: function (value) {
+          return value + "k";
+        },
+      },
+    },
   },
 };
 

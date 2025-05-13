@@ -81,6 +81,7 @@ app.use("/api/address", require("./routes/Address"));
 app.use("/api/customervehicle", require("./routes/CustomerVehicle"));
 app.use("/api/payment", require("./routes/Payment"));
 app.use("/api/mail", require("./routes/Mail"));
+app.use("/api/sales", require("./routes/Sales"));
 
 app.listen(3000, (error) => {
   if (!error)

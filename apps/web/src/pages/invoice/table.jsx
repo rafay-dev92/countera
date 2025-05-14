@@ -61,7 +61,7 @@ export function Invoice() {
 
   const getInvoices = async () => {
     try {
-      const filters = { paymentStatus: ["Paid", "Partially Paid", "Unpaid"] };
+      const filters = { paymentStatus: ["Paid", "Partially Paid", "Unpaid", "Void", "Refund"] };
       const response = await fetchInvoices(state.userToken, currentPage, itemsPerPage, filters);
       const totalInvoices = await response.json();
       setInvoices(totalInvoices?.data)
@@ -179,6 +179,14 @@ export function Invoice() {
     }
   };
 
+  const invoiceStatusColors = {
+    "Paid": "green",
+    "Partially Paid": "orange",
+    "Unpaid": "red",
+    "Void": "purple",
+    "Refund": "blue",
+  };
+
   if (loading) {
     return <Spinner className="mx-auto mt-[30vh] h-10 w-10 text-gray-900/50" />
   }
@@ -270,13 +278,7 @@ export function Invoice() {
                     <td className={classes}>
                       <Typography
                         variant="small"
-                        color={
-                          paymentStatus === "Paid"
-                            ? "green"
-                            : paymentStatus === "Partially Paid"
-                              ? "orange"
-                              : "red"
-                        }
+                        color={invoiceStatusColors[paymentStatus] || "gray"}                      
                         className="font-medium"
                       >
                         {paymentStatus}

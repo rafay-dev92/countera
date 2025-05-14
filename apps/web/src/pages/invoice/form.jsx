@@ -26,7 +26,8 @@ import CustomerVehicleForm from "../customer/customerVehicleForm";
 import { fetchCustomer } from "@/services/fetchCustomer";
 import { PlusCircleIcon } from "@heroicons/react/24/outline";
 import { ArrowUturnLeftIcon } from "@heroicons/react/24/outline";
-import CustomerForm from "./customerForm";
+// import CustomerForm from "./customerForm";
+import CustomerForm from "@/utils/forms/customerForm";
 import { updateCustomerVehicle } from "@/services/updateCustomerVehicle";
 import ViewInvoice from "./viewInvoice";
 import { fetchPackages } from "@/services/fetchPackages";
@@ -744,7 +745,10 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
                               id="address"
                               name="address"
                               type="text"
-                              value={selectedCustomer?.Address ? `${selectedCustomer.Address?.street}, ${selectedCustomer.Address?.city}` : ''}
+                              value={selectedCustomer?.Address && [
+                                selectedCustomer?.Address.street,
+                                selectedCustomer?.Address.city
+                              ].filter(Boolean).join(', ')}
                               disabled
                             />
                           </div>
@@ -1243,7 +1247,7 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
           </form>
         )}
       </Dialog>
-      <CustomerForm open={isCustomerFormOpen} close={closeCustomerForm} refresh={refresh} setRefresh={setRefresh} setSelectedCustomer={setSelectedCustomer} />
+      <CustomerForm open={isCustomerFormOpen} close={closeCustomerForm} refresh={refresh} setRefresh={setRefresh} setSelectedCustomer={setSelectedCustomer} selectedItem={null} setSelectedItem={null} />
       {selectedCustomer ? <CustomerVehicleForm open={isCustomerVehicleFormOpen} close={closeCustomerVehicleForm} refresh={refresh} setRefresh={setRefresh} CustomerId={selectedCustomer?.id} getCustomerDetails={getCustomerDetails} /> : null}
       {printInvoice && Object.keys(printInvoice).length > 0 ? <PrintView view={false} printInvoice={printInvoice} ref={componentRef} appliedTaxes={appliedTaxes} /> : null}
       <ProductForm open={state?.product?.openForm} close={() => dispatch({ type: "SET_PRODUCT_DATA", payload: false })} refresh={refresh} setRefresh={setRefresh} selectedItem={null} setSelectedItem={null} />

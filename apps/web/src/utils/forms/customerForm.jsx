@@ -10,7 +10,7 @@ import { State } from "@/state/Context";
 import { addAddress } from "@/services/addAddress";
 import { updateAddress } from "@/services/updateAddress";
 import { PlusCircleIcon } from "@heroicons/react/24/outline";
-import CustomerVehicleForm from "./customerVehicleForm";
+import CustomerVehicleForm from "../../pages/customer/customerVehicleForm";
 import { fetchCustomer } from "@/services/fetchCustomer";
 import { TrashIcon } from "@heroicons/react/24/solid";
 import { delCustomerVehicle } from "@/services/delCustomerVehicle";
@@ -37,7 +37,7 @@ const schema = Yup.object().shape({
   taxable: Yup.boolean(true),
 });
 
-const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setRefresh }) => {
+const CustomerForm = ({ open, close, selectedItem, setSelectedItem, refresh, setRefresh }) => {
   const router = useNavigate();
   const { state, dispatch } = State();
   const confirm = useConfirm();
@@ -76,7 +76,7 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
   const handleClose = () => {
     clearForm(formikProps);
     setEdit(false);
-    setSelectedItem(null);
+    setSelectedItem && setSelectedItem(null);
     close();
   };
 
@@ -570,7 +570,7 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
                           <label className="p-1 font-bold">Vehicles</label>
                           <PlusCircleIcon onClick={openPopup} className="h-6 w-6 text-blue-600 cursor-pointer" />
                         </div>
-                        <MyPopUpForm />
+                        <CustomerForm />
                         {/* <select
                         className="w-full p-2 border border-gray-300 bg-inherit rounded-md"
                         label="Select Vehicle"
@@ -699,4 +699,4 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
     </>
   );
 };
-export default MyPopUpForm;
+export default CustomerForm;

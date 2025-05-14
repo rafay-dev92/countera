@@ -16,7 +16,7 @@ import {
 } from "@material-tailwind/react";
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import MyPopUpForm from "./form";
+import CustomerForm from "../../utils/forms/customerForm";
 import { fetchCustomers } from "@/services/fetchCustomers";
 import { delCustomer } from "@/services/delCustomer";
 import { toast } from "react-toastify";
@@ -387,7 +387,7 @@ export function Customers() {
         </CardFooter>
 
       </Card>
-      <MyPopUpForm open={isOpen} close={closePopup} selectedItem={selectedItem} setSelectedItem={setSelectedItem} refresh={refresh} setRefresh={setRefresh} />
+      <CustomerForm open={isOpen} close={closePopup} selectedItem={selectedItem} setSelectedItem={setSelectedItem} refresh={refresh} setRefresh={setRefresh} />
     </>
   );
 }

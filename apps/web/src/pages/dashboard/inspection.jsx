@@ -31,42 +31,23 @@ export function Inspection() {
     const customerInputRef = useRef();
 
     const [data, setData] = useState(inspectionReport);
+    const [customerInspections, setCustomerInspections] = useState([]);
+    const [selectedInspection, setSelectedInspection] = useState(null);
     const [customers, setCustomers] = useState([]);
     const [selectedCustomer, setSelectedCustomer] = useState(null);
     const [selectedVehicle, setSelectedVehicle] = useState(null);
-
     const [showCustomerSuggestions, setShowCustomerSuggestions] = useState(false);
-    // const handleStatusInputs = (index, fieldName, newValue) => {
-    //     setData(prevData => {
-    //         const newData = prevData.map((item, idx) => {
-    //             if (idx === index) {
-    //                 return {
-    //                     ...item,
-    //                     good: false,
-    //                     fair: false,
-    //                     poor: false,
-    //                     [fieldName]: newValue,
-    //                 };
-    //             }
-    //             return item;
-    //         });
-    //         return newData;
-    //     });
-    // }
+    const [refresh, setRefresh] = useState(false);
 
     const Reset = () => {
-        // setData(inspectionReport)
         clearForm(formikProps)
         setSelectedCustomer(null)
         setSelectedVehicle(null)
+        setCustomerInspections([])
+        setSelectedInspection(null)
+        setShowCustomerSuggestions(false)
         dispatch({ type: 'SET_INSPECTION_DATA', payload: null });
     }
-
-    // const handleDetailInput = (index, fieldName, newValue) => {
-    //     const newData = [...data];
-    //     newData[index][fieldName] = newValue;
-    //     setData(newData);
-    // }
 
     const handleDel = (index) => {
         const newData = values.data.filter(item => item !== values.data[index]);
@@ -80,10 +61,9 @@ export function Inspection() {
             setSelectedCustomer(selected.Customer);
             setSelectedVehicle(selected.Customer.Vehicle.find(vehicle => vehicle.id === selected.CustomerVehicleId));
             setValues({ ['customer']: selected.CustomerId, ['vehicle']: selected.CustomerVehicleId, data: JSON.parse(selected.data) });
-            // setData(JSON.parse(selected.data));
             setShowCustomerSuggestions(false);
         }
-    }, []);
+    }, [state.inspection?.selected]);
 
     const currentDate = new Date().toLocaleDateString();
 
@@ -105,6 +85,7 @@ export function Inspection() {
             const res = await addInspection(data, state.userToken);
             await res.json()
             toast.success("Inspection saved successfully")
+            setRefresh(!refresh)
             setTimeout(() => {
                 printBtnRef.current?.click();
                 Reset()
@@ -124,10 +105,12 @@ export function Inspection() {
 
     useEffect(() => {
         getCustomers();
-    }, []);
+    }, [refresh]);
 
     const handleCustomerChange = (customer) => {
         setSelectedCustomer(customer);
+        console.log(customer.Inspection)
+        setCustomerInspections(customer.Inspection);
         if (customer && customer.Vehicle.length > 0) {
             setSelectedVehicle(customer.Vehicle[0]);
             setValues({ ...values, ['customer']: customer.id, ['vehicle']: customer.Vehicle[0].id });
@@ -156,6 +139,26 @@ export function Inspection() {
             document.removeEventListener('mousedown', handleClickOutside);
         };
     }, []);
+
+    // const openInspection = () => {
+    //     if (selectedInspection) {
+    //         const inspection = customerInspections.find((inspection) => inspection.id === selectedInspection);
+    //         const updatedInspection = { ...inspection, Customer: selectedCustomer };
+    //         dispatch({ type: 'SET_INSPECTION_DATA', payload: updatedInspection })
+    //     }
+    // }
+
+    useEffect(() => {
+        if (selectedInspection) {
+            const inspection = customerInspections.find((inspection) => inspection.id === selectedInspection);
+            if (inspection) {
+                const updatedInspection = { ...inspection, Customer: selectedCustomer };
+                dispatch({ type: 'SET_INSPECTION_DATA', payload: updatedInspection })
+            }
+        } else {
+            dispatch({ type: 'SET_INSPECTION_DATA', payload: null })
+        }
+    }, [selectedInspection]);
 
     const clearForm = (formikProps) => {
         formikProps.resetForm({
@@ -207,17 +210,17 @@ export function Inspection() {
             <CardBody className="p-4 px-0">
                 <form onSubmit={handleSubmit}>
                     <div className="flex flex-col lg:flex-row items-center w-full mx-5">
-                        <div className="w-full lg:w-2/5 flex items-center justify-center lg:justify-start gap-1">
+                        <div className="w-full flex items-center justify-center lg:justify-start gap-1">
                             <Button className="w-full bg-green-600 lg:w-auto" size="md" onClick={Reset} >
                                 Reset
                             </Button>
 
-                            <div className="relative" ref={customerInputRef}>
-                                {/* <div className="flex items-center pl-2">
-                                <label className="font-bold">Customer</label>
-                            </div> */}
+                            <div className="relative mb-5" ref={customerInputRef}>
+                                <div className="flex items-center pl-3">
+                                    <label className="font-bold">Customer</label>
+                                </div>
                                 <input
-                                    className="h-full m-2 p-2 border border-gray-700/20 rounded-md text-gray-700 font-small placeholder-gray-700"
+                                    className="h-full mx-2 p-2 border border-gray-700/20 rounded-md text-gray-700 font-small placeholder-gray-700"
                                     id="customer"
                                     name="customer"
                                     type="text"
@@ -260,14 +263,14 @@ export function Inspection() {
                                 )}
                             </div>
 
-                            <div>
-                                {/* <div className="flex items-center pl-2">
-                                <label className="font-bold">Vehicle</label>
-                            </div> */}
+                            <div className='relative mb-5'>
+                                <div className="flex items-center pl-3">
+                                    <label className="font-bold">Vehicle</label>
+                                </div>
                                 <select
                                     id="vehicle"
                                     name="vehicle"
-                                    className="m-2 p-2 border border-gray-300 bg-inherit rounded-md"
+                                    className="mx-2 p-2 border border-gray-300 bg-inherit rounded-md"
                                     value={values.vehicle}
                                     onChange={(e) =>
                                         handleVehicleChange(e.target.value)
@@ -287,6 +290,33 @@ export function Inspection() {
                                     }
                                 </select>
                             </div>
+                            {/* {customerInspections?.length > 0 && ( */}
+                                <div className="flex flex-col mb-5 mx-2">
+                                    <span className="font-bold">Inspections History</span>
+                                    <div className='flex items-center gap-2 w-full'>
+                                        <select
+                                            className="w-full px-3 py-2 border border-gray-300 rounded bg-white"
+                                            onChange={(e) => setSelectedInspection(e.target.value)}
+                                        >
+                                            <option value="">Select an Inspection</option>
+                                            {customerInspections?.map((inspection) => {
+                                                const matchedVehicle = selectedCustomer?.Vehicle.find(
+                                                    (vehicle) => vehicle.id === inspection.CustomerVehicleId
+                                                );
+
+                                                return (
+                                                    <option key={inspection.id} value={inspection.id}>
+                                                        {`${inspection.createdAt.split('T')[0]} (${matchedVehicle ? matchedVehicle.make + " " + matchedVehicle.model : "Unknown Vehicle"})`}
+                                                    </option>
+                                                );
+                                            })}
+                                        </select>
+                                        {/* {selectedInspection && (
+                                            <Button onClick={openInspection} className='bg-blue-600 w-fit ms-auto'>Open</Button>
+                                        )} */}
+                                    </div>
+                                </div>
+                            {/* )} */}
                         </div>
                     </div>
                     <div className="overflow-auto">

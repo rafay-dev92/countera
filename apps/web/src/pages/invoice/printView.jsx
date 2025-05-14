@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { Typography } from "@material-tailwind/react";
 import PaidImg from "@/assets/paid.png";
 
-const INVOICE_TABLE_HEAD = ["Customer", "Status", "Payment Method", "Total"];
 const PRODUCT_TABLE_HEAD = ["Product", "Quantity", "Unit Price", "Tax", "Total Price"]
 
 const printView = React.forwardRef(({ view, printInvoice, appliedTaxes }, ref) => {
@@ -31,16 +30,9 @@ const printView = React.forwardRef(({ view, printInvoice, appliedTaxes }, ref) =
     if (Object.keys(printInvoice).length > 0) {
         return (
             <div ref={ref} className={`min-h-screen flex flex-col ${!view ? "hidden print:flex print:min-h-screen" : ""}`}>
-                <div className="grid grid-cols-3 divide-x border-b">
-                    <div className="col-span-1 flex flex-col p-2">
-                        <span className="text-[12px] font-normal ">{printInvoice?.Business.address}</span>
-                        <span className="text-[12px] font-normal ">{printInvoice?.Business.city}, {printInvoice?.Business.state}, {printInvoice?.Business.zipcode}</span>
-                        <span className="text-[12px] font-normal ">Phone: {printInvoice?.Business.tel}</span>
-                        <span className="text-[12px] font-normal ">Fax: {printInvoice?.Business.fax}</span>
-                        <span className="text-[12px] font-normal ">Email: {printInvoice?.Business.email}</span>
-                    </div>
+                <div className="grid grid-cols-2 border-b">
                     <div className="col-span-1 h-full flex">
-                        <img src={printInvoice?.Business.logo} className="rounded-xl h-[100px] w-[100px] m-auto" alt="Business logo" width={100} height={100} />
+                        <img src={printInvoice?.Business.logo} className="rounded-xl h-[100px]" alt="Business logo" height={100} />
                     </div>
                     <div className="col-span-1 flex flex-col items-end gap-1 p-2">
                         <span className="text-[12px] font-semibold">Date: {invoiceDate.toLocaleDateString("en-US")}</span>
@@ -49,7 +41,26 @@ const printView = React.forwardRef(({ view, printInvoice, appliedTaxes }, ref) =
                         <span className="text-[12px]">Permit No: {printInvoice?.Business.permitNumber}</span>
                     </div>
                 </div>
-                <div className="grid grid-cols-2 divide-x">
+                <div className="grid grid-cols-3 divide-x">
+                    <div className="col-span-1 flex flex-col p-2">
+                        <span className="text-[12px] font-normal ">{printInvoice?.Business.address}</span>
+                        <span className="text-[12px] font-normal ">{printInvoice?.Business.city}, {printInvoice?.Business.state}, {printInvoice?.Business.zipcode}</span>
+                        <span className="text-[12px] font-normal ">Phone: {printInvoice?.Business.tel}</span>
+                        <span className="text-[12px] font-normal ">Fax: {printInvoice?.Business.fax}</span>
+                        <span className="text-[12px] font-normal ">Email: {printInvoice?.Business.email}</span>
+                    </div>
+
+                    <div className="col-span-1 flex flex-col gap-1 p-2">
+                        <h2 className="text-xs font-semibold underline">Bill To:</h2>
+                        <div className="flex flex-col">
+                            <span className="text-xs">{printInvoice?.Customer.firstName} {printInvoice?.Customer.lastName}</span>
+                            <span className="text-xs">{printInvoice?.Customer?.Address && printInvoice?.Customer.Address.street}</span>
+                            <span className="text-xs">{printInvoice?.Customer?.Address && `${printInvoice?.Customer?.Address?.city}, ${printInvoice?.Customer?.Address?.state}, ${printInvoice?.Customer?.Address?.zipcode}`}</span>
+                            <span className="text-xs">{printInvoice?.Customer?.phone && `Phone: ${printInvoice?.Customer.phone}`}</span>
+                        </div>
+
+                    </div>
+
                     <div className="col-span-1 flex flex-col gap-1 p-2">
                         <h2 className="text-xs font-semibold underline">Vehicle Info:</h2>
                         <div className="grid grid-cols-2 gap-2">
@@ -78,16 +89,6 @@ const printView = React.forwardRef(({ view, printInvoice, appliedTaxes }, ref) =
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <div className="col-span-1 flex flex-col gap-1 p-2">
-                        <h2 className="text-xs font-semibold underline">Bill To:</h2>
-                        <div className="flex flex-col">
-                            <span className="text-xs">{printInvoice?.Customer.firstName} {printInvoice?.Customer.lastName}</span>
-                            <span className="text-xs">{printInvoice?.Customer?.Address && printInvoice?.Customer.Address.street}</span>
-                            <span className="text-xs">{printInvoice?.Customer?.Address && `${printInvoice?.Customer?.Address?.city}, ${printInvoice?.Customer?.Address?.state}, ${printInvoice?.Customer?.Address?.zipcode}`}</span>
-                            <span className="text-xs">{printInvoice?.Customer?.phone && `Phone: ${printInvoice?.Customer.phone}`}</span>
-                        </div>
-
                     </div>
                 </div>
 
@@ -202,7 +203,7 @@ const printView = React.forwardRef(({ view, printInvoice, appliedTaxes }, ref) =
                         <div className="flex flex-col text-xs">
                             {Object.keys(appliedTaxes).map((tax, ind) => (
                                 <div key={ind} className="border-t border-x divide-y">
-                                    <div className="flex justify-between px-2 py-1">                                    
+                                    <div className="flex justify-between px-2 py-1">
                                         <span className="">
                                             {`${tax.split('_')[0]} (${tax.split('_')[1]}${tax.split('_')[2]})`}
                                         </span>
@@ -266,9 +267,9 @@ const printView = React.forwardRef(({ view, printInvoice, appliedTaxes }, ref) =
                     </div>
                 </div>
                 <div className="flex flex-col justify-center border-t border-gray-300 p-2 gap-8">
-                    <div className="flex flex-col justify-end items-start h-full w-full gap-2">
+                    <div className="flex flex-col justify-end items-start h-full w-full gap-2 mt-6">
                         <div className="flex flex-col">
-                            <h1 className="font-medium text-xs mb-1">Terms & Conditions</h1>
+                            {/* <h1 className="font-medium text-xs mb-1">Terms & Conditions</h1>
                             <p className="text-[9px] py-1 leading-relaxed uppercase">
                                 you agree to the following terms and conditions. Our platform facilitates the purchase and sale
                                 of vehicle auto parts. All products are subject to availability and provided "as is." We are not
@@ -276,16 +277,54 @@ const printView = React.forwardRef(({ view, printInvoice, appliedTaxes }, ref) =
                                 our policies, which may change without notice. By continuing to use our services, you agree to
                                 comply with all applicable laws and regulations. For further inquiries, please contact our
                                 support team.
+                            </p> */}
+                            <div className="text-xs flex w-full mb-2">
+                                <span className="whitespace-nowrap">SignX</span>
+                                <div className=" border-t border-gray-500 mt-3 ms-2 w-48 mr-2">
+                                    {/* <p className="text-xs text-black text-center mt-1">(Customer Signature)</p> */}
+                                </div>
+                                <span>Date</span>
+                                 <div className=" border-t border-gray-500 mt-3 ms-2 w-48">
+                                </div>
+                            </div>
+                            <h2 className="font-medium text-xs italic">Thanks For Your Business!</h2>
+                            <p className="text-[9px] py-1 leading-relaxed">
+                                <span className="block">## Terms & Conditions  </span>
+                                <p className="text-[9px] py-1 leading-tight">
+                                    No verbal agreement by any salesperson is binding on the company. You are authorized to deliver and/or install
+                                    the listed products under the terms of this order. Any operation of the vehicle for testing, inspection, or delivery
+                                    is at my risk. A mechanic's lien is placed on the vehicle to secure payment for installed products. The company is
+                                    not responsible for damage or loss of items in the vehicle due to fire, theft, accident, or other uncontrollable events.
+                                    If legal action is taken to collect payment, the purchaser will cover attorney fees, court costs, and collection expenses.
+                                    The dealership is not liable for wheel damage. I acknowledge receipt and approval of this order and its terms.
+                                </p>
+                            </p>
+                            <p className="text-[9px] py-1 leading-relaxed">
+                                <span className="block">## All Sales Are Final</span>
+                                <span className="block"><b>NOTICE:</b> We are not responsible for any goods left over 3 days from above date.</span>
+                                <span className="block"><b>Return/Exchange:</b> All returns or cancellations subject to freight and hauling charges and a 25% restocking fee.</span>
+                                <span className="block"><b>NOTICE:</b> Customer is responsible for maintaining:</span>
+                                <span className="block">a) tire air pressure per manufacturer specifications</span>
+                                <span className="block">b) wire wheels per manufacturer specifications .The dealership is not liable for issues with lugs, nuts, or studs.</span>
+                            </p>
+                            <p className="text-[9px] py-1 leading-relaxed">
+                                <span className="block"> ## Warranty Disclaimer</span>
+                                <p className="text-[9px] py-1 leading-tight">
+                                    All product warranties are provided solely by the manufacturer. The seller expressly disclaims all express or implied warranties,
+                                    including merchantability or fitness for a particular purpose, and does not authorize any other party to assume liability on its behalf.
+                                    The buyer may not claim consequential, incidental, or indirect damages, including property damage, lost time, or lost income.
+                                </p>
+
                             </p>
                         </div>
                     </div>
 
-                    <div className="text-xs flex w-full">
+                    {/* <div className="text-xs flex w-full">
                         <p className="whitespace-nowrap">I acknowledge that above and receipt to the invoice</p>
                         <div className=" border-t border-gray-500 mt-3 ms-2 w-full">
                             <p className="text-xs text-black text-center mt-1">(Customer Signature)</p>
                         </div>
-                    </div>
+                    </div> */}
                 </div>
             </div>
         );

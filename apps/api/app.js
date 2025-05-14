@@ -6,6 +6,9 @@ const { exec } = require('child_process');
 const app = express();
 const fs = require("fs");
 
+// Serve the uploads folder statically
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
 const productDir = path.join(__dirname, "uploads/products");
 const businessDir = path.join(__dirname, "uploads/business");
 // Check if uploads directory exists, and create it if it doesn't

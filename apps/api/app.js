@@ -1,13 +1,10 @@
 const express = require("express");
 const cors = require("cors");
-const cron = require('node-cron');
-const path = require('path');
-const { exec } = require('child_process');
+const cron = require("node-cron");
+const path = require("path");
+const { exec } = require("child_process");
 const app = express();
 const fs = require("fs");
-
-// Serve the uploads folder statically
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 const productDir = path.join(__dirname, "uploads/products");
 const businessDir = path.join(__dirname, "uploads/business");
@@ -31,15 +28,17 @@ if (!fs.existsSync(backupDir)) {
 }
 
 // Schedule backup to run at 12 AM (midnight) every day
-cron.schedule('0 0 * * *', () => {
+cron.schedule("0 0 * * *", () => {
   const now = new Date();
   console.log(`[${now.toISOString()}] Starting scheduled database backup...`);
-  const backupScript = path.join(__dirname, 'scripts', 'backup.js');
-  
+  const backupScript = path.join(__dirname, "scripts", "backup.js");
+
   exec(`node ${backupScript}`, (error, stdout, stderr) => {
     const endTime = new Date();
     if (error) {
-      console.error(`[${endTime.toISOString()}] Backup failed: ${error.message}`);
+      console.error(
+        `[${endTime.toISOString()}] Backup failed: ${error.message}`
+      );
       return;
     }
     if (stderr) {
@@ -57,15 +56,16 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 const corsOptions = {
-  origin: ['http://localhost:5173', 'https://sales4x-fe.vercel.app'],
+  origin: ["http://localhost:5173", "https://sales4x-fe.vercel.app"],
 };
 app.use(cors(corsOptions));
 
 app.get("/", (req, res) => {
   res.status(200);
-  res.send("Home");
+  res.send("Hello from Sales4X API");
 });
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use("/uploads/business", express.static(path.join(__dirname, "uploads/business")));
+app.use("/uploads/products", express.static(path.join(__dirname, "uploads/products")));
 app.use("/api/user", require("./routes/User"));
 app.use("/api/permission", require("./routes/Permission"));
 app.use("/api/business", require("./routes/Business"));

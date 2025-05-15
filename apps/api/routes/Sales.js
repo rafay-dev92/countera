@@ -15,7 +15,7 @@ router.get("/monthly", fetchUser, async (req, res) => {
     const salesData = await Invoice.findAll({
       attributes: [
         [fn('MONTH', col('createdAt')), 'month'],
-        [fn('SUM', col('totalAmount')), 'totalSales'],
+        [fn('SUM', col('paidAmount')), 'totalSales'],
       ],
       where: {
         paymentStatus: { [Op.in]: ['Paid', 'Partially Paid'] },

@@ -33,6 +33,11 @@ module.exports = (sequelize) => {
                 }
             }
         },
+        paidAmount: {
+            type: DataTypes.FLOAT,
+            allowNull: false,
+            defaultValue: 0,
+        },
         notes: {
             type: DataTypes.STRING,
             allowNull: true,
@@ -40,6 +45,36 @@ module.exports = (sequelize) => {
         comments: {
             type: DataTypes.STRING,
             allowNull: true,
+        },
+        manufactureWarranty: {
+            type: DataTypes.BOOLEAN,
+            allowNull: false,
+            defaultValue: false,
+        },
+        roadHazardWarranty: {
+            type: DataTypes.BOOLEAN,
+            allowNull: false,
+            defaultValue: false,
+        },
+        flatRepairWarranty: {
+            type: DataTypes.BOOLEAN,
+            allowNull: false,
+            defaultValue: false,
+        },
+        rotationWarranty: {
+            type: DataTypes.BOOLEAN,
+            allowNull: false,
+            defaultValue: false,
+        },
+        noWarranty: {
+            type: DataTypes.BOOLEAN,
+            allowNull: false,
+            defaultValue: false,
+        },
+        balanceWarranty: {
+            type: DataTypes.BOOLEAN,
+            allowNull: false,
+            defaultValue: false,
         },
         CustomerId: {
             type: DataTypes.UUID,

@@ -22,6 +22,11 @@ router.post("/create", async (req, res) => {
   try {
     const paymentData = req.body;
     const newPayment = await Payment.create(paymentData);
+    const invoice = await newPayment.getInvoice();
+    const updatedInvoice = await invoice.update({
+      paidAmount: invoice.paidAmount + newPayment.paidAmount,
+    });
+    await updatedInvoice.save();
     res.json(newPayment);
   } catch (error) {
     console.error(error);

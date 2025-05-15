@@ -8,11 +8,6 @@ const printView = React.forwardRef(({ view, printInvoice, appliedTaxes }, ref) =
 
     const invoiceDate = new Date(printInvoice?.createdAt);
 
-    const formatCreatedAt = (createdAt) => {
-        const date = new Date(createdAt);
-        return date.toLocaleString();
-    };
-
     const calculateAmount = (price, quantity) => {
         const unitPrice = parseFloat(price) || 0;
         const qty = parseFloat(quantity) || 0;
@@ -27,11 +22,13 @@ const printView = React.forwardRef(({ view, printInvoice, appliedTaxes }, ref) =
         return total.toFixed(2);
     };
 
+    console.log('printInvoice', printInvoice);
+
     if (Object.keys(printInvoice).length > 0) {
         return (
             <div ref={ref} className={`min-h-screen flex flex-col ${!view ? "hidden print:flex print:min-h-screen" : ""}`}>
                 <div className="grid grid-cols-2 border-b">
-                    <div className="col-span-1 h-full flex">
+                    <div className="col-span-1 h-full flex p-1">
                         <img src={printInvoice?.Business.logo} className="rounded-xl h-[100px]" alt="Business logo" height={100} />
                     </div>
                     <div className="col-span-1 flex flex-col items-end gap-1 p-2">
@@ -58,7 +55,6 @@ const printView = React.forwardRef(({ view, printInvoice, appliedTaxes }, ref) =
                             <span className="text-xs">{printInvoice?.Customer?.Address && `${printInvoice?.Customer?.Address?.city}, ${printInvoice?.Customer?.Address?.state}, ${printInvoice?.Customer?.Address?.zipcode}`}</span>
                             <span className="text-xs">{printInvoice?.Customer?.phone && `Phone: ${printInvoice?.Customer.phone}`}</span>
                         </div>
-
                     </div>
 
                     <div className="col-span-1 flex flex-col gap-1 p-2">
@@ -284,10 +280,33 @@ const printView = React.forwardRef(({ view, printInvoice, appliedTaxes }, ref) =
                                     {/* <p className="text-xs text-black text-center mt-1">(Customer Signature)</p> */}
                                 </div>
                                 <span>Date</span>
-                                 <div className=" border-t border-gray-500 mt-3 ms-2 w-48">
+                                <div className=" border-t border-gray-500 mt-3 ms-2 w-48">
                                 </div>
                             </div>
                             <h2 className="font-medium text-xs italic">Thanks For Your Business!</h2>
+                            <p className="text-[9px] py-1 leading-relaxed">
+                                <span className="block">## Tire Warranty Options</span>
+                                <div className="flex flex-wrap gap-3 text-[9px]">
+                                    {[
+                                        { key: "manufactureWarranty", label: "Manufacturer Warranty" },
+                                        { key: "roadHazardWarranty", label: "Road Hazard" },
+                                        { key: "noWarranty", label: "No Warranty" },
+                                        { key: "flatRepairWarranty", label: "Flat Repair" },
+                                        { key: "rotationWarranty", label: "Rotation" },
+                                        { key: "balance", label: "Balance" },
+                                    ].map(({ key, label }) => (
+                                        <label key={key} className="flex items-center gap-1">
+                                            <input
+                                                type="checkbox"
+                                                className="w-3 h-3"
+                                                checked={!!printInvoice?.[key]}
+                                                readOnly
+                                            />
+                                            <span>{label}</span>
+                                        </label>
+                                    ))}
+                                </div>
+                            </p>
                             <p className="text-[9px] py-1 leading-relaxed">
                                 <span className="block">## Terms & Conditions  </span>
                                 <p className="text-[9px] py-1 leading-tight">

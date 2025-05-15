@@ -25,13 +25,13 @@ const websiteViewsChart = {
   },
 };
 
-const dailySalesChart = {
+const monthlySalesChart = {
   type: "line",
   height: 220,
   series: [
     {
       name: "Sales",
-      data: [50, 40, 300, 320, 500, 350, 200, 230, 500],
+      data: [50, 40, 150, 70, 250, 300, 320, 500, 350, 200, 230, 500],
     },
   ],
   options: {
@@ -46,6 +46,9 @@ const dailySalesChart = {
     xaxis: {
       ...chartsConfig.xaxis,
       categories: [
+        "Jan",
+        "Feb",
+        "Mar",
         "Apr",
         "May",
         "Jun",
@@ -60,7 +63,7 @@ const dailySalesChart = {
     yaxis: {
       labels: {
         formatter: function (value) {
-          return value + "k";
+          return value.toFixed(2) + "k";
         },
       },
     },
@@ -124,7 +127,7 @@ export const statisticsChartsData = [
     title: "Monthly Sales",
     // description: "15% increase in today sales",
     // footer: "updated 4 min ago",
-    chart: dailySalesChart,
+    chart: monthlySalesChart,
   },
   {
     color: "white",

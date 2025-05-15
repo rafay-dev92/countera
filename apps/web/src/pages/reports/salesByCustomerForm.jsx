@@ -42,7 +42,7 @@ function SalesByCustomerForm({ open, close, setReportData }) {
     const onSubmit = async (values) => {
         setIsLoading(true);
         try {
-            const filters = {paymentStatus: ['Paid', 'Partially Paid', 'Unpaid'], CustomerId: values.customer, isReport: true, order: 'ASC'}
+            const filters = {paymentStatus: ['Paid', 'Partially Paid'], CustomerId: values.customer, isReport: true, order: 'ASC'}
 
             const fetchedInvoices = await fetchInvoices(state.userToken, null, null, filters);
             const totalInvoices = await fetchedInvoices.json();

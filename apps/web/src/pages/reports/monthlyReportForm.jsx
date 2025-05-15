@@ -51,7 +51,7 @@ function MonthlyReportForm({ open, close, setReportData }) {
                 month: selectedMonth.getMonth(),
                 day: moment(selectedMonth).daysInMonth()
             }, timezone).endOf('day').utc().toDate();
-            const filters = { paymentStatus: ['Paid', 'Partially Paid', 'Unpaid'], startDate, endDate, isReport: true, order: 'ASC' }
+            const filters = { paymentStatus: ['Paid', 'Partially Paid'], startDate, endDate, isReport: true, order: 'ASC' }
 
             // fetch invoices
             const fetchedInvoices = await fetchInvoices(state.userToken, null, null, filters);

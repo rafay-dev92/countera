@@ -5,7 +5,7 @@ import { StarIcon } from '@heroicons/react/24/solid';
 
 const MonthlyReportPreview = React.forwardRef(({ invoices, productsCategories, taxes }, ref) => {
     // const productsCategoriesPrices = productsCategories.map(category => { return `${category} Price` });
-    const INVOICE_TABLE_HEAD = ["Date", "Invoice", "Total", ...productsCategories, ...taxes];
+    const INVOICE_TABLE_HEAD = ["Date", "Invoice", "Paid By", "Total", ...productsCategories, ...taxes];
     const { state } = State();
     const calculateTaxes = (products, customerType) => {
         if (customerType === 'business') return {};
@@ -51,7 +51,7 @@ const MonthlyReportPreview = React.forwardRef(({ invoices, productsCategories, t
         const isCustomerTaxExempt = invoice.Customer?.customerType === 'business';
         if (isCustomerTaxExempt) return sum;
         const matchedProducts = invoice.Product?.filter(p => p.taxable) || [];
-        matchedProducts.forEach(matchedProduct => {            
+        matchedProducts.forEach(matchedProduct => {
             const quantity = matchedProduct?.invoice_product?.quantity || 0;
             const price = matchedProduct?.price || 0;
             sum += price * quantity;
@@ -63,7 +63,7 @@ const MonthlyReportPreview = React.forwardRef(({ invoices, productsCategories, t
         const isCustomerTaxExempt = invoice.Customer?.customerType === 'business';
         if (!isCustomerTaxExempt) return sum;
         const matchedProducts = invoice.Product?.filter(p => p.taxable) || [];
-        matchedProducts.forEach(matchedProduct => {            
+        matchedProducts.forEach(matchedProduct => {
             const quantity = matchedProduct?.invoice_product?.quantity || 0;
             const price = matchedProduct?.price || 0;
             sum += price * quantity;
@@ -73,7 +73,7 @@ const MonthlyReportPreview = React.forwardRef(({ invoices, productsCategories, t
 
     const nonTaxableLabourTotal = invoices.reduce((sum, invoice) => {
         const matchedProducts = invoice.Product?.filter(p => !p.taxable);
-        matchedProducts.forEach(matchedProduct => {            
+        matchedProducts.forEach(matchedProduct => {
             const quantity = matchedProduct?.invoice_product?.quantity || 0;
             const price = matchedProduct?.price || 0;
             sum += price * quantity;
@@ -123,8 +123,8 @@ const MonthlyReportPreview = React.forwardRef(({ invoices, productsCategories, t
                     <tbody className="bg-white divide-y divide-gray-200">
                         {invoices?.map((item, index) => {
                             const productTaxes = calculateTaxes(item.Product, item.Customer?.customerType);
-                            const formattedDate = new Date(item.createdAt).toLocaleDateString("en-PK", {
-                                timeZone: "Asia/Karachi", // Adjusts to Pakistan Standard Time
+                            const formattedDate = new Date(item.createdAt).toLocaleDateString("en-US", {
+                                timeZone: state.business.timezone ? state.business.timezone : '',
                                 year: "numeric",
                                 month: "2-digit",
                                 day: "2-digit",
@@ -137,7 +137,7 @@ const MonthlyReportPreview = React.forwardRef(({ invoices, productsCategories, t
                                             color="blue-gray"
                                             className="font-normal leading-none"
                                         >
-                                           {item.Customer?.customerType === 'business'? <StarIcon className='w-3.5 h-3.5 mb-1 text-blue-600 inline' /> : null} {formattedDate}
+                                            {item.Customer?.customerType === 'business' ? <StarIcon className='w-3.5 h-3.5 mb-1 text-blue-600 inline' /> : null} {formattedDate}
                                         </Typography>
                                     </td>
                                     <td className="p-4 border-b border-blue-gray-50">
@@ -149,6 +149,15 @@ const MonthlyReportPreview = React.forwardRef(({ invoices, productsCategories, t
                                             INV{String(item.invoiceNumber).padStart(4, '0')}
                                         </Typography>
                                     </td>
+                                     <td className="p-4 border-b border-blue-gray-50">
+                                        <Typography
+                                            variant="small"
+                                            color="blue-gray"
+                                            className="font-normal leading-none"
+                                        >
+                                            {item.Payments.map(payment => payment.paymentMethod).join(', ')}
+                                        </Typography>
+                                    </td>
                                     <td className="p-4 border-b border-blue-gray-50">
                                         <Typography
                                             variant="small"
@@ -157,7 +166,7 @@ const MonthlyReportPreview = React.forwardRef(({ invoices, productsCategories, t
                                         >
                                             {item.totalAmount}
                                         </Typography>
-                                    </td>
+                                    </td>                                   
                                     {productsCategories.map((category, idx) => {
                                         const price = item.Product?.find(item => item.Category.name === category)?.price || 0;
                                         const quantity = item.Product?.find(item => item.Category.name === category)?.invoice_product?.quantity || 0;
@@ -219,6 +228,7 @@ const MonthlyReportPreview = React.forwardRef(({ invoices, productsCategories, t
                     <tr className="bg-gray-100">
                         <td></td>
                         <td></td>
+                        <td></td>
 
                         <td className="p-4 border-t font-semibold text-blue-gray-700">
                             {invoices.reduce((sum, item) => sum + item.totalAmount, 0).toFixed(2)}
@@ -226,7 +236,7 @@ const MonthlyReportPreview = React.forwardRef(({ invoices, productsCategories, t
 
                         {productTotals.map((total, idx) => (
                             <td key={idx} className="p-4 border-t font-semibold text-blue-gray-700">
-                                {total}
+                                {total.toFixed(2)}
                             </td>
                         ))}
 
@@ -242,18 +252,18 @@ const MonthlyReportPreview = React.forwardRef(({ invoices, productsCategories, t
                 <div className="mt-10 border border-gray-400 p-4 rounded-md w-full justify-start max-w-md mr-auto">
                     <h2 className="text-lg font-semibold text-center mb-2">{state.business.name}</h2>
                     <div className="grid grid-cols gap-y-2 gap-x-4 text-sm border-t border-gray-300 pt-2">
-                    <div className='flex justify-between'>
-                        <span className="font-medium">Taxable sales parts:</span>
-                        <span className="text-right">{taxablePartsTotal.toFixed(2)}</span>
-                    </div>
-                    <div className='flex justify-between'>
-                        <span className="font-medium">Non-taxable sales labour:</span>
-                        <span className="text-right">{nonTaxableLabourTotal.toFixed(2)}</span>
-                    </div>
-                    <div className='flex justify-between'>
-                        <span className="font-medium">Non-taxable sales - wholesales:</span>
-                        <span className="text-right">{nonTaxableWholeSaleTotal.toFixed(2)}</span>
-                    </div>
+                        <div className='flex justify-between'>
+                            <span className="font-medium">Taxable sales parts:</span>
+                            <span className="text-right">{taxablePartsTotal.toFixed(2)}</span>
+                        </div>
+                        <div className='flex justify-between'>
+                            <span className="font-medium">Non-taxable sales labour:</span>
+                            <span className="text-right">{nonTaxableLabourTotal.toFixed(2)}</span>
+                        </div>
+                        <div className='flex justify-between'>
+                            <span className="font-medium">Non-taxable sales - wholesales:</span>
+                            <span className="text-right">{nonTaxableWholeSaleTotal.toFixed(2)}</span>
+                        </div>
                         {taxTotals.map((total, idx) => (
                             <div key={idx} className='flex justify-between'>
                                 <span className="font-medium">{total.name} collected:</span>

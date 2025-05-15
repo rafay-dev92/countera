@@ -79,11 +79,11 @@ function Profile() {
             img.src = URL.createObjectURL(e.target.files[0]);
 
             img.onload = () => {
-                if (img.width === REQUIRED_WIDTH && img.height === REQUIRED_HEIGHT) {
-                    showToastMessage('success', 'Image uploaded successfully');
-                } else {
-                    showToastMessage('error', `Invalid dimensions! Please upload an image of ${REQUIRED_WIDTH}x${REQUIRED_HEIGHT}px.`);
-                }
+                showToastMessage('success', 'Image uploaded successfully');
+                // if (img.width === REQUIRED_WIDTH && img.height === REQUIRED_HEIGHT) {
+                // } else {
+                //     showToastMessage('error', `Invalid dimensions! Please upload an image of ${REQUIRED_WIDTH}x${REQUIRED_HEIGHT}px.`);
+                // }
                 URL.revokeObjectURL(img.src)
             }
         }

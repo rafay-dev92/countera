@@ -9,6 +9,7 @@ import {
   Dialog,
   IconButton,
   Button,
+  Checkbox
 } from "@material-tailwind/react";
 import {
   XCircleIcon
@@ -46,6 +47,12 @@ const schema = Yup.object().shape({
   customer: Yup.string().required("Customer is required"),
   vehicle: Yup.string().required("Vehicle is required"),
   comments: Yup.string(),
+  manufactureWarranty: Yup.boolean().default(false),
+  roadHazardWarranty: Yup.boolean().default(false),
+  flatRepairWarranty: Yup.boolean().default(false),
+  rotationWarranty: Yup.boolean().default(false),
+  noWarranty: Yup.boolean().default(false),
+  balanceWarranty: Yup.boolean().default(false),
 });
 
 const MyPopUpForm = ({ refresh, setRefresh, close }) => {
@@ -234,9 +241,9 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
 
     const data = {
       invoiceData: {
+        ...values,
         totalAmount: calculateTotalAmountWithTax() - discount,
         discount: discount,
-        // paymentStatus: "Unpaid",
         CustomerId: selectedCustomer.id,
         CustomerVehicleId: selectedVehicle.id,
         comments: values.comments,
@@ -560,11 +567,23 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
         customer: "",
         vehicle: "",
         comments: "",
+        manufactureWarranty: false,
+        roadHazardWarranty: false,
+        flatRepairWarranty: false,
+        rotationWarranty: false,
+        noWarranty: false,
+        balanceWarranty: false,
       },
       errors: {
         customer: "",
         vehicle: "",
         comments: "",
+        manufactureWarranty: false,
+        roadHazardWarranty: false,
+        flatRepairWarranty: false,
+        rotationWarranty: false,
+        noWarranty: false,
+        balanceWarranty: false,
       },
     });
     setSelectedCustomer(null);
@@ -586,6 +605,12 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
       customer: "",
       vehicle: "",
       comments: "",
+      manufactureWarranty: false,
+      roadHazardWarranty: false,
+      flatRepairWarranty: false,
+      rotationWarranty: false,
+      noWarranty: false,
+      balanceWarranty: false,
     },
     validationSchema: schema,
     onSubmit,
@@ -1115,7 +1140,49 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
                     </table>
 
                     <div className="flex">
-                      <div className="basis-[50%] max-w-[50%]">
+                      <div className="basis-[50%] max-w-[50%] grid grid-cols-1 sm:grid-cols-2 gap-4 p-4">
+                        <Checkbox
+                          id="manufactureWarranty"
+                          name="manufactureWarranty"
+                          label="Manufacture Warranty"
+                          checked={values.manufactureWarranty}
+                          onChange={handleChange}
+                        />
+                        <Checkbox
+                          id="roadHazardWarranty"
+                          name="roadHazardWarranty"
+                          label="Road Hazard Warranty"
+                          checked={values.roadHazardWarranty}
+                          onChange={handleChange}
+                        />
+                        <Checkbox
+                          id="flatRepairWarranty"
+                          name="flatRepairWarranty"
+                          label="Flat Repair Warranty"
+                          checked={values.flatRepairWarranty}
+                          onChange={handleChange}
+                        />
+                        <Checkbox
+                          id="rotationWarranty"
+                          name="rotationWarranty"
+                          label="Rotation Warranty"
+                          checked={values.rotationWarranty}
+                          onChange={handleChange}
+                        />
+                        <Checkbox
+                          id="noWarranty"
+                          name="noWarranty"
+                          label="No Warranty"
+                          checked={values.noWarranty}
+                          onChange={handleChange}
+                        />
+                        <Checkbox
+                          id="balanceWarranty"
+                          name="balanceWarranty"
+                          label="Balance"
+                          checked={values.balance}
+                          onChange={handleChange}
+                        />
                       </div>
 
                       <div className="basis-[50%] max-w-[50%] border my-1 font-normal">

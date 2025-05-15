@@ -25,11 +25,12 @@ export function Home() {
     const { state } = State();
     const timezone = state.business.timezone;
     const [loading, setLoading] = useState(true);
+    const [chartLoading, setChartLoading] = useState(true);
     const [cardsData, setCardsData] = useState(statisticsCardsData);
     const [chartsData, setChartsData] = useState(statisticsChartsData);
 
-    const currentDate = new Date().toISOString().split('T')[0];
     useEffect(() => {
+        setLoading(true);
         if (timezone) {
             getInvoices();
         }
@@ -45,14 +46,36 @@ export function Home() {
             const data = await res.json();
             if (res.status === 200) {
                 setChartsData(prev => {
-                    const newArray = [...prev];                
-                    newArray[1].chart.series[0].data = data?.values;
-                    newArray[1].chart.options.xaxis.categories = data?.months;
-                    return newArray;
+                    return prev.map((chart, index) => {
+                        if (index === 1) {
+                            return {
+                                ...chart,
+                                chart: {
+                                    ...chart.chart,
+                                    series: [{
+                                        ...chart.chart.series[0],
+                                        data: data?.values || [],
+                                    }],
+                                    options: {
+                                        ...chart.chart.options,
+                                        xaxis: {
+                                            ...chart.chart.options.xaxis,
+                                            categories: data?.months || [],
+                                        },
+                                    },
+                                },
+                            };
+                        }
+                        return chart;
+                    });
                 });
             }
         };
-        dailySalesData()
+        setChartLoading(true);
+        dailySalesData();
+        setTimeout(() => {
+            setChartLoading(false);
+        }, 1000);
     }, [state.userToken]);
 
     const showToastMessage = (type, message) => {
@@ -194,23 +217,16 @@ export function Home() {
                             />
                         )))}
                     </div>
-                    <div className="mb-6 grid grid-cols-1 gap-y-12 gap-x-6 md:grid-cols-2 xl:grid-cols-3">
-                        {chartsData.map((props) => (
-                            <StatisticsChart
-                                key={props.title}
-                                {...props}
-                            // footer={
-                            //     <Typography
-                            //         variant="small"
-                            //         className="flex items-center font-normal text-blue-gray-600"
-                            //     >
-                            //         <ClockIcon strokeWidth={2} className="h-4 w-4 text-blue-gray-400" />
-                            //         &nbsp;{props.footer}
-                            //     </Typography>
-                            // }
-                            />
-                        ))}
-                    </div>
+                    {chartLoading ? <Spinner className="mx-auto mt-[30vh] h-10 w-10 text-gray-900/50" /> :
+                        <div className="mb-6 grid grid-cols-1 gap-y-12 gap-x-6 md:grid-cols-2 xl:grid-cols-3">
+                            {chartsData.map((props) => (
+                                <StatisticsChart
+                                    key={props.title}
+                                    {...props}
+                                />
+                            ))}
+                        </div>
+                    }
                 </div>
             </div>
         </div>

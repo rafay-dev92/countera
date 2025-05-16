@@ -28,7 +28,7 @@ const ViewQuotation = ({ quotationData, setQuotationData, componentRef, appliedT
     
     // Delete Invoice
     const handleDel = async () => {
-        const confirmed = await confirm();
+        const confirmed = await confirm("Do you really want to delete this quotation?");
         if (!confirmed) return;
         setIsLoading({ ...isLoading, delete: true });
         try {

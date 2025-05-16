@@ -28,7 +28,7 @@ const ViewWorkOrder = ({ workOrderData, setWorkOrderData, componentRef, appliedT
     
     // Delete Invoice
     const handleDel = async () => {
-        const confirmed = await confirm();
+        const confirmed = await confirm("Are you sure you want to delete this work order?");
         if (!confirmed) return;
         setIsLoading({ ...isLoading, delete: true });
         try {

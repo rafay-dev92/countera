@@ -24,116 +24,81 @@ const printView = React.forwardRef(({view, quotationData, appliedTaxes}, ref) =>
 
     if (quotationData && Object.keys(quotationData).length > 0) {
         return (
-            <div ref={ref} className={`${!view ? "hidden print:block" : ""}`}>
-                <div className="flex items-center justify-between p-4">
-                    <div className="flex flex-col gap-1">
-                        <h3 className="text-2xl font-bold mb-3">{quotationData?.Business.name}</h3>
-                        <div className="flex items-center gap-4">
-                            <div className="flex flex-col items-start justify-start">
-                                <span className="text-sm font-normal text-black">{quotationData?.Business.address}</span>
-                                <span className="text-sm font-normal text-black">{quotationData?.Business.city}, {quotationData?.Business.state}, {quotationData?.Business.zipcode}</span>
-                                <span className="text-sm font-normal text-black">Phone: {quotationData?.Business.tel}</span>
-                                <span className="text-sm font-normal text-black">Fax: {quotationData?.Business.fax}</span>
-                                <span className="text-sm font-normal text-black">Email: {quotationData?.Business.email}</span>
-                            </div>
-                            <img src={quotationData?.Business.logo} className="rounded-xl h-[100px] w-[100px]" alt="Business logo" width={100} height={100} />
-                        </div>
+            <div ref={ref} className={`min-h-screen flex flex-col ${!view ? "hidden print:flex print:min-h-screen" : ""}`}>
+                 <div className="grid grid-cols-2 border-b">
+                    <div className="col-span-1 h-full flex p-1">
+                        <img src={quotationData?.Business.logo} className="rounded-xl h-[100px]" alt="Business logo" height={100} />
                     </div>
-                    {quotationData?.approved && (
-                        <div className="">
-                            <img src={ApprovedImg} alt="approved" width={170} height={170} />
-                        </div>
-                    )}
-                    <div className="flex flex-col items-end gap-1">
-                        <span className="text-sm font-semibold">Date: {quotationDate.toLocaleDateString("en-US")}</span>
-                        <span className="text-sm">Quotation No: QUT{`${quotationData?.quotationNumber}`.padStart(4, '0')}</span>
-                        <span className="text-sm">License No: {quotationData?.Business.licenseNumber}</span>
-                        <span className="text-sm">Permit No: {quotationData?.Business.permitNumber}</span>
+                    <div className="col-span-1 flex flex-col items-end gap-1 p-2">
+                        <span className="text-[12px] font-semibold">Date: {quotationDate.toLocaleDateString("en-US")}</span>
+                        <span className="text-[12px]">Quote No: INV{`${quotationData?.quotationNumber}`.padStart(4, '0')}</span>
+                        <span className="text-[12px]">License No: {quotationData?.Business.licenseNumber}</span>
+                        <span className="text-[12px]">Permit No: {quotationData?.Business.permitNumber}</span>
                     </div>
                 </div>
-                <div className="flex justify-between items-center p-4">
-                    <div>
-                        <table className="w-full min-w-max table-auto text-left">
-                            <thead>
-                                <tr>
-                                    <th className="border-y border-blue-gray-100 bg-blue-gray-50/50 p-4">
-                                        <Typography
-                                            variant="small"
-                                            color="blue-gray"
-                                            className="font-normal leading-none opacity-70"
-                                        >
-                                            Bill To
-                                        </Typography>
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td className="p-2 border-b border-blue-gray-50 space-y-2">
-                                        <Typography
-                                            variant="small"
-                                            color="blue-gray"
-                                            className="font-normal leading-none"
-                                        >
-                                            {quotationData.Customer.firstName} {quotationData.Customer.lastName}
-                                        </Typography>
-                                        <Typography
-                                            variant="small"
-                                            color="blue-gray"
-                                            className="font-normal leading-none"
-                                        >
-                                            {quotationData?.Customer.Address.street}
-                                        </Typography>
-                                        <Typography
-                                            variant="small"
-                                            color="blue-gray"
-                                            className="font-normal leading-none"
-                                        >
-                                            {quotationData?.Customer.Address.city}, {quotationData?.Customer.Address.state}, {quotationData?.Customer.Address.zipcode}
-                                        </Typography>
-                                        <Typography
-                                            variant="small"
-                                            color="blue-gray"
-                                            className="font-normal leading-none"
-                                        >
-                                            Phone: {quotationData?.Customer.phone}
-                                        </Typography>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+
+                <div className="grid grid-cols-3 divide-x">
+                    <div className="col-span-1 flex flex-col p-2">
+                        <span className="text-[12px] font-normal ">{quotationData?.Business.address}</span>
+                        <span className="text-[12px] font-normal ">{quotationData?.Business.city}, {quotationData?.Business.state}, {quotationData?.Business.zipcode}</span>
+                        <span className="text-[12px] font-normal ">Phone: {quotationData?.Business.tel}</span>
+                        <span className="text-[12px] font-normal ">Fax: {quotationData?.Business.fax}</span>
+                        <span className="text-[12px] font-normal ">Email: {quotationData?.Business.email}</span>
                     </div>
-                    <div className="flex border border-black-2">
-                        <div className="flex flex-col divide-y">
-                            <span className="text-xs p-2">License No:</span>
-                            <span className="text-xs p-2">Odometer</span>
-                            <span className="text-xs p-2">Year</span>
-                            <span className="text-xs p-2">Make</span>
-                            <span className="text-xs p-2">Model</span>
+
+                    <div className="col-span-1 flex flex-col gap-1 p-2">
+                        <h2 className="text-xs font-semibold underline">Bill To:</h2>
+                        <div className="flex flex-col">
+                            <span className="text-xs">{quotationData?.Customer.firstName} {quotationData?.Customer.lastName}</span>
+                            <span className="text-xs">{quotationData?.Customer?.Address && quotationData?.Customer.Address.street}</span>
+                            <span className="text-xs">{quotationData?.Customer?.Address && `${quotationData?.Customer?.Address?.city}, ${quotationData?.Customer?.Address?.state}, ${quotationData?.Customer?.Address?.zipcode}`}</span>
+                            <span className="text-xs">{quotationData?.Customer?.phone && `Phone: ${quotationData?.Customer.phone}`}</span>
                         </div>
-                        <div className="flex flex-col divide-y">
-                            <span className="text-xs p-2">{quotationData?.CustomerVehicle.licenseNo? quotationData?.CustomerVehicle.licenseNo : 'N/A'}</span>
-                            <span className="text-xs p-2">{quotationData?.CustomerVehicle.odometer}</span>
-                            <span className="text-xs p-2">{quotationData?.CustomerVehicle.year}</span>
-                            <span className="text-xs p-2">{quotationData?.CustomerVehicle.make}</span>
-                            <span className="text-xs p-2">{quotationData?.CustomerVehicle.model}</span>
+                    </div>
+
+                    <div className="col-span-1 flex flex-col gap-1 p-2">
+                        <h2 className="text-xs font-semibold underline">Vehicle Info:</h2>
+                        <div className="grid grid-cols-2 gap-2">
+                            <div className="col-span-1 flex gap-1">
+                                <div className="flex flex-col gap-1">
+                                    <span className="text-xs font-normal">License No:</span>
+                                    <span className="text-xs font-normal">Odometer:</span>
+                                    <span className="text-xs font-normal">Year:</span>
+                                    <span className="text-xs font-normal">Make:</span>
+                                </div>
+                                <div className="flex flex-col gap-1">
+                                    <span className="text-xs">{quotationData?.CustomerVehicle.licenseNo ? quotationData?.CustomerVehicle.licenseNo : 'N/A'}</span>
+                                    <span className="text-xs">{quotationData?.CustomerVehicle.odometer}</span>
+                                    <span className="text-xs">{quotationData?.CustomerVehicle.year}</span>
+                                    <span className="text-xs">{quotationData?.CustomerVehicle.make}</span>
+                                </div>
+                            </div>
+                            <div className="col-span-1 flex gap-1">
+                                <div className="flex flex-col gap-1">
+                                    <span className="text-xs font-normal">Model:</span>
+                                </div>
+                                <div className="flex flex-col gap-1">
+                                    <span className="text-xs">{quotationData?.CustomerVehicle.model}</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div className="w-full p-4">
+                <div className="w-full px-2 text-sm">
                     <table className="w-full min-w-max table-auto text-left">
                         <thead>
                             <tr>
-                                {PRODUCT_TABLE_HEAD.map((head) => (
+                                {PRODUCT_TABLE_HEAD.map((head, i) => (
                                     <th
                                         key={head}
-                                        className="border-y border-blue-gray-100 bg-blue-gray-50/50 p-4"
+                                        className={`border-y border-blue-gray-100 bg-blue-gray-50/50 p-2 ${i === 0 ? 'w-[60%]' : 'w-[10%] text-center'
+                                            }`}
                                     >
                                         <Typography
                                             variant="small"
                                             color="blue-gray"
-                                            className="font-normal leading-none opacity-70"
+                                            className="font-normal leading-none opacity-70 text-xs"
                                         >
                                             {head}
                                         </Typography>
@@ -144,45 +109,46 @@ const printView = React.forwardRef(({view, quotationData, appliedTaxes}, ref) =>
                         <tbody className="bg-white divide-y divide-gray-200">
                             {quotationData.Product.map((item, index) => (
                                 <tr key={index}>
-                                    <td className="p-4 border-b border-blue-gray-50">
+                                    <td className="p-2 border-b border-blue-gray-50 w-[60%]">
                                         <Typography
                                             variant="small"
                                             color="blue-gray"
-                                            className="font-normal leading-none"
+                                            className="font-normal leading-none text-xs"
                                         >
                                             {item.name}
                                         </Typography>
                                     </td>
-                                    <td className="p-4 border-b border-blue-gray-50">
+                                    <td className="p-2 border-b border-blue-gray-50 w-[10%] text-center">
                                         <Typography
                                             variant="small"
                                             color="blue-gray"
-                                            className="font-normal leading-none"
+                                            className="font-normal leading-none text-xs"
                                         >
                                             {item.quotation_product.quantity}
                                         </Typography>
                                     </td>
-                                    <td className="p-4 border-b border-blue-gray-50">
+                                    <td className="p-2 border-b border-blue-gray-50 w-[10%] text-center">
                                         <Typography
                                             variant="small"
                                             color="blue-gray"
-                                            className="font-normal leading-none"
+                                            className="font-normal leading-none text-xs"
                                         >
                                             {item.quotation_product.price}
                                         </Typography>
                                     </td>
-                                    <td className="p-4 border-b border-blue-gray-50">
+                                    <td className="p-2 border-b border-blue-gray-50 w-[10%] text-center">
                                         <input
                                             type="checkbox"
                                             checked={item.taxable}
                                             readOnly
+                                            className="w-3 h-3"
                                         />
                                     </td>
-                                    <td className="p-4 border-b border-blue-gray-50">
+                                    <td className="p-2 border-b border-blue-gray-50 w-[10%] text-center">
                                         <Typography
                                             variant="small"
                                             color="blue-gray"
-                                            className="font-normal leading-none"
+                                            className="font-normal leading-none text-xs"
                                         >
                                             {calculateAmount(item.quotation_product.price, item.quotation_product.quantity)}
                                         </Typography>
@@ -193,37 +159,43 @@ const printView = React.forwardRef(({view, quotationData, appliedTaxes}, ref) =>
 
                     </table>
                 </div>
-                <div className="flex p-2">
-                    <div className="basis-[50%] max-w-[50%] h-full p-4">
-                        <div className="flex flex-col justify-end items-start h-full gap-6">
-                            <div className="basis-[80%] flex flex-col">
-                                <h1 className="font-semibold text-md mb-2">Terms & Conditions</h1>
-                                <p className="text-xs border py-6 px-2 w-[80%]">you agree to the following terms and conditions. Our platform facilitates the purchase and sale
-                                    of vehicle auto parts. All products are subject to availability and provided "as is." We are not responsible for any misuse or improper
-                                    installation of parts. Returns and refunds are subject to our policies, which may change without notice. By continuing to use our services,
-                                    you agree to comply with all applicable laws and regulations. For further inquiries, please contact our support team.</p>
-                            </div>
-                            <h2 className="basis-[20%] font-semibold text-lg italic">Thank You For Your Business!</h2>
-                        </div>
+
+                <div className="border-y py-1 w-full flex items-center justify-center mt-auto">
+                    <h4 className="text-xs font-normal italic">Quote Summary</h4>
+                </div>
+
+                <div className="flex p-2 text-xs">
+                    <div className="basis-[50%] max-w-[50%] h-full p-2">
+                        Notes: {quotationData.notes ? quotationData.notes : 'N/A'}                       
                     </div>
 
                     <div className="basis-[50%] max-w-[50%]">
-                        <div className="flex items-center justify-center border divide-x">
-                            <h1 className="basis-[50%] max-w-[50%] text-1xl p-2">Subtotal</h1>
-                            <h1 className="basis-[50%] max-w-[50%] text-1xl p-2">${calculateTotalAmount(quotationData.Product)}</h1>
+                        <div className="border-x border-t divide-y">
+                            <div className="flex justify-between px-2 py-1">
+                                <span>Subtotal</span>
+                                <span>${calculateTotalAmount(quotationData.Product)}</span>
+                            </div>
                         </div>
 
-                        <div className="flex flex-col">
+                        <div className="flex flex-col text-xs">
                             {Object.keys(appliedTaxes).map((tax, ind) => (
-                                <div key={ind} className="flex border divide-x">
-                                    <span className="max-w-[50%] w-min p-2 whitespace-nowrap basis-[50%]" >{`${tax.split('_')[0]} (${tax.split('_')[1]}${tax.split('_')[2]})`}</span>
-                                    <span className="max-w-[50%] text-1xl p-2 basis-[50%]">${tax.split('_')[2] === '%' ? appliedTaxes[tax].toFixed(2) : appliedTaxes[tax]}</span>
+                                 <div key={ind} className="border-t border-x divide-y">
+                                    <div className="flex justify-between px-2 py-1">
+                                        <span className="">
+                                            {`${tax.split('_')[0]} (${tax.split('_')[1]}${tax.split('_')[2]})`}
+                                        </span>
+                                        <span className="">
+                                            ${tax.split('_')[2] === '%' ? appliedTaxes[tax].toFixed(2) : appliedTaxes[tax]}
+                                        </span>
+                                    </div>
                                 </div>
                             ))}                           
                         </div>
-                        <div className="flex items-center border divide-x">
-                            <h1 className="basis-[50%] max-w-[50%] text-1xl p-2">Total</h1>
-                            <h1 className="basis-[50%] max-w-[50%] text-1xl p-2">${quotationData?.totalAmount}</h1>
+                         <div className="border divide-y text-xs">
+                            <div className="flex justify-between px-2 py-1">
+                                <span className="">Total</span>
+                                <span className="">${parseFloat(quotationData?.totalAmount.toFixed(2))}</span>
+                            </div>
                         </div>
                     </div>
                 </div>

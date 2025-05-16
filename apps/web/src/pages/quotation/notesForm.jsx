@@ -15,9 +15,6 @@ const NotesForm = ({ open, close, quotationId, setQuotationData, currentValue })
 
     const onSubmit = async (values) => {
         setIsLoading(true);
-        if (values.notes === "") {
-            return;
-        }
         try {
             const data = {
                 quotationData: {

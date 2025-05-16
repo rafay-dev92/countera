@@ -68,7 +68,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedWorkOrder, setS
   }]);
   const [totalAmount, setTotalAmount] = useState(0);
   const [edit, setEdit] = useState(false);
-  const [printWorkOrder, setPrintWorkOrder] = useState([]);
+  const [printWorkOrder, setPrintWorkOrder] = useState(null);
   const [appliedTaxes, setAppliedTaxes] = useState({});
   const [showCustomerSuggestions, setShowCustomerSuggestions] = useState(false);
   const [showProductSuggestions, setShowProductSuggestions] = useState(false);
@@ -112,7 +112,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedWorkOrder, setS
     setSelectedCustomer(null)
     setSelectedVehicle(null)
     setSelectetWorkOrder(null)
-    setPrintWorkOrder([])
+    setPrintWorkOrder(null);
     setSelectedProducts([{
       product: "",
       description: "",

@@ -9,15 +9,12 @@ const schema = Yup.object().shape({
     notes: Yup.string(),
 });
 
-const NotesForm = ({ open, close, workOrderId, setWorOrderData, currentValue }) => {
+const NotesForm = ({ open, close, workOrderId, setWorkOrderData, currentValue }) => {
     const { state } = State();
     const [isLoading, setIsLoading] = useState(false);
 
     const onSubmit = async (values) => {
         setIsLoading(true);
-        if (values.notes === "") {
-            return;
-        }
         try {
             const data = {
                 workOrderData: {
@@ -27,7 +24,7 @@ const NotesForm = ({ open, close, workOrderId, setWorOrderData, currentValue }) 
             const res = await updateWorkOrder(workOrderId, data, state.userToken);
             const workorder = await res.json();
             if (res.status === 200) {
-                setWorOrderData(workorder.data);
+                setWorkOrderData(workorder.data);
             }
             handleClose();
         } catch (error) {

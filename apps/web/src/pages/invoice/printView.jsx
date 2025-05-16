@@ -22,8 +22,6 @@ const printView = React.forwardRef(({ view, printInvoice, appliedTaxes }, ref) =
         return total.toFixed(2);
     };
 
-    console.log('printInvoice', printInvoice);
-
     if (Object.keys(printInvoice).length > 0) {
         return (
             <div ref={ref} className={`min-h-screen flex flex-col ${!view ? "hidden print:flex print:min-h-screen" : ""}`}>
@@ -164,7 +162,7 @@ const printView = React.forwardRef(({ view, printInvoice, appliedTaxes }, ref) =
                 </div>
 
                 <div className="border-y py-1 w-full flex items-center justify-center mt-auto">
-                    <h4 className="text-sm font-medium italic">Invoice Summary</h4>
+                    <h4 className="text-xs font-normal italic">Invoice Summary</h4>
                 </div>
                 <div className="flex p-2 text-xs">
                     {/* Terms and Conditions */}

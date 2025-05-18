@@ -109,7 +109,6 @@ export function Inspection() {
 
     const handleCustomerChange = (customer) => {
         setSelectedCustomer(customer);
-        console.log(customer.Inspection)
         setCustomerInspections(customer.Inspection);
         if (customer && customer.Vehicle.length > 0) {
             setSelectedVehicle(customer.Vehicle[0]);

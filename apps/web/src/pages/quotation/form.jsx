@@ -8,6 +8,7 @@ import {
   CardBody,
   Dialog,
   IconButton,
+  Button,
 } from "@material-tailwind/react";
 import {
   XCircleIcon
@@ -23,12 +24,13 @@ import CustomerVehicleForm from "../customer/customerVehicleForm";
 import { fetchCustomer } from "@/services/fetchCustomer";
 import { PlusCircleIcon } from "@heroicons/react/24/outline";
 import { ArrowUturnLeftIcon } from "@heroicons/react/24/outline";
-import CustomerForm from "../invoice/customerForm";
+import CustomerForm from "../../utils/forms/customerForm";
 import { updateCustomerVehicle } from "@/services/updateCustomerVehicle";
 import { updateQuotation } from "@/services/updateQuotation";
 import { addQuotaion } from "@/services/addQuotation";
 import ViewQuotation from "./viewQuotation";
 import { fetchPackages } from "@/services/fetchPackages";
+import ProductForm from "../../utils/forms/productForm";
 
 const TABLE_HEAD = [
   "Product",
@@ -747,7 +749,10 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
                               id="address"
                               name="address"
                               type="text"
-                              value={selectedCustomer ? `${selectedCustomer.Address?.street}, ${selectedCustomer.Address?.city}` : ''}
+                              value={selectedCustomer?.Address && [
+                                selectedCustomer?.Address.street,
+                                selectedCustomer?.Address.city
+                              ].filter(Boolean).join(', ')}
                               disabled
                             />
                           </div>
@@ -988,15 +993,69 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
                                   />
                                   {showProductSuggestions && (
                                     <ul className="absolute left-0 right-0 z-50 bg-white border border-slate-700 mt-1 ml-2 overflow-y-auto min-h-24 max-h-48 w-80">
-                                      {products?.length > 0 ?
-                                        products.filter(product => `${product.name}`.toLowerCase().includes(productSearchText)).map((product) => (
-                                          <li key={product.id} className="cursor-pointer px-2 py-1 rounded-sm hover:bg-gray-200" onClick={() => { handleProductChange(index, item.quantity, product.id), setShowProductSuggestions(false) }}>
-                                            {product?.name}
-                                          </li>
-                                        ))
-                                        :
-                                        <li className="px-2 py-1 rounded-sm">No Product</li>
-                                      }
+                                      {products?.length > 0 ? (
+                                        products
+                                          .filter(product =>
+                                            product?.name?.toLowerCase().includes(productSearchText.toLowerCase())
+                                          )
+                                          .map(product => (
+                                            <li
+                                              key={product.id}
+                                              className="cursor-pointer px-2 py-1 rounded-sm hover:bg-gray-200"
+                                              onClick={() => {
+                                                handleProductChange(index, item.quantity, product.id);
+                                                setShowProductSuggestions(false);
+                                              }}
+                                            >
+                                              {product.name}
+                                            </li>
+                                          ))
+                                          .concat(
+                                            products.filter(product =>
+                                              product?.name?.toLowerCase().includes(productSearchText.toLowerCase())
+                                            ).length === 0
+                                              ? [
+                                                <li key="no-product" className="px-2 py-1 rounded-sm flex justify-between items-center">
+                                                  <span>No Product Found</span>
+                                                  <Button
+                                                    className="rounded"
+                                                    size="sm"
+                                                    color="blue"
+                                                    onClick={() => {
+                                                      setShowProductSuggestions(false);
+                                                      dispatch({
+                                                        type: "SET_PRODUCT_DATA",
+                                                        payload:
+                                                          true,
+                                                      });
+                                                    }}
+                                                  >
+                                                    Add New Product
+                                                  </Button>
+                                                </li>
+                                              ]
+                                              : []
+                                          )
+                                      ) : (
+                                        <li className="px-2 py-1 rounded-sm flex justify-between items-center">
+                                          <span>No Product Found</span>
+                                          <Button
+                                            className="rounded"
+                                            size="sm"
+                                            color="blue"
+                                            onClick={() => {
+                                              setShowProductSuggestions(false);
+                                              dispatch({
+                                                type: "SET_PRODUCT_DATA",
+                                                payload:
+                                                  true,
+                                              });
+                                            }}
+                                          >
+                                            Add New Product
+                                          </Button>
+                                        </li>
+                                      )}
                                     </ul>
                                   )}
                                 </div>
@@ -1173,6 +1232,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
       <CustomerForm open={isCustomerFormOpen} close={closeCustomerForm} refresh={refresh} setRefresh={setRefresh} setSelectedCustomer={setSelectedCustomer} />
       {selectedCustomer ? <CustomerVehicleForm open={isCustomerVehicleFormOpen} close={closeCustomerVehicleForm} refresh={refresh} setRefresh={setRefresh} CustomerId={selectedCustomer?.id} getCustomerDetails={getCustomerDetails} /> : null}
       {printQuotation && Object.keys(printQuotation).length > 0 ? <PrintView view={false} quotationData={printQuotation} ref={componentRef} appliedTaxes={appliedTaxes} /> : null}
+      <ProductForm open={state?.product?.openForm} close={() => dispatch({ type: "SET_PRODUCT_DATA", payload: false })} refresh={refresh} setRefresh={setRefresh} selectedItem={null} setSelectedItem={null} />
 
       {/* Package Preview Modal */}
       {showPackageModal && packagePreview && (

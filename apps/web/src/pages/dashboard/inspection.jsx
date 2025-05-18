@@ -210,7 +210,7 @@ export function Inspection() {
                 <form onSubmit={handleSubmit}>
                     <div className="flex flex-col lg:flex-row items-center w-full mx-5">
                         <div className="w-full flex items-center justify-center lg:justify-start gap-1">
-                            <Button className="w-full bg-green-600 lg:w-auto" size="md" onClick={Reset} >
+                            <Button className="w-full bg-green-600 py-2.5 lg:w-auto" size="md" onClick={Reset} >
                                 Reset
                             </Button>
 
@@ -344,41 +344,39 @@ export function Inspection() {
                             <table className="w-full bg-white border border-gray-200">
                                 <thead>
                                     <tr className="border-b border-gray-200">
-                                        <th className="text-left px-4 py-2">Name</th>
-                                        <th className="text-left px-4 py-2">Good</th>
-                                        <th className="text-left px-4 py-2">Fair</th>
-                                        <th className="text-left px-4 py-2">Poor</th>
-                                        <th className="text-left px-4 py-2">Details</th>
-                                        <th className="text-left px-4 py-2 print:hidden">Delete</th>
+                                        <th className="text-left px-4 py-2 text-xs">Name</th>
+                                        <th className="text-left px-4 py-2 text-xs">Good</th>
+                                        <th className="text-left px-4 py-2 text-xs">Fair</th>
+                                        <th className="text-left px-4 py-2 text-xs">Poor</th>
+                                        <th className="text-left px-4 py-2 text-xs">Details</th>
+                                        <th className="text-left px-4 py-2 text-xs print:hidden">Delete</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {values?.data?.map((item, idx) => (
-                                        <tr id='table' key={idx} className={`w-full border-b border-gray-200 px-4 py-2 ${item.category ? 'bg-gradient-to-br from-gray-800 to-gray-700 text-white' : ''}`}>
-                                            <td className="border-b border-gray-200 px-4 py-2">{item.name}</td>
+                                        <tr id='table' key={idx} className={`w-full border-b border-gray-200 px-4 py-1 text-xs ${item.category ? 'bg-gradient-to-br from-gray-800 to-gray-700 text-white py-2' : ''}`}>
+                                            <td className="border-b border-gray-200 px-4 py-1">{item.name}</td>
                                             {!item.category ?
-                                                <td className="border-b border-gray-200 px-4 py-2">
+                                                <td className="border-b border-gray-200 px-4 py-1">
                                                     <span>{values.data[idx].good}</span>
-                                                    <div onClick={() => setFieldValue(`data[${idx}].status`, 'good')} className={`h-8 w-8 rounded-full cursor-pointer ${values.data[idx].status === 'good' ? 'bg-green-500' : 'bg-gray-200'}`}></div>
+                                                    <div onClick={() => setFieldValue(`data[${idx}].status`, 'good')} className={`h-6 w-6 rounded-full cursor-pointer ${values.data[idx].status === 'good' ? 'bg-green-500' : 'bg-gray-200'}`}></div>
                                                 </td> : <td></td>}
                                             {!item.category ?
-                                                <td className="border-b border-gray-200 px-4 py-2">
-                                                    <div onClick={() => setFieldValue(`data[${idx}].status`, 'fair')} className={`h-8 w-8 rounded-full cursor-pointer ${values.data[idx].status === 'fair' ? 'bg-orange-500' : 'bg-gray-200'}`}></div>
+                                                <td className="border-b border-gray-200 px-4 py-1">
+                                                    <div onClick={() => setFieldValue(`data[${idx}].status`, 'fair')} className={`h-6 w-6 rounded-full cursor-pointer ${values.data[idx].status === 'fair' ? 'bg-orange-500' : 'bg-gray-200'}`}></div>
                                                 </td> : <td></td>}
                                             {!item.category ?
-                                                <td className="border-b border-gray-200 px-4 py-2">
-                                                    <div onClick={() => setFieldValue(`data[${idx}].status`, 'poor')} className={`h-8 w-8 rounded-full cursor-pointer ${values.data[idx].status === 'poor' ? 'bg-red-500' : 'bg-gray-200'}`}></div>
+                                                <td className="border-b border-gray-200 px-4 py-1">
+                                                    <div onClick={() => setFieldValue(`data[${idx}].status`, 'poor')} className={`h-6 w-6 rounded-full cursor-pointer ${values.data[idx].status === 'poor' ? 'bg-red-500' : 'bg-gray-200'}`}></div>
                                                 </td> : <td></td>}
                                             {!item.category ?
-                                                <td className="border-b border-gray-200 px-4 py-2 print:hidden">
+                                                <td className="border-b border-gray-200 px-4 py-1 print:hidden">
                                                     <input
                                                         id='inputField'
                                                         variant="static"
                                                         type="text"
                                                         placeholder="Enter details..."
-                                                        className="px-2 py-1 w-full focus:outline-none focus:border-blue-500"
-                                                        // value={item.detail}
-                                                        // onChange={(e) => handleDetailInput(idx, 'detail', e.target.value)}
+                                                        className="px-2 py-1 w-full focus:outline-none focus:border-blue-500 text-xs"                                                    
                                                         value={values.data[idx].detail}
                                                         onChange={e => setFieldValue(`data[${idx}].detail`, e.target.value)}
                                                     />
@@ -386,12 +384,20 @@ export function Inspection() {
                                             <td className="hidden print:inline text-sm text-gray-900 my-auto"><span>{item.detail}</span></td>
                                             {!item.category ?
                                                 <td className="border-b border-gray-200 px-4 py-2 print:hidden">
-                                                    <TrashIcon id='delButton' onClick={() => handleDel(idx)} className='h-6 w-6 text-red-500 cursor-pointer' />
+                                                    <TrashIcon id='delButton' onClick={() => handleDel(idx)} className='h-4 w-4 text-red-500 cursor-pointer' />
                                                 </td> : <td></td>}
                                         </tr>
                                     ))}
                                 </tbody>
                             </table>
+                            <div className="text-xs print:flex w-full m-2 mt-12 hidden">
+                                <span className="whitespace-nowrap">SignX</span>
+                                <div className=" border-t border-gray-500 mt-3 ms-2 w-48 mr-2">
+                                </div>
+                                <span>Date</span>
+                                <div className=" border-t border-gray-500 mt-3 ms-2 w-48">
+                                </div>
+                            </div>
                         </div>
                         <div className="flex justify-end gap-3 m-4">
                             {!state.inspection?.selected && (

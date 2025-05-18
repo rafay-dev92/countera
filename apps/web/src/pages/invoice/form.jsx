@@ -489,6 +489,7 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
 
   // handle vehicle change
   const handleVehicleChange = (vehicleId) => {
+    if (vehicleId === "") return;
     const foundVehicle = selectedCustomer.Vehicle.find(
       (vehicle) => `${vehicle.id}` === vehicleId
     );
@@ -770,10 +771,10 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
                               id="address"
                               name="address"
                               type="text"
-                              value={selectedCustomer?.Address && [
+                              value={selectedCustomer ? [
                                 selectedCustomer?.Address.street,
                                 selectedCustomer?.Address.city
-                              ].filter(Boolean).join(', ')}
+                              ].filter(Boolean).join(', ') : ''}
                               disabled
                             />
                           </div>
@@ -803,7 +804,8 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
                                     <option key={vehicle.id} value={vehicle.id}>
                                       {vehicle.make} {vehicle.model} {vehicle.year}
                                     </option>
-                                  )) : <option value="">Select Vehicle</option>}
+                                  )) : <option value="">Select Vehicle</option>
+                                  }
                                 </select>
                               </div>
                             </div>

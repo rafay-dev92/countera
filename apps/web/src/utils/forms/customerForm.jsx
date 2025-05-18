@@ -471,7 +471,7 @@ const CustomerForm = ({ open, close, selectedItem, setSelectedItem, refresh, set
                       )}
                     </div>
                     <div className="basis-[33.33%]">
-                      <label className="font-bold">License No</label> <br />
+                      <label className="font-bold">Permit/License No</label> <br />
                       <input
                         className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
                         id="licenseNo"

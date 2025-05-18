@@ -608,6 +608,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedWorkOrder, setS
     }
   }, [printWorkOrder])
 
+  console.log(values)
   return (
     <>
       <Dialog open={open} size="lg">
@@ -743,10 +744,10 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedWorkOrder, setS
                               id="address"
                               name="address"
                               type="text"
-                              value={selectedCustomer?.Address && [
+                              value={selectedCustomer ? [
                                 selectedCustomer?.Address.street,
                                 selectedCustomer?.Address.city
-                              ].filter(Boolean).join(', ')}
+                              ].filter(Boolean).join(', ') : ''}
                               disabled
                             />
                           </div>

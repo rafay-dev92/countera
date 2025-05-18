@@ -5,7 +5,7 @@ import { StarIcon } from '@heroicons/react/24/solid';
 
 const MonthlyReportPreview = React.forwardRef(({ invoices, productsCategories, taxes }, ref) => {
     // const productsCategoriesPrices = productsCategories.map(category => { return `${category} Price` });
-    const INVOICE_TABLE_HEAD = ["Date", "Invoice", "Paid By", "Total", ...productsCategories, ...taxes];
+    const INVOICE_TABLE_HEAD = ["Date", "Invoice", "Paid By", "Total", "Paid", ...productsCategories, ...taxes];
     const { state } = State();
     const calculateTaxes = (products, customerType) => {
         if (customerType === 'business') return {};
@@ -166,7 +166,19 @@ const MonthlyReportPreview = React.forwardRef(({ invoices, productsCategories, t
                                         >
                                             {item.totalAmount}
                                         </Typography>
-                                    </td>                                   
+                                    </td>
+                                    <td className="p-4 border-b border-blue-gray-50">
+                                        <Typography
+                                            variant="small"
+                                            color="blue-gray"
+                                            className="font-normal leading-none"
+                                        >
+                                            <div className="text-sm leading-5 text-blue-gray-700 whitespace-nowrap">
+                                                <div><span className="font-medium">Paid:</span> {item.paidAmount}</div>
+                                                <div><span className="font-medium">Balance:</span> {(item.totalAmount - item.paidAmount).toFixed(2)}</div>
+                                            </div>
+                                        </Typography>
+                                    </td>                                 
                                     {productsCategories.map((category, idx) => {
                                         const price = item.Product?.find(item => item.Category.name === category)?.price || 0;
                                         const quantity = item.Product?.find(item => item.Category.name === category)?.invoice_product?.quantity || 0;
@@ -232,6 +244,10 @@ const MonthlyReportPreview = React.forwardRef(({ invoices, productsCategories, t
 
                         <td className="p-4 border-t font-semibold text-blue-gray-700">
                             {invoices.reduce((sum, item) => sum + item.totalAmount, 0).toFixed(2)}
+                        </td>
+
+                        <td className="p-4 border-t font-semibold text-blue-gray-700">
+                            {invoices.reduce((sum, item) => sum + item.paidAmount, 0).toFixed(2)}
                         </td>
 
                         {productTotals.map((total, idx) => (

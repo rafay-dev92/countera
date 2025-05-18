@@ -749,10 +749,10 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
                               id="address"
                               name="address"
                               type="text"
-                              value={selectedCustomer?.Address && [
+                              value={selectedCustomer? [
                                 selectedCustomer?.Address.street,
                                 selectedCustomer?.Address.city
-                              ].filter(Boolean).join(', ')}
+                              ].filter(Boolean).join(', ') : ''}
                               disabled
                             />
                           </div>

@@ -3,7 +3,7 @@ import { Typography } from "@material-tailwind/react";
 import { State } from '@/state/Context';
 import { StarIcon } from '@heroicons/react/24/solid';
 
-const MonthlyReportPreview = React.forwardRef(({ invoices, productsCategories, taxes }, ref) => {
+const MonthlyReportPreview = React.forwardRef(({ filterValue, invoices, productsCategories, taxes }, ref) => {
     // const productsCategoriesPrices = productsCategories.map(category => { return `${category} Price` });
     const INVOICE_TABLE_HEAD = ["Date", "Invoice", "Paid By", "Total", "Paid", ...productsCategories, ...taxes];
     const { state } = State();
@@ -82,10 +82,8 @@ const MonthlyReportPreview = React.forwardRef(({ invoices, productsCategories, t
     }, 0);
 
     return (
-        // <div ref={ref} className="text-black bg-white hidden print:block print:p-0">
         <div ref={ref} className="text-black bg-white border-2 mt-4 print:mt-0 print:border-0 print:p-0">
             <div className='p-4'>
-                {/* <h1 className="text-3xl font-bold text-center mb-4">Monthly Sales Report</h1> */}
                 <div className="flex gap-1">
                     <div className="flex flex-col w-full">
                         <h3 className="text-2xl font-bold mb-3">{state.business.name}</h3>
@@ -149,13 +147,17 @@ const MonthlyReportPreview = React.forwardRef(({ invoices, productsCategories, t
                                             INV{String(item.invoiceNumber).padStart(4, '0')}
                                         </Typography>
                                     </td>
-                                     <td className="p-4 border-b border-blue-gray-50">
+                                    <td className="p-4 border-b border-blue-gray-50">
                                         <Typography
                                             variant="small"
                                             color="blue-gray"
                                             className="font-normal leading-none"
                                         >
-                                            {item.Payments.map(payment => payment.paymentMethod).join(', ')}
+                                            {item.Payments.map(payment => (
+                                                <div className="text-sm leading-5 text-blue-gray-700 whitespace-nowrap">
+                                                    <span className="font-medium">{payment?.paymentMethod}:</span> {payment?.paidAmount}
+                                                </div>
+                                            ))}
                                         </Typography>
                                     </td>
                                     <td className="p-4 border-b border-blue-gray-50">
@@ -178,7 +180,7 @@ const MonthlyReportPreview = React.forwardRef(({ invoices, productsCategories, t
                                                 <div><span className="font-medium">Balance:</span> {(item.totalAmount - item.paidAmount).toFixed(2)}</div>
                                             </div>
                                         </Typography>
-                                    </td>                                 
+                                    </td>
                                     {productsCategories.map((category, idx) => {
                                         const price = item.Product?.find(item => item.Category.name === category)?.price || 0;
                                         const quantity = item.Product?.find(item => item.Category.name === category)?.invoice_product?.quantity || 0;
@@ -240,7 +242,17 @@ const MonthlyReportPreview = React.forwardRef(({ invoices, productsCategories, t
                     <tr className="bg-gray-100">
                         <td></td>
                         <td></td>
-                        <td></td>
+                        <td className="p-4 border-t font-semibold text-blue-gray-700">
+                            {!filterValue || filterValue === "" ?
+                                invoices.reduce((sum, invoice) =>
+                                    sum + invoice.Payments.reduce((acc, payment) => acc + payment.paidAmount, 0)
+                                    , 0).toFixed(2)
+                                :
+                                invoices.reduce((sum, invoice) =>
+                                    sum + invoice.Payments.reduce((acc, payment) => acc + (payment.paymentMethod === filterValue ? payment.paidAmount : 0), 0)
+                                    , 0).toFixed(2)
+                            }
+                        </td>
 
                         <td className="p-4 border-t font-semibold text-blue-gray-700">
                             {invoices.reduce((sum, item) => sum + item.totalAmount, 0).toFixed(2)}

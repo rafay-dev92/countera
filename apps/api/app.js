@@ -22,7 +22,6 @@ if (!fs.existsSync(businessDir)) {
   console.log("Images directory already exists");
 }
 
-// Create backups directory if it doesn't exist
 const backupDir = path.join(__dirname, "backups");
 if (!fs.existsSync(backupDir)) {
   fs.mkdirSync(backupDir, { recursive: true });

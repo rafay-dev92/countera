@@ -6,6 +6,8 @@ const { exec } = require("child_process");
 const app = express();
 const fs = require("fs");
 
+app.set("trust proxy", true);
+
 const productDir = path.join(__dirname, "uploads/products");
 const businessDir = path.join(__dirname, "uploads/business");
 // Check if uploads directory exists, and create it if it doesn't
@@ -64,8 +66,14 @@ app.get("/", (req, res) => {
   res.status(200);
   res.send("Hello from Sales4X API");
 });
-app.use("/uploads/business", express.static(path.join(__dirname, "uploads/business")));
-app.use("/uploads/products", express.static(path.join(__dirname, "uploads/products")));
+app.use(
+  "/uploads/business",
+  express.static(path.join(__dirname, "uploads/business"))
+);
+app.use(
+  "/uploads/products",
+  express.static(path.join(__dirname, "uploads/products"))
+);
 app.use("/api/user", require("./routes/User"));
 app.use("/api/permission", require("./routes/Permission"));
 app.use("/api/business", require("./routes/Business"));

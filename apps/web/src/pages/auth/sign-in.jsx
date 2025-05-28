@@ -99,6 +99,12 @@ export function SignIn() {
     }
   }
 
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && email && password) {
+      handleSignIn();
+    }
+  };
+
   if (loading) {
     return <Spinner className="mx-auto mt-[40vh] h-10 w-10 text-gray-900/50" />
   }
@@ -108,7 +114,7 @@ export function SignIn() {
         <Typography variant="h2" className="font-bold mb-4">Sign In</Typography>
         <Typography variant="paragraph" color="blue-gray" className="text-lg font-normal">Enter your email and password to Sign In.</Typography>
       </div>
-      <form className="mt-8 mb-2 mx-auto w-80 max-w-screen-lg lg:w-1/4">
+      <form className="mt-8 mb-2 mx-auto w-80 max-w-screen-lg lg:w-1/4" onKeyDown={handleKeyDown}>
         <div className="mb-1 flex flex-col gap-6">
           <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
             Your email

@@ -48,9 +48,11 @@ const Form = ({ open, close, selectedItem, setSelectedItem, refresh, setRefresh 
     const onSubmit = async (values) => {       
         setIsLoading(true);
         try {
+            const data = { ...values, BusinessId: state.business.id}
+            console.log(data)
             if (!edit) {
-                // saving category data
-                const res = await addProductCategory(values, state.userToken);
+                // saving category data            
+                const res = await addProductCategory(data, state.userToken);
                 const category = await res.json();
                 if (res.status === 200) {
                     showToastMessage('success', category.message)
@@ -63,7 +65,7 @@ const Form = ({ open, close, selectedItem, setSelectedItem, refresh, setRefresh 
                 }
             }
             else {
-                const res = await updateProductCategory(selectedItem.id, values, state.userToken);
+                const res = await updateProductCategory(selectedItem.id, data, state.userToken);
                 const category = await res.json();
                 if (res.status === 200) {
                     showToastMessage('success', category.message)

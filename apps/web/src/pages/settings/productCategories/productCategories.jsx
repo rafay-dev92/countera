@@ -45,7 +45,7 @@ function ProductCategories() {
     try {
       const res = await fetchProductsCategories(state.userToken);
       const categories = await res.json();
-      setCategories(categories);
+      if (res.status === 200) setCategories(categories);
       setLoading(false)
     } catch (error) {
       toast.error("Something went wrong")

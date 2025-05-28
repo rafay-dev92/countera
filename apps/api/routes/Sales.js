@@ -2,6 +2,8 @@ const express = require("express");
 const router = express.Router();
 const {
   Invoice,
+  User,
+  Business,
 } = require("../models");
 const fetchUser = require("../middlewares/fetchUser");
 const { Op, fn, col, literal } = require("sequelize");
@@ -11,7 +13,17 @@ require("dotenv").config();
 router.get("/monthly", fetchUser, async (req, res) => {
   try {
     const currentYear = moment().year();
+    const user = await User.findOne({
+      where: { id: req.user.id },
+      include: [{
+        model: Business,
+        as: 'Business'
+      }]
+    });
 
+    if (!user || !user.Business) {
+      return res.status(404).json({ message: "User or business not found" });
+    }
     const salesData = await Invoice.findAll({
       attributes: [
         [fn('MONTH', col('createdAt')), 'month'],
@@ -19,6 +31,7 @@ router.get("/monthly", fetchUser, async (req, res) => {
       ],
       where: {
         paymentStatus: { [Op.in]: ['Paid', 'Partially Paid'] },
+        BusinessId: user.Business.id,
         createdAt: {
           [Op.gte]: moment().startOf('year').toDate(),
           [Op.lte]: moment().endOf('year').toDate(),

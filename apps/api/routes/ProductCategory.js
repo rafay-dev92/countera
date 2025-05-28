@@ -1,15 +1,31 @@
 const express = require("express");
 const router = express.Router();
-const { Product_Category } = require("../models");
+const { Product_Category, User, Business } = require("../models");
 const fetchUser = require("../middlewares/fetchUser");
 require("dotenv").config();
 
 // routes below
 router.get("/", fetchUser, async (req, res) => {
   try {
+    const user = await User.findOne({
+      where: { id: req.user.id },
+      include: [{
+        model: Business,
+        as: 'Business'
+      }]
+    });
+
+    if (!user || !user.Business) {
+      return res.status(404).json({ message: "User or business not found" });
+    }
+
     const products_categories = await Product_Category.findAll({
+      where: {
+        BusinessId: user.Business.id
+      },
       order: [["createdAt", "DESC"]],
     });
+    
     return res.status(200).json(products_categories);
   } catch (error) {
     res.status(500).json({ message: error.message });

@@ -18,6 +18,12 @@ module.exports = (sequelize) => {
         type: DataTypes.STRING,
         allowNull: true,
       },
+      BusinessId: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        onDelete: "RESTRICT",
+        onUpdate: "CASCADE",
+      },
     },
     {
       tableName: "product_categories",
@@ -28,6 +34,10 @@ module.exports = (sequelize) => {
     Product_Category.hasMany(models.Product, {
       foreignKey: "CategoryId",
       as: "products",
+    });
+    Product_Category.belongsTo(models.Business, {
+      foreignKey: "BusinessId",
+      as: "Business",
     });
   };
 

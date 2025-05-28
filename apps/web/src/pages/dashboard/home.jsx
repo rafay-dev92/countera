@@ -105,14 +105,13 @@ export function Home() {
             // }
 
             if (fetchedInvoices.status === 200) {
-                const invoicesWithCurrentDate = totalInvoices?.data?.filter(obj => {
+                const invoicesWithCurrentDate = totalInvoices.length > 0 ? totalInvoices?.data?.filter(obj => {
                     const invoiceDate = moment(obj.createdAt).tz(timezone).format('YYYY-MM-DD');
                     return invoiceDate === currentDate;
-                });
+                }) : [];
                 const money = invoicesWithCurrentDate.reduce((sum, invoice) => {
                     return sum + Number(invoice.totalAmount || 0);
                 }, 0);
-
                 const newArray = [...cardsData];
 
                 newArray[0].value = `$${money.toFixed(2)}`;

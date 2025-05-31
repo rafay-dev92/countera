@@ -9,10 +9,13 @@ const {
   CustomerVehicle,
   Business,
   Payment,
+  InvoiceAudit,
 } = require("../models");
 const fetchUser = require("../middlewares/fetchUser");
 const { Op } = require("sequelize");
 const moment = require("moment");
+// const InvoiceAudit = require("../models/InvoiceAudit");
+const { trackObjectChanges, trackProductChanges } = require("../utils/auditHelper");
 require("dotenv").config();
 
 router.get("/", fetchUser, async (req, res) => {
@@ -258,65 +261,62 @@ router.put("/update/:id", fetchUser, async (req, res) => {
       return res.status(404).json({ message: "Invoice not found" });
     }
 
+    // Track changes in invoice data
+    if (req.body.invoiceData && req.body.products) {
+      await trackObjectChanges(
+        invoice.id,
+        req.user.id,
+        invoice.toJSON(),
+        req.body.invoiceData,
+        req.body.products
+      );
+    }
+
+    // Track changes in products
+    // if (req.body?.products) {
+    //   await trackProductChanges(
+    //     invoice.id,
+    //     req.user.id,
+    //     invoice.Product.map(p => p.toJSON()),
+    //     req.body.products
+    //   );
+    // }
+
+    // Update invoice data
+    if (req.body.invoiceData) {
+      await invoice.update(req.body.invoiceData);
+    }
+
+    // Update products
     if (req.body?.products && req.body?.products.length > 0) {
       try {
-        req.body.products.forEach(async (newProduct) => {
-          const productId = newProduct.id;
-          const newQuantity = newProduct.quantity;
-          const newDescription = newProduct.description;
-          const newPrice = newProduct.price;
-
-          // Check if the product exists in the current products
-          const existingProduct = invoice.Product.find(
-            (currentProduct) => currentProduct.dataValues.id === productId
-          );
-
-          if (existingProduct) {
-            // If the product exists, update the quantity in the junction table
-            await invoice_product.update(
-              {
-                quantity: newQuantity,
-                description: newDescription,
-                price: newPrice,
-              },
-              {
-                where: {
-                  InvoiceId: invoice.id,
-                  ProductId: productId,
-                },
-              }
-            );
-          } else {
-            // If the product doesn't exist, add a new entry to the junction table
-            await invoice_product.create({
-              InvoiceId: invoice.id,
-              ProductId: productId,
-              quantity: newQuantity,
-              description: newDescription,
-              price: newPrice,
-            });
-          }
-        });
-      } catch (error) {
-        return res.status(500).json({ message: "Internel Server Error" });
-      }
-
-      const deletedItems = invoice.Product.filter(
-        (orgProd) =>
-          !req.body.products.some((item) => item.id === orgProd.dataValues.id)
-      ).map((changeItem) => changeItem.dataValues.id);
-
-      if (deletedItems.length !== 0) {
+        // Remove all existing products
         await Promise.all(
-          deletedItems.map(async (item) => {
-            const product = await Product.findByPk(item.id);
+          invoice.Product.map(async (product) => {
             await invoice.removeProduct(product);
           })
         );
+
+        // Add updated products
+        await Promise.all(
+          req.body.products.map(async (product) => {
+            const productRecord = await Product.findByPk(product.id);
+            if (productRecord) {
+              await invoice.addProduct(productRecord, {
+                through: {
+                  quantity: product.quantity,
+                  description: product.description,
+                  price: product.price,
+                },
+              });
+            }
+          })
+        );
+      } catch (error) {
+        console.error('Error updating products:', error);
+        return res.status(500).json({ message: "Internal Server Error" });
       }
     }
-
-    await invoice.update(req.body.invoiceData);
 
     const currentInvoice = await Invoice.findByPk(invoice.id, {
       include: [
@@ -415,6 +415,54 @@ router.delete("/delete/:id", fetchUser, async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Error deleting invoice" });
+  }
+});
+
+// Get invoice audit history
+router.get("/audit/:id", fetchUser, async (req, res) => {
+  try {
+    // Validate invoice ID
+    if (!req.params.id) {
+      return res.status(400).json({ 
+        message: "Invoice ID is required",
+        data: []
+      });
+    }
+
+    // Check if invoice exists
+    const invoice = await Invoice.findByPk(req.params.id);
+    if (!invoice) {
+      return res.status(404).json({ 
+        message: "Invoice not found",
+        status: 404,
+        data: []
+      });
+    }
+
+    const auditHistory = await InvoiceAudit.findAll({
+      where: {
+        invoiceId: req.params.id
+      },
+      order: [['createdAt', 'DESC']],
+      include: [{
+        model: User,
+        as: 'User',
+        attributes: ['id', 'first_name', 'last_name', 'email', 'role']
+      }]
+    });
+
+    return res.status(200).json({
+      message: "Audit history retrieved successfully",
+      status: 200,
+      data: auditHistory || []
+    });
+  } catch (error) {
+    console.error('Error fetching audit history:', error);
+    return res.status(200).json({
+      message: "Unable to load audit history. Please try again later.",
+      status: 500,
+      data: []
+    });
   }
 });
 

@@ -140,7 +140,7 @@ const printView = React.forwardRef(({ view, printInvoice, appliedTaxes }, ref) =
                                     <td className="p-2 border-b border-blue-gray-50 w-[10%] text-center">
                                         <input
                                             type="checkbox"
-                                            checked={item.taxable}
+                                            checked={item.taxable || false}
                                             readOnly
                                             className="w-3 h-3"
                                         />
@@ -296,9 +296,9 @@ const printView = React.forwardRef(({ view, printInvoice, appliedTaxes }, ref) =
                                         <label key={key} className="flex items-center gap-1">
                                             <input
                                                 type="checkbox"
-                                                className="w-3 h-3"
-                                                checked={!!printInvoice?.[key]}
+                                                checked={!!printInvoice?.[key] || false}
                                                 readOnly
+                                                className="w-3 h-3"
                                             />
                                             <span>{label}</span>
                                         </label>
@@ -307,14 +307,14 @@ const printView = React.forwardRef(({ view, printInvoice, appliedTaxes }, ref) =
                             </p>
                             <p className="text-[9px] py-1 leading-relaxed">
                                 <span className="block">## Terms & Conditions  </span>
-                                <p className="text-[9px] py-1 leading-tight">
+                                <div className="text-[9px] py-1 leading-tight">
                                     No verbal agreement by any salesperson is binding on the company. You are authorized to deliver and/or install
                                     the listed products under the terms of this order. Any operation of the vehicle for testing, inspection, or delivery
                                     is at my risk. A mechanic's lien is placed on the vehicle to secure payment for installed products. The company is
                                     not responsible for damage or loss of items in the vehicle due to fire, theft, accident, or other uncontrollable events.
                                     If legal action is taken to collect payment, the purchaser will cover attorney fees, court costs, and collection expenses.
                                     The dealership is not liable for wheel damage. I acknowledge receipt and approval of this order and its terms.
-                                </p>
+                                </div>
                             </p>
                             <p className="text-[9px] py-1 leading-relaxed">
                                 <span className="block">## All Sales Are Final</span>
@@ -326,12 +326,11 @@ const printView = React.forwardRef(({ view, printInvoice, appliedTaxes }, ref) =
                             </p>
                             <p className="text-[9px] py-1 leading-relaxed">
                                 <span className="block"> ## Warranty Disclaimer</span>
-                                <p className="text-[9px] py-1 leading-tight">
+                                <div className="text-[9px] py-1 leading-tight">
                                     All product warranties are provided solely by the manufacturer. The seller expressly disclaims all express or implied warranties,
                                     including merchantability or fitness for a particular purpose, and does not authorize any other party to assume liability on its behalf.
                                     The buyer may not claim consequential, incidental, or indirect damages, including property damage, lost time, or lost income.
-                                </p>
-
+                                </div>
                             </p>
                         </div>
                     </div>

@@ -140,6 +140,8 @@ function MonthlyReportForm({ open, close, setReportData }) {
                                     <div className="flex flex-col gap-1">
                                         <label className="font-bold">Month</label>
                                         <DatePicker
+                                            id="month"
+                                            name="month"
                                             selected={values.month}
                                             onChange={(date) => setFieldValue("month", date)}
                                             onBlur={handleBlur}

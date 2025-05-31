@@ -608,7 +608,6 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedWorkOrder, setS
     }
   }, [printWorkOrder])
 
-  console.log(values)
   return (
     <>
       <Dialog open={open} size="lg">

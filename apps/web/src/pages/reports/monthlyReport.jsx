@@ -99,7 +99,7 @@ const MonthlyReportPreview = React.forwardRef(({ filterValue, invoices, products
                 </div>
             </div>
             <div className='w-full p-2'>
-                <table className="w-full min-w-max table-auto text-left">
+                <table className="w-full">
                     <thead>
                         <tr>
                             {INVOICE_TABLE_HEAD.map((head) => (
@@ -118,7 +118,7 @@ const MonthlyReportPreview = React.forwardRef(({ filterValue, invoices, products
                             ))}
                         </tr>
                     </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
+                    <tbody>
                         {invoices?.map((item, index) => {
                             const productTaxes = calculateTaxes(item.Product, item.Customer?.customerType);
                             const formattedDate = new Date(item.createdAt).toLocaleDateString("en-US", {
@@ -154,7 +154,7 @@ const MonthlyReportPreview = React.forwardRef(({ filterValue, invoices, products
                                             className="font-normal leading-none"
                                         >
                                             {item.Payments.map(payment => (
-                                                <div className="text-sm leading-5 text-blue-gray-700 whitespace-nowrap">
+                                                <div key={payment.id} className="text-sm leading-5 text-blue-gray-700 whitespace-nowrap">
                                                     <span className="font-medium">{payment?.paymentMethod}:</span> {payment?.paidAmount}
                                                 </div>
                                             ))}
@@ -238,42 +238,42 @@ const MonthlyReportPreview = React.forwardRef(({ filterValue, invoices, products
                                 </tr>
                             )
                         })}
+                        <tr className="bg-gray-100">
+                            <td></td>
+                            <td></td>
+                            <td className="p-4 border-t font-semibold text-blue-gray-700">
+                                {!filterValue || filterValue === "" ?
+                                    invoices.reduce((sum, invoice) =>
+                                        sum + invoice.Payments.reduce((acc, payment) => acc + payment.paidAmount, 0)
+                                        , 0).toFixed(2)
+                                    :
+                                    invoices.reduce((sum, invoice) =>
+                                        sum + invoice.Payments.reduce((acc, payment) => acc + (payment.paymentMethod === filterValue ? payment.paidAmount : 0), 0)
+                                        , 0).toFixed(2)
+                                }
+                            </td>
+
+                            <td className="p-4 border-t font-semibold text-blue-gray-700">
+                                {invoices.reduce((sum, item) => sum + item.totalAmount, 0).toFixed(2)}
+                            </td>
+
+                            <td className="p-4 border-t font-semibold text-blue-gray-700">
+                                {invoices.reduce((sum, item) => sum + item.paidAmount, 0).toFixed(2)}
+                            </td>
+
+                            {productTotals.map((total, idx) => (
+                                <td key={idx} className="p-4 border-t font-semibold text-blue-gray-700">
+                                    {total.toFixed(2)}
+                                </td>
+                            ))}
+
+                            {taxTotals.map((total, idx) => (
+                                <td key={idx} className="p-4 border-t font-semibold text-blue-gray-700">
+                                    {total.value.toFixed(2)}
+                                </td>
+                            ))}
+                        </tr>
                     </tbody>
-                    <tr className="bg-gray-100">
-                        <td></td>
-                        <td></td>
-                        <td className="p-4 border-t font-semibold text-blue-gray-700">
-                            {!filterValue || filterValue === "" ?
-                                invoices.reduce((sum, invoice) =>
-                                    sum + invoice.Payments.reduce((acc, payment) => acc + payment.paidAmount, 0)
-                                    , 0).toFixed(2)
-                                :
-                                invoices.reduce((sum, invoice) =>
-                                    sum + invoice.Payments.reduce((acc, payment) => acc + (payment.paymentMethod === filterValue ? payment.paidAmount : 0), 0)
-                                    , 0).toFixed(2)
-                            }
-                        </td>
-
-                        <td className="p-4 border-t font-semibold text-blue-gray-700">
-                            {invoices.reduce((sum, item) => sum + item.totalAmount, 0).toFixed(2)}
-                        </td>
-
-                        <td className="p-4 border-t font-semibold text-blue-gray-700">
-                            {invoices.reduce((sum, item) => sum + item.paidAmount, 0).toFixed(2)}
-                        </td>
-
-                        {productTotals.map((total, idx) => (
-                            <td key={idx} className="p-4 border-t font-semibold text-blue-gray-700">
-                                {total.toFixed(2)}
-                            </td>
-                        ))}
-
-                        {taxTotals.map((total, idx) => (
-                            <td key={idx} className="p-4 border-t font-semibold text-blue-gray-700">
-                                {total.value.toFixed(2)}
-                            </td>
-                        ))}
-                    </tr>
                 </table>
 
                 {/* Summary */}

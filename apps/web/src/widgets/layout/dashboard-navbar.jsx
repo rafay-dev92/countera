@@ -33,7 +33,7 @@ export function DashboardNavbar() {
     dispatch({ type: 'RESET' })
     localStorage.removeItem('Token');
     localStorage.removeItem('sessionExp');
-    navigate('/auth/sign-in')
+    navigate('/auth/sign-in');
   }
 
   return (
@@ -56,7 +56,7 @@ export function DashboardNavbar() {
         <div className="flex w-full flex-row justify-end items-center">
           <div>
             <h3 className="font-semibold text-sm text-gray-600 uppercase">
-              {state.userInfo ? (
+              {state?.userInfo ? (
                 `${state.userInfo.first_name} ${state.userInfo.last_name} (${state.userInfo.role})`
               ) : (
                 <Spinner className="mxl-auto h-5 w-5 text-gray-900/50" />

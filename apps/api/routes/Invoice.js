@@ -15,7 +15,10 @@ const fetchUser = require("../middlewares/fetchUser");
 const { Op } = require("sequelize");
 const moment = require("moment");
 // const InvoiceAudit = require("../models/InvoiceAudit");
-const { trackObjectChanges, trackProductChanges } = require("../utils/auditHelper");
+const {
+  trackObjectChanges,
+  trackProductChanges,
+} = require("../utils/auditHelper");
 require("dotenv").config();
 
 router.get("/", fetchUser, async (req, res) => {
@@ -252,7 +255,7 @@ router.post("/create", fetchUser, async (req, res) => {
 
 router.put("/update/:id", fetchUser, async (req, res) => {
   try {
-    let invoiceData = req.body;
+    let payload = req.body;
     const invoice = await Invoice.findByPk(req.params.id, {
       include: ["Product"],
     });
@@ -261,26 +264,23 @@ router.put("/update/:id", fetchUser, async (req, res) => {
       return res.status(404).json({ message: "Invoice not found" });
     }
 
-    // Track changes in invoice data
-    if (req.body.invoiceData && req.body.products) {
-      await trackObjectChanges(
-        invoice.id,
-        req.user.id,
-        invoice.toJSON(),
-        req.body.invoiceData,
-        req.body.products
-      );
+    if (
+      !(
+        Object.keys(payload.invoiceData).length === 1 &&
+        payload.invoiceData.hasOwnProperty("paymentStatus")
+      )
+    ) {
+      // Track changes in invoice data
+      if (req.body.invoiceData && req.body.products) {
+        await trackObjectChanges(
+          invoice.id,
+          req.user.id,
+          invoice.toJSON(),
+          req.body.invoiceData,
+          req.body.products
+        );
+      }
     }
-
-    // Track changes in products
-    // if (req.body?.products) {
-    //   await trackProductChanges(
-    //     invoice.id,
-    //     req.user.id,
-    //     invoice.Product.map(p => p.toJSON()),
-    //     req.body.products
-    //   );
-    // }
 
     // Update invoice data
     if (req.body.invoiceData) {
@@ -313,7 +313,7 @@ router.put("/update/:id", fetchUser, async (req, res) => {
           })
         );
       } catch (error) {
-        console.error('Error updating products:', error);
+        console.error("Error updating products:", error);
         return res.status(500).json({ message: "Internal Server Error" });
       }
     }
@@ -423,45 +423,47 @@ router.get("/audit/:id", fetchUser, async (req, res) => {
   try {
     // Validate invoice ID
     if (!req.params.id) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         message: "Invoice ID is required",
-        data: []
+        data: [],
       });
     }
 
     // Check if invoice exists
     const invoice = await Invoice.findByPk(req.params.id);
     if (!invoice) {
-      return res.status(404).json({ 
+      return res.status(404).json({
         message: "Invoice not found",
         status: 404,
-        data: []
+        data: [],
       });
     }
 
     const auditHistory = await InvoiceAudit.findAll({
       where: {
-        invoiceId: req.params.id
+        invoiceId: req.params.id,
       },
-      order: [['createdAt', 'DESC']],
-      include: [{
-        model: User,
-        as: 'User',
-        attributes: ['id', 'first_name', 'last_name', 'email', 'role']
-      }]
+      order: [["createdAt", "DESC"]],
+      include: [
+        {
+          model: User,
+          as: "User",
+          attributes: ["id", "first_name", "last_name", "email", "role"],
+        },
+      ],
     });
 
     return res.status(200).json({
       message: "Audit history retrieved successfully",
       status: 200,
-      data: auditHistory || []
+      data: auditHistory || [],
     });
   } catch (error) {
-    console.error('Error fetching audit history:', error);
+    console.error("Error fetching audit history:", error);
     return res.status(200).json({
       message: "Unable to load audit history. Please try again later.",
       status: 500,
-      data: []
+      data: [],
     });
   }
 });

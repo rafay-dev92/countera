@@ -60,8 +60,8 @@ const corsOptions = {
   origin: [
     "http://localhost:5173",
     "https://sales4x-fe.vercel.app",
-    "http://31.97.138.1",
-    "http://31.97.138.1:5173",
+    "http://31.97.138.15",
+    "http://31.97.138.15:5173",
     "http://localhost:3000",
   ],
 };

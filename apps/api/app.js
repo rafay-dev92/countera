@@ -57,7 +57,13 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 const corsOptions = {
-  origin: ["http://localhost:5173", "https://sales4x-fe.vercel.app"],
+  origin: [
+    "http://localhost:5173",
+    "https://sales4x-fe.vercel.app",
+    "http://31.97.138.1",
+    "http://31.97.138.1:5173",
+    "http://localhost:3000",
+  ],
 };
 app.use(cors(corsOptions));
 

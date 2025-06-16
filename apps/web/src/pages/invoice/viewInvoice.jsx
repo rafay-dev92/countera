@@ -251,19 +251,22 @@ const ViewInvoice = ({ printInvoice, setPrintInvoice, componentRef, appliedTaxes
                     <div key={field} className="flex items-center gap-2 ml-4">
                         <span className="font-semibold text-blue-400">{formatFieldName(field)}</span>
                         <span className="text-gray-400">•</span>
-                        {oldVal && newVal && (
+                        {oldVal && newVal ? (
                             <div className="flex items-center gap-2">
                                 <span className="text-green-400">{formatValue(oldVal) ? formatValue(oldVal) : oldVal[field.split('_')[2]] !== '' ? `${oldVal[field.split('_')[2]]}` : <span className="flex items-center gap-1"><XCircleIcon className="w-4 h-4" /> Empty</span>}</span>
                                 <ArrowLongRightIcon className="text-gray-400 w-4 h-4" />
                                 <span className="text-red-400">{formatValue(newVal) ? formatValue(newVal) : newVal[field.split('_')[2]] !== '' ? `${newVal[field.split('_')[2]]}` : <span className="flex items-center gap-1"><XCircleIcon className="w-4 h-4" /> Empty</span>}</span>
-                            </div>
-                        )}
+                            </div>)
+                            : null
+                        }
                         {!oldVal && newVal && (
-                            Object.keys(newVal).map(key => (
+                            typeof newVal === 'object' ? Object.keys(newVal).map(key => (
                                 key !== 'id' && (
                                     <span key={key} className="text-green-400">{newVal[key] && `${key} : ${newVal[key]}`}</span>
                                 )
                             ))
+                                :
+                                <span className="text-green-400">{newVal !== '' ? formatValue(newVal) : <span className="flex items-center gap-1"><XCircleIcon className="w-4 h-4" /> Empty</span>}</span>
                         )}
                         <span className="text-xs px-2 py-1 rounded bg-gray-700">
                             {!oldVal ? "Added" : !newVal ? "Deleted" : "Updated"}

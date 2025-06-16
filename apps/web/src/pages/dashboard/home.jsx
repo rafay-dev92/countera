@@ -75,7 +75,7 @@ export function Home() {
         dailySalesData();
         setTimeout(() => {
             setChartLoading(false);
-        }, 1000);
+        }, 2000);
     }, [state.userToken]);
 
     const showToastMessage = (type, message) => {

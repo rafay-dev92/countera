@@ -242,7 +242,7 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
     const data = {
       invoiceData: {
         ...values,
-        totalAmount: calculateTotalAmountWithTax() - discount,
+        totalAmount: (calculateTotalAmountWithTax() - discount).toFixed(2),
         discount: discount,
         CustomerId: selectedCustomer.id,
         CustomerVehicleId: selectedVehicle.id,
@@ -1259,7 +1259,7 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
                             <h1>Total</h1>
                           </div>
                           <div className="text-md">
-                            <h1>${calculateTotalAmountWithTax() - discount}</h1>
+                            <h1>${(calculateTotalAmountWithTax() - discount).toFixed(2)}</h1>
                           </div>
                         </div>
                       </div>

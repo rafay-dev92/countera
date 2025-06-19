@@ -80,7 +80,7 @@ export function Invoice() {
 
   const handleEditInvoice = (index) => {
     if (state.userInfo.Permission.some(obj => obj.name === "CAN_EDIT_INVOICE" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
-      const selected = currentItems[index];
+      const selected = filteredRows[index];
       dispatch({ type: 'SET_INVOICE_VIEW_DATA', payload: selected });
       openPopup();
     }
@@ -135,7 +135,7 @@ export function Invoice() {
   };
 
   const showCustomer = (index) => {
-    const selected = currentItems[index];
+    const selected = filteredRows[index];
     setIsCustomerFormOpen(true);
     setSelectedCustomer(selected.Customer);
   }
@@ -145,10 +145,6 @@ export function Invoice() {
     return date.toLocaleString();
   };
 
-  const indexOfFirstItem = (currentPage - 1) * itemsPerPage;
-  const indexOfLastItem = indexOfFirstItem + itemsPerPage;
-
-  let currentItems = [];
   let filteredRows = [];
   if (invoices?.length !== 0) {
     filteredRows = invoices?.filter(
@@ -156,7 +152,6 @@ export function Invoice() {
         Customer['firstName'].toLowerCase().includes(searchQuery.toLowerCase()) ||
         Customer['lastName'].toLowerCase().includes(searchQuery.toLowerCase())
     );
-    currentItems = filteredRows?.slice(indexOfFirstItem, indexOfLastItem);
   }
 
   const handleItemsPerPageChange = (event) => {
@@ -187,6 +182,7 @@ export function Invoice() {
     "Refund": "blue",
   };
 
+  console.log("Invoices:", invoices);
   if (loading) {
     return <Spinner className="mx-auto mt-[30vh] h-10 w-10 text-gray-900/50" />
   }
@@ -278,7 +274,7 @@ export function Invoice() {
                     <td className={classes}>
                       <Typography
                         variant="small"
-                        color={invoiceStatusColors[paymentStatus] || "gray"}                      
+                        color={invoiceStatusColors[paymentStatus] || "gray"}
                         className="font-medium"
                       >
                         {paymentStatus}

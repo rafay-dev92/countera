@@ -13,7 +13,7 @@ const schema = Yup.object().shape({
     date: Yup.string().required("Date is required"),
 });
 
-function DailySalesReportForm({ open, close, setReportData }) {
+function DailySalesReportForm({ open, close, setReportData, onReportGenerated }) {
     const { state } = State();
     const [isLoading, setIsLoading] = useState(false);
     const handleClose = () => {
@@ -51,6 +51,7 @@ function DailySalesReportForm({ open, close, setReportData }) {
                 return;
             }
             setReportData(totalInvoices?.data);
+            if (onReportGenerated) onReportGenerated();
             setIsLoading(false);
             handleClose();
         } catch (error) {

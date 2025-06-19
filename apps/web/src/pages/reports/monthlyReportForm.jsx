@@ -13,7 +13,7 @@ const schema = Yup.object().shape({
     month: Yup.string().required("Month is required"),
 });
 
-function MonthlyReportForm({ open, close, setReportData }) {
+function MonthlyReportForm({ open, close, setReportData, onReportGenerated }) {
     const { state } = State();
     const [isLoading, setIsLoading] = useState(false);
     const handleClose = () => {
@@ -63,6 +63,7 @@ function MonthlyReportForm({ open, close, setReportData }) {
                 return;
             }
             setReportData(totalInvoices?.data);
+            if (onReportGenerated) onReportGenerated();
             setIsLoading(false);
             handleClose();
         } catch (error) {

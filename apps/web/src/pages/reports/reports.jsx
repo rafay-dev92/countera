@@ -21,13 +21,13 @@ export function Reports() {
 
     const [isMonthlyReportOpen, setIsMonthlyReportOpen] = useState(false);
     const [isCustomerReportOpen, setIsCustomerReportOpen] = useState(false);
-    const [showCustomerReport, setShowCustomerReport] = useState(false);
     const [isDailySalesOpen, setIsDailySalesOpen] = useState(false);
     const [isProductReportOpen, setIsProductReportOpen] = useState(false);
     const [reportData, setReportData] = useState([]);
-    const [originalData, setOriginalData] = useState([]);
     const [filteredData, setFilteredData] = useState([]);
     const [filterValue, setFilterValue] = useState("");
+    const [currentReport, setCurrentReport] = useState(null); // null, 'customer', 'monthly', 'daily'
+
     const getTaxes = async () => {
         try {
             const res = await fetchTaxes(state.userToken);
@@ -58,6 +58,7 @@ export function Reports() {
         // setOriginalData(reportData);
         setFilteredData(reportData);
     }, [reportData]);
+    console.log(currentReport)
     return (
         <>
             <Card className="h-full w-full">
@@ -80,7 +81,7 @@ export function Reports() {
                     </CardBody>
                     <CardBody className="border-2 border-gray-300 rounded-lg flex flex-col items-center justify-center">
                         <h2 className="text-lg font-semibold text-gray-800">Customer Sales Reports</h2>
-                        <Button onClick={() => { setIsCustomerReportOpen(true); setShowCustomerReport(true); }} className='cursor-pointer mt-3 p-2 hover:bg-gray-600 hover:text-white w-full text-center font-medium rounded'>Generate</Button>
+                        <Button onClick={() => setIsCustomerReportOpen(true)} className='cursor-pointer mt-3 p-2 hover:bg-gray-600 hover:text-white w-full text-center font-medium rounded'>Generate</Button>
                     </CardBody>
                     {/* <CardBody className="border-2 border-gray-300 rounded-lg flex flex-col items-center justify-center">
                         <h2 className="text-lg font-semibold text-gray-800">Product Sales Reports</h2>
@@ -88,44 +89,51 @@ export function Reports() {
                     </CardBody> */}
                 </div>
             </Card>
-            <MonthlyReportForm open={isMonthlyReportOpen} close={() => setIsMonthlyReportOpen(false)} setReportData={setReportData} />
-            <SalesByCustomerForm open={isCustomerReportOpen} close={() => setIsCustomerReportOpen(false)} setReportData={setReportData} />
-            <DailySalesReportForm open={isDailySalesOpen} close={() => setIsDailySalesOpen(false)} setReportData={setReportData} />
+            <MonthlyReportForm open={isMonthlyReportOpen} close={() => setIsMonthlyReportOpen(false)} setReportData={setReportData} onReportGenerated={() => setCurrentReport('monthly')} />
+            <SalesByCustomerForm open={isCustomerReportOpen} close={() => setIsCustomerReportOpen(false)} setReportData={setReportData} onReportGenerated={() => setCurrentReport('customer')} />
+            <DailySalesReportForm open={isDailySalesOpen} close={() => setIsDailySalesOpen(false)} setReportData={setReportData} onReportGenerated={() => setCurrentReport('daily')} />
             {/* <ProductSalesForm open={isProductReportOpen} close={() => setIsProductReportOpen(false)} setReportData={setReportData} /> */}
             {reportData.length > 0 && (
                 <div className='flex flex-col justify-center mt-4'>
                     <div className="flex justify-between gap-4">
-                        <div className="w-1/4 min-w-0">
-                            <Select
-                                label="Filter By Payment Method"
-                                onChange={(value) => {
-                                    setFilterValue(value);
-                                    if (value === "") {
-                                        setFilteredData(reportData);
-                                        return;
-                                    }
-                                    const filteredData = reportData.filter(invoice =>
-                                        invoice.Payments.some(item => item.paymentMethod === value)
-                                    );
-                                    if (filteredData.length === 0) {
-                                        toast.info("No data found for this payment method");
-                                        return;
-                                    }
-                                    setFilteredData(filteredData);
-                                }}
-                            >
-                                <Option value="">All</Option>
-                                <Option value="Cash">Cash</Option>
-                                <Option value="Card">Card</Option>
-                                <Option value="Check">Check</Option>
-                            </Select>
-                        </div>
+                        {currentReport !== 'customer' ? (
+                            <div className="w-1/4 min-w-0">
+                                <Select
+                                    label="Filter By Payment Method"
+                                    onChange={(value) => {
+                                        setFilterValue(value);
+                                        if (value === "") {
+                                            setFilteredData(reportData);
+                                            return;
+                                        }
+                                        const filteredData = reportData.filter(invoice =>
+                                            invoice.Payments.some(item => item.paymentMethod === value)
+                                        );
+                                        if (filteredData.length === 0) {
+                                            toast.info("No data found for this payment method");
+                                            return;
+                                        }
+                                        setFilteredData(filteredData);
+                                    }}
+                                >
+                                    <Option value="">All</Option>
+                                    <Option value="Cash">Cash</Option>
+                                    <Option value="Card">Card</Option>
+                                    <Option value="Check">Check</Option>
+                                </Select>
+                            </div>
+                        )
+                            :
 
+                            <div>
+
+                            </div>
+                        }
                         <div className="flex">
                             <Button
                                 onClick={() => {
                                     setReportData([]);
-                                    setShowCustomerReport(false);
+                                    setCurrentReport(null);
                                 }}
                                 className="bg-red-800 hover:bg-red-900 text-white font-bold py-2 px-4 rounded mr-2"
                             >
@@ -142,14 +150,14 @@ export function Reports() {
                         </div>
                     </div>
 
-                    {showCustomerReport ? (
+                    {currentReport === 'customer' ? (
                         <CustomerReportPreview
                             ref={printRef}
                             invoices={filteredData}
                             productsCategories={productsCategories}
                             taxes={taxes}
                         />
-                    ) : (
+                    ) : currentReport === 'monthly' || 'daily' ? (
                         <MonthlyReportPreview
                             ref={printRef}
                             filterValue={filterValue}
@@ -157,7 +165,7 @@ export function Reports() {
                             productsCategories={productsCategories}
                             taxes={taxes}
                         />
-                    )}
+                    ) : null}
                 </div>
             )}
         </>

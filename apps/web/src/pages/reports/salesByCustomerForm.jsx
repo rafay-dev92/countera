@@ -6,12 +6,16 @@ import { toast } from "react-toastify";
 import { Dialog } from "@material-tailwind/react";
 import { fetchInvoices } from "@/services/fetchInvoices";
 import { fetchCustomers } from "@/services/fetchCustomers";
+import moment from 'moment-timezone';
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 const schema = Yup.object().shape({
     customer: Yup.string().required("Customer is required"),
+    month: Yup.string().required("Month is required"),
 });
 
-function SalesByCustomerForm({ open, close, setReportData }) {
+function SalesByCustomerForm({ open, close, setReportData, onReportGenerated }) {
     const customerInputRef = useRef();
     const { state } = State();
     const [isLoading, setIsLoading] = useState(false);
@@ -42,16 +46,31 @@ function SalesByCustomerForm({ open, close, setReportData }) {
     const onSubmit = async (values) => {
         setIsLoading(true);
         try {
-            const filters = {paymentStatus: ['Paid', 'Partially Paid'], CustomerId: values.customer, isReport: true, order: 'ASC'}
+            const timezone = state.business.timezone;
+            const selectedMonth = new Date(values.month);
+
+            const startDate = moment.tz({
+                year: selectedMonth.getFullYear(),
+                month: selectedMonth.getMonth(),
+                day: 1
+            }, timezone).startOf('day').utc().toDate();
+
+            const endDate = moment.tz({
+                year: selectedMonth.getFullYear(),
+                month: selectedMonth.getMonth(),
+                day: moment(selectedMonth).daysInMonth()
+            }, timezone).endOf('day').utc().toDate();
+            const filters = {paymentStatus: ['Paid', 'Partially Paid'], CustomerId: values.customer, startDate, endDate, isReport: true, order: 'ASC'}
 
             const fetchedInvoices = await fetchInvoices(state.userToken, null, null, filters);
             const totalInvoices = await fetchedInvoices.json();
             if (totalInvoices?.data?.length === 0) {
-                showToastMessage('info', 'No invoices found for this customer');
+                showToastMessage('info', 'No invoices found for this customer in this month');
                 setIsLoading(false);
                 return;
             }
             setReportData(totalInvoices?.data);
+            if (onReportGenerated) onReportGenerated();
             setIsLoading(false);
             handleClose();
         } catch (error) {
@@ -97,9 +116,11 @@ function SalesByCustomerForm({ open, close, setReportData }) {
         formikProps.resetForm({
             values: {
                 customer: '',
+                month: '',
             },
             errors: {
                 customer: '',
+                month: '',
             },
         });
         setSelectedCustomer(null);
@@ -108,6 +129,7 @@ function SalesByCustomerForm({ open, close, setReportData }) {
     const formikProps = useFormik({
         initialValues: {
             customer: '',
+            month: '',
         },
         validationSchema: schema,
         onSubmit,
@@ -121,6 +143,7 @@ function SalesByCustomerForm({ open, close, setReportData }) {
         handleChange,
         handleSubmit,
         setValues,
+        setFieldValue,
     } = formikProps;
 
     return (
@@ -197,6 +220,24 @@ function SalesByCustomerForm({ open, close, setReportData }) {
                                                 }
                                             </ul>
                                         )}
+                                    </div>
+                                    <div className="flex flex-col gap-1">
+                                        <label className="font-bold">Month</label>
+                                        <DatePicker
+                                            id="month"
+                                            name="month"
+                                            selected={values.month}
+                                            onChange={(date) => setFieldValue("month", date)}
+                                            onBlur={handleBlur}
+                                            dateFormat="yyyy-MM"
+                                            showMonthYearPicker
+                                            className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
+                                        />
+                                        {(touched.month && errors.month) ? (
+                                            <div className="text-red-500">
+                                                {errors.month}
+                                            </div>
+                                        ) : (<div></div>)}
                                     </div>
                                 </div>
                                 <div className="flex items-center justify-end space-x-2 sticky bg-gradient-to-br from-gray-800 to-gray-700">

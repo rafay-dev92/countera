@@ -12,7 +12,17 @@ import "react-datepicker/dist/react-datepicker.css";
 
 const schema = Yup.object().shape({
     customer: Yup.string().required("Customer is required"),
-    month: Yup.string().required("Month is required"),
+    startDate: Yup.date().nullable(),
+    endDate: Yup.date()
+        .nullable()
+        .when('startDate', {
+            is: (val) => !!val,
+            then: (schema) =>
+                schema
+                    .required('End date is required if start date is selected')
+                    .min(Yup.ref('startDate'), 'End date cannot be before start date'),
+            otherwise: (schema) => schema.nullable(),
+        }),
 });
 
 function SalesByCustomerForm({ open, close, setReportData, onReportGenerated }) {
@@ -47,25 +57,25 @@ function SalesByCustomerForm({ open, close, setReportData, onReportGenerated }) 
         setIsLoading(true);
         try {
             const timezone = state.business.timezone;
-            const selectedMonth = new Date(values.month);
-
-            const startDate = moment.tz({
-                year: selectedMonth.getFullYear(),
-                month: selectedMonth.getMonth(),
-                day: 1
-            }, timezone).startOf('day').utc().toDate();
-
-            const endDate = moment.tz({
-                year: selectedMonth.getFullYear(),
-                month: selectedMonth.getMonth(),
-                day: moment(selectedMonth).daysInMonth()
-            }, timezone).endOf('day').utc().toDate();
-            const filters = {paymentStatus: ['Paid', 'Partially Paid'], CustomerId: values.customer, startDate, endDate, isReport: true, order: 'ASC'}
-
+            let startDate = values.startDate ? moment.tz(values.startDate, timezone).startOf('day').utc().toDate() : null;
+            let endDate = values.endDate ? moment.tz(values.endDate, timezone).endOf('day').utc().toDate() : null;
+            // If neither date is set, pass null for both
+            if (!startDate && !endDate) {
+                startDate = null;
+                endDate = null;
+            }
+            const filters = {
+                paymentStatus: ['Paid', 'Partially Paid'],
+                CustomerId: values.customer,
+                startDate,
+                endDate,
+                isReport: true,
+                order: 'ASC'
+            };
             const fetchedInvoices = await fetchInvoices(state.userToken, null, null, filters);
             const totalInvoices = await fetchedInvoices.json();
             if (totalInvoices?.data?.length === 0) {
-                showToastMessage('info', 'No invoices found for this customer in this month');
+                showToastMessage('info', 'No invoices found for this customer in this date range');
                 setIsLoading(false);
                 return;
             }
@@ -116,11 +126,13 @@ function SalesByCustomerForm({ open, close, setReportData, onReportGenerated }) 
         formikProps.resetForm({
             values: {
                 customer: '',
-                month: '',
+                startDate: null,
+                endDate: null,
             },
             errors: {
                 customer: '',
-                month: '',
+                startDate: '',
+                endDate: '',
             },
         });
         setSelectedCustomer(null);
@@ -129,7 +141,8 @@ function SalesByCustomerForm({ open, close, setReportData, onReportGenerated }) 
     const formikProps = useFormik({
         initialValues: {
             customer: '',
-            month: '',
+            startDate: null,
+            endDate: null,
         },
         validationSchema: schema,
         onSubmit,
@@ -194,7 +207,7 @@ function SalesByCustomerForm({ open, close, setReportData, onReportGenerated }) 
                                             onBlur={handleBlur}
                                             autoComplete="off"
                                             placeholder="Select Customer"
-                                        />
+                                        />                                        
                                         {showCustomerSuggestions && (
                                             <ul className="d-block absolute z-50 bg-white border border-slate-700 w-full top-full mt-1 overflow-y-auto min-h-24 max-h-48 ">
                                                 {customers.length > 0 ?
@@ -220,24 +233,44 @@ function SalesByCustomerForm({ open, close, setReportData, onReportGenerated }) 
                                                 }
                                             </ul>
                                         )}
-                                    </div>
-                                    <div className="flex flex-col gap-1">
-                                        <label className="font-bold">Month</label>
-                                        <DatePicker
-                                            id="month"
-                                            name="month"
-                                            selected={values.month}
-                                            onChange={(date) => setFieldValue("month", date)}
-                                            onBlur={handleBlur}
-                                            dateFormat="yyyy-MM"
-                                            showMonthYearPicker
-                                            className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
-                                        />
-                                        {(touched.month && errors.month) ? (
-                                            <div className="text-red-500">
-                                                {errors.month}
-                                            </div>
+                                        {(touched.customer && errors.customer) ? (
+                                            <div className="text-red-500">{errors.customer}</div>
                                         ) : (<div></div>)}
+                                    </div>
+                                    <div className="flex gap-x-2">
+                                        <div className="flex flex-col gap-1 w-1/2">
+                                            <label className="font-bold">Start Date</label>
+                                            <DatePicker
+                                                id="startDate"
+                                                name="startDate"
+                                                selected={values.startDate}
+                                                onChange={(date) => setFieldValue("startDate", date || null)}
+                                                onBlur={handleBlur}
+                                                className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
+                                                dateFormat="yyyy-MM-dd"
+                                                placeholderText="Select start date"
+                                            />
+                                            {(touched.startDate && errors.startDate) ? (
+                                                <div className="text-red-500">{errors.startDate}</div>
+                                            ) : (<div></div>)}
+                                        </div>
+                                        <div className="flex flex-col gap-1 w-1/2 mt-0">
+                                            <label className="font-bold">End Date</label>
+                                            <DatePicker
+                                                id="endDate"
+                                                name="endDate"
+                                                selected={values.endDate}
+                                                onChange={(date) => setFieldValue("endDate", date || null)}
+                                                onBlur={handleBlur}
+                                                className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
+                                                dateFormat="yyyy-MM-dd"
+                                                placeholderText="Select end date"
+                                                minDate={values.startDate}
+                                            />
+                                            {(touched.endDate && errors.endDate) ? (
+                                                <div className="text-red-500">{errors.endDate}</div>
+                                            ) : (<div></div>)}
+                                        </div>
                                     </div>
                                 </div>
                                 <div className="flex items-center justify-end space-x-2 sticky bg-gradient-to-br from-gray-800 to-gray-700">

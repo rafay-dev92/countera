@@ -58,7 +58,7 @@ export function Reports() {
         // setOriginalData(reportData);
         setFilteredData(reportData);
     }, [reportData]);
-    console.log(currentReport)
+
     return (
         <>
             <Card className="h-full w-full">

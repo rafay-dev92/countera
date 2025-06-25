@@ -126,6 +126,7 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, close, refresh, 
             ...values,
             endDateTime: inputEndDateTime,
             BusinessId: state.business.id,
+            BusinessName: state.business.name,
             BusinessEmail: state.business.email,
         };
 

@@ -34,6 +34,8 @@ import { updateCustomerVehicle } from "@/services/updateCustomerVehicle";
 import ViewInvoice from "./viewInvoice";
 import { fetchPackages } from "@/services/fetchPackages";
 import ProductForm from "../../utils/forms/productForm";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 const TABLE_HEAD = [
   "Product",
@@ -41,6 +43,7 @@ const TABLE_HEAD = [
   "Price",
   "Tax",
   "Amount",
+  "Reminder Date",
   "Action"
 ]
 
@@ -75,7 +78,8 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
     description: "",
     quantity: 1,
     price: 0,
-    taxable: false
+    taxable: false,
+    replacement_reminder_date: null
   }]);
   const [totalAmount, setTotalAmount] = useState(0);
   const [discount, setDiscount] = useState(0);
@@ -131,7 +135,8 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
       description: "",
       quantity: 1,
       price: 0,
-      taxable: false
+      taxable: false,
+      replacement_reminder_date: null
     }]);
     setAppliedTaxes({});
     clearForm(formikProps);
@@ -186,6 +191,7 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
           taxable: prod.taxable,
           Tax: prod.Tax,
           description: prod.invoice_product.description,
+          replacement_reminder_date: prod.invoice_product.replacement_reminder_date ? new Date(prod.invoice_product.replacement_reminder_date) : null
         }
         selectedProd = [aProd, ...selectedProd];
       })
@@ -225,7 +231,8 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
       id: product.id,
       quantity: product.quantity,
       description: product.description || '',
-      price: product.price
+      price: product.price,
+      replacement_reminder_date: product.replacement_reminder_date
     })).filter(product => product.id); // Remove empty products
 
     if (selectedVehicle?.odometer < vehicleOdometer) {
@@ -350,6 +357,7 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
         taxable: selectedProductDetails.taxable,
         Tax: selectedProductDetails.Tax,
         description: "",
+        replacement_reminder_date: null
       };
     } else {
       // Reset the row if no product is found
@@ -362,6 +370,7 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
         price: 0,
         taxable: false,
         Tax: [],
+        replacement_reminder_date: null
       };
     }
 
@@ -380,6 +389,7 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
         price: 0,
         taxable: false,
         Tax: [],
+        replacement_reminder_date: null
       });
     }
 
@@ -596,7 +606,8 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
       description: "",
       quantity: 1,
       price: 0,
-      taxable: false
+      taxable: false,
+      replacement_reminder_date: null
     }])
     setAppliedTaxes({});
     setSelectedPackage("");
@@ -1130,8 +1141,19 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
                                 {calculateAmount(item.price, item.quantity)}
                               </Typography>
                             </td>
-                            {/* </>
-                            )} */}
+                            <td className="p-4 border-b border-blue-gray-50">
+                              <DatePicker
+                                selected={item.replacement_reminder_date}
+                                onChange={(date) => {
+                                  const newProducts = [...selectedProducts];
+                                  newProducts[index].replacement_reminder_date = date;
+                                  setSelectedProducts(newProducts);
+                                }}
+                                className="w-36 p-2 border rounded-md text-black"
+                                dateFormat="MM/dd/yyyy"
+                                placeholderText="Select a date"
+                              />
+                            </td>
                             <td className="p-4 border-b border-blue-gray-50 text-center px-4 py-2">
                               {index !== selectedProducts.length - 1 ?
                                 <XCircleIcon
@@ -1399,6 +1421,7 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
                         taxable: product.taxable,
                         Tax: product.Tax,
                         description: "",
+                        replacement_reminder_date: null
                       });
                     }
                   });
@@ -1413,6 +1436,7 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
                     price: 0,
                     taxable: false,
                     Tax: [],
+                    replacement_reminder_date: null
                   });
 
                   setSelectedProducts(updatedItems);

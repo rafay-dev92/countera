@@ -88,9 +88,11 @@ const ViewInvoice = ({ printInvoice, setPrintInvoice, componentRef, appliedTaxes
             const invoiceElement = componentRef.current;
             if (!invoiceElement) return;
 
+            const scale = 2.5;
             const canvas = await html2canvas(invoiceElement, {
-                scale: window.devicePixelRatio,
-                useCORS: true
+                scale,
+                useCORS: true,
+                backgroundColor: "#fff"
             });
             const imgData = canvas.toDataURL("image/png");
 
@@ -103,6 +105,7 @@ const ViewInvoice = ({ printInvoice, setPrintInvoice, componentRef, appliedTaxes
 
             const formData = new FormData();
             formData.append("pdf", pdfBlob, "invoice.pdf");
+            formData.append("businessName", state?.business?.name);
             formData.append("businessEmail", state?.business?.email);
             formData.append("customerEmail", printInvoice?.Customer?.email);
             formData.append("customerName", `${printInvoice?.Customer?.firstName} ${printInvoice?.Customer?.lastName}`);

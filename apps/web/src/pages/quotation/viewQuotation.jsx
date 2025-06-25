@@ -64,7 +64,6 @@ const ViewQuotation = ({ quotationData, setQuotationData, componentRef, appliedT
         const confirmed = await confirm("Do you really want to create an invoice from this quotation?");
         if (!confirmed) return;
         setIsLoading({ ...isLoading, createInvoice: true });
-        // const selectedProductIds = quotationData?.Product?.map((product) => `${product.id}:${product.quotation_product?.quantity}`);
         const selectedProductIds = quotationData?.Product?.map((product) => ({
             id: product.id,
             quantity: product.quotation_product.quantity,
@@ -75,7 +74,6 @@ const ViewQuotation = ({ quotationData, setQuotationData, componentRef, appliedT
         const data = {
             invoiceData: {
                 totalAmount: quotationData.totalAmount,
-                // paymentStatus: "Unpaid",
                 CustomerId: quotationData.CustomerId,
                 CustomerVehicleId: quotationData.CustomerVehicleId,
                 comments: quotationData.comments,
@@ -140,9 +138,11 @@ const ViewQuotation = ({ quotationData, setQuotationData, componentRef, appliedT
             const quotationElement = componentRef.current;
             if (!quotationElement) return;
 
+            const scale = 2.5;
             const canvas = await html2canvas(quotationElement, {
-                scale: window.devicePixelRatio,
-                useCORS: true
+                scale,
+                useCORS: true,
+                backgroundColor: "#fff"
             });
             const imgData = canvas.toDataURL("image/png");
 
@@ -155,6 +155,7 @@ const ViewQuotation = ({ quotationData, setQuotationData, componentRef, appliedT
 
             const formData = new FormData();
             formData.append("pdf", pdfBlob, "quotation.pdf");
+            formData.append("businessName", state?.business?.name);
             formData.append("businessEmail", state?.business?.email);
             formData.append("customerEmail", quotationData?.Customer?.email);
             formData.append("customerName", `${quotationData?.Customer?.firstName} ${quotationData?.Customer?.lastName}`);

@@ -5,6 +5,7 @@ const path = require("path");
 const { exec } = require("child_process");
 const app = express();
 const fs = require("fs");
+const replacementReminder = require("./utils/replacementReminder");
 
 app.set("trust proxy", true);
 
@@ -51,6 +52,11 @@ cron.schedule("0 0 * * *", () => {
       console.log(`[${endTime.toISOString()}] Backup output: ${stdout}`);
     }
   });
+});
+
+// daily invoice's product replacement 
+cron.schedule('0 9 * * *', () => {
+  replacementReminder()
 });
 
 app.use(express.json());

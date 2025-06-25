@@ -16,6 +16,10 @@ module.exports = (sequelize) => {
             type: DataTypes.FLOAT,
             defaultValue: 0,
             allowNull: false
+        },
+        replacement_reminder_date: {
+            type: DataTypes.DATE,
+            allowNull: true
         }
     },{
         tableName: 'invoice_product'

@@ -7,16 +7,18 @@ const upload = multer();
 
 router.post("/send/invoice", upload.single("pdf"), async (req, res) => {
   try {
-    if (req.body.customerEmail === "") return res.status(400).json({ message: "Customer Email is missing" });
-    if (req.body.businessEmail === "") return res.status(400).json({ message: "Business Email is missing" });
+    if (req.body.customerEmail === "" || req.body.businessEmail === "") return res.status(400).json({ message: "Customer or Business Email is missing" });
+    if (req.body.businessName === "") return res.status(400).json({ message: "Business Name is missing" });
+
     const mailOptions = {
-      from: req.body.businessEmail,
+      from: `"${req.body.businessName}" <rafaywork93@gmail.com>`,
       to: req.body.customerEmail,
+      replyTo: req.body.businessEmail,
       subject: "Your Invoice",
-      text: `<h6>Hey ${req.body.customerName}!</h6>
+      text: `<h3>Hey ${req.body.customerName}!</h3>
             <p>Thanks for choosing us, Please find the attached invoice below.</p>
             <p>Have a nice day!</p>`,
-      html: `<h6>Hey ${req.body.customerName}!</h6>
+      html: `<h3>Hey ${req.body.customerName}!</h3>
             <p>Thanks for choosing us, Please find the attached invoice below.</p>
             <p>Have a nice day!</p>`,
       attachments: [
@@ -36,34 +38,35 @@ router.post("/send/invoice", upload.single("pdf"), async (req, res) => {
 });
 
 router.post("/send/quotation", upload.single("pdf"), async (req, res) => {
-    try {
-      if (req.body.customerEmail === "" || req.body.businessEmail === "") {
-        return res.status(400).json({ message: "Customer or Business Email is missing" });
-      }
-      const mailOptions = {
-        from: req.body.businessEmail,
-        to: req.body.customerEmail,
-        subject: "Your Quotation",
-        text: `<h6>Hey ${req.body.customerName}!</h6>
+  try {
+    if (req.body.customerEmail === "" || req.body.businessEmail === "") return res.status(400).json({ message: "Customer or Business Email is missing" });
+    if (req.body.businessName === "") return res.status(400).json({ message: "Business Name is missing" });
+
+    const mailOptions = {
+      from: `"${req.body.businessName}" <rafaywork93@gmail.com>`,
+      to: req.body.customerEmail,
+      replyTo: req.body.businessEmail,
+      subject: "Your Quotation",
+      text: `<h3>Hey ${req.body.customerName}!</h3>
               <p>Thanks for choosing us, Please find the attached quotation below.</p>
               <p>Have a nice day!</p>`,
-        html: `<h6>Hey ${req.body.customerName}!</h6>
+      html: `<h3>Hey ${req.body.customerName}!</h3>
               <p>Thanks for choosing us, Please find the attached quotation below.</p>
               <p>Have a nice day!</p>`,
-        attachments: [
-          {
-            filename: "quotation.pdf",
-            content: req.file.buffer,
-            contentType: "application/pdf",
-          },
-        ],
-      };
-  
-      await sendMail(mailOptions);
-      return res.status(200).json({ message: "Quotation sent successfully" });
-    } catch (error) {
-      res.status(500).json({ message: error.message });
-    }
-  });
+      attachments: [
+        {
+          filename: "quotation.pdf",
+          content: req.file.buffer,
+          contentType: "application/pdf",
+        },
+      ],
+    };
+
+    await sendMail(mailOptions);
+    return res.status(200).json({ message: "Quotation sent successfully" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
 
 module.exports = router;

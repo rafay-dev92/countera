@@ -210,6 +210,7 @@ router.post("/create", fetchUser, async (req, res) => {
                 quantity: product.quantity,
                 description: product.description,
                 price: product.price,
+                replacement_reminder_date: product.replacement_reminder_date ? product.replacement_reminder_date  : null,
               },
             });
           }
@@ -307,6 +308,7 @@ router.put("/update/:id", fetchUser, async (req, res) => {
                   quantity: product.quantity,
                   description: product.description,
                   price: product.price,
+                  replacement_reminder_date: product.replacement_reminder_date ? product.replacement_reminder_date  : null,
                 },
               });
             }

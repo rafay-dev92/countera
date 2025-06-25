@@ -99,7 +99,7 @@ router.post("/create", fetchUser, async (req, res) => {
       req.body.startDateTime !== "" &&
       req.body.endTime !== ""
     ) {
-      const { BusinessEmail, ...usefulData } = appointmentData;
+      const { BusinessEmail, BusinessName, ...usefulData } = appointmentData;
       await Appointment.create(usefulData);
       //   if (newAppointment.sendEmail) {
       if (BusinessEmail === null) {
@@ -112,8 +112,9 @@ router.post("/create", fetchUser, async (req, res) => {
       }
 
       const mailOptions = {
-        from: BusinessEmail,
+        from: `"${BusinessName}" <rafaywork93@gmail.com>`,
         to: appointmentData.customerEmail,
+        replyTo: BusinessEmail,
         subject: "Appointment Confirmed",
         text: `${
           appointmentData.customerName
@@ -121,7 +122,7 @@ router.post("/create", fetchUser, async (req, res) => {
           appointmentData.startDateTime.split("T")[0]
         } at ${appointmentData.startDateTime.split("T")[1]} 
                     Thanks and Have a nice day!`,
-        html: `<h6>Hey ${appointmentData.customerName}!</h6>
+        html: `<h3>Hey ${appointmentData.customerName}!</h3>
                     <p>Your appointment has been scheduled on <b>${
                       appointmentData.startDateTime.split("T")[0]
                     }</b> at <b>${

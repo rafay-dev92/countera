@@ -45,6 +45,20 @@ const ViewInvoice = ({ printInvoice, setPrintInvoice, componentRef, appliedTaxes
         }
     };
 
+    const handleUpdate = async () => {
+        if (printInvoice.paymentStatus !== 'Paid') {
+            dispatch({ type: 'SET_INVOICE_VIEW', payload: false });
+            setEdit(true);
+        }
+        else {
+            const decision = await confirm('This invoice is Paid, would you still want to update it?');
+            if (!decision) return;
+
+            dispatch({ type: 'SET_INVOICE_VIEW', payload: false });
+            setEdit(true);
+        }
+    }
+
     const handleDel = async () => {
         const result = await confirmDeleteInvoice();
         if (result === null) return;
@@ -317,7 +331,7 @@ const ViewInvoice = ({ printInvoice, setPrintInvoice, componentRef, appliedTaxes
                                     </div>
                                 }
                                 <div onClick={() => printInvoice?.paymentStatus !== 'Paid' && setIsPaymentFormOpen(true)} className={`w-full py-2 mx-auto ${printInvoice?.paymentStatus !== 'Paid' ? "hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer" : "text-green-500 font-bold"}`}>{printInvoice?.paymentStatus !== 'Paid' ? 'Pay' : 'Paid'}</div>
-                                <div onClick={() => { dispatch({ type: 'SET_INVOICE_VIEW', payload: false }); setEdit(true) }} className="w-full py-2 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer">Edit</div>
+                                <div onClick={() => { handleUpdate() }} className="w-full py-2 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer">Edit</div>
                                 <div onClick={() => setIsNotesFormOpen(true)} className="w-full py-2 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer">Notes</div>
                                 {!isLoading.delete ?
                                     <div onClick={handleDel} className="w-full py-2 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer">Delete</div>

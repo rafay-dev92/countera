@@ -91,8 +91,6 @@ export function Invoice() {
 
   const handleDeleteInvoice = async (index) => {
     if (state.userInfo.Permission.some(obj => obj.name === "CAN_DELETE" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
-      // const confirmed = await confirm("Do you really want to delete this invoice?");
-      // if (!confirmed) return;
 
       const result = await confirmDeleteInvoice();
       if (result === null) return;
@@ -182,7 +180,6 @@ export function Invoice() {
     "Refund": "blue",
   };
 
-  console.log("Invoices:", invoices);
   if (loading) {
     return <Spinner className="mx-auto mt-[30vh] h-10 w-10 text-gray-900/50" />
   }

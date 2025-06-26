@@ -11,7 +11,7 @@ router.post("/send/invoice", upload.single("pdf"), async (req, res) => {
     if (req.body.businessName === "") return res.status(400).json({ message: "Business Name is missing" });
 
     const mailOptions = {
-      from: `"${req.body.businessName}" <rafaywork93@gmail.com>`,
+      from: `"${req.body.businessName}" <${process.env.GMAIL_SMTP_EMAIL}>`,
       to: req.body.customerEmail,
       replyTo: req.body.businessEmail,
       subject: "Your Invoice",
@@ -43,7 +43,7 @@ router.post("/send/quotation", upload.single("pdf"), async (req, res) => {
     if (req.body.businessName === "") return res.status(400).json({ message: "Business Name is missing" });
 
     const mailOptions = {
-      from: `"${req.body.businessName}" <rafaywork93@gmail.com>`,
+      from: `"${req.body.businessName}" <${process.env.GMAIL_SMTP_EMAIL}>`,
       to: req.body.customerEmail,
       replyTo: req.body.businessEmail,
       subject: "Your Quotation",

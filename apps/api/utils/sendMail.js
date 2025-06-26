@@ -2,11 +2,12 @@ const nodemailer = require("nodemailer");
 
 const sendMail = async (mailOptions) => {
   let transporter = nodemailer.createTransport({
-    host: "smtp.sendgrid.net",
-    port: 587,
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true,
     auth: {
-      user: "apikey",
-      pass: process.env.SENDGRID_API_KEY,
+      user: process.env.GMAIL_SMTP_EMAIL,
+      pass: process.env.GMAIL_SMTP_PASS,
     },
   });
 

@@ -20,10 +20,12 @@ import { toast } from 'react-toastify';
 import { State } from "@/state/Context";
 import { fetchPermissions } from "@/services/fetchPermissions";
 import { delPermission } from "@/services/delPermission";
+import { useConfirm } from "@/context/confirmContext";
 
 const TABLE_HEAD = ["Name", "Description", "Actions"];
 
 export default function Permissions() {
+    const confirm = useConfirm();
     const {state} = State();
     const [selectAll, setSelectAll] = useState(false);
     const [selectedRows, setSelectedRows] = useState([]);
@@ -123,7 +125,9 @@ export default function Permissions() {
     };
 
     // Function to handle deletion of selected items
-    const handleDelete = async (id) => {        
+    const handleDelete = async (id) => {  
+        const confirmed = await confirm("Are you sure you want to delete this permission?");
+        if (!confirmed) return;      
         try {
             const res = await delPermission(id, state.userToken);
             const permission = await res.json();
@@ -271,7 +275,7 @@ export default function Permissions() {
                                             </Typography>
                                         </td>                                                                                                                                                                                        
                                         <td className={classes}>
-                                            <Tooltip content="Delete Product">
+                                            <Tooltip content="Delete Permission">
                                                 <IconButton variant="text" onClick={() => handleDelete(id)} >
                                                     <TrashIcon className="h-6 w-6 text-red-600" />
                                                 </IconButton>

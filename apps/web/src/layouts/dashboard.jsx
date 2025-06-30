@@ -29,24 +29,35 @@ export function Dashboard() {
           const UserInfo = await getUserDetails(token);
           if (UserInfo.status >= 200 && UserInfo.status <= 299) {
             const user = await UserInfo.json();
-            if (user?.role === "super-admin") {
+            if (user?.isSuperAdmin) {
               navigate("/super-admin/dashboard");
+              dispatch({ type: 'SET_USER', payload: user });
+              localStorage.setItem('User', JSON.stringify(user));
+              dispatch({ type: 'SET_BUSINESS', payload: null });
+              localStorage.removeItem('Business');
+            } else {
+              dispatch({ type: 'SET_USER', payload: user });
+              localStorage.setItem('User', JSON.stringify(user));
+              if (user.business) {
+                const business = user.business;
+                dispatch({ type: 'SET_BUSINESS', payload: business });
+                localStorage.setItem('Business', JSON.stringify(business));
+              } else {
+                dispatch({ type: 'SET_BUSINESS', payload: null });
+                localStorage.removeItem('Business');
+              }
             }
-            dispatch({ type: 'SET_USER', payload: user });
-            localStorage.setItem('User', JSON.stringify(user));
-            dispatch({ type: 'SET_BUSINESS', payload: user.Business });
-            localStorage.setItem('Business', JSON.stringify(user.Business));
           }
           else {
             try {
               const user = JSON.parse(localStorage.getItem('User'));
               const business = JSON.parse(localStorage.getItem('Business'));
-              if (user?.role === "super-admin") {
+              if (user?.isSuperAdmin) {
                 navigate("/super-admin/dashboard");
               }
               if (user !== null && business !== null) {
                 dispatch({ type: 'SET_USER', payload: user });
-                dispatch({ type: 'SET_BUSINESS', payload: user.Business });
+                dispatch({ type: 'SET_BUSINESS', payload: business });
                 dispatch({ type: 'SET_TOKEN', payload: token });
               }
             } catch (error) {

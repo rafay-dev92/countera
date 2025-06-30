@@ -22,7 +22,8 @@ import { toast } from 'react-toastify';
 import { State } from "@/state/Context";
 import { useConfirm } from "@/context/confirmContext";
 
-const TABLE_HEAD = ["Make", "Model", "Actions"];
+// const TABLE_HEAD = ["Make", "Model", "Actions"];
+const TABLE_HEAD = ["Make", "Model"];
 
 export default function Vehicles() {
     const confirm = useConfirm();
@@ -270,13 +271,13 @@ export default function Vehicles() {
                                                 {model}
                                             </Typography>
                                         </td>
-                                        <td className={classes}>
+                                        {/* <td className={classes}>
                                             <Tooltip content="Delete Vehicle">
                                                 <IconButton variant="text" onClick={() => handleDelete(id)}>
                                                     <TrashIcon className="h-6 w-6 text-red-600" />
                                                 </IconButton>
                                             </Tooltip>
-                                        </td>
+                                        </td> */}
                                     </tr>
                                 );
                             },

@@ -1,4 +1,3 @@
-
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import { TrashIcon, UserGroupIcon } from "@heroicons/react/24/solid";
 import {
@@ -20,10 +19,12 @@ import { toast } from 'react-toastify';
 import { State } from "@/state/Context";
 import { fetchUsers } from "@/services/fetchUsers";
 import { delUser } from "@/services/delUser";
+import { useConfirm } from "@/context/confirmContext";
 
-const TABLE_HEAD = ["Name", "Role", "Email", "Business", "Actions"];
+const TABLE_HEAD = ["Name", "Email", "Business", "Actions"];
 
 export default function Users() {
+    const confirm = useConfirm();
     const {state} = State();
     const [selectAll, setSelectAll] = useState(false);
     const [selectedRows, setSelectedRows] = useState([]);
@@ -124,7 +125,9 @@ export default function Users() {
     };
 
     // Function to handle deletion of selected items
-    const handleDelete = async (id) => {        
+    const handleDelete = async (id) => {    
+        const confirmed = await confirm("Do you really want to delete this user?");
+        if (!confirmed) return; 
         try {
             const res = await delUser(id, state.userToken);
             const user = await res.json();
@@ -236,7 +239,7 @@ export default function Users() {
                             </tr>
                         </thead>
                         <tbody>
-                            {currentItems.map(({ id, first_name, last_name, role, email, Business }, index) => {
+                            {currentItems.map(({ id, first_name, last_name, role, email, businesses }, index) => {
                                 const isLast = index === currentItems.length - 1;
                                 const classes = isLast
                                     ? "p-4"
@@ -261,16 +264,7 @@ export default function Users() {
                                             >
                                                 {first_name + ' ' + last_name}
                                             </Link>
-                                        </td>                                        
-                                        <td className={classes}>
-                                            <Typography
-                                                variant="small"
-                                                color="blue-gray"
-                                                className="font-normal"
-                                            >
-                                                {role}
-                                            </Typography>
-                                        </td>                                        
+                                        </td>                                                                               
                                         <td className={classes}>
                                             <Typography
                                                 variant="small"
@@ -281,17 +275,33 @@ export default function Users() {
                                             </Typography>
                                         </td>
                                         <td className={classes}>
-                                            <Typography
-                                                variant="small"
-                                                color="blue-gray"
-                                                className="font-normal opacity-70"
-                                            >   
-                                            {Business && Business?.name}
-                                            </Typography>
+                                            <div className="flex flex-col gap-1">
+                                                {businesses && businesses.length > 0 ? (
+                                                    businesses.map((business, idx) => (
+                                                        <div key={business.id} className="flex items-center gap-2">
+                                                            <Typography
+                                                                variant="small"
+                                                                color="blue-gray"
+                                                                className="font-normal opacity-70"
+                                                            >   
+                                                                {business.name}
+                                                            </Typography>                                                            
+                                                        </div>
+                                                    ))
+                                                ) : (
+                                                    <Typography
+                                                        variant="small"
+                                                        color="blue-gray"
+                                                        className="font-normal opacity-70"
+                                                    >   
+                                                        No businesses
+                                                    </Typography>
+                                                )}
+                                            </div>
                                         </td>                                                                                                                     
                                         <td className={classes}>
-                                            <Tooltip content="Delete Product">
-                                                <IconButton variant="text" onClick={() => handleDelete(id)} disabled>
+                                            <Tooltip content="Delete User">
+                                                <IconButton variant="text" onClick={() => handleDelete(id)}>
                                                     <TrashIcon className="h-6 w-6 text-red-600" />
                                                 </IconButton>
                                             </Tooltip>

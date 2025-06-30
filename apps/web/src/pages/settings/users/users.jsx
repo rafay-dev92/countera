@@ -45,7 +45,7 @@ function Users() {
     try {
       const res = await fetchUsers(state.userToken);
       const users = await res.json();
-      setUsers(users.filter(user => user.role !== 'Admin'));
+      setUsers(users.filter(user => user.role !== 'ADMIN'));
       setLoading(false)
     } catch (error) {
       toast.error("Something went wrong")

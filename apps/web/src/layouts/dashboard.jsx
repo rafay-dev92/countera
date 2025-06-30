@@ -29,7 +29,7 @@ export function Dashboard() {
           const UserInfo = await getUserDetails(token);
           if (UserInfo.status >= 200 && UserInfo.status <= 299) {
             const user = await UserInfo.json();
-            if (user?.isSuperAdmin) {
+            if (user?.role === 'SUPER_ADMIN') {
               navigate("/super-admin/dashboard");
               dispatch({ type: 'SET_USER', payload: user });
               localStorage.setItem('User', JSON.stringify(user));
@@ -38,8 +38,8 @@ export function Dashboard() {
             } else {
               dispatch({ type: 'SET_USER', payload: user });
               localStorage.setItem('User', JSON.stringify(user));
-              if (user.business) {
-                const business = user.business;
+              if (user.Business) {
+                const business = user.Business;
                 dispatch({ type: 'SET_BUSINESS', payload: business });
                 localStorage.setItem('Business', JSON.stringify(business));
               } else {
@@ -52,7 +52,7 @@ export function Dashboard() {
             try {
               const user = JSON.parse(localStorage.getItem('User'));
               const business = JSON.parse(localStorage.getItem('Business'));
-              if (user?.isSuperAdmin) {
+              if (user?.role === 'SUPER_ADMIN') {
                 navigate("/super-admin/dashboard");
               }
               if (user !== null && business !== null) {
@@ -61,7 +61,7 @@ export function Dashboard() {
                 dispatch({ type: 'SET_TOKEN', payload: token });
               }
             } catch (error) {
-
+              console.log(error)
             }
           }
         } catch (error) {

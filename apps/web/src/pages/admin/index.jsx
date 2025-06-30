@@ -75,7 +75,7 @@ function AdminPanel() {
         }
 
         const user = await getUserInfo(token);
-        if (user?.role !== "super-admin") {
+        if (user?.role !== "SUPER_ADMIN") {
           navigate("/dashboard/home");
         }
       } catch (error) {

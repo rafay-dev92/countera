@@ -201,10 +201,11 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
     } = formikProps;
 
     const userRoles = [
-        { value: 'Admin', label: 'Admin' },
-        { value: 'Manager', label: 'Manager' },
-        { value: 'Cashier', label: 'Cashier' },
-        { value: 'Salesman', label: 'Salesman' },
+        { value: 'ADMIN', label: 'Admin' },
+        { value: 'USER', label: 'User' },
+        { value: 'MANAGER', label: 'Manager' },
+        { value: 'CASHIER', label: 'Cashier' },
+        { value: 'SALESMAN', label: 'Salesman' },
     ];
 
     return (
@@ -375,7 +376,7 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
                                                     setBusiness(e.target.value)
                                                 }
                                                 size="md"
-                                                disabled={state.userInfo.role !== 'super-admin'}
+                                                disabled={state.userInfo.role !== 'SUPER_ADMIN'}
                                             >
                                                 {businesses ?
                                                     businesses.map((business) => (

@@ -43,7 +43,7 @@ export default function Vehicles() {
     // Modify handleRowSelect to update the selected item's data
     const handleEditVehicle = (index) => {
         // Assuming currentItems holds the filtered rows for display
-        if (state.userInfo.Permission.some(obj => obj.name === "CAN_EDIT_VEHICLE" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
+        if (state.userInfo.Permission.some(obj => obj.name === "CAN_UPDATE" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
             const selected = currentItems[index];
             setSelectedItem(selected);
             openPopup();
@@ -137,7 +137,7 @@ export default function Vehicles() {
     const handleDelete = async (id) => {  
         const confirmed = await confirm("Do you really want to delete this vehicle?");
         if (!confirmed) return;     
-        if (state.userInfo.Permission.some(obj => obj.name === "CAN_DELETE_VEHICLE" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
+        if (state.userInfo.Permission.some(obj => obj.name === "CAN_DELETE" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
             try {
                 const res = await delVehicle(id, state.userToken);
                 const vehicle = await res.json();
@@ -171,7 +171,7 @@ export default function Vehicles() {
     const [isOpen, setIsOpen] = useState(false);
 
     const openPopup = () => {
-        if (state.userInfo.Permission.some(obj => obj.name === "CAN_ADD_VEHICLE" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
+        if (state.userInfo.Permission.some(obj => obj.name === "CAN_ADD" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
             setIsOpen(true);
         }
         else {

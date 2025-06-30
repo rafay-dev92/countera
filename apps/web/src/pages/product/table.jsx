@@ -43,7 +43,7 @@ export function Product() {
     // Modify handleRowSelect to update the selected item's data
     const handleEditProduct = (index) => {
         // Assuming currentItems holds the filtered rows for display
-        if (state.userInfo.Permission.some(obj => obj.name === "CAN_EDIT_PRODUCT" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
+        if (state.userInfo.Permission.some(obj => obj.name === "CAN_UPDATE" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
             const selected = currentItems[index];
             setSelectedItem(selected);
             openPopup();
@@ -149,7 +149,7 @@ export function Product() {
         // setSelectAll(false);
         const confirmed = await confirm("Do you really want to delete this product?");
         if (!confirmed) return;
-        if (state.userInfo.Permission.some(obj => obj.name === "CAN_DELETE_PRODUCT" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
+        if (state.userInfo.Permission.some(obj => obj.name === "CAN_DELETE" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
             try {
                 const res = await delProduct(id, state.userToken);
                 const product = await res.json();
@@ -182,7 +182,7 @@ export function Product() {
     // Popup state
     const [isOpen, setIsOpen] = useState(false);
     const openPopup = () => {
-        if (state.userInfo.Permission.some(obj => obj.name === "CAN_ADD_PRODUCT" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
+        if (state.userInfo.Permission.some(obj => obj.name === "CAN_ADD" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
 
             // setIsOpen(true);
             dispatch({

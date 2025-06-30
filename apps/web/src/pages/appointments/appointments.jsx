@@ -94,7 +94,7 @@ export function Appointments() {
     }
 
     const handleOpen = () => {
-        if (state.userInfo.Permission.some(obj => obj.name === "CAN_ADD_APPOINTMENT" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
+        if (state.userInfo.Permission.some(obj => obj.name === "CAN_ADD" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
             setOpen(true);
         }
         else {
@@ -107,7 +107,7 @@ export function Appointments() {
     };
 
     const handleEdit = (data) => {
-        if (state.userInfo.Permission.some(obj => obj.name === "CAN_EDIT_APPOINTMENT" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
+        if (state.userInfo.Permission.some(obj => obj.name === "CAN_UPDATE" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
             setSelectedItem(data)
             handleOpen()
         }
@@ -119,7 +119,7 @@ export function Appointments() {
     async function handleDel(id) {
         const confirmed = await confirm("Are you sure you want to delete this appointment?");
         if (!confirmed) return
-        if (state.userInfo.Permission.some(obj => obj.name === "CAN_DELETE_APPOINTMENT" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
+        if (state.userInfo.Permission.some(obj => obj.name === "CAN_DELETE" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
             setAppointments(appointments.filter((appointment) => appointment.id !== id))
             try {
                 const res = await delAppointment(id, state.userToken);

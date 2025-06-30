@@ -66,7 +66,7 @@ export default function Users() {
     const getUsers = async () => {
         try {
             const users = await (await fetchUsers(state.userToken)).json();
-            setFinalItems(users.filter(user => user.role !== 'super-admin'));
+            setFinalItems(users.filter(user => user.role !== 'SUPER_ADMIN'));
             setLoading(false);
         } catch (error) {
             console.log(error.message);
@@ -264,7 +264,16 @@ export default function Users() {
                                             >
                                                 {first_name + ' ' + last_name}
                                             </Link>
-                                        </td>                                                                               
+                                        </td> 
+                                        <td className={classes}>
+                                            <Typography
+                                                variant="small"
+                                                color="blue-gray"
+                                                className="font-normal opacity-70"
+                                            >
+                                                {role}
+                                            </Typography>
+                                        </td>                                                                              
                                         <td className={classes}>
                                             <Typography
                                                 variant="small"
@@ -275,29 +284,13 @@ export default function Users() {
                                             </Typography>
                                         </td>
                                         <td className={classes}>
-                                            <div className="flex flex-col gap-1">
-                                                {businesses && businesses.length > 0 ? (
-                                                    businesses.map((business, idx) => (
-                                                        <div key={business.id} className="flex items-center gap-2">
-                                                            <Typography
-                                                                variant="small"
-                                                                color="blue-gray"
-                                                                className="font-normal opacity-70"
-                                                            >   
-                                                                {business.name}
-                                                            </Typography>                                                            
-                                                        </div>
-                                                    ))
-                                                ) : (
-                                                    <Typography
-                                                        variant="small"
-                                                        color="blue-gray"
-                                                        className="font-normal opacity-70"
-                                                    >   
-                                                        No businesses
-                                                    </Typography>
-                                                )}
-                                            </div>
+                                            <Typography
+                                                variant="small"
+                                                color="blue-gray"
+                                                className="font-normal opacity-70"
+                                            >   
+                                                {Business?.name}
+                                            </Typography>
                                         </td>                                                                                                                     
                                         <td className={classes}>
                                             <Tooltip content="Delete User">

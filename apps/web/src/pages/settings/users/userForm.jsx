@@ -175,10 +175,11 @@ const UserForm = ({ open, close, selectedItem, setSelectedItem, refresh, setRefr
     } = formikProps;
 
     const userRoles = [
-        { value: 'Admin', label: 'Admin' },
-        { value: 'Manager', label: 'Manager' },
-        { value: 'Cashier', label: 'Cashier' },
-        { value: 'Salesman', label: 'Salesman' },
+        // { value: 'ADMIN', label: 'Admin' },
+        { value: 'USER', label: 'User' },
+        { value: 'MANAGER', label: 'Manager' },
+        { value: 'CASHIER', label: 'Cashier' },
+        { value: 'SALESMAN', label: 'Salesman' },
     ];
 
     return (

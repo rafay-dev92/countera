@@ -46,7 +46,7 @@ export function SignIn() {
         }
         const user = await getUserInfo(token);
         setLoading(false);
-        if (user?.role === "super-admin" || user?.isSuperAdmin) {
+        if (user?.role === "SUPER_ADMIN") {
           navigate("/super-admin/dashboard");
         } else {
           navigate("/dashboard/home");
@@ -127,7 +127,7 @@ export function SignIn() {
           setPassword('');
           setShowPassword(false);
           setLoading(false);
-          if (UserInfo?.role === 'super-admin' || UserInfo?.isSuperAdmin) navigate('/super-admin/dashboard')
+          if (UserInfo?.role === 'SUPER_ADMIN' || UserInfo?.isSuperAdmin) navigate('/super-admin/dashboard')
           else navigate('/dashboard/home')
         } catch (error) {
           setLoading(false);

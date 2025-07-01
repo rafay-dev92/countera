@@ -239,7 +239,7 @@ export default function Users() {
                             </tr>
                         </thead>
                         <tbody>
-                            {currentItems.map(({ id, first_name, last_name, role, email, businesses }, index) => {
+                            {currentItems.map(({ id, first_name, last_name, role, email, Business }, index) => {
                                 const isLast = index === currentItems.length - 1;
                                 const classes = isLast
                                     ? "p-4"

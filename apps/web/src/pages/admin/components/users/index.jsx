@@ -21,7 +21,7 @@ import { fetchUsers } from "@/services/fetchUsers";
 import { delUser } from "@/services/delUser";
 import { useConfirm } from "@/context/confirmContext";
 
-const TABLE_HEAD = ["Name", "Email", "Business", "Actions"];
+const TABLE_HEAD = ["Name", "Role", "Email", "Business", "Actions"];
 
 export default function Users() {
     const confirm = useConfirm();

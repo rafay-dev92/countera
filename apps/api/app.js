@@ -6,7 +6,7 @@ const { exec } = require("child_process");
 const app = express();
 const fs = require("fs");
 const replacementReminder = require("./utils/replacementReminder");
-const sendMail = require('../utils/sendMail');
+const sendMail = require('./utils/sendMail');
 
 app.set("trust proxy", true);
 

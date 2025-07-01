@@ -6,6 +6,7 @@ const { exec } = require("child_process");
 const app = express();
 const fs = require("fs");
 const replacementReminder = require("./utils/replacementReminder");
+const sendMail = require('../utils/sendMail');
 
 app.set("trust proxy", true);
 
@@ -41,6 +42,20 @@ cron.schedule("0 0 * * *", () => {
       console.error(
         `[${endTime.toISOString()}] Backup failed: ${error.message}`
       );
+      const errorMsg = `Backup failed: ${error.message}`;
+      console.error(errorMsg);
+      fs.appendFileSync(logPath, logMessage + errorMsg + '\n');
+
+      // Send email on failure
+      const mailOptions = {
+        from: `"Sales4x Backup" <${process.env.GMAIL_SMTP_EMAIL}>`,
+        to: process.env.BACKUP_ALERT_EMAIL || process.env.GMAIL_SMTP_EMAIL,
+        subject: 'Sales4x Backup Failed',
+        text: errorMsg,
+        html: `<p>${errorMsg}</p>`
+      };
+      sendMail(mailOptions);
+
       return;
     }
     if (stderr) {

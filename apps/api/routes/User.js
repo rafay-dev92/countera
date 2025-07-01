@@ -14,7 +14,7 @@ router.get("/", fetchUser, async (req, res) => {
     const loggedInUser = await User.findOne({
       where: {
         id: userId,
-        role: { [Op.ne]: "super-admin" },
+        role: { [Op.ne]: "SUPER_ADMIN" },
         BusinessId: { [Op.ne]: null },
       },
     });
@@ -138,7 +138,7 @@ router.post("/login", async (req, res) => {
 
     if (!passMatch) {
       return res
-        .status(404)
+        .status(401)
         .json({ message: "Please provide correct credentials" });
     }
 

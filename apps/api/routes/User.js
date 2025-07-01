@@ -73,10 +73,8 @@ router.post(
 
       const existingUser = await User.findOne({
         where: {
-          [Op.or]: [
-            { email: userData.email },
-            { email: userData.email, role: "super-admin" }
-          ]
+          email: userData.email,
+          BusinessId: userData.BusinessId
         },
       });
 
@@ -126,13 +124,17 @@ router.post("/add_permission", async (req, res) => {
 
 router.post("/login", async (req, res) => {
   try {
-    const user = await User.findOne({ where: { email: req.body.email } });
+    const { email, password, businessId } = req.body;
+    const whereClause = { email };
+    if (businessId) whereClause.BusinessId = businessId;
+
+    const user = await User.findOne({ where: whereClause });
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    const passMatch = await bcryptjs.compare(req.body.password, user.password);
+    const passMatch = await bcryptjs.compare(password, user.password);
 
     if (!passMatch) {
       return res
@@ -154,6 +156,34 @@ router.post("/login", async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Error login user" });
+  }
+});
+
+router.post("/businesses-for-email", async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
+    }
+    
+    const users = await User.findAll({
+      where: { email },
+      include: {
+        model: Business,
+        as: 'Business',
+        attributes: ['id', 'name'],
+      },
+    });
+
+    if (users.length > 0 && (users[0].role === 'SUPER_ADMIN' || users[0].isSuperAdmin)) {
+      return res.json({ isSuperAdmin: true });
+    }
+
+    const businesses = users.map(user => user.Business).filter(Boolean);
+    res.json({ businesses });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error fetching businesses for email" });
   }
 });
 

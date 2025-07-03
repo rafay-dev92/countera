@@ -62,7 +62,7 @@ router.post("/create", upload.single("logo"), async (req, res) => {
         .json({ message: "Business already exists" });
     }
     if (req.file) {
-      const imageUrl = `${req.protocol}://${req.get("host")}/uploads/business/${
+      const imageUrl = `${req.protocol}://${req.get("host")}/backend/uploads/business/${
         req.file.filename
       }`;
       req.body.logo = imageUrl;
@@ -83,7 +83,7 @@ router.put("/update/:id", upload.single("logo"), async (req, res) => {
       return res.status(404).json({ message: "business not found" });
     }
     if (req.file) {
-      const imageUrl = `${req.protocol}://${req.get("host")}/uploads/business/${
+      const imageUrl = `${req.protocol}://${req.get("host")}/backend/uploads/business/${
         req.file.filename
       }`;
       req.body.logo = imageUrl;

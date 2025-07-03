@@ -103,7 +103,7 @@ router.post("/create", fetchUser, upload.single("image"), async (req, res) => {
         .json({ message: "Product with this name or item code already exists" });
     }
     if (req.file) {
-      const imageUrl = `${req.protocol}://${req.get("host")}/uploads/products/${
+      const imageUrl = `${req.protocol}://${req.get("host")}/backend/uploads/products/${
         req.file.filename
       }`;
       productData.image = imageUrl;
@@ -148,7 +148,7 @@ router.put(
         return res.status(404).json({ message: "product not found" });
       }
       if (req.file) {
-        const imageUrl = `${req.protocol}://${req.get("host")}/uploads/products/${
+        const imageUrl = `${req.protocol}://${req.get("host")}/backend/uploads/products/${
           req.file.filename
         }`;
         req.body.image = imageUrl;

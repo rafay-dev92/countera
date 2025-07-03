@@ -46,7 +46,7 @@ const printView = React.forwardRef(({view, workOrderData, appliedTaxes}, ref) =>
 
     if (workOrderData && Object.keys(workOrderData).length > 0) {
         return (
-             <div ref={ref} className={`min-h-screen flex flex-col ${!view ? "hidden print:flex print:min-h-screen" : ""}`}>
+             <div ref={ref} className={`w-[794px] min-h-[1123px] bg-white mx-auto flex flex-col ${!view ? "hidden print:flex" : ""}`}>
                 <div className="grid grid-cols-2 border-b">
                     <div className="col-span-1 h-full flex p-1">
                         <img src={workOrderData?.Business.logo} className="rounded-xl h-[100px]" alt="Business logo" height={100} />

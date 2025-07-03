@@ -138,9 +138,13 @@ const ViewQuotation = ({ quotationData, setQuotationData, componentRef, appliedT
             const quotationElement = componentRef.current;
             if (!quotationElement) return;
 
-            const scale = 2.5;
+            const scale = 2.0;
+            const a4WidthPx = 794;
+            const a4HeightPx = 1123;
             const canvas = await html2canvas(quotationElement, {
                 scale,
+                width: a4WidthPx,
+                height: a4HeightPx,
                 useCORS: true,
                 backgroundColor: "#fff"
             });

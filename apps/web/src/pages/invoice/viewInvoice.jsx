@@ -102,9 +102,13 @@ const ViewInvoice = ({ printInvoice, setPrintInvoice, componentRef, appliedTaxes
             const invoiceElement = componentRef.current;
             if (!invoiceElement) return;
 
-            const scale = 2.5;
+            const scale = 2.0;
+            const a4WidthPx = 794;
+            const a4HeightPx = 1123;
             const canvas = await html2canvas(invoiceElement, {
                 scale,
+                width: a4WidthPx,
+                height: a4HeightPx,
                 useCORS: true,
                 backgroundColor: "#fff"
             });
@@ -115,6 +119,7 @@ const ViewInvoice = ({ printInvoice, setPrintInvoice, componentRef, appliedTaxes
             const pdfHeight = pdf.internal.pageSize.getHeight();
 
             pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+
             const pdfBlob = pdf.output("blob");
 
             const formData = new FormData();
@@ -344,6 +349,13 @@ const ViewInvoice = ({ printInvoice, setPrintInvoice, componentRef, appliedTaxes
                                         }
                                     </div>
                                 )}
+                                <button onClick={() => {
+                                    import('html2canvas').then(({ default: html2canvas }) => {
+                                        html2canvas(document.getElementById('pdf-invoice')).then(canvas => {
+                                            document.body.appendChild(canvas);
+                                        });
+                                    });
+                                }}>Test html2canvas</button>
                                 <ReactToPrint
                                     trigger={() => <button
                                         className="w-full py-2 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer"

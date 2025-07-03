@@ -349,13 +349,6 @@ const ViewInvoice = ({ printInvoice, setPrintInvoice, componentRef, appliedTaxes
                                         }
                                     </div>
                                 )}
-                                <button onClick={() => {
-                                    import('html2canvas').then(({ default: html2canvas }) => {
-                                        html2canvas(document.getElementById('pdf-invoice')).then(canvas => {
-                                            document.body.appendChild(canvas);
-                                        });
-                                    });
-                                }}>Test html2canvas</button>
                                 <ReactToPrint
                                     trigger={() => <button
                                         className="w-full py-2 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer"

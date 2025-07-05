@@ -12,10 +12,12 @@ import {
   BriefcaseIcon,
   UserGroupIcon,
   ShieldCheckIcon,
+  TruckIcon,
 } from "@heroicons/react/24/solid";
 import Businesses from "./components/businesses";
 import Users from "./components/users";
 import Permissions from "./components/permissions";
+import Vehicles from "./components/vehicles";
 
 function AdminPanel() {
   const { dispatch } = State();
@@ -53,6 +55,12 @@ function AdminPanel() {
           name: "Permissions",
           path: "/permissions",
           element: <Permissions />,
+        },
+        {
+          icon: <TruckIcon {...icon} />,
+          name: "Vehicles",
+          path: "/vehicles",
+          element: <Vehicles />,
         },
       ],
       

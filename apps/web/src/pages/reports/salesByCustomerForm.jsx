@@ -164,7 +164,7 @@ function SalesByCustomerForm({ open, close, setReportData, onReportGenerated }) 
             <Dialog open={open} size="xs">
                 {open && (
                     <form onSubmit={handleSubmit} autoComplete="new" >
-                        <div className="flex justify-center w-full">
+                        <div className="">
                             <div className="bg-white rounded shadow-xl">
                                 <div className="flex items-center justify-between sticky bg-gradient-to-br from-gray-800 to-gray-700">
                                     <div></div>
@@ -193,7 +193,7 @@ function SalesByCustomerForm({ open, close, setReportData, onReportGenerated }) 
                                     </button>
                                 </div>
 
-                                <div className="w-[25vw] p-6 space-y-4">
+                                <div className="p-6 space-y-4">
                                     <div className="relative flex flex-col" ref={customerInputRef}>
                                         <label className="font-bold">Customer</label>
                                         <input

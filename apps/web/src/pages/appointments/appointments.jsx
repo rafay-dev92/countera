@@ -174,7 +174,7 @@ export function Appointments() {
                     </Typography>
                 </div>
                 <div className="flex flex-col lg:flex-row items-center w-full mt-5">
-                    <div className="w-full lg:w-2/5 flex items-center justify-center lg:justify-start gap-2">
+                    <div className="w-full lg:w-2/5 flex items-center justify-start gap-2">
                         <div className="flex gap-2 lg:gap-4">
                             <Button className="w-full bg-blue-900 lg:w-auto" size="md" onClick={handleOpen} >
                                 New

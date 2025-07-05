@@ -187,7 +187,7 @@ const UserForm = ({ open, close, selectedItem, setSelectedItem, refresh, setRefr
             <Dialog open={open}>
                 {open && (
                     <form onSubmit={handleSubmit} autoComplete="new">
-                        <div className="flex justify-center w-full">
+                        <div className="">
                             <div className="bg-white rounded shadow-xl">
                                 <div className="flex items-center justify-between sticky bg-gradient-to-br from-gray-800 to-gray-700">
                                     <div></div>
@@ -216,7 +216,7 @@ const UserForm = ({ open, close, selectedItem, setSelectedItem, refresh, setRefr
                                     </button>
                                 </div>
 
-                                <div className="w-[40vw] p-6">
+                                <div className="min-w-[40vw] p-6">
                                     <div className="flex items-center justify-start space-x-4">
                                         <div className="basis-[33.33%]">
                                             <label className="font-bold">First Name</label> <br />

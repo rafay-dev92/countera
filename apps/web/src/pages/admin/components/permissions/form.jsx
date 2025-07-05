@@ -122,7 +122,7 @@ const PermissionForm = ({ open, close, selectedItem, setSelectedItem, refresh, s
             <Dialog open={open}>
                 {open && (
                     <form autoComplete="new">
-                        <div className="flex justify-center w-full">
+                        <div className="">
                             <div className="bg-white rounded shadow-xl">
                                 <div className="flex items-center justify-between sticky bg-gradient-to-br from-gray-800 to-gray-700">
                                     <div></div>
@@ -151,7 +151,7 @@ const PermissionForm = ({ open, close, selectedItem, setSelectedItem, refresh, s
                                     </button>
                                 </div>
 
-                                <div className="w-[30vw] p-6">
+                                <div className="p-6">
                                     <div className="flex items-center justify-start space-x-4">
                                         <div className="basis-[50%]">
                                             <label className="font-bold">Name</label> <br />

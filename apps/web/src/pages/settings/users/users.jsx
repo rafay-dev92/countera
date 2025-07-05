@@ -53,30 +53,30 @@ function Users() {
   }
 
   // Function to handle deletion of selected items
-  const handleDelete = async (id) => {    
+  const handleDelete = async (id) => {
     const confirmed = await confirm("Do you really want to delete this user?");
-    if (!confirmed) return;   
+    if (!confirmed) return;
     if (state.userInfo.Permission.some(obj => obj.name === "CAN_DELETE" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
-        try {
-            const res = await delUser(id, state.userToken);
-            const user = await res.json();
-            if (res.status === 200) {
-                toast.success(user.message)
-            }
-            else if (res.status === 404) {
-                toast.info(user.message)
-            }
-            else if (res.status === 500) {
-                toast.error("You must delete its foreign key relations first");
-            }
-            setRefresh(!refresh);
-        } catch (error) {
-            console.log(error)
-            showToastMessage('error', "You must delete its foreign key relations first");
+      try {
+        const res = await delUser(id, state.userToken);
+        const user = await res.json();
+        if (res.status === 200) {
+          toast.success(user.message)
         }
+        else if (res.status === 404) {
+          toast.info(user.message)
+        }
+        else if (res.status === 500) {
+          toast.error("You must delete its foreign key relations first");
+        }
+        setRefresh(!refresh);
+      } catch (error) {
+        console.log(error)
+        showToastMessage('error', "You must delete its foreign key relations first");
+      }
     }
     else {
-        toast.error("You are not allowed to delete a user");
+      toast.error("You are not allowed to delete a user");
     }
   };
 
@@ -84,12 +84,12 @@ function Users() {
   const handleEditUser = (index) => {
     // Assuming currentItems holds the filtered rows for display
     if (state.userInfo.Permission.some(obj => obj.name === "CAN_UPDATE" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
-        const selected = currentItems[index];
-        setSelectedItem(selected);
-        openPopup();
+      const selected = currentItems[index];
+      setSelectedItem(selected);
+      openPopup();
     }
     else {
-        toast.error("You are not allowed to update a user");
+      toast.error("You are not allowed to update a user");
     }
   };
 
@@ -116,37 +116,40 @@ function Users() {
   }
   return (
     <>
-      <Card className="h-full w-full ">
+      <Card className="w-full max-h-[80vh] overflow-y-auto">
         <CardHeader floated={false} shadow={false} className="rounded-none">
-          <div className="flex flex-col md:flex-row items-center w-full h-max py-3">
-            <div className="w-full md:w-2/5 flex items-center justify-center md:justify-start gap-2">
-              <Typography variant="h5" color="blue-gray" className="flex items-center">
+          <div className="flex flex-col md:flex-row items-center w-full h-max py-3 gap-4">
+            <div className="w-full md:w-auto flex items-center justify-start gap-2">
+              <Typography variant="h5" color="blue-gray" className="flex items-center text-lg md:text-xl">
                 Users
               </Typography>
-              <PlusCircleIcon onClick={openPopup} className="ml-4 mr-1 h-7 w-7 text-blue-600 cursor-pointer" />
-              <span className="text-base">Add new User</span>
+              <Tooltip content="Add new User">
+                <PlusCircleIcon onClick={openPopup} className="ml-2 mr-1 h-7 w-7 text-blue-600 cursor-pointer" />
+              </Tooltip>
             </div>
-            <div className="flex items-center mt-4 md:mt-0 md:ml-auto">
-              <div className="w-full md:flex-1 md:mr-4">
+            <div className="flex flex-col sm:flex-row items-start gap-3 w-full md:w-auto md:ml-auto">
+              <div className="w-full sm:w-auto md:flex-1 md:mr-4">
                 <Input
                   label="Search"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  icon={<MagnifyingGlassIcon className="h-5 w-5" />}
+                  icon={<MagnifyingGlassIcon className="h-4 w-4 md:h-5 md:w-5" />}
+                  className="text-xs md:text-sm lg:text-base"
                 />
               </div>
-              <Typography variant="small" color="blue-gray" className="mr-2">
-                Items per page:
-              </Typography>
-              <select
-                value={itemsPerPage}
-                onChange={handleItemsPerPageChange}
-                className="px-2 py-1 border border-blue-gray-300 rounded bg-white text-blue-gray-700"
-              >
-                <option value={5}>5</option>
-                <option value={10}>10</option>
-                <option value={15}>15</option>
-              </select>
+              <div className="flex gap-2">
+                <Tooltip content="Items per page">
+                  <select
+                    value={itemsPerPage}
+                    onChange={handleItemsPerPageChange}
+                    className="px-2 py-2 border border-blue-gray-300 rounded bg-white text-blue-gray-700 text-xs md:text-sm"
+                  >
+                    <option value={5}>5</option>
+                    <option value={10}>10</option>
+                    <option value={15}>15</option>
+                  </select>
+                </Tooltip>
+              </div>
             </div>
           </div>
         </CardHeader>
@@ -249,10 +252,10 @@ function Users() {
             </Button>
           </div>
         </CardFooter>
-        
+
       </Card>
       <UserForm open={isOpen} close={closePopup} selectedItem={selectedItem} setSelectedItem={setSelectedItem} refresh={refresh} setRefresh={setRefresh} />
-    </>    
+    </>
   );
 }
 

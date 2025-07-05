@@ -108,7 +108,7 @@ function MonthlyReportForm({ open, close, setReportData, onReportGenerated }) {
             <Dialog open={open} size="xs">
                 {open && (
                     <form onSubmit={handleSubmit} autoComplete="new" >
-                        <div className="flex justify-center w-full">
+                        <div className="">
                             <div className="bg-white rounded shadow-xl">
                                 <div className="flex items-center justify-between sticky bg-gradient-to-br from-gray-800 to-gray-700">
                                     <div></div>
@@ -137,7 +137,7 @@ function MonthlyReportForm({ open, close, setReportData, onReportGenerated }) {
                                     </button>
                                 </div>
 
-                                <div className="w-[25vw] p-6 space-y-4">
+                                <div className="p-6 space-y-4">
                                     <div className="flex flex-col gap-1">
                                         <label className="font-bold">Month</label>
                                         <DatePicker

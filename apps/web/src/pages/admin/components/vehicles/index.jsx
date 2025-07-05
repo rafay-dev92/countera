@@ -1,6 +1,6 @@
 
-import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
-import { TruckIcon, TrashIcon } from "@heroicons/react/24/solid";
+import { MagnifyingGlassIcon, PlusCircleIcon } from "@heroicons/react/24/outline";
+import { TrashIcon, TruckIcon } from "@heroicons/react/24/solid";
 import {
     Card,
     CardHeader,
@@ -18,13 +18,16 @@ import { Link } from "react-router-dom";
 import MyPopUpForm from "./form";
 import { fetchVehicles } from "@/services/fetchVehicles";
 import { delVehicle } from "@/services/delVehicle";
-import {toast} from 'react-toastify';
+import { toast } from 'react-toastify';
 import { State } from "@/state/Context";
+import { useConfirm } from "@/context/confirmContext";
 
 const TABLE_HEAD = ["Make", "Model", "Actions"];
+// const TABLE_HEAD = ["Make", "Model"];
 
-export function Vehicles() {
-    const {state} = State();    
+export default function Vehicles() {
+    const confirm = useConfirm();
+    const { state } = State();
     const [selectAll, setSelectAll] = useState(false);
     const [selectedRows, setSelectedRows] = useState([]);
     const [searchQuery, setSearchQuery] = useState("");
@@ -40,7 +43,7 @@ export function Vehicles() {
     // Modify handleRowSelect to update the selected item's data
     const handleEditVehicle = (index) => {
         // Assuming currentItems holds the filtered rows for display
-        if (state.userInfo.Permission.some(obj => obj.name === "CAN_EDIT_VEHICLE" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
+        if (state.userInfo.Permission.some(obj => obj.name === "CAN_UPDATE" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
             const selected = currentItems[index];
             setSelectedItem(selected);
             openPopup();
@@ -69,7 +72,7 @@ export function Vehicles() {
 
     const getVehicles = async () => {
         try {
-            const vehicles = await fetchVehicles(state.userToken);            
+            const vehicles = await fetchVehicles(state.userToken);
             setFinalItems(await vehicles.json());
             setLoading(false)
         } catch (error) {
@@ -132,20 +135,9 @@ export function Vehicles() {
 
     // Function to handle deletion of selected items
     const handleDelete = async (id) => {
-        // Calculate the indexes of the selected rows within the full data set
-        // const selectedIndexes = selectedRows.map((index) => {
-        //   const startIndex = (currentPage - 1) * itemsPerPage;
-        //   return startIndex + index;
-        // });
-
-        // Create a new array containing the rows that are not selected
-        // const updatedItems = finalItems.filter((_, index) => !selectedIndexes.includes(index));
-
-        // Update finalItems and clear selectedRows
-        // setFinalItems(updatedItems);
-        // setSelectedRows([]);
-        // setSelectAll(false);
-        if (state.userInfo.Permission.some(obj => obj.name === "CAN_DELETE_VEHICLE" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
+        const confirmed = await confirm("Do you really want to delete this vehicle?");
+        if (!confirmed) return;
+        if (state.userInfo.Permission.some(obj => obj.name === "CAN_DELETE" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
             try {
                 const res = await delVehicle(id, state.userToken);
                 const vehicle = await res.json();
@@ -179,7 +171,7 @@ export function Vehicles() {
     const [isOpen, setIsOpen] = useState(false);
 
     const openPopup = () => {
-        if (state.userInfo.Permission.some(obj => obj.name === "CAN_ADD_VEHICLE" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
+        if (state.userInfo.Permission.some(obj => obj.name === "CAN_ADD" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
             setIsOpen(true);
         }
         else {
@@ -195,17 +187,26 @@ export function Vehicles() {
     }
     return (
         <>
-            <Card className="h-full w-full ">
+            <Card className="w-full max-h-[80vh] overflow-y-auto">
                 <CardHeader floated={false} shadow={false} className="rounded-none">
+                    {/* <div className="flex flex-col md:flex-row items-center w-full py-3 gap-4"> */}
                     <div className="mb-4 sm:mb-0 flex items-center">
                         <Typography variant="h5" color="blue-gray" className="flex items-center">
                             <TruckIcon className="h-12 w-12 text-blueGray-500 ml-2" />
                             Vehicles
                         </Typography>
                     </div>
-                    <div className="flex flex-col md:flex-row items-center w-full mt-5">
-                        <div className="w-full md:w-2/5 flex items-center justify-center md:justify-start gap-2">
-                            <div className="w-full md:flex-1 md:mr-4">
+                    {/* <div className="w-full md:w-auto flex items-center justify-start gap-2">
+                            <Typography variant="h5" color="blue-gray" className="flex items-center">
+                                Vehicles
+                            </Typography>
+                            <Tooltip content="Add new vehicle">
+                            <PlusCircleIcon onClick={openPopup} className="ml-2 mr-1 h-7 w-7 text-blue-600 cursor-pointer" />
+                            </Tooltip>
+                        </div> */}
+                    <div className="flex flex-col lg:flex-row items-center w-full mt-5">
+                        <div className="w-full lg:w-2/5 flex items-center justify-center lg:justify-start gap-2">
+                            <div className="w-full lg:flex-1 lg:mr-4">
                                 <Input
                                     label="Search"
                                     value={searchQuery}
@@ -217,12 +218,9 @@ export function Vehicles() {
                                 <Button className="w-full bg-blue-900 lg:w-auto" size="md" onClick={openPopup} >
                                     New
                                 </Button>
-                                {/* <Button className="w-full bg-red-900 lg:w-auto" size="md" onClick={handleDelete} disabled={selectedRows.length == 0} >
-                                    Delete
-                                    </Button> */}
                             </div>
                         </div>
-                        <div className="flex items-center mt-4 md:mt-0 md:ml-auto">
+                        <div className="flex items-center mt-4 lg:mt-0 lg:ml-auto">
                             <Typography variant="small" color="blue-gray" className="mr-2">
                                 Items per page:
                             </Typography>
@@ -237,10 +235,11 @@ export function Vehicles() {
                             </select>
                         </div>
                     </div>
+                    {/* </div> */}
                 </CardHeader>
 
-                <CardBody className="p-2 overflow-scroll px-0">
-                    <table className=" w-full min-w-max table-auto text-left">
+                <CardBody className="p-2 overflow-auto px-0">
+                    <table className="w-full min-w-max table-auto text-left">
                         <thead>
                             <tr>
                                 <th className="border-y border-blue-gray-100 bg-blue-gray-50/50 p-4">
@@ -304,7 +303,7 @@ export function Vehicles() {
                                             >
                                                 {model}
                                             </Typography>
-                                        </td>                                        
+                                        </td>
                                         <td className={classes}>
                                             <Tooltip content="Delete Vehicle">
                                                 <IconButton variant="text" onClick={() => handleDelete(id)}>

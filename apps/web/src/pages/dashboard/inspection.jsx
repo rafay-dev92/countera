@@ -9,6 +9,7 @@ import { fetchCustomers } from '@/services/fetchCustomers';
 import { State } from '@/state/Context';
 import { toast } from 'react-toastify';
 import { addInspection } from '@/services/addInspection';
+import { useConfirm } from '@/context/confirmContext';
 
 const schema = Yup.object().shape({
     customer: Yup.string().required("Customer is required"),
@@ -26,6 +27,7 @@ const schema = Yup.object().shape({
 
 export function Inspection() {
     const { state, dispatch } = State();
+    const resetConfirm = useConfirm()
     const printBtnRef = useRef();
     const componentRef = useRef();
     const customerInputRef = useRef();
@@ -39,7 +41,9 @@ export function Inspection() {
     const [showCustomerSuggestions, setShowCustomerSuggestions] = useState(false);
     const [refresh, setRefresh] = useState(false);
 
-    const Reset = () => {
+    const Reset = async () => {
+        const confirmed = await resetConfirm("Do you want to reset the inspection page?")
+        if (!confirmed) return
         clearForm(formikProps)
         setSelectedCustomer(null)
         setSelectedVehicle(null)
@@ -197,29 +201,29 @@ export function Inspection() {
     } = formikProps;
 
     return (
-        <Card className="h-full w-full overflow-x-hidden">
-            <CardHeader floated={false} shadow={false} className="rounded-none">
+        <div className="h-full w-full overflow-x-hidden">
+            <div className="rounded-none">
                 <div className="mb-4 sm:mb-0 flex items-center">
                     <Typography variant="h5" color="blue-gray" className="flex items-center">
                         <WrenchIcon className="h-12 w-12 text-blueGray-500 ml-2" />
                         Inspection
                     </Typography>
                 </div>
-            </CardHeader>
-            <CardBody className="p-4 px-0">
+            </div>
+            <div className="p-4 px-0">
                 <form onSubmit={handleSubmit}>
-                    <div className="flex flex-col lg:flex-row items-center w-full mx-5">
-                        <div className="w-full flex items-center justify-center lg:justify-start gap-1">
-                            <Button className="w-full bg-green-600 py-2.5 lg:w-auto" size="md" onClick={Reset} >
+                    <div className="flex flex-col lg:flex-row items-center mx-5">
+                        <div className="w-full flex flex-col lg:flex-row items-center justify-center lg:justify-start gap-3 lg:gap-1">
+                            <Button className="w-full lg:w-auto bg-green-600 py-2.5" size="md" onClick={Reset} >
                                 Reset
                             </Button>
 
-                            <div className="relative mb-5" ref={customerInputRef}>
-                                <div className="flex items-center pl-3">
-                                    <label className="font-bold">Customer</label>
+                            <div className="relative mb-5 w-full lg:w-auto" ref={customerInputRef}>
+                                <div className="flex items-center pl-3 mb-1">
+                                    <label className="font-bold text-sm lg:text-base">Customer</label>
                                 </div>
                                 <input
-                                    className="h-full mx-2 p-2 border border-gray-700/20 rounded-md text-gray-700 font-small placeholder-gray-700"
+                                    className="w-full lg:w-auto h-full mx-0 lg:mx-2 p-2 border border-gray-700/20 rounded-md text-gray-700 font-small placeholder-gray-700"
                                     id="customer"
                                     name="customer"
                                     type="text"
@@ -262,14 +266,14 @@ export function Inspection() {
                                 )}
                             </div>
 
-                            <div className='relative mb-5'>
-                                <div className="flex items-center pl-3">
-                                    <label className="font-bold">Vehicle</label>
+                            <div className='relative mb-5 w-full lg:w-auto'>
+                                <div className="flex items-center pl-3 mb-1">
+                                    <label className="font-bold text-sm lg:text-base">Vehicle</label>
                                 </div>
                                 <select
                                     id="vehicle"
                                     name="vehicle"
-                                    className="mx-2 p-2 border border-gray-300 bg-inherit rounded-md"
+                                    className="w-full lg:w-auto mx-0 lg:mx-2 p-2 border border-gray-300 bg-inherit rounded-md"
                                     value={values.vehicle}
                                     onChange={(e) =>
                                         handleVehicleChange(e.target.value)
@@ -290,8 +294,8 @@ export function Inspection() {
                                 </select>
                             </div>
                             {/* {customerInspections?.length > 0 && ( */}
-                                <div className="flex flex-col mb-5 mx-2">
-                                    <span className="font-bold">Inspections History</span>
+                                <div className="flex flex-col mb-5 mx-0 lg:mx-2 w-full lg:w-auto">
+                                    <span className="font-bold text-sm lg:text-base mb-1">Inspections History</span>
                                     <div className='flex items-center gap-2 w-full'>
                                         <select
                                             className="w-full px-3 py-2 border border-gray-300 rounded bg-white"
@@ -412,8 +416,8 @@ export function Inspection() {
                         </div>
                     </div>
                 </form>
-            </CardBody>
-        </Card>
+            </div>
+        </div>
     );
 };
 

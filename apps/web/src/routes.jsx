@@ -7,9 +7,8 @@ import {
   ChartBarIcon,
   UserGroupIcon,
   PencilSquareIcon,
-  TruckIcon,
 } from "@heroicons/react/24/solid";
-import { Home, Customers, Invoice, Quotation, WorkOrder, Product, Inspection, Appointments, Settings, Vehicles, Reports } from "@/pages/dashboard";
+import { Home, Customers, Invoice, Quotation, WorkOrder, Product, Inspection, Appointments, Settings, Reports } from "@/pages/dashboard";
 import { SignIn, SignUp } from "@/pages/auth";
 
 const icon = {
@@ -56,12 +55,6 @@ export const routes = [
         path: "/products",
         element: <Product />,
       },
-      // {
-      //   icon: <TruckIcon {...icon} />,
-      //   name: "Vehicles",
-      //   path: "/vehicles",
-      //   element: <Vehicles />,
-      // },
       {
         icon: <PencilSquareIcon {...icon} />,
         name: "Appointments",

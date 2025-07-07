@@ -83,6 +83,7 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
   }]);
   const [totalAmount, setTotalAmount] = useState(0);
   const [discount, setDiscount] = useState(0);
+  const [lumpSum, setLumpSum] = useState(0);
   const [edit, setEdit] = useState(false);
   const [printInvoice, setPrintInvoice] = useState([]);
   const [appliedTaxes, setAppliedTaxes] = useState({});
@@ -905,8 +906,8 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
                                 <div className="flex items-center pl-2">
                                   <label className="font-bold">Odometer</label>
                                   <Tooltip content="reset" className="z-[9999]">
-                                    <IconButton 
-                                      variant="text" 
+                                    <IconButton
+                                      variant="text"
                                       onClick={() => setVehicleOdometer(selectedVehicle?.odometer)}
                                       disabled={String(vehicleOdometer) === String(selectedVehicle?.odometer)}
                                     >
@@ -1216,7 +1217,35 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
                         />
                       </div>
 
+
                       <div className="basis-[50%] max-w-[50%] border my-1 font-normal">
+                        {/* <div className="flex justify-between p-2 mb-2 border-b-2">
+                          <div className="text-md">
+                            <h1>Lump Sum</h1>
+                          </div>
+                          <div className="text-md">
+                            <input
+                              type="number"
+                              min={0}
+                              className="w-fit no-spinner text-right"
+                              value={lumpSum === 0 ? '' : lumpSum}
+                              onChange={(e) => {
+                                const enteredValue = Number(e.target.value);
+                                const maxDiscount = totalAmount * 0.25;
+
+                                setLumpSum(enteredValue)
+                                if (enteredValue <= maxDiscount) {
+                                  setDiscount(enteredValue);
+                                  setLumpSum(totalAmount - enteredValue);
+                                } else {
+                                  setDiscount(maxDiscount);
+                                  setLumpSum(totalAmount - maxDiscount);
+                                }
+                              }}
+
+                            />
+                          </div>
+                        </div> */}
                         <div className="flex justify-between p-2">
                           <div className="text-md">
                             <h1>Subtotal</h1>

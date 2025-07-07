@@ -87,14 +87,12 @@ const printView = React.forwardRef(({view, workOrderData, appliedTaxes}, ref) =>
                                     <span className="text-xs font-normal">Odometer:</span>
                                     <span className="text-xs font-normal">Year:</span>
                                     <span className="text-xs font-normal">Make:</span>
-                                    {/* <span className="text-xs">Model</span> */}
                                 </div>
                                 <div className="flex flex-col gap-1">
                                     <span className="text-xs">{workOrderData?.CustomerVehicle.licenseNo ? workOrderData?.CustomerVehicle.licenseNo : 'N/A'}</span>
                                     <span className="text-xs">{workOrderData?.CustomerVehicle.odometer}</span>
                                     <span className="text-xs">{workOrderData?.CustomerVehicle.year}</span>
                                     <span className="text-xs">{workOrderData?.CustomerVehicle.make}</span>
-                                    {/* <span className="text-xs">{printInvoice?.CustomerVehicle.model}</span> */}
                                 </div>
                             </div>
                             <div className="col-span-1 flex gap-1">
@@ -216,10 +214,24 @@ const printView = React.forwardRef(({view, workOrderData, appliedTaxes}, ref) =>
                                 </div>
                             ))}
                         </div>
-                        <div className="border divide-y text-xs">
+                        <div className="border-t border-x divide-y text-xs">
                             <div className="flex justify-between px-2 py-1">
                                 <span className="">Total</span>
-                                <span className="">${parseFloat(workOrderData?.totalAmount.toFixed(2))}</span>
+                                <span className="">${parseFloat(workOrderData?.totalAmount.toFixed(2)) + parseFloat(workOrderData?.discount)}</span>
+                            </div>
+                        </div>
+
+                        <div className="border-t border-x divide-y text-xs">
+                            <div className="flex justify-between px-2 py-1">
+                                <span className="">Discount</span>
+                                <span className="">${workOrderData?.discount}</span>
+                            </div>
+                        </div>
+
+                        <div className=" border divide-y text-xs">
+                            <div className="flex justify-between px-2 py-1 font-medium">
+                                <span className="">Grand Total</span>
+                                <span className="">${workOrderData?.totalAmount.toFixed(2)}</span>
                             </div>
                         </div>
                     </div>

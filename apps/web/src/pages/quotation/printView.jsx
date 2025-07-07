@@ -191,10 +191,24 @@ const printView = React.forwardRef(({view, quotationData, appliedTaxes}, ref) =>
                                 </div>
                             ))}                           
                         </div>
-                         <div className="border divide-y text-xs">
+                        <div className="border-t border-x divide-y text-xs">
                             <div className="flex justify-between px-2 py-1">
                                 <span className="">Total</span>
-                                <span className="">${parseFloat(quotationData?.totalAmount.toFixed(2))}</span>
+                                <span className="">${parseFloat(quotationData?.totalAmount.toFixed(2)) + parseFloat(quotationData?.discount)}</span>
+                            </div>
+                        </div>
+
+                        <div className="border-t border-x divide-y text-xs">
+                            <div className="flex justify-between px-2 py-1">
+                                <span className="">Discount</span>
+                                <span className="">${quotationData?.discount}</span>
+                            </div>
+                        </div>
+
+                        <div className=" border divide-y text-xs">
+                            <div className="flex justify-between px-2 py-1 font-medium">
+                                <span className="">Grand Total</span>
+                                <span className="">${quotationData?.totalAmount.toFixed(2)}</span>
                             </div>
                         </div>
                     </div>

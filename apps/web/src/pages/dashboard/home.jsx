@@ -96,7 +96,7 @@ export function Home() {
             const startDate = moment.tz(currentDate, timezone).startOf('day').utc().toDate();
             const endDate = moment.tz(currentDate, timezone).endOf('day').utc().toDate();
 
-            const fetchedInvoices = await fetchInvoices(state.userToken, null, null, { paymentStatus: ['Paid', 'Partially Paid', 'Unpaid'], startDate, endDate, isReport: true });
+            const fetchedInvoices = await fetchInvoices(state.userToken, null, null, { paymentStatus: ['PAID', 'PARTIALLY_PAID', 'UNPAID'], startDate, endDate, isReport: true });
             let totalInvoices = await fetchedInvoices.json();
             // if (state.Settings.General.invoice === 'all') {
             // }

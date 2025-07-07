@@ -4,6 +4,10 @@ import { State } from '../../../state/Context'
 import { updateBusiness } from "@/services/updateBusiness";
 import { toast } from "react-toastify";
 import dummyImage from "../../../assets/dummyImage.png"
+import ReactQuill from "react-quill";
+import Quill from 'quill';
+import "react-quill/dist/quill.snow.css";
+import "react-quill/dist/quill.bubble.css";
 
 function Profile() {
     const timezones = Intl.supportedValuesOf('timeZone');
@@ -24,7 +28,41 @@ function Profile() {
         fax: "",
         licenseNumber: "",
         permitNumber: "",
+        termsAndConditions: "",
     });
+
+    const Size = Quill.import('attributors/style/size');
+    Size.whitelist = ['10px', '12px', '14px', '16px', '18px', '20px', '24px', '28px', '32px', '36px'];
+    Quill.register(Size, true);
+
+    const quillModules = {
+        toolbar: [
+            [{ 'font': [] }, { 'size': Size.whitelist }],
+            ['bold', 'italic', 'underline', 'strike'],
+            [{ 'color': [] }, { 'background': [] }],
+            [{ 'script': 'sub' }, { 'script': 'super' }],
+            [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+            [{ 'align': [] }],
+            ['blockquote', 'code-block'],
+            [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+            [{ 'indent': '-1' }, { 'indent': '+1' }],
+            ['link', 'image', 'video'],
+            ['clean']
+        ]
+    };
+
+    const quillFormats = [
+        'font', 'size',
+        'bold', 'italic', 'underline', 'strike',
+        'color', 'background',
+        'script',
+        'header',
+        'align',
+        'blockquote', 'code-block',
+        'list', 'bullet', 'indent',
+        'link', 'image', 'video'
+    ];
+
 
     const allTimezones = useMemo(() => Intl.supportedValuesOf('timeZone'), []);
     const [showSuggestions, setShowSuggestions] = useState(false);
@@ -213,7 +251,7 @@ function Profile() {
                 </Button>
             </div>
             {/* Address Form */}
-            <div className="py-5 w-2/5">
+            <div className="py-5 w-full md:w-[70%] lg:w-[60%] 2xl:w-[50%]">
                 {/* Address Form */}
                 <h3 className="text-lg font-bold mb-4">Address:</h3>
                 <div className="flex flex-col gap-5">
@@ -285,7 +323,7 @@ function Profile() {
                 </Button>
             </div>
             {/* Phone Form */}
-            <div className="py-5 w-2/5">
+            <div className="py-5 w-full md:w-[70%] lg:w-[60%] 2xl:w-[50%]">
                 <h3 className="text-lg font-bold mb-4">Phone:</h3>
                 <div className="flex flex-col gap-5">
                     <Input
@@ -303,6 +341,25 @@ function Profile() {
                         onChange={handleChange}
                     />
                 </div>
+                <Button
+                    className="mt-4 px-6 py-3 text-white rounded float-right"
+                    onClick={() => handleSave()}
+                >
+                    Save
+                </Button>
+            </div>
+
+            <div className="py-5 w-full md:w-[70%] lg:w-[60%] 2xl:w-[50%]">
+                <h3 className="text-lg font-bold mb-4">Invoice:</h3>
+                <ReactQuill
+                    value={formData.termsAndConditions}
+                    onChange={(value) =>
+                        setFormData((prev) => ({ ...prev, termsAndConditions: value }))
+                    }
+                    modules={quillModules}
+                    formats={quillFormats}
+                />
+
                 <Button
                     className="mt-4 px-6 py-3 text-white rounded float-right"
                     onClick={() => handleSave()}

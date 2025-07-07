@@ -19,7 +19,8 @@ export function SignIn() {
   const [loading, setLoading] = useState(false);
   const [businesses, setBusinesses] = useState([]);
   const [selectedBusiness, setSelectedBusiness] = useState(null);
-  const [step, setStep] = useState(1); // 1: email, 2: business, 3: password
+  const [step, setStep] = useState(1);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(null);
 
   const passwordInputRef = useRef(null);
 
@@ -81,11 +82,11 @@ export function SignIn() {
       setLoading(false);
       
       if (res.ok) {
+        setBusinesses(data.businesses);
         if (data.isSuperAdmin || data.businesses.length === 1) {
           setStep(3);
           if (data.businesses?.length === 1) setSelectedBusiness(data.businesses[0].id)
         } else if (data.businesses.length > 1) {
-          setBusinesses(data.businesses);
           setStep(2);
         } else {
           showToastMessage('info', 'No businesses found for this email');
@@ -107,6 +108,18 @@ export function SignIn() {
     if (selectedBusiness) setStep(3);
     else showToastMessage('info', 'Please select a business');
   }
+
+  const handleBack = () => {
+    if (step === 3) {
+      if (!businesses || businesses.length === 1) {
+        setStep(1);
+      } else {
+        setStep(2);
+      }
+    } else {
+      setStep((prev) => Math.max(1, prev - 1));
+    }
+  };
 
   async function handleSignIn() {
     setLoading(true);
@@ -206,9 +219,14 @@ export function SignIn() {
                   </label>
                 ))}
               </div>
-              <Button onClick={handleNextAfterBusiness} className="mt-2" fullWidth>
-                Next
-              </Button>
+              <div className="flex gap-2 mt-2">
+                <Button onClick={handleBack} variant="outlined" fullWidth>
+                  Back
+                </Button>
+                <Button onClick={handleNextAfterBusiness} fullWidth>
+                  Next
+                </Button>
+              </div>
             </>
           )}
           {step === 3 && (
@@ -236,9 +254,14 @@ export function SignIn() {
                   {showPassword ? "hide" : "show"}
                 </span>
               </div>
-              <Button onClick={handleSignIn} className="mt-6" fullWidth disabled={!password}>
-                Sign In
-              </Button>
+              <div className="flex gap-2 mt-6">
+                <Button onClick={handleBack} variant="outlined" fullWidth>
+                  Back
+                </Button>
+                <Button onClick={handleSignIn} fullWidth disabled={!password}>
+                  Sign In
+                </Button>
+              </div>
             </>
           )}
         </div>

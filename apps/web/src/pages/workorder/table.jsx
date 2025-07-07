@@ -171,11 +171,11 @@ export function WorkOrder() {
         const data = {
             invoiceData: {
                 totalAmount: workOrderData.totalAmount,
-                // paymentStatus: "Unpaid",
                 CustomerId: workOrderData.CustomerId,
                 CustomerVehicleId: workOrderData.CustomerVehicleId,
                 comments: workOrderData.comments,
                 notes: workOrderData.notes,
+                discount: workOrderData.discount,
                 BusinessId: state.business.id
             },
             "products": selectedProductIds,
@@ -326,7 +326,7 @@ export function WorkOrder() {
                                         <td className={classes}>
                                             <Typography
                                                 variant="small"
-                                                color={status === 'Finished' ? "green" : "red"}
+                                                color={status === 'FINISHED' ? "green" : "red"}
                                                 className="font-medium"
                                             >
                                                 {status}

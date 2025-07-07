@@ -22,10 +22,10 @@ const ViewWorkOrder = ({ workOrderData, setWorkOrderData, componentRef, appliedT
         delete: false,
         createInvoice: false,
         createCopy: false,
-        sendMail: false,        
+        sendMail: false,
     });
     const [isNotesFormOpen, setIsNotesFormOpen] = useState(false);
-    
+
     // Delete Invoice
     const handleDel = async () => {
         const confirmed = await confirm("Are you sure you want to delete this work order?");
@@ -74,11 +74,11 @@ const ViewWorkOrder = ({ workOrderData, setWorkOrderData, componentRef, appliedT
         const data = {
             invoiceData: {
                 totalAmount: workOrderData.totalAmount,
-                // paymentStatus: "Unpaid",
                 CustomerId: workOrderData.CustomerId,
                 CustomerVehicleId: workOrderData.CustomerVehicleId,
                 comments: workOrderData.comments,
                 notes: workOrderData.notes,
+                discount: workOrderData.discount,
                 BusinessId: state.business.id
             },
             "products": selectedProductIds,
@@ -106,11 +106,19 @@ const ViewWorkOrder = ({ workOrderData, setWorkOrderData, componentRef, appliedT
 
     const createCopy = async () => {
         setIsLoading({ ...isLoading, createCopy: true });
-        const selectedProductIds = workOrderData?.Product?.map((product) => `${product.id}:${product.workorder_product?.quantity}`);
-
+        const selectedProductIds = workOrderData?.Product?.map((product) => ({
+            id: product.id,
+            quantity: product.workorder_product.quantity,
+            description: product.workorder_product.description || '',
+            price: product.workorder_product.price
+        })).filter(product => product.id);
+        
         const data = {
             workOrderData: {
                 totalAmount: workOrderData.totalAmount,
+                comments: workOrderData.comments,
+                notes: workOrderData.notes,
+                discount: workOrderData.discount,
                 CustomerId: workOrderData.CustomerId,
                 CustomerVehicleId: workOrderData.CustomerVehicleId,
                 BusinessId: state.business.id,
@@ -196,7 +204,7 @@ const ViewWorkOrder = ({ workOrderData, setWorkOrderData, componentRef, appliedT
                                         <div className="w-6 h-6 border-4 border-gray-500 border-t-transparent rounded-full animate-spin"></div>
                                     </div>
                                 } */}
-                                <div onClick={() => workOrderData?.status === 'Pending' && setWorkOrderFinished()} className={`w-full py-2 mx-auto ${workOrderData?.status === 'Pending' ? "hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer" : "text-green-500 font-bold"}`}>{workOrderData?.status === 'Pending' ? 'Finish' : 'Finished'}</div>
+                                <div onClick={() => workOrderData?.status === 'PENDING' && setWorkOrderFinished()} className={`w-full py-2 mx-auto ${workOrderData?.status === 'PENDING' ? "hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer" : "text-green-500 font-bold"}`}>{workOrderData?.status === 'PENDING' ? 'Finish' : 'Finished'}</div>
                                 <div onClick={() => { dispatch({ type: 'SET_WORKORDER_VIEW', payload: false }); setEdit(true) }} className="w-full py-2 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer">Edit</div>
                                 <div onClick={() => setIsNotesFormOpen(true)} className="w-full py-2 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer">Notes</div>
                                 {!isLoading.delete ?

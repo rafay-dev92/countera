@@ -26,7 +26,7 @@ export function Dashboard() {
     const currentDate = new Date().toISOString().split('T')[0];
 
     useEffect(() => {
-        getInvoices();
+        // getInvoices();
         getCustomers();
         getProducts();
         
@@ -47,13 +47,14 @@ export function Dashboard() {
 
     const getInvoices = async () => {
         try {
-            const fetchedInvoices = await fetchInvoices(state.userToken);
+            
+            const fetchedInvoices = await fetchInvoices(state.userToken, null, null, { paymentStatus: ['PAID', 'PARTIALLY_PAID', 'UNPAID'], isReport: true });
             let totalInvoices = await fetchedInvoices.json();
-            if (state.Settings.General.invoice === 'all') {
-            }
-            else if (state.Settings.General.invoice === 'current') {
-                totalInvoices = totalInvoices?.data.filter(invoice => invoice.current === true);
-            }
+            // if (state.Settings.General.invoice === 'all') {
+            // }
+            // else if (state.Settings.General.invoice === 'current') {
+            //     totalInvoices = totalInvoices?.data.filter(invoice => invoice.current === true);
+            // }
 
             const invoicesWithCurrentDate = totalInvoices.filter(obj => obj.createdAt.split('T')[0] === currentDate);
             let money = 0;

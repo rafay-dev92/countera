@@ -49,3 +49,9 @@
     border-radius: 10px;
     /* Rounded ends for track */
 }
+
+/* React Quill */
+
+.ql-toolbar .ql-size span[data-label="10px"]::before {
+    font-size: 10px;
+}

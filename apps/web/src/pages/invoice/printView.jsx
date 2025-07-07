@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Typography } from "@material-tailwind/react";
 import PaidImg from "@/assets/paid.png";
+import "react-quill/dist/quill.snow.css";
 
 const PRODUCT_TABLE_HEAD = ["Product", "Quantity", "Unit Price", "Tax", "Total Price"]
 
@@ -45,244 +46,250 @@ const printView = React.forwardRef(({ view, printInvoice, appliedTaxes }, ref) =
                         <span className="text-[12px] font-normal ">Email: {printInvoice?.Business.email}</span>
                     </div>
 
-                        <div className="col-span-1 flex flex-col gap-1 p-2">
-                            <h2 className="text-xs font-semibold underline">Bill To:</h2>
-                            <div className="flex flex-col">
-                                <span className="text-xs">{printInvoice?.Customer.firstName} {printInvoice?.Customer.lastName}</span>
-                                <span className="text-xs">{printInvoice?.Customer?.Address && printInvoice?.Customer.Address.street}</span>
-                                <span className="text-xs">{printInvoice?.Customer?.Address && `${printInvoice?.Customer?.Address?.city}, ${printInvoice?.Customer?.Address?.state}, ${printInvoice?.Customer?.Address?.zipcode}`}</span>
-                                <span className="text-xs">{printInvoice?.Customer?.phone && `Phone: ${printInvoice?.Customer.phone}`}</span>
-                            </div>
+                    <div className="col-span-1 flex flex-col gap-1 p-2">
+                        <h2 className="text-xs font-semibold underline">Bill To:</h2>
+                        <div className="flex flex-col">
+                            <span className="text-xs">{printInvoice?.Customer.firstName} {printInvoice?.Customer.lastName}</span>
+                            <span className="text-xs">{printInvoice?.Customer?.Address && printInvoice?.Customer.Address.street}</span>
+                            <span className="text-xs">{printInvoice?.Customer?.Address && `${printInvoice?.Customer?.Address?.city}, ${printInvoice?.Customer?.Address?.state}, ${printInvoice?.Customer?.Address?.zipcode}`}</span>
+                            <span className="text-xs">{printInvoice?.Customer?.phone && `Phone: ${printInvoice?.Customer.phone}`}</span>
                         </div>
+                    </div>
 
-                        <div className="col-span-1 flex flex-col gap-1 p-2">
-                            <h2 className="text-xs font-semibold underline">Vehicle Info:</h2>
-                            <div className="grid grid-cols-2 gap-2">
-                                <div className="col-span-1 flex gap-1">
-                                    <div className="flex flex-col gap-1">
-                                        <span className="text-xs font-normal">License No:</span>
-                                        <span className="text-xs font-normal">Odometer:</span>
-                                        <span className="text-xs font-normal">Year:</span>
-                                        <span className="text-xs font-normal">Make:</span>
-                                        {/* <span className="text-xs">Model</span> */}
-                                    </div>
-                                    <div className="flex flex-col gap-1">
-                                        <span className="text-xs">{printInvoice?.CustomerVehicle.licenseNo ? printInvoice?.CustomerVehicle.licenseNo : 'N/A'}</span>
-                                        <span className="text-xs">{printInvoice?.CustomerVehicle.odometer}</span>
-                                        <span className="text-xs">{printInvoice?.CustomerVehicle.year}</span>
-                                        <span className="text-xs">{printInvoice?.CustomerVehicle.make}</span>
-                                        {/* <span className="text-xs">{printInvoice?.CustomerVehicle.model}</span> */}
-                                    </div>
+                    <div className="col-span-1 flex flex-col gap-1 p-2">
+                        <h2 className="text-xs font-semibold underline">Vehicle Info:</h2>
+                        <div className="grid grid-cols-2 gap-2">
+                            <div className="col-span-1 flex gap-1">
+                                <div className="flex flex-col gap-1">
+                                    <span className="text-xs font-normal">License No:</span>
+                                    <span className="text-xs font-normal">Odometer:</span>
+                                    <span className="text-xs font-normal">Year:</span>
+                                    <span className="text-xs font-normal">Make:</span>
+                                    {/* <span className="text-xs">Model</span> */}
                                 </div>
-                                <div className="col-span-1 flex gap-1">
-                                    <div className="flex flex-col gap-1">
-                                        <span className="text-xs font-normal">Model:</span>
-                                    </div>
-                                    <div className="flex flex-col gap-1">
-                                        <span className="text-xs">{printInvoice?.CustomerVehicle.model}</span>
-                                    </div>
+                                <div className="flex flex-col gap-1">
+                                    <span className="text-xs">{printInvoice?.CustomerVehicle.licenseNo ? printInvoice?.CustomerVehicle.licenseNo : 'N/A'}</span>
+                                    <span className="text-xs">{printInvoice?.CustomerVehicle.odometer}</span>
+                                    <span className="text-xs">{printInvoice?.CustomerVehicle.year}</span>
+                                    <span className="text-xs">{printInvoice?.CustomerVehicle.make}</span>
+                                    {/* <span className="text-xs">{printInvoice?.CustomerVehicle.model}</span> */}
+                                </div>
+                            </div>
+                            <div className="col-span-1 flex gap-1">
+                                <div className="flex flex-col gap-1">
+                                    <span className="text-xs font-normal">Model:</span>
+                                </div>
+                                <div className="flex flex-col gap-1">
+                                    <span className="text-xs">{printInvoice?.CustomerVehicle.model}</span>
                                 </div>
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    <div className="w-full px-2 text-sm">
-                        <table className="w-full min-w-max table-auto text-left">
-                            <thead>
-                                <tr>
-                                    {PRODUCT_TABLE_HEAD.map((head, i) => (
-                                        <th
-                                            key={head}
-                                            className={`border-y border-blue-gray-100 bg-blue-gray-50/50 p-2 ${i === 0 ? 'w-[60%]' : 'w-[10%] text-center'
-                                                }`}
+                <div className="w-full px-2 text-sm">
+                    <table className="w-full min-w-max table-auto text-left">
+                        <thead>
+                            <tr>
+                                {PRODUCT_TABLE_HEAD.map((head, i) => (
+                                    <th
+                                        key={head}
+                                        className={`border-y border-blue-gray-100 bg-blue-gray-50/50 p-2 ${i === 0 ? 'w-[60%]' : 'w-[10%] text-center'
+                                            }`}
+                                    >
+                                        <Typography
+                                            variant="small"
+                                            color="blue-gray"
+                                            className="font-normal leading-none opacity-70 text-xs"
                                         >
-                                            <Typography
-                                                variant="small"
-                                                color="blue-gray"
-                                                className="font-normal leading-none opacity-70 text-xs"
-                                            >
-                                                {head}
-                                            </Typography>
-                                        </th>
-                                    ))}
+                                            {head}
+                                        </Typography>
+                                    </th>
+                                ))}
+                            </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200 text-xs">
+                            {printInvoice?.Product?.map((item, index) => (
+                                <tr key={index}>
+                                    <td className="p-2 border-b border-blue-gray-50 w-[60%]">
+                                        <Typography
+                                            variant="small"
+                                            color="blue-gray"
+                                            className="font-normal leading-none text-xs"
+                                        >
+                                            {item.name}
+                                        </Typography>
+                                    </td>
+                                    <td className="p-2 border-b border-blue-gray-50 w-[10%] text-center">
+                                        <Typography
+                                            variant="small"
+                                            color="blue-gray"
+                                            className="font-normal leading-none text-xs"
+                                        >
+                                            {item.invoice_product.quantity}
+                                        </Typography>
+                                    </td>
+                                    <td className="p-2 border-b border-blue-gray-50 w-[10%] text-center">
+                                        <Typography
+                                            variant="small"
+                                            color="blue-gray"
+                                            className="font-normal leading-none text-xs"
+                                        >
+                                            {item.invoice_product.price}
+                                        </Typography>
+                                    </td>
+                                    <td className="p-2 border-b border-blue-gray-50 w-[10%] text-center">
+                                        <input
+                                            type="checkbox"
+                                            checked={item.taxable || false}
+                                            readOnly
+                                            className="w-3 h-3"
+                                        />
+                                    </td>
+                                    <td className="p-2 border-b border-blue-gray-50 w-[10%] text-center">
+                                        <Typography
+                                            variant="small"
+                                            color="blue-gray"
+                                            className="font-normal leading-none text-xs"
+                                        >
+                                            {calculateAmount(item.invoice_product.price, item.invoice_product.quantity)}
+                                        </Typography>
+                                    </td>
                                 </tr>
-                            </thead>
-                            <tbody className="bg-white divide-y divide-gray-200 text-xs">
-                                {printInvoice?.Product?.map((item, index) => (
-                                    <tr key={index}>
-                                        <td className="p-2 border-b border-blue-gray-50 w-[60%]">
-                                            <Typography
-                                                variant="small"
-                                                color="blue-gray"
-                                                className="font-normal leading-none text-xs"
-                                            >
-                                                {item.name}
-                                            </Typography>
-                                        </td>
-                                        <td className="p-2 border-b border-blue-gray-50 w-[10%] text-center">
-                                            <Typography
-                                                variant="small"
-                                                color="blue-gray"
-                                                className="font-normal leading-none text-xs"
-                                            >
-                                                {item.invoice_product.quantity}
-                                            </Typography>
-                                        </td>
-                                        <td className="p-2 border-b border-blue-gray-50 w-[10%] text-center">
-                                            <Typography
-                                                variant="small"
-                                                color="blue-gray"
-                                                className="font-normal leading-none text-xs"
-                                            >
-                                                {item.invoice_product.price}
-                                            </Typography>
-                                        </td>
-                                        <td className="p-2 border-b border-blue-gray-50 w-[10%] text-center">
+                            ))}
+                        </tbody>
+                    </table>
+
+                </div>
+
+                <div className="border-y py-1 w-full flex items-center justify-center mt-auto">
+                    <h4 className="text-xs font-normal italic">Invoice Summary</h4>
+                </div>
+                <div className="flex p-2 text-xs">
+                    <div className="basis-[50%] max-w-[50%] h-full p-2">
+                        Notes: {printInvoice.notes ? printInvoice.notes : 'N/A'}
+                    </div>
+
+                    {/* Financial Summary */}
+                    <div className="basis-[50%] max-w-[50%]">
+                        <div className="border-x border-t divide-y">
+                            <div className="flex justify-between px-2 py-1">
+                                <span>Subtotal</span>
+                                <span>${calculateTotalAmount(printInvoice.Product)}</span>
+                            </div>
+
+                        </div>
+
+                        <div className="flex flex-col text-xs">
+                            {Object.keys(appliedTaxes).map((tax, ind) => (
+                                <div key={ind} className="border-t border-x divide-y">
+                                    <div className="flex justify-between px-2 py-1">
+                                        <span className="">
+                                            {`${tax.split('_')[0]} (${tax.split('_')[1]}${tax.split('_')[2]})`}
+                                        </span>
+                                        <span className="">
+                                            ${tax.split('_')[2] === '%' ? appliedTaxes[tax].toFixed(2) : appliedTaxes[tax]}
+                                        </span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        <div className="border-t border-x divide-y text-xs">
+                            <div className="flex justify-between px-2 py-1">
+                                <span className="">Total</span>
+                                <span className="">${parseFloat(printInvoice?.totalAmount.toFixed(2)) + parseFloat(printInvoice?.discount)}</span>
+                            </div>
+                        </div>
+
+                        <div className="border-t border-x divide-y text-xs">
+                            <div className="flex justify-between px-2 py-1">
+                                <span className="">Discount</span>
+                                <span className="">${printInvoice?.discount}</span>
+                            </div>
+                        </div>
+
+                        <div className=" border divide-y text-xs">
+                            <div className="flex justify-between px-2 py-1 font-medium">
+                                <span className="">Grand Total</span>
+                                <span className="">${printInvoice?.totalAmount.toFixed(2)}</span>
+                            </div>
+                        </div>
+
+                        <div className="p-1 border mt-2 text-center font-medium text-xs">
+                            Payments
+                        </div>
+
+                        {printInvoice?.Payments.length > 0 ? (
+                            printInvoice.Payments.map((payment, index) => {
+                                const date = new Date(payment.createdAt);
+                                return (
+                                    <div key={index} className="border-b border-x divide-x text-xs">
+                                        <div className="flex justify-between px-2 py-1">
+                                            <span className="">
+                                                {payment.paymentMethod} on {date.toLocaleDateString("en-US")}
+                                            </span>
+                                            <span className="">
+                                                ${payment.paidAmount}
+                                            </span>
+                                        </div>
+                                    </div>
+                                );
+                            })
+                        ) : (
+                            <div className="border-b border-x divide-x text-xs">
+                                <div className="flex justify-between px-2 py-1">
+                                    <span className="">N/A</span>
+                                    <span className="">$0.00</span>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+                <div className="flex flex-col justify-center border-t border-gray-300 p-2 gap-8">
+                    <div className="flex flex-col justify-end items-start h-full w-full gap-2 mt-6">
+                        <div className="flex flex-col">
+
+                            <div className="text-xs flex w-full mb-2">
+                                <span className="whitespace-nowrap">SignX</span>
+                                <div className=" border-t border-gray-500 mt-3 ms-2 w-48 mr-2">
+                                    {/* <p className="text-xs text-black text-center mt-1">(Customer Signature)</p> */}
+                                </div>
+                                <span>Date</span>
+                                <div className=" border-t border-gray-500 mt-3 ms-2 w-48">
+                                </div>
+                            </div>
+                            <h2 className="font-medium text-xs italic">Thanks For Your Business!</h2>
+                            <p className="text-[9px] py-1 leading-relaxed">
+                                <span className="block">## Tire Warranty Options</span>
+                                <div className="flex flex-wrap gap-3 text-[9px]">
+                                    {[
+                                        { key: "manufactureWarranty", label: "Manufacturer Warranty" },
+                                        { key: "roadHazardWarranty", label: "Road Hazard" },
+                                        { key: "noWarranty", label: "No Warranty" },
+                                        { key: "flatRepairWarranty", label: "Flat Repair" },
+                                        { key: "rotationWarranty", label: "Rotation" },
+                                        { key: "balance", label: "Balance" },
+                                    ].map(({ key, label }) => (
+                                        <label key={key} className="flex items-center gap-1">
                                             <input
                                                 type="checkbox"
-                                                checked={item.taxable || false}
+                                                checked={!!printInvoice?.[key] || false}
                                                 readOnly
                                                 className="w-3 h-3"
                                             />
-                                        </td>
-                                        <td className="p-2 border-b border-blue-gray-50 w-[10%] text-center">
-                                            <Typography
-                                                variant="small"
-                                                color="blue-gray"
-                                                className="font-normal leading-none text-xs"
-                                            >
-                                                {calculateAmount(item.invoice_product.price, item.invoice_product.quantity)}
-                                            </Typography>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-
-                    </div>
-
-                    <div className="border-y py-1 w-full flex items-center justify-center mt-auto">
-                        <h4 className="text-xs font-normal italic">Invoice Summary</h4>
-                    </div>
-                    <div className="flex p-2 text-xs">
-                        <div className="basis-[50%] max-w-[50%] h-full p-2">
-                            Notes: {printInvoice.notes ? printInvoice.notes : 'N/A'}                           
-                        </div>
-
-                        {/* Financial Summary */}
-                        <div className="basis-[50%] max-w-[50%]">
-                            <div className="border-x border-t divide-y">
-                                <div className="flex justify-between px-2 py-1">
-                                    <span>Subtotal</span>
-                                    <span>${calculateTotalAmount(printInvoice.Product)}</span>
+                                            <span>{label}</span>
+                                        </label>
+                                    ))}
                                 </div>
-
-                            </div>
-
-                            <div className="flex flex-col text-xs">
-                                {Object.keys(appliedTaxes).map((tax, ind) => (
-                                    <div key={ind} className="border-t border-x divide-y">
-                                        <div className="flex justify-between px-2 py-1">
-                                            <span className="">
-                                                {`${tax.split('_')[0]} (${tax.split('_')[1]}${tax.split('_')[2]})`}
-                                            </span>
-                                            <span className="">
-                                                ${tax.split('_')[2] === '%' ? appliedTaxes[tax].toFixed(2) : appliedTaxes[tax]}
-                                            </span>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-
-                            <div className="border-t border-x divide-y text-xs">
-                                <div className="flex justify-between px-2 py-1">
-                                    <span className="">Total</span>
-                                    <span className="">${parseFloat(printInvoice?.totalAmount.toFixed(2)) + parseFloat(printInvoice?.discount)}</span>
-                                </div>
-                            </div>
-
-                            <div className="border-t border-x divide-y text-xs">
-                                <div className="flex justify-between px-2 py-1">
-                                    <span className="">Discount</span>
-                                    <span className="">${printInvoice?.discount}</span>
-                                </div>
-                            </div>
-
-                            <div className=" border divide-y text-xs">
-                                <div className="flex justify-between px-2 py-1 font-medium">
-                                    <span className="">Grand Total</span>
-                                    <span className="">${printInvoice?.totalAmount.toFixed(2)}</span>
-                                </div>
-                            </div>
-
-                            <div className="p-1 border mt-2 text-center font-medium text-xs">
-                                Payments
-                            </div>
-
-                            {printInvoice?.Payments.length > 0 ? (
-                                printInvoice.Payments.map((payment, index) => {
-                                    const date = new Date(payment.createdAt);
-                                    return (
-                                        <div key={index} className="border-b border-x divide-x text-xs">
-                                            <div className="flex justify-between px-2 py-1">
-                                                <span className="">
-                                                    {payment.paymentMethod} on {date.toLocaleDateString("en-US")}
-                                                </span>
-                                                <span className="">
-                                                    ${payment.paidAmount}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    );
-                                })
-                            ) : (
-                                <div className="border-b border-x divide-x text-xs">
-                                    <div className="flex justify-between px-2 py-1">
-                                        <span className="">N/A</span>
-                                        <span className="">$0.00</span>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                    <div className="flex flex-col justify-center border-t border-gray-300 p-2 gap-8">
-                        <div className="flex flex-col justify-end items-start h-full w-full gap-2 mt-6">
-                            <div className="flex flex-col">
-                               
-                                <div className="text-xs flex w-full mb-2">
-                                    <span className="whitespace-nowrap">SignX</span>
-                                    <div className=" border-t border-gray-500 mt-3 ms-2 w-48 mr-2">
-                                        {/* <p className="text-xs text-black text-center mt-1">(Customer Signature)</p> */}
-                                    </div>
-                                    <span>Date</span>
-                                    <div className=" border-t border-gray-500 mt-3 ms-2 w-48">
-                                    </div>
-                                </div>
-                                <h2 className="font-medium text-xs italic">Thanks For Your Business!</h2>
-                                <p className="text-[9px] py-1 leading-relaxed">
-                                    <span className="block">## Tire Warranty Options</span>
-                                    <div className="flex flex-wrap gap-3 text-[9px]">
-                                        {[
-                                            { key: "manufactureWarranty", label: "Manufacturer Warranty" },
-                                            { key: "roadHazardWarranty", label: "Road Hazard" },
-                                            { key: "noWarranty", label: "No Warranty" },
-                                            { key: "flatRepairWarranty", label: "Flat Repair" },
-                                            { key: "rotationWarranty", label: "Rotation" },
-                                            { key: "balance", label: "Balance" },
-                                        ].map(({ key, label }) => (
-                                            <label key={key} className="flex items-center gap-1">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={!!printInvoice?.[key] || false}
-                                                    readOnly
-                                                    className="w-3 h-3"
-                                                />
-                                                <span>{label}</span>
-                                            </label>
-                                        ))}
-                                    </div>
-                                </p>
-                                <p className="text-[9px] py-1 leading-relaxed">
+                            </p>
+                            {/* <div className="quill-content"
+                                dangerouslySetInnerHTML={{
+                                    __html: printInvoice?.Business.termsAndConditions || "",
+                                }}
+                            >
+                            </div> */}
+                            <p className="text-[9px] py-1 leading-relaxed">
                                     <span className="block">## Terms & Conditions  </span>
                                     <div className="text-[9px] py-1 leading-tight">
                                         No verbal agreement by any salesperson is binding on the company. You are authorized to deliver and/or install
@@ -309,10 +316,10 @@ const printView = React.forwardRef(({ view, printInvoice, appliedTaxes }, ref) =
                                         The buyer may not claim consequential, incidental, or indirect damages, including property damage, lost time, or lost income.
                                     </div>
                                 </p>
-                            </div>
-                        </div>                        
+                        </div>
                     </div>
-                
+                </div>
+
             </div>
         );
     }

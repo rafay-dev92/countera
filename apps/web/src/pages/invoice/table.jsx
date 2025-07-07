@@ -61,7 +61,7 @@ export function Invoice() {
 
   const getInvoices = async () => {
     try {
-      const filters = { paymentStatus: ["Paid", "Partially Paid", "Unpaid", "Void", "Refund"] };
+      const filters = { paymentStatus: ["PAID", "PARTIALLY_PAID", "UNPAID", "VOID", "REFUND"] };
       const response = await fetchInvoices(state.userToken, currentPage, itemsPerPage, filters);
       const totalInvoices = await response.json();
       setInvoices(totalInvoices?.data)
@@ -173,11 +173,11 @@ export function Invoice() {
   };
 
   const invoiceStatusColors = {
-    "Paid": "green",
-    "Partially Paid": "orange",
-    "Unpaid": "red",
-    "Void": "purple",
-    "Refund": "blue",
+    "PAID": "green",
+    "PARTIALLY_PAID": "orange",
+    "UNPAID": "red",
+    "VOID": "purple",
+    "REFUND": "blue",
   };
 
   if (loading) {

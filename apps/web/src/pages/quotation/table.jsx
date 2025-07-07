@@ -171,11 +171,11 @@ export function Quotation() {
         const data = {
             invoiceData: {
                 totalAmount: quotationData.totalAmount,
-                // paymentStatus: "Unpaid",
                 CustomerId: quotationData.CustomerId,
                 CustomerVehicleId: quotationData.CustomerVehicleId,
                 comments: quotationData.comments,
                 notes: quotationData.notes,
+                discount: quotationData.discount,
                 BusinessId: state.business.id
             },
             "products": selectedProductIds,
@@ -331,7 +331,7 @@ export function Quotation() {
                                                 color={approved ? "green" : "red"}
                                                 className="font-medium"
                                             >
-                                                {approved ? 'Approved' : 'Pending'}
+                                                {approved ? 'APPROVED' : 'PENDING'}
                                             </Typography>
                                         </td>
                                         <td className={classes}>

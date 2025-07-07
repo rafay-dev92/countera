@@ -25,7 +25,7 @@ const ViewQuotation = ({ quotationData, setQuotationData, componentRef, appliedT
         sendMail: false,
     });
     const [isNotesFormOpen, setIsNotesFormOpen] = useState(false);
-    
+
     // Delete Invoice
     const handleDel = async () => {
         const confirmed = await confirm("Do you really want to delete this quotation?");
@@ -69,7 +69,7 @@ const ViewQuotation = ({ quotationData, setQuotationData, componentRef, appliedT
             quantity: product.quotation_product.quantity,
             description: product.quotation_product.description || '',
             price: product.quotation_product.price
-          })).filter(product => product.id);
+        })).filter(product => product.id);
 
         const data = {
             invoiceData: {
@@ -78,6 +78,7 @@ const ViewQuotation = ({ quotationData, setQuotationData, componentRef, appliedT
                 CustomerVehicleId: quotationData.CustomerVehicleId,
                 comments: quotationData.comments,
                 notes: quotationData.notes,
+                discount: quotationData.discount,
                 BusinessId: state.business.id
             },
             "products": selectedProductIds,
@@ -105,11 +106,19 @@ const ViewQuotation = ({ quotationData, setQuotationData, componentRef, appliedT
 
     const createCopy = async () => {
         setIsLoading({ ...isLoading, createCopy: true });
-        const selectedProductIds = quotationData?.Product?.map((product) => `${product.id}:${product.quotation_product?.quantity}`);
+        const selectedProductIds = quotationData?.Product?.map((product) => ({
+            id: product.id,
+            quantity: product.quotation_product.quantity,
+            description: product.quotation_product.description || '',
+            price: product.quotation_product.price
+        })).filter(product => product.id);
 
         const data = {
             quotationData: {
                 totalAmount: quotationData.totalAmount,
+                comments: quotationData.comments,
+                notes: quotationData.notes,
+                discount: quotationData.discount,
                 CustomerId: quotationData.CustomerId,
                 CustomerVehicleId: quotationData.CustomerVehicleId,
                 BusinessId: state.business.id,

@@ -5,7 +5,7 @@ import ApprovedImg from "@/assets/approved.png";
 const INVOICE_TABLE_HEAD = ["Customer", "Status", "Payment Method", "Total"];
 const PRODUCT_TABLE_HEAD = ["Product", "Quantity", "Price", "Tax", "Amount"]
 
-const printView = React.forwardRef(({view, workOrderData, appliedTaxes}, ref) =>  {
+const printView = React.forwardRef(({ view, workOrderData, appliedTaxes }, ref) => {
     const workOrderDate = new Date(workOrderData?.createdAt);
     const [taxes, setTaxes] = useState([]);
 
@@ -46,7 +46,7 @@ const printView = React.forwardRef(({view, workOrderData, appliedTaxes}, ref) =>
 
     if (workOrderData && Object.keys(workOrderData).length > 0) {
         return (
-             <div ref={ref} className={`w-[794px] min-h-[1123px] bg-white mx-auto flex flex-col ${!view ? "hidden print:flex" : ""}`}>
+            <div ref={ref} className={`w-[794px] min-h-[1123px] bg-white mx-auto flex flex-col ${!view ? "hidden print:flex" : ""}`}>
                 <div className="grid grid-cols-2 border-b">
                     <div className="col-span-1 h-full flex p-1">
                         <img src={workOrderData?.Business.logo} className="rounded-xl h-[100px]" alt="Business logo" height={100} />
@@ -133,13 +133,16 @@ const printView = React.forwardRef(({view, workOrderData, appliedTaxes}, ref) =>
                             {workOrderData.Product.map((item, index) => (
                                 <tr key={index}>
                                     <td className="p-2 border-b border-blue-gray-50 w-[60%]">
-                                        <Typography
-                                            variant="small"
-                                            color="blue-gray"
-                                            className="font-normal leading-none text-xs"
-                                        >
-                                            {item.name}
-                                        </Typography>
+                                        <div className="flex flex-col">
+                                            <Typography
+                                                variant="small"
+                                                color="blue-gray"
+                                                className="font-normal leading-none text-xs"
+                                            >
+                                                {item.name}
+                                            </Typography>
+                                            <span className="text-gray-600 text-[10px]">{item?.workorder_product?.description}</span>
+                                        </div>
                                     </td>
                                     <td className="p-2 border-b border-blue-gray-50 w-[10%] text-center">
                                         <Typography
@@ -187,9 +190,9 @@ const printView = React.forwardRef(({view, workOrderData, appliedTaxes}, ref) =>
                     <h4 className="text-xs font-normal italic">WorkOrder Summary</h4>
                 </div>
                 <div className="flex p-2 text-xs">
-                     <div className="basis-[50%] max-w-[50%] h-full p-2">
+                    <div className="basis-[50%] max-w-[50%] h-full p-2">
                         Notes: {workOrderData.notes ? workOrderData.notes : 'N/A'}
-                    </div>                    
+                    </div>
 
                     <div className="basis-[50%] max-w-[50%]">
                         <div className="border-x border-t divide-y">
@@ -200,7 +203,7 @@ const printView = React.forwardRef(({view, workOrderData, appliedTaxes}, ref) =>
 
                         </div>
 
-                       <div className="flex flex-col text-xs">
+                        <div className="flex flex-col text-xs">
                             {Object.keys(appliedTaxes).map((tax, ind) => (
                                 <div key={ind} className="border-t border-x divide-y">
                                     <div className="flex justify-between px-2 py-1">

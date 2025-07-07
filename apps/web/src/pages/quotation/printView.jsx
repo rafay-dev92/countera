@@ -5,7 +5,7 @@ import ApprovedImg from "@/assets/approved.png";
 const INVOICE_TABLE_HEAD = ["Customer", "Status", "Payment Method", "Total"];
 const PRODUCT_TABLE_HEAD = ["Product", "Quantity", "Price", "Tax", "Amount"]
 
-const printView = React.forwardRef(({view, quotationData, appliedTaxes}, ref) =>  {
+const printView = React.forwardRef(({ view, quotationData, appliedTaxes }, ref) => {
     const quotationDate = new Date(quotationData?.createdAt);
 
     const calculateAmount = (price, quantity) => {
@@ -25,7 +25,7 @@ const printView = React.forwardRef(({view, quotationData, appliedTaxes}, ref) =>
     if (quotationData && Object.keys(quotationData).length > 0) {
         return (
             <div ref={ref} className={`w-[794px] min-h-[1123px] bg-white mx-auto flex flex-col ${!view ? "hidden print:flex" : ""}`}>
-                 <div className="grid grid-cols-2 border-b">
+                <div className="grid grid-cols-2 border-b">
                     <div className="col-span-1 h-full flex p-1">
                         <img src={quotationData?.Business.logo} className="rounded-xl h-[100px]" alt="Business logo" height={100} />
                     </div>
@@ -110,13 +110,16 @@ const printView = React.forwardRef(({view, quotationData, appliedTaxes}, ref) =>
                             {quotationData.Product.map((item, index) => (
                                 <tr key={index}>
                                     <td className="p-2 border-b border-blue-gray-50 w-[60%]">
-                                        <Typography
-                                            variant="small"
-                                            color="blue-gray"
-                                            className="font-normal leading-none text-xs"
-                                        >
-                                            {item.name}
-                                        </Typography>
+                                        <div className="flex flex-col">
+                                            <Typography
+                                                variant="small"
+                                                color="blue-gray"
+                                                className="font-normal leading-none text-xs"
+                                            >
+                                                {item.name}
+                                            </Typography>
+                                            <span className="text-gray-600 text-[10px]">{item?.quotation_product?.description}</span>
+                                        </div>
                                     </td>
                                     <td className="p-2 border-b border-blue-gray-50 w-[10%] text-center">
                                         <Typography
@@ -166,7 +169,7 @@ const printView = React.forwardRef(({view, quotationData, appliedTaxes}, ref) =>
 
                 <div className="flex p-2 text-xs">
                     <div className="basis-[50%] max-w-[50%] h-full p-2">
-                        Notes: {quotationData.notes ? quotationData.notes : 'N/A'}                       
+                        Notes: {quotationData.notes ? quotationData.notes : 'N/A'}
                     </div>
 
                     <div className="basis-[50%] max-w-[50%]">
@@ -179,7 +182,7 @@ const printView = React.forwardRef(({view, quotationData, appliedTaxes}, ref) =>
 
                         <div className="flex flex-col text-xs">
                             {Object.keys(appliedTaxes).map((tax, ind) => (
-                                 <div key={ind} className="border-t border-x divide-y">
+                                <div key={ind} className="border-t border-x divide-y">
                                     <div className="flex justify-between px-2 py-1">
                                         <span className="">
                                             {`${tax.split('_')[0]} (${tax.split('_')[1]}${tax.split('_')[2]})`}
@@ -189,7 +192,7 @@ const printView = React.forwardRef(({view, quotationData, appliedTaxes}, ref) =>
                                         </span>
                                     </div>
                                 </div>
-                            ))}                           
+                            ))}
                         </div>
                         <div className="border-t border-x divide-y text-xs">
                             <div className="flex justify-between px-2 py-1">

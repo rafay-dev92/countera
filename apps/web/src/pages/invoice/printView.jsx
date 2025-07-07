@@ -112,13 +112,16 @@ const printView = React.forwardRef(({ view, printInvoice, appliedTaxes }, ref) =
                             {printInvoice?.Product?.map((item, index) => (
                                 <tr key={index}>
                                     <td className="p-2 border-b border-blue-gray-50 w-[60%]">
-                                        <Typography
-                                            variant="small"
-                                            color="blue-gray"
-                                            className="font-normal leading-none text-xs"
-                                        >
-                                            {item.name}
-                                        </Typography>
+                                        <div className="flex flex-col">
+                                            <Typography
+                                                variant="small"
+                                                color="blue-gray"
+                                                className="font-normal leading-none text-xs"
+                                            >
+                                                {item.name}
+                                            </Typography>
+                                            <span className="text-gray-600 text-[10px]">{item?.invoice_product?.description}</span>
+                                        </div>
                                     </td>
                                     <td className="p-2 border-b border-blue-gray-50 w-[10%] text-center">
                                         <Typography
@@ -290,32 +293,32 @@ const printView = React.forwardRef(({ view, printInvoice, appliedTaxes }, ref) =
                             >
                             </div> */}
                             <p className="text-[9px] py-1 leading-relaxed">
-                                    <span className="block">## Terms & Conditions  </span>
-                                    <div className="text-[9px] py-1 leading-tight">
-                                        No verbal agreement by any salesperson is binding on the company. You are authorized to deliver and/or install
-                                        the listed products under the terms of this order. Any operation of the vehicle for testing, inspection, or delivery
-                                        is at my risk. A mechanic's lien is placed on the vehicle to secure payment for installed products. The company is
-                                        not responsible for damage or loss of items in the vehicle due to fire, theft, accident, or other uncontrollable events.
-                                        If legal action is taken to collect payment, the purchaser will cover attorney fees, court costs, and collection expenses.
-                                        The dealership is not liable for wheel damage. I acknowledge receipt and approval of this order and its terms.
-                                    </div>
-                                </p>
-                                <p className="text-[9px] py-1 leading-relaxed">
-                                    <span className="block">## All Sales Are Final</span>
-                                    <span className="block"><b>NOTICE:</b> We are not responsible for any goods left over 3 days from above date.</span>
-                                    <span className="block"><b>Return/Exchange:</b> All returns or cancellations subject to freight and hauling charges and a 25% restocking fee.</span>
-                                    <span className="block"><b>NOTICE:</b> Customer is responsible for maintaining:</span>
-                                    <span className="block">a) tire air pressure per manufacturer specifications</span>
-                                    <span className="block">b) wire wheels per manufacturer specifications .The dealership is not liable for issues with lugs, nuts, or studs.</span>
-                                </p>
-                                <p className="text-[9px] py-1 leading-relaxed">
-                                    <span className="block"> ## Warranty Disclaimer</span>
-                                    <div className="text-[9px] py-1 leading-tight">
-                                        All product warranties are provided solely by the manufacturer. The seller expressly disclaims all express or implied warranties,
-                                        including merchantability or fitness for a particular purpose, and does not authorize any other party to assume liability on its behalf.
-                                        The buyer may not claim consequential, incidental, or indirect damages, including property damage, lost time, or lost income.
-                                    </div>
-                                </p>
+                                <span className="block">## Terms & Conditions  </span>
+                                <div className="text-[9px] py-1 leading-tight">
+                                    No verbal agreement by any salesperson is binding on the company. You are authorized to deliver and/or install
+                                    the listed products under the terms of this order. Any operation of the vehicle for testing, inspection, or delivery
+                                    is at my risk. A mechanic's lien is placed on the vehicle to secure payment for installed products. The company is
+                                    not responsible for damage or loss of items in the vehicle due to fire, theft, accident, or other uncontrollable events.
+                                    If legal action is taken to collect payment, the purchaser will cover attorney fees, court costs, and collection expenses.
+                                    The dealership is not liable for wheel damage. I acknowledge receipt and approval of this order and its terms.
+                                </div>
+                            </p>
+                            <p className="text-[9px] py-1 leading-relaxed">
+                                <span className="block">## All Sales Are Final</span>
+                                <span className="block"><b>NOTICE:</b> We are not responsible for any goods left over 3 days from above date.</span>
+                                <span className="block"><b>Return/Exchange:</b> All returns or cancellations subject to freight and hauling charges and a 25% restocking fee.</span>
+                                <span className="block"><b>NOTICE:</b> Customer is responsible for maintaining:</span>
+                                <span className="block">a) tire air pressure per manufacturer specifications</span>
+                                <span className="block">b) wire wheels per manufacturer specifications .The dealership is not liable for issues with lugs, nuts, or studs.</span>
+                            </p>
+                            <p className="text-[9px] py-1 leading-relaxed">
+                                <span className="block"> ## Warranty Disclaimer</span>
+                                <div className="text-[9px] py-1 leading-tight">
+                                    All product warranties are provided solely by the manufacturer. The seller expressly disclaims all express or implied warranties,
+                                    including merchantability or fitness for a particular purpose, and does not authorize any other party to assume liability on its behalf.
+                                    The buyer may not claim consequential, incidental, or indirect damages, including property damage, lost time, or lost income.
+                                </div>
+                            </p>
                         </div>
                     </div>
                 </div>

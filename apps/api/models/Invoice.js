@@ -23,13 +23,19 @@ module.exports = (sequelize) => {
             defaultValue: 0,
         },
         paymentStatus: {
-            type: DataTypes.STRING,
+            type: DataTypes.ENUM(
+                'UNPAID',
+                'PARTIALLY_PAID',
+                'PAID',
+                'REFUNDED',
+                'VOID',
+              ),
             allowNull: false,
-            defaultValue: 'Unpaid',
+            defaultValue: 'UNPAID',
             validate: {
                 isIn: {
-                    args: [['Paid', 'Partially Paid', 'Unpaid', 'Void', 'Refund']],
-                    msg: "Payment status must be either 'Paid', 'Partially Paid', 'Unpaid', 'Void', or 'Refund'"
+                    args: [['PAID', 'PARTIALLY_PAID', 'UNPAID', 'VOID', 'REFUNDED']],
+                    msg: "Payment status must be either 'PAID', 'PARTIALLY_PAID', 'UNPAID', 'VOID', or 'REFUNDED'"
                 }
             }
         },

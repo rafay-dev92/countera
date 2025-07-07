@@ -52,16 +52,6 @@ module.exports = (sequelize) => {
         onDelete: "RESTRICT",
         onUpdate: "CASCADE",
       },
-      // CategoryId: {
-      //   type: DataTypes.UUID,
-      //   allowNull: false,
-      //   references: {
-      //     model: "product_categories",
-      //     key: "id",
-      //   },
-      //   onDelete: "CASCADE",
-      //   onUpdate: "CASCADE",
-      // },
     },
     {
       tableName: "products",

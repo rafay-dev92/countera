@@ -50,8 +50,8 @@ router.post("/create", upload.single("logo"), async (req, res) => {
         [Op.or]: [
           { name },
           { email },
-          { licenseNumber },
-          { permitNumber },
+          // { licenseNumber },
+          // { permitNumber },
         ],
       },
     });

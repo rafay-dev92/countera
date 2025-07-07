@@ -19,6 +19,11 @@ module.exports = (sequelize) => {
         type: DataTypes.FLOAT,
         allowNull: false,
       },
+      discount: {
+        type: DataTypes.FLOAT,
+        allowNull: false,
+        defaultValue: 0,
+      },
       approved: {
         type: DataTypes.BOOLEAN,
         defaultValue: false,

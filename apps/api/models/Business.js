@@ -15,7 +15,6 @@ module.exports= (sequelize) => {
         email: {
             type: DataTypes.STRING,
             allowNull: true,
-            unique: true,
         },
         logo: {
             type: DataTypes.STRING,
@@ -61,6 +60,10 @@ module.exports= (sequelize) => {
         defaultMargin: {
             type: DataTypes.FLOAT,
             allowNull: true,
+        },
+        termsAndConditions: { 
+            type: DataTypes.TEXT, 
+            allowNull: true 
         },
     },{
         tableName: 'businesses'

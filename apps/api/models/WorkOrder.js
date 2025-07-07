@@ -19,9 +19,17 @@ module.exports = (sequelize) => {
         type: DataTypes.FLOAT,
         allowNull: false,
       },
+      discount: {
+        type: DataTypes.FLOAT,
+        allowNull: false,
+        defaultValue: 0,
+      },
       status: {
-        type: DataTypes.STRING,
-        defaultValue: "Pending",
+        type: DataTypes.ENUM(
+          'PENDING',
+          'FINISHED',
+        ),
+        defaultValue: "PENDING",
         allowNull: false,
       },
       notes: {

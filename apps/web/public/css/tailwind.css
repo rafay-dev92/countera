@@ -52,6 +52,97 @@
 
 /* React Quill */
 
-.ql-toolbar .ql-size span[data-label="10px"]::before {
-    font-size: 10px;
+.ql-editor p {
+    margin: 0;
+    @apply text-xs leading-3;
 }
+
+.quill-content p {
+    margin: 0;
+    @apply text-xs leading-3;
+}
+
+.ql-size-small {
+    @apply text-[9px];
+}
+
+.ql-size-large {
+    @apply text-base;
+}
+
+.ql-size-huge {
+    @apply text-lg;
+}
+
+
+/* .ql-line-height-1 {
+    @apply leading-none;
+}
+
+.ql-line-height-1\.5 {
+    line-height: 1.5;
+}
+
+.ql-line-height-2 {
+    line-height: 2;
+}
+
+.ql-line-height-2\.5 {
+    line-height: 2.5;
+}
+
+.ql-line-height-3 {
+    line-height: 3;
+} */
+
+
+
+/* .ql-lineheight-1 {
+    @apply leading-3;
+}
+
+.ql-lineheight-1\.5 {
+    line-height: 1.5;
+}
+
+.ql-lineheight-2 {
+    line-height: 2;
+}
+
+.ql-lineheight-2\.5 {
+    line-height: 2.5;
+}
+
+.ql-lineheight-3 {
+    line-height: 3;
+} 
+
+
+
+
+.ql-lineHeight {
+    width: 20px;
+}
+.ql-lineHeight .ql-picker-label > svg {
+    display: none;
+}
+.ql-lineHeight .ql-picker-item::before {
+    content: attr(data-label);
+}
+
+
+
+
+
+.line-height-normal {
+    line-height: normal;
+}
+.line-height-tight {
+    line-height: 1;
+}
+.line-height-comfortable {
+    line-height: 2;
+}
+.line-height-spacious {
+    line-height: 2.5;
+} */

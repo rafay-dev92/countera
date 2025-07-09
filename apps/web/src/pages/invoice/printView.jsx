@@ -286,13 +286,15 @@ const printView = React.forwardRef(({ view, printInvoice, appliedTaxes }, ref) =
                                     ))}
                                 </div>
                             </p>
-                            {/* <div className="quill-content"
+                            <div className="quill-content"
                                 dangerouslySetInnerHTML={{
                                     __html: printInvoice?.Business.termsAndConditions || "",
                                 }}
                             >
-                            </div> */}
-                            <p className="text-[9px] py-1 leading-relaxed">
+                            </div>
+
+
+                            {/* <p className="text-[9px] py-1 leading-relaxed">
                                 <span className="block">## Terms & Conditions  </span>
                                 <div className="text-[9px] py-1 leading-tight">
                                     No verbal agreement by any salesperson is binding on the company. You are authorized to deliver and/or install
@@ -318,7 +320,7 @@ const printView = React.forwardRef(({ view, printInvoice, appliedTaxes }, ref) =
                                     including merchantability or fitness for a particular purpose, and does not authorize any other party to assume liability on its behalf.
                                     The buyer may not claim consequential, incidental, or indirect damages, including property damage, lost time, or lost income.
                                 </div>
-                            </p>
+                            </p> */}
                         </div>
                     </div>
                 </div>

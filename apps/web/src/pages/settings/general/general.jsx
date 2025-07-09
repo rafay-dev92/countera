@@ -1,13 +1,12 @@
 import React, { useEffect, useState, useMemo, useRef } from "react";
-import { Input, Select, Button, Option } from "@material-tailwind/react";
+import { Input, Button } from "@material-tailwind/react";
 import { State } from '../../../state/Context'
 import { updateBusiness } from "@/services/updateBusiness";
 import { toast } from "react-toastify";
 import dummyImage from "../../../assets/dummyImage.png"
 import ReactQuill from "react-quill";
-import Quill from 'quill';
 import "react-quill/dist/quill.snow.css";
-import "react-quill/dist/quill.bubble.css";
+import Quill from 'quill';
 
 function Profile() {
     const timezones = Intl.supportedValuesOf('timeZone');
@@ -31,13 +30,14 @@ function Profile() {
         termsAndConditions: "",
     });
 
-    const Size = Quill.import('attributors/style/size');
-    Size.whitelist = ['10px', '12px', '14px', '16px', '18px', '20px', '24px', '28px', '32px', '36px'];
-    Quill.register(Size, true);
+    // const Size = Quill.import('attributors/class/size');
+    // Size.whitelist = ['small', 'base', 'large', 'huge'];
+    // Quill.register(Size, true);
+
 
     const quillModules = {
         toolbar: [
-            [{ 'font': [] }, { 'size': Size.whitelist }],
+            [{ 'font': [] }, { 'size': [] }],
             ['bold', 'italic', 'underline', 'strike'],
             [{ 'color': [] }, { 'background': [] }],
             [{ 'script': 'sub' }, { 'script': 'super' }],
@@ -62,7 +62,6 @@ function Profile() {
         'list', 'bullet', 'indent',
         'link', 'image', 'video'
     ];
-
 
     const allTimezones = useMemo(() => Intl.supportedValuesOf('timeZone'), []);
     const [showSuggestions, setShowSuggestions] = useState(false);
@@ -351,6 +350,7 @@ function Profile() {
 
             <div className="py-5 w-full md:w-[70%] lg:w-[60%] 2xl:w-[50%]">
                 <h3 className="text-lg font-bold mb-4">Invoice:</h3>
+
                 <ReactQuill
                     value={formData.termsAndConditions}
                     onChange={(value) =>

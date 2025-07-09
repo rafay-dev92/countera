@@ -3,6 +3,17 @@ const withMT = require("@material-tailwind/react/utils/withMT");
 
 module.exports = withMT({
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
+  safelist: [
+    'text-[9px]',
+    'text-xs',
+    'text-sm',
+    'text-base',
+    'text-lg',
+    'text-2xl',
+    'leading-3',
+    'leading-none',
+    'leading-tight',
+  ],
   theme: {
     extend: {
       animation: {

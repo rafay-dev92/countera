@@ -3,7 +3,6 @@ import { Typography } from "@material-tailwind/react";
 import PaidImg from "@/assets/paid.png";
 import "react-quill/dist/quill.snow.css";
 
-const PRODUCT_TABLE_HEAD = ["Product", "Quantity", "Unit Price", "Tax", "Total Price"]
 
 const printView = React.forwardRef(({ view, printInvoice, appliedTaxes }, ref) => {
 
@@ -25,7 +24,7 @@ const printView = React.forwardRef(({ view, printInvoice, appliedTaxes }, ref) =
 
     if (Object.keys(printInvoice).length > 0) {
         return (
-            <div ref={ref} className={`w-[794px] min-h-[1123px] bg-white mx-auto flex flex-col ${!view ? "hidden print:flex" : ""}`}>
+            <div ref={ref} className={`w-[794px] min-h-[1123px] bg-white mx-auto flex flex-col p-4 ${!view ? "hidden print:flex" : ""}`}>
                 <div className="grid grid-cols-2 border-b">
                     <div className="col-span-1 h-full flex p-1">
                         <img src={printInvoice?.Business.logo} className="rounded-xl h-[100px]" alt="Business logo" height={100} />
@@ -33,8 +32,8 @@ const printView = React.forwardRef(({ view, printInvoice, appliedTaxes }, ref) =
                     <div className="col-span-1 flex flex-col items-end gap-1 p-2">
                         <span className="text-[12px] font-semibold">Date: {invoiceDate.toLocaleDateString("en-US")}</span>
                         <span className="text-[12px]">Invoice No: INV{`${printInvoice?.invoiceNumber}`.padStart(4, '0')}</span>
-                        <span className="text-[12px]">License No: {printInvoice?.Business.licenseNumber}</span>
-                        <span className="text-[12px]">Permit No: {printInvoice?.Business.permitNumber}</span>
+                        <span className="text-[12px]">License No: {printInvoice?.Business.licenseNumber ? printInvoice?.Business.licenseNumber : "N/A"}</span>
+                        <span className="text-[12px]">Permit No: {printInvoice?.Business.permitNumber ? printInvoice?.Business.permitNumber : "N/A"}</span>
                     </div>
                 </div>
                 <div className="grid grid-cols-3 divide-x">
@@ -50,9 +49,21 @@ const printView = React.forwardRef(({ view, printInvoice, appliedTaxes }, ref) =
                         <h2 className="text-xs font-semibold underline">Bill To:</h2>
                         <div className="flex flex-col">
                             <span className="text-xs">{printInvoice?.Customer.firstName} {printInvoice?.Customer.lastName}</span>
-                            <span className="text-xs">{printInvoice?.Customer?.Address && printInvoice?.Customer.Address.street}</span>
-                            <span className="text-xs">{printInvoice?.Customer?.Address && `${printInvoice?.Customer?.Address?.city}, ${printInvoice?.Customer?.Address?.state}, ${printInvoice?.Customer?.Address?.zipcode}`}</span>
-                            <span className="text-xs">{printInvoice?.Customer?.phone && `Phone: ${printInvoice?.Customer.phone}`}</span>
+                            {printInvoice?.Customer?.Address?.street && (
+                                <span className="text-xs">{printInvoice.Customer.Address.street}</span>
+                            )}
+                            {(printInvoice?.Customer?.Address?.city || printInvoice?.Customer?.Address?.state || printInvoice?.Customer?.Address?.zipcode) && (
+                                <span className="text-xs">
+                                    {printInvoice?.Customer?.Address?.city ? printInvoice.Customer.Address.city : ''}
+                                    {printInvoice?.Customer?.Address?.city && printInvoice?.Customer?.Address?.state ? ', ' : ''}
+                                    {printInvoice?.Customer?.Address?.state ? printInvoice.Customer.Address.state : ''}
+                                    {(printInvoice?.Customer?.Address?.city || printInvoice?.Customer?.Address?.state) && printInvoice?.Customer?.Address?.zipcode ? ', ' : ''}
+                                    {printInvoice?.Customer?.Address?.zipcode ? printInvoice.Customer.Address.zipcode : ''}
+                                </span>
+                            )}
+                            {printInvoice?.Customer?.phone && (
+                                <span className="text-xs">Phone: {printInvoice.Customer.phone}</span>
+                            )}
                         </div>
                     </div>
 
@@ -60,58 +71,56 @@ const printView = React.forwardRef(({ view, printInvoice, appliedTaxes }, ref) =
                         <h2 className="text-xs font-semibold underline">Vehicle Info:</h2>
                         <div className="grid grid-cols-2 gap-2">
                             <div className="col-span-1 flex gap-1">
-                                <div className="flex flex-col gap-1">
-                                    <span className="text-xs font-normal">License No:</span>
-                                    <span className="text-xs font-normal">Odometer:</span>
-                                    <span className="text-xs font-normal">Year:</span>
-                                    <span className="text-xs font-normal">Make:</span>
-                                    {/* <span className="text-xs">Model</span> */}
-                                </div>
-                                <div className="flex flex-col gap-1">
-                                    <span className="text-xs">{printInvoice?.CustomerVehicle.licenseNo ? printInvoice?.CustomerVehicle.licenseNo : 'N/A'}</span>
-                                    <span className="text-xs">{printInvoice?.CustomerVehicle.odometer}</span>
-                                    <span className="text-xs">{printInvoice?.CustomerVehicle.year}</span>
-                                    <span className="text-xs">{printInvoice?.CustomerVehicle.make}</span>
-                                    {/* <span className="text-xs">{printInvoice?.CustomerVehicle.model}</span> */}
-                                </div>
+                                <span className="text-xs font-normal">License No:</span>
                             </div>
                             <div className="col-span-1 flex gap-1">
-                                <div className="flex flex-col gap-1">
-                                    <span className="text-xs font-normal">Model:</span>
-                                </div>
-                                <div className="flex flex-col gap-1">
-                                    <span className="text-xs">{printInvoice?.CustomerVehicle.model}</span>
-                                </div>
+                                <span className="text-xs">{printInvoice?.CustomerVehicle.licenseNo ? printInvoice?.CustomerVehicle.licenseNo : 'N/A'}</span>
+                            </div>
+                            <div className="col-span-1 flex gap-1">
+                                <span className="text-xs font-normal">Odometer:</span>
+                                <span className="text-xs">{printInvoice?.CustomerVehicle.odometer}</span>
+                            </div>
+                            <div className="col-span-1 flex gap-1">
+                                <span className="text-xs font-normal">Year:</span>
+                                <span className="text-xs">{printInvoice?.CustomerVehicle.year}</span>
+                            </div>
+                            <div className="col-span-1 flex gap-1">
+                                <span className="text-xs font-normal">Make:</span>
+                                <span className="text-xs">{printInvoice?.CustomerVehicle.make}</span>
+                            </div>
+                            <div className="col-span-1 flex gap-1">
+                                <span className="text-xs font-normal">Model:</span>
+                                <span className="text-xs">{printInvoice?.CustomerVehicle.model}</span>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div className="w-full px-2 text-sm">
+                <div className="w-full text-sm">
                     <table className="w-full min-w-max table-auto text-left">
                         <thead>
                             <tr>
-                                {PRODUCT_TABLE_HEAD.map((head, i) => (
-                                    <th
-                                        key={head}
-                                        className={`border-y border-blue-gray-100 bg-blue-gray-50/50 p-2 ${i === 0 ? 'w-[60%]' : 'w-[10%] text-center'
-                                            }`}
-                                    >
-                                        <Typography
-                                            variant="small"
-                                            color="blue-gray"
-                                            className="font-normal leading-none opacity-70 text-xs"
-                                        >
-                                            {head}
-                                        </Typography>
-                                    </th>
-                                ))}
+                                <th className="border-y border-blue-gray-100 bg-blue-gray-50/50 p-2 w-[5%] text-center font-normal leading-none text-[13px]">#</th>
+                                <th className="border-y border-blue-gray-100 bg-blue-gray-50/50 p-2 w-[35%] font-normal leading-none text-[13px]">Product</th>
+                                <th className="border-y border-blue-gray-100 bg-blue-gray-50/50 p-2 w-[10%] text-center font-normal leading-none text-[13px]">Quantity</th>
+                                <th className="border-y border-blue-gray-100 bg-blue-gray-50/50 p-2 w-[15%] text-center font-normal leading-none text-[13px]">Unit Price</th>
+                                <th className="border-y border-blue-gray-100 bg-blue-gray-50/50 p-2 w-[10%] text-center font-normal leading-none text-[13px]">Tax</th>
+                                <th className="border-y border-blue-gray-100 bg-blue-gray-50/50 p-2 w-[15%] text-center font-normal leading-none text-[13px]">Total Price</th>
                             </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200 text-xs">
                             {printInvoice?.Product?.map((item, index) => (
                                 <tr key={index}>
-                                    <td className="p-2 border-b border-blue-gray-50 w-[60%]">
+                                    <td className="p-2 border-b border-blue-gray-50 w-[5%] text-center">
+                                        <Typography
+                                            variant="small"
+                                            color="blue-gray"
+                                            className="font-normal leading-none text-xs"
+                                        >
+                                            {index + 1}
+                                        </Typography>
+                                    </td>
+                                    <td className="p-2 border-b border-blue-gray-50 w-[35%]">
                                         <div className="flex flex-col">
                                             <Typography
                                                 variant="small"
@@ -132,7 +141,7 @@ const printView = React.forwardRef(({ view, printInvoice, appliedTaxes }, ref) =
                                             {item.invoice_product.quantity}
                                         </Typography>
                                     </td>
-                                    <td className="p-2 border-b border-blue-gray-50 w-[10%] text-center">
+                                    <td className="p-2 border-b border-blue-gray-50 w-[15%] text-center">
                                         <Typography
                                             variant="small"
                                             color="blue-gray"
@@ -149,7 +158,7 @@ const printView = React.forwardRef(({ view, printInvoice, appliedTaxes }, ref) =
                                             className="w-3 h-3"
                                         />
                                     </td>
-                                    <td className="p-2 border-b border-blue-gray-50 w-[10%] text-center">
+                                    <td className="p-2 border-b border-blue-gray-50 w-[15%] text-center">
                                         <Typography
                                             variant="small"
                                             color="blue-gray"

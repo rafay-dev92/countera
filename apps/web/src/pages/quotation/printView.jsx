@@ -2,8 +2,6 @@ import React, { useEffect, useState } from "react";
 import { Typography } from "@material-tailwind/react";
 import ApprovedImg from "@/assets/approved.png";
 
-const INVOICE_TABLE_HEAD = ["Customer", "Status", "Payment Method", "Total"];
-const PRODUCT_TABLE_HEAD = ["Product", "Quantity", "Price", "Tax", "Amount"]
 
 const printView = React.forwardRef(({ view, quotationData, appliedTaxes }, ref) => {
     const quotationDate = new Date(quotationData?.createdAt);
@@ -24,7 +22,7 @@ const printView = React.forwardRef(({ view, quotationData, appliedTaxes }, ref) 
 
     if (quotationData && Object.keys(quotationData).length > 0) {
         return (
-            <div ref={ref} className={`w-[794px] min-h-[1123px] bg-white mx-auto flex flex-col ${!view ? "hidden print:flex" : ""}`}>
+            <div ref={ref} className={`w-[794px] min-h-[1123px] bg-white mx-auto flex flex-col p-4 ${!view ? "hidden print:flex" : ""}`}>
                 <div className="grid grid-cols-2 border-b">
                     <div className="col-span-1 h-full flex p-1">
                         <img src={quotationData?.Business.logo} className="rounded-xl h-[100px]" alt="Business logo" height={100} />
@@ -32,8 +30,8 @@ const printView = React.forwardRef(({ view, quotationData, appliedTaxes }, ref) 
                     <div className="col-span-1 flex flex-col items-end gap-1 p-2">
                         <span className="text-[12px] font-semibold">Date: {quotationDate.toLocaleDateString("en-US")}</span>
                         <span className="text-[12px]">Quote No: INV{`${quotationData?.quotationNumber}`.padStart(4, '0')}</span>
-                        <span className="text-[12px]">License No: {quotationData?.Business.licenseNumber}</span>
-                        <span className="text-[12px]">Permit No: {quotationData?.Business.permitNumber}</span>
+                        <span className="text-[12px]">License No: {quotationData?.Business.licenseNumber ? quotationData?.Business.licenseNumber : "N/A"}</span>
+                        <span className="text-[12px]">Permit No: {quotationData?.Business.permitNumber ? quotationData?.Business.permitNumber : "N/A"}</span>
                     </div>
                 </div>
 
@@ -50,9 +48,21 @@ const printView = React.forwardRef(({ view, quotationData, appliedTaxes }, ref) 
                         <h2 className="text-xs font-semibold underline">Bill To:</h2>
                         <div className="flex flex-col">
                             <span className="text-xs">{quotationData?.Customer.firstName} {quotationData?.Customer.lastName}</span>
-                            <span className="text-xs">{quotationData?.Customer?.Address && quotationData?.Customer.Address.street}</span>
-                            <span className="text-xs">{quotationData?.Customer?.Address && `${quotationData?.Customer?.Address?.city}, ${quotationData?.Customer?.Address?.state}, ${quotationData?.Customer?.Address?.zipcode}`}</span>
-                            <span className="text-xs">{quotationData?.Customer?.phone && `Phone: ${quotationData?.Customer.phone}`}</span>
+                            {quotationData?.Customer?.Address?.street && (
+                                <span className="text-xs">{quotationData.Customer.Address.street}</span>
+                            )}
+                            {(quotationData?.Customer?.Address?.city || quotationData?.Customer?.Address?.state || quotationData?.Customer?.Address?.zipcode) && (
+                                <span className="text-xs">
+                                    {quotationData?.Customer?.Address?.city ? quotationData.Customer.Address.city : ''}
+                                    {quotationData?.Customer?.Address?.city && quotationData?.Customer?.Address?.state ? ', ' : ''}
+                                    {quotationData?.Customer?.Address?.state ? quotationData.Customer.Address.state : ''}
+                                    {(quotationData?.Customer?.Address?.city || quotationData?.Customer?.Address?.state) && quotationData?.Customer?.Address?.zipcode ? ', ' : ''}
+                                    {quotationData?.Customer?.Address?.zipcode ? quotationData.Customer.Address.zipcode : ''}
+                                </span>
+                            )}
+                            {quotationData?.Customer?.phone && (
+                                <span className="text-xs">Phone: {quotationData.Customer.phone}</span>
+                            )}
                         </div>
                     </div>
 
@@ -60,56 +70,56 @@ const printView = React.forwardRef(({ view, quotationData, appliedTaxes }, ref) 
                         <h2 className="text-xs font-semibold underline">Vehicle Info:</h2>
                         <div className="grid grid-cols-2 gap-2">
                             <div className="col-span-1 flex gap-1">
-                                <div className="flex flex-col gap-1">
-                                    <span className="text-xs font-normal">License No:</span>
-                                    <span className="text-xs font-normal">Odometer:</span>
-                                    <span className="text-xs font-normal">Year:</span>
-                                    <span className="text-xs font-normal">Make:</span>
-                                </div>
-                                <div className="flex flex-col gap-1">
-                                    <span className="text-xs">{quotationData?.CustomerVehicle.licenseNo ? quotationData?.CustomerVehicle.licenseNo : 'N/A'}</span>
-                                    <span className="text-xs">{quotationData?.CustomerVehicle.odometer}</span>
-                                    <span className="text-xs">{quotationData?.CustomerVehicle.year}</span>
-                                    <span className="text-xs">{quotationData?.CustomerVehicle.make}</span>
-                                </div>
+                                <span className="text-xs font-normal">License No:</span>
                             </div>
                             <div className="col-span-1 flex gap-1">
-                                <div className="flex flex-col gap-1">
-                                    <span className="text-xs font-normal">Model:</span>
-                                </div>
-                                <div className="flex flex-col gap-1">
-                                    <span className="text-xs">{quotationData?.CustomerVehicle.model}</span>
-                                </div>
+                                <span className="text-xs">{quotationData?.CustomerVehicle.licenseNo ? quotationData?.CustomerVehicle.licenseNo : 'N/A'}</span>
+                            </div>
+                            <div className="col-span-1 flex gap-1">
+                                <span className="text-xs font-normal">Odometer:</span>
+                                <span className="text-xs">{quotationData?.CustomerVehicle.odometer}</span>
+                            </div>
+                            <div className="col-span-1 flex gap-1">
+                                <span className="text-xs font-normal">Year:</span>
+                                <span className="text-xs">{quotationData?.CustomerVehicle.year}</span>
+                            </div>
+                            <div className="col-span-1 flex gap-1">
+                                <span className="text-xs font-normal">Make:</span>
+                                <span className="text-xs">{quotationData?.CustomerVehicle.make}</span>
+                            </div>
+                            <div className="col-span-1 flex gap-1">
+                                <span className="text-xs font-normal">Model:</span>
+                                <span className="text-xs">{quotationData?.CustomerVehicle.model}</span>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div className="w-full px-2 text-sm">
+                <div className="w-full text-sm">
                     <table className="w-full min-w-max table-auto text-left">
                         <thead>
                             <tr>
-                                {PRODUCT_TABLE_HEAD.map((head, i) => (
-                                    <th
-                                        key={head}
-                                        className={`border-y border-blue-gray-100 bg-blue-gray-50/50 p-2 ${i === 0 ? 'w-[60%]' : 'w-[10%] text-center'
-                                            }`}
-                                    >
-                                        <Typography
-                                            variant="small"
-                                            color="blue-gray"
-                                            className="font-normal leading-none opacity-70 text-xs"
-                                        >
-                                            {head}
-                                        </Typography>
-                                    </th>
-                                ))}
+                                <th className="border-y border-blue-gray-100 bg-blue-gray-50/50 p-2 w-[5%] text-center font-normal leading-none text-[13px]">#</th>
+                                <th className="border-y border-blue-gray-100 bg-blue-gray-50/50 p-2 w-[35%] font-normal leading-none text-[13px]">Product</th>
+                                <th className="border-y border-blue-gray-100 bg-blue-gray-50/50 p-2 w-[10%] text-center font-normal leading-none text-[13px]">Quantity</th>
+                                <th className="border-y border-blue-gray-100 bg-blue-gray-50/50 p-2 w-[15%] text-center font-normal leading-none text-[13px]">Unit Price</th>
+                                <th className="border-y border-blue-gray-100 bg-blue-gray-50/50 p-2 w-[10%] text-center font-normal leading-none text-[13px]">Tax</th>
+                                <th className="border-y border-blue-gray-100 bg-blue-gray-50/50 p-2 w-[15%] text-center font-normal leading-none text-[13px]">Total Price</th>
                             </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
                             {quotationData.Product.map((item, index) => (
                                 <tr key={index}>
-                                    <td className="p-2 border-b border-blue-gray-50 w-[60%]">
+                                    <td className="p-2 border-b border-blue-gray-50 w-[5%] text-center">
+                                        <Typography
+                                            variant="small"
+                                            color="blue-gray"
+                                            className="font-normal leading-none text-xs"
+                                        >
+                                            {index + 1}
+                                        </Typography>
+                                    </td>
+                                    <td className="p-2 border-b border-blue-gray-50 w-[35%]">
                                         <div className="flex flex-col">
                                             <Typography
                                                 variant="small"
@@ -130,7 +140,7 @@ const printView = React.forwardRef(({ view, quotationData, appliedTaxes }, ref) 
                                             {item.quotation_product.quantity}
                                         </Typography>
                                     </td>
-                                    <td className="p-2 border-b border-blue-gray-50 w-[10%] text-center">
+                                    <td className="p-2 border-b border-blue-gray-50 w-[15%] text-center">
                                         <Typography
                                             variant="small"
                                             color="blue-gray"
@@ -147,7 +157,7 @@ const printView = React.forwardRef(({ view, quotationData, appliedTaxes }, ref) 
                                             className="w-3 h-3"
                                         />
                                     </td>
-                                    <td className="p-2 border-b border-blue-gray-50 w-[10%] text-center">
+                                    <td className="p-2 border-b border-blue-gray-50 w-[15%] text-center">
                                         <Typography
                                             variant="small"
                                             color="blue-gray"

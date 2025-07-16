@@ -9,6 +9,7 @@ import {
   Dialog,
   IconButton,
   Button,
+  Input,
 } from "@material-tailwind/react";
 import {
   XCircleIcon
@@ -70,6 +71,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedWorkOrder, setS
   }]);
   const [totalAmount, setTotalAmount] = useState(0);
   const [discount, setDiscount] = useState(0);
+  const [lumSum, setLumSum] = useState(0);
   const [edit, setEdit] = useState(false);
   const [printWorkOrder, setPrintWorkOrder] = useState(null);
   const [appliedTaxes, setAppliedTaxes] = useState({});
@@ -293,7 +295,8 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedWorkOrder, setS
       const selected = productsPackages.find((pkg) => pkg.id === packageId);
       if (selected) {
         setPackagePreview(selected);
-        setModalQuantity(selected.Product[0].package_product.quantity);
+        setModalQuantity(1);
+        // setModalQuantity(selected.Product[0].package_product.quantity);
         setShowPackageModal(true);
       }
     }
@@ -584,6 +587,8 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedWorkOrder, setS
       taxable: false
     }])
     setAppliedTaxes({});
+    setDiscount(0);
+    setLumSum(0);
   };
 
   const formikProps = useFormik({
@@ -611,6 +616,21 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedWorkOrder, setS
       dispatch({ type: 'SET_WORKORDER_VIEW', payload: true });
     }
   }, [printWorkOrder])
+
+  const handleLumSum = () => {
+    const total = parseFloat(calculateTotalAmountWithTax());
+    const lump = parseFloat(lumSum) || 0;
+    const appliedDiscount = (total - lump).toFixed(2);
+    if (appliedDiscount > calculateTotalAmountWithTax() * 0.25) {
+      toast.error("Lumsum couldn't be less than 75% of total amount");
+      return;
+    }
+    else if (lump > calculateTotalAmountWithTax()) {
+      toast.error("Lumsum couldn't be greater than total amount");
+      return;
+    }
+    setDiscount(appliedDiscount);
+  }
 
   return (
     <>
@@ -1128,6 +1148,24 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedWorkOrder, setS
                       </div>
 
                       <div className="basis-[50%] max-w-[50%] border my-4 font-normal">
+                        <div className="flex items-center justify-between p-2 border-b-2 bg-yellow-300">
+                          <div className="text-md">
+                            <Input
+                              type="number"
+                              step="any"
+                              min={0}
+                              className="w-fit no-spinner text-left border-none focus:border-none focus:ring-0"
+                              placeholder="Lump sum"
+                              value={lumSum === 0 ? '' : lumSum}
+                              onChange={(e) => setLumSum(parseFloat(e.target.value) || 0)}
+                              labelProps={{
+                                className: "before:content-none after:content-none",
+                              }}
+                            />
+                          </div>
+                          <Button disabled={lumSum === 0 || lumSum > calculateTotalAmountWithTax()} size="sm" color="blue" onClick={handleLumSum}>Apply</Button>
+                        </div>
+
                         <div className="flex justify-between p-2">
                           <div className="text-1xl">
                             <h1>Subtotal</h1>
@@ -1151,7 +1189,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedWorkOrder, setS
                           </div>
                           <div className="text-md">
                             <input
-                              type="number"
+                              type="float"
                               min={0}
                               className="w-fit no-spinner text-right"
                               value={discount === 0 ? '' : discount}
@@ -1323,17 +1361,18 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedWorkOrder, setS
                   packagePreview.Product.forEach((product) => {
                     const existingIndex = updatedItems.findIndex(p => p.product === product.id);
                     if (existingIndex !== -1) {
-                      updatedItems[existingIndex].quantity += modalQuantity;
+                      updatedItems[existingIndex].quantity += (product.package_product.quantity * modalQuantity);
                     } else {
                       updatedItems.push({
                         id: product.id,
                         product: product.id,
                         name: product.name,
-                        quantity: modalQuantity,
+                        quantity: product.package_product.quantity * modalQuantity,
                         price: product.price,
                         taxable: product.taxable,
                         Tax: product.Tax,
                         description: "",
+                        replacement_reminder_date: null
                       });
                     }
                   });

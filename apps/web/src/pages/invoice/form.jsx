@@ -227,7 +227,6 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
 
   // handle submit
   const onSubmit = async (values) => {
-    return
     setIsLoading(true);
 
     const selectedProductIds = selectedProducts.map((product) => ({

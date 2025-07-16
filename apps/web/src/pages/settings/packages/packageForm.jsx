@@ -51,25 +51,7 @@ function PackageForm({ packageData, setPackageData, open, close, refresh, setRef
                 }
                 selectedProd = [aProd, ...selectedProd];
             })
-
-            // const productTaxes = {};
-
-            // selectedProd.forEach((product) => {
-            //     product.Tax?.forEach((productTax) => {
-            //         const key = `${productTax.name}_${productTax.rate}_${productTax.type}`;
-
-            //         if (!productTaxes[key]) {
-            //             productTaxes[key] = 0;
-            //         }
-
-            //         if (productTax.type === "%") {
-            //             productTaxes[key] += product.price * product.quantity * (productTax.rate / 100);
-            //         } else {
-            //             productTaxes[key] += product.quantity * productTax.rate;
-            //         }
-            //     });
-            // });
-            // setAppliedTaxes(productTaxes);
+           
             setSelectedProducts(selectedProd);
             setEdit(true);
         }
@@ -221,12 +203,12 @@ function PackageForm({ packageData, setPackageData, open, close, refresh, setRef
     const handleQuantityChange = (index, quantity) => {
         const updatedItems = [...selectedProducts];
 
-        updatedItems.forEach((item, i) => {
-            if (i !== updatedItems.length - 1) {
-                item.quantity = Number(quantity);
-            }
-        });
-        // updatedItems[index].quantity = Number(quantity);
+        // updatedItems.forEach((item, i) => {
+        //     if (i !== updatedItems.length - 1) {
+        //         item.quantity = Number(quantity);
+        //     }
+        // });
+        updatedItems[index].quantity = Number(quantity);
         
         // Recalculate taxes
         // recalculateTaxes(updatedItems);

@@ -17,6 +17,7 @@
     "html2canvas": "^1.4.1",
     "jspdf": "^2.5.2",
     "moment-timezone": "^0.5.48",
+    "papaparse": "^5.5.3",
     "prop-types": "15.8.1",
     "quill": "^2.0.3",
     "react": "18.2.0",

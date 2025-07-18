@@ -13,7 +13,7 @@ import {
     Tooltip,
     Spinner,
 } from "@material-tailwind/react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import MyPopUpForm from "./form";
 import { fetchVehicles } from "@/services/fetchVehicles";
@@ -21,6 +21,7 @@ import { delVehicle } from "@/services/delVehicle";
 import { toast } from 'react-toastify';
 import { State } from "@/state/Context";
 import { useConfirm } from "@/context/confirmContext";
+import Papa from "papaparse";
 
 const TABLE_HEAD = ["Make", "Model", "Actions"];
 // const TABLE_HEAD = ["Make", "Model"];
@@ -182,6 +183,55 @@ export default function Vehicles() {
         setIsOpen(false);
     };
 
+    const fileInputRef = useRef();
+
+    const handleImportClick = () => {
+        fileInputRef.current.click();
+    };
+
+    const handleFileChange = async (e) => {
+        setLoading(true);
+        const file = e.target.files[0];
+        if (!file) return;
+
+        Papa.parse(file, {
+            header: true,
+            skipEmptyLines: true,
+            complete: async function (results) {
+                const expectedColumns = ['Make', 'Model'];
+                const actualColumns = results.meta.fields || [];
+                const hasOnlyExpectedColumns =
+                    actualColumns.length === 2 &&
+                    expectedColumns.every(col => actualColumns.includes(col));
+
+                if (!hasOnlyExpectedColumns) {
+                    toast.error("CSV must have exactly two columns: Make and Model");
+                    setLoading(false);
+                    return;
+                }
+                try {
+                    const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/vehicle/import`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', "auth-token": state.userToken },
+                        body: JSON.stringify({ vehicles: results.data }),
+                    });
+                    if (response.ok) {
+                        toast.success("Vehicles has been uploaded")
+                        setRefresh(!refresh)
+                    } else {
+                        toast.error("Failed to upload vehicles")
+                    }
+                } catch (err) {
+                    toast.error(err.message)
+                }
+            },
+            error: function (err) {
+                toast.error(err.message)
+            }
+        });
+        setLoading(false)
+    };
+
     if (loading) {
         return <Spinner className="mx-auto mt-[30vh] h-10 w-10 text-gray-900/50" />
     }
@@ -218,6 +268,18 @@ export default function Vehicles() {
                                 <Button className="w-full bg-blue-900 lg:w-auto" size="md" onClick={openPopup} >
                                     New
                                 </Button>
+                            </div>
+                            <div className="flex gap-2 lg:gap-4">
+                                <Button className="w-full bg-green-700 lg:w-auto" size="md" onClick={handleImportClick}>
+                                    Import CSV
+                                </Button>
+                                <input
+                                    type="file"
+                                    accept=".csv"
+                                    ref={fileInputRef}
+                                    style={{ display: "none" }}
+                                    onChange={handleFileChange}
+                                />
                             </div>
                         </div>
                         <div className="flex items-center mt-4 lg:mt-0 lg:ml-auto">

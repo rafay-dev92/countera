@@ -79,4 +79,24 @@ router.delete("/delete/:id", fetchUser, async (req, res) => {
   }
 });
 
+router.post("/import", fetchUser, async (req, res) => {
+  try {
+    const vehicles = req.body.vehicles;
+    for (const vehicle of vehicles) {
+      const make = (vehicle.Make || "").toUpperCase();
+      const model = (vehicle.Model || "").toUpperCase();
+      const existingVehicle = await Vehicle.findOne({
+        where: { make: make, model: model },
+      });
+      if (!existingVehicle) {
+        await Vehicle.create({make, model});
+      }
+    }
+    return res.status(200).json({ message: "Vehicle uploaded successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error uploading vehicles" });
+  }
+});
+
 module.exports = router;

@@ -13,7 +13,7 @@ const {
 } = require("../models");
 const fetchUser = require("../middlewares/fetchUser");
 const { Op } = require("sequelize");
-const moment = require("moment");
+const moment = require("moment-timezone");
 // const InvoiceAudit = require("../models/InvoiceAudit");
 const {
   trackObjectChanges,
@@ -210,7 +210,7 @@ router.post("/create", fetchUser, async (req, res) => {
                 quantity: product.quantity,
                 description: product.description,
                 price: product.price,
-                replacement_reminder_date: product.replacement_reminder_date ? product.replacement_reminder_date  : null,
+                replacement_reminder_date: product.replacement_reminder_date ? product.replacement_reminder_date : null,
               },
             });
           }
@@ -308,7 +308,7 @@ router.put("/update/:id", fetchUser, async (req, res) => {
                   quantity: product.quantity,
                   description: product.description,
                   price: product.price,
-                  replacement_reminder_date: product.replacement_reminder_date ? product.replacement_reminder_date  : null,
+                  replacement_reminder_date: product.replacement_reminder_date ? product.replacement_reminder_date : null,
                 },
               });
             }
@@ -469,5 +469,72 @@ router.get("/audit/:id", fetchUser, async (req, res) => {
     });
   }
 });
+
+
+router.get('/today-reminders/:businessId', fetchUser, async (req, res) => {
+  try {
+    const business = await Business.findOne({
+      attributes: ['id', 'timezone'],
+      where: {
+        id: req.params.businessId
+      }
+    });
+
+    if (!business) {
+      return res.status(404).json({
+        message: "Business not found",
+        status: 404,
+        data: [],
+      });
+    }
+
+    const todayInBusinessTz = moment().tz(business.timezone || 'UTC').format('YYYY-MM-DD');
+        
+    const reminders = await invoice_product.findAll({
+      where: {
+        replacement_reminder_date: todayInBusinessTz,
+      },
+      include: [
+        {
+          model: Invoice,
+          as: 'Invoice',
+          where: {
+            BusinessId: business.id
+          },
+          include: [
+            {
+              model: Customer,
+              as: 'Customer',
+              include: [
+                {
+                  model: Business,
+                  as: 'Business'
+                }
+              ]
+            }
+          ]
+        },
+        {
+          model: Product,
+          as: 'Product'
+        }
+      ],
+    });
+
+    return res.status(200).json({
+      message: "Reminders fetched successfully",
+      status: 200,
+      data: reminders || [],
+    });
+  } catch (error) {
+    console.error("Error fetching reminders:", error);
+    return res.status(500).json({
+      message: "Unable to get reminders. Please try again later.",
+      status: 500,
+      data: [],
+    });
+  }
+});
+
 
 module.exports = router;

@@ -36,7 +36,7 @@ const monthlySalesChart = {
   ],
   options: {
     ...chartsConfig,
-    colors: ["#0288d1"],
+    colors: ["#0288d1"],    
     stroke: {
       lineCap: "round",
     },
@@ -117,7 +117,7 @@ const completedTasksChart = {
 export const statisticsChartsData = [
   {
     color: "white",
-    title: "Website View",
+    title: "Today's Reminders",
     // description: "Last Campaign Performance",
     // footer: "campaign sent 2 days ago",
     chart: websiteViewsChart,

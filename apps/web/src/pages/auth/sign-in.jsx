@@ -10,6 +10,7 @@ import { useNavigate } from "react-router-dom";
 import { signIn } from "@/services/signIn";
 import { toast } from 'react-toastify';
 import { getUserDetails } from "@/services/getUserDetails";
+import { fetchBusinessesForEmail } from "@/services/fetchBusinessesForEmail";
 
 export function SignIn() {
   const navigate = useNavigate();
@@ -73,11 +74,7 @@ export function SignIn() {
     setBusinesses([]);
     setSelectedBusiness(null);
     try {
-      const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/user/businesses-for-email`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
-      });
+      const res = await fetchBusinessesForEmail(email)
       const data = await res.json();
       setLoading(false);
       

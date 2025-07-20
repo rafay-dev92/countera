@@ -8,7 +8,7 @@ import {
     Spinner,
 } from "@material-tailwind/react";
 import { StatisticsCard } from "@/widgets/cards";
-import { StatisticsChart } from "@/widgets/charts";
+import { StatisticsChart, RemindersList } from "@/widgets/charts";
 import {
     statisticsCardsData,
     statisticsChartsData,
@@ -20,6 +20,7 @@ import { fetchCustomers } from '@/services/fetchCustomers';
 import { fetchProducts } from '@/services/fetchProducts';
 import moment from 'moment-timezone';
 import { fetchMonthlySales } from '@/services/fetchMontlySales';
+import { fetchDailyReminders } from '@/services/fetchDailyRemiders';
 
 export function Home() {
     const { state } = State();
@@ -28,6 +29,7 @@ export function Home() {
     const [chartLoading, setChartLoading] = useState(true);
     const [cardsData, setCardsData] = useState(statisticsCardsData);
     const [chartsData, setChartsData] = useState(statisticsChartsData);
+    const [dailyReminders, setDailyReminders] = useState([]);
 
     useEffect(() => {
         setLoading(true);
@@ -40,39 +42,54 @@ export function Home() {
         setLoading(false);
     }, [timezone]);
 
-    useEffect(() => {
-        const dailySalesData = async () => {
-            const res = await fetchMonthlySales(state.userToken);
-            const data = await res.json();
-            if (res.status === 200) {
-                setChartsData(prev => {
-                    return prev.map((chart, index) => {
-                        if (index === 1) {
-                            return {
-                                ...chart,
-                                chart: {
-                                    ...chart.chart,
-                                    series: [{
-                                        ...chart.chart.series[0],
-                                        data: data?.values || [],
-                                    }],
-                                    options: {
-                                        ...chart.chart.options,
-                                        xaxis: {
-                                            ...chart.chart.options.xaxis,
-                                            categories: data?.months || [],
-                                        },
+    const dailySalesData = async () => {
+        const res = await fetchMonthlySales(state.userToken);
+        const data = await res.json();
+        if (res.status === 200) {
+            setChartsData(prev => {
+                return prev.map((chart, index) => {
+                    if (index === 1) {
+                        return {
+                            ...chart,
+                            chart: {
+                                ...chart.chart,
+                                series: [{
+                                    ...chart.chart.series[0],
+                                    data: data?.values || [],
+                                }],
+                                options: {
+                                    ...chart.chart.options,
+                                    xaxis: {
+                                        ...chart.chart.options.xaxis,
+                                        categories: data?.months || [],
                                     },
                                 },
-                            };
-                        }
-                        return chart;
-                    });
+                            },
+                        };
+                    }
+                    return chart;
                 });
+            });
+        }
+    };
+
+    const getTodaysReminders = async () => {
+        try {
+            const res = await fetchDailyReminders(state.userToken, state.business.id);
+            const reminders = await res.json();
+            if (res.status === 200) {
+                setDailyReminders(reminders.data || []);
             }
-        };
+        } catch (error) {
+            console.log(error);
+            toast.error("Failed to load daily reminders")
+        }
+    }
+
+    useEffect(() => {
         setChartLoading(true);
         dailySalesData();
+        getTodaysReminders();
         setTimeout(() => {
             setChartLoading(false);
         }, 2000);
@@ -218,7 +235,13 @@ export function Home() {
                     </div>
                     {chartLoading ? <Spinner className="mx-auto mt-[30vh] h-10 w-10 text-gray-900/50" /> :
                         <div className="mb-6 grid grid-cols-1 gap-y-12 gap-x-6 md:grid-cols-2 xl:grid-cols-3">
-                            {chartsData.map((props) => (
+                            <RemindersList
+                                color="white"
+                                title="Today's Reminders"
+                                reminders={dailyReminders}
+                            />
+                            
+                            {chartsData.slice(1).map((props) => (
                                 <StatisticsChart
                                     key={props.title}
                                     {...props}

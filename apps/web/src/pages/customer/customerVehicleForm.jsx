@@ -33,7 +33,7 @@ const CustomerVehicleForm = ({ open, close, refresh, setRefresh, CustomerId, get
 
     // set the years to be displayed in the year select input
     const startYear = import.meta.env.VITE_START_YEAR;
-    const endYear = new Date().getFullYear()+1;
+    const endYear = new Date().getFullYear() + 1;
     const years = [];
     for (let year = endYear; year >= startYear; year--) {
         years.push(year);
@@ -60,7 +60,7 @@ const CustomerVehicleForm = ({ open, close, refresh, setRefresh, CustomerId, get
     useEffect(() => {
         if (selectedVehicle) {
             setValues({
-                year: selectedVehicle.year, 
+                year: selectedVehicle.year,
                 make: selectedVehicle.make,
                 model: selectedVehicle.model,
                 odometer: selectedVehicle.odometer,
@@ -91,11 +91,11 @@ const CustomerVehicleForm = ({ open, close, refresh, setRefresh, CustomerId, get
         setIsLoading(true);
         try {
             if (!edit) {
-                values = {...values, CustomerId}               
+                values = { ...values, CustomerId }
                 const res = await addCustomerVehicle(values, state.userToken)
                 const vehicle = await res.json();
                 if (res.status === 200) {
-                    showToastMessage('success', vehicle.message)                    
+                    showToastMessage('success', vehicle.message)
                 }
                 else if (res.status === 409) {
                     showToastMessage('error', vehicle.message)
@@ -183,7 +183,7 @@ const CustomerVehicleForm = ({ open, close, refresh, setRefresh, CustomerId, get
             vinNo: "",
             engineSize: "",
             color: "",
-            notes: "",  
+            notes: "",
         },
         validationSchema: schema,
         onSubmit,
@@ -200,7 +200,7 @@ const CustomerVehicleForm = ({ open, close, refresh, setRefresh, CustomerId, get
     } = formikProps;
 
     useEffect(() => {
-        function handleClickOutside(event) {           
+        function handleClickOutside(event) {
             if (makeInputRef.current && !makeInputRef.current.contains(event.target)) {
                 setShowMakeSuggestions(false);
             }
@@ -251,7 +251,7 @@ const CustomerVehicleForm = ({ open, close, refresh, setRefresh, CustomerId, get
                             <div className="p-6 2xl:w-[40vw] xl:w-[60vw] lg:w-[80vw] w-[80vw]">
                                 <div className="flex items-center justify-start space-x-4">
 
-                                    <div className="basis-[20%] max-w-20%"> 
+                                    <div className="basis-[20%] max-w-20%">
                                         <label className="font-bold">Year</label> <br />
                                         <select
                                             className="w-full p-2 border border-gray-300 rounded-md text-black font-small"
@@ -292,19 +292,22 @@ const CustomerVehicleForm = ({ open, close, refresh, setRefresh, CustomerId, get
                                                 {showMakeSuggestions && (
                                                     <ul className="absolute left-0 right-0 z-50 bg-white border border-slate-700 w-full mt-1 overflow-y-auto min-h-24 max-h-48">
                                                         {vehicles.length > 0 ?
-                                                            [...new Set(vehicles.map(v => v.make))].map((make) => (
-                                                                <li 
-                                                                    key={make} 
-                                                                    className="cursor-pointer px-2 py-1 rounded-sm hover:bg-gray-200" 
-                                                                    onClick={() => { 
-                                                                        setValues({...values, make: make, model: ''}); 
-                                                                        setShowMakeSuggestions(false);
-                                                                        setShowModelSuggestions(true);
-                                                                    }}
-                                                                >
-                                                                    {make}
-                                                                </li>
-                                                            ))
+                                                            [...new Set(vehicles.map(v => v.make))]
+                                                                .filter(make => make.toLowerCase().includes(values.make.toLowerCase()))
+                                                                .sort((a, b) => a.localeCompare(b))
+                                                                .map((make) => (
+                                                                    <li
+                                                                        key={make}
+                                                                        className="cursor-pointer px-2 py-1 rounded-sm hover:bg-gray-200"
+                                                                        onClick={() => {
+                                                                            setValues({ ...values, make: make, model: '' });
+                                                                            setShowMakeSuggestions(false);
+                                                                            setShowModelSuggestions(true);
+                                                                        }}
+                                                                    >
+                                                                        {make}
+                                                                    </li>
+                                                                ))
                                                             :
                                                             <Spinner className="mx-auto my-auto h-6 w-6 text-blue-900/50" />
                                                         }
@@ -331,13 +334,14 @@ const CustomerVehicleForm = ({ open, close, refresh, setRefresh, CustomerId, get
                                                     <ul className="absolute left-0 right-0 z-50 bg-white border border-slate-700 w-full mt-1 overflow-y-auto min-h-24 max-h-48">
                                                         {vehicles.length > 0 ?
                                                             vehicles
-                                                                .filter(vehicle => vehicle.make === values.make)
+                                                                .filter(vehicle => (vehicle.make === values.make) && vehicle.model.toLowerCase().includes(values.model.toLowerCase()))
+                                                                .sort((a, b) => a.model.localeCompare(b.model))
                                                                 .map((vehicle) => (
-                                                                    <li 
-                                                                        key={vehicle.id} 
-                                                                        className="cursor-pointer px-2 py-1 rounded-sm hover:bg-gray-200" 
-                                                                        onClick={() => { 
-                                                                            setValues({...values, model: vehicle.model}); 
+                                                                    <li
+                                                                        key={vehicle.id}
+                                                                        className="cursor-pointer px-2 py-1 rounded-sm hover:bg-gray-200"
+                                                                        onClick={() => {
+                                                                            setValues({ ...values, model: vehicle.model });
                                                                             setShowModelSuggestions(false);
                                                                         }}
                                                                     >
@@ -483,12 +487,12 @@ const CustomerVehicleForm = ({ open, close, refresh, setRefresh, CustomerId, get
                                     className="w-32 bg-gray-600 hover:bg-gray-900 text-white font-bold py-2 px-4"
                                     type="submit"
                                 >
-                                    {!isLoading?
+                                    {!isLoading ?
                                         <span>{edit ? 'Update' : 'Save'}</span> :
                                         <div className="flex items-center justify-center h-fit">
                                             <div className="w-6 h-6 border-4 border-gray-500 border-t-transparent rounded-full animate-spin"></div>
                                         </div>
-                                    }     
+                                    }
                                 </button>
                             </div>
                         </div>

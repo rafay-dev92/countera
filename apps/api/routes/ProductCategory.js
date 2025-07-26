@@ -9,10 +9,12 @@ router.get("/", fetchUser, async (req, res) => {
   try {
     const user = await User.findOne({
       where: { id: req.user.id },
-      include: [{
-        model: Business,
-        as: 'Business'
-      }]
+      include: [
+        {
+          model: Business,
+          as: "Business",
+        },
+      ],
     });
 
     if (!user || !user.Business) {
@@ -21,11 +23,11 @@ router.get("/", fetchUser, async (req, res) => {
 
     const products_categories = await Product_Category.findAll({
       where: {
-        BusinessId: user.Business.id
+        BusinessId: user.Business.id,
       },
       order: [["createdAt", "DESC"]],
     });
-    
+
     return res.status(200).json(products_categories);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -57,8 +59,9 @@ router.get("/", fetchUser, async (req, res) => {
 router.post("/create", fetchUser, async (req, res) => {
   try {
     const categoryData = req.body;
+
     const existingCategory = await Product_Category.findOne({
-      where: { name: categoryData.name },
+      where: { name: categoryData.name, BusinessId: categoryData.BusinessId },
     });
 
     if (existingCategory) {

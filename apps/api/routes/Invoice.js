@@ -10,11 +10,12 @@ const {
   Business,
   Payment,
   InvoiceAudit,
+  ArchivedInvoice,
 } = require("../models");
 const fetchUser = require("../middlewares/fetchUser");
 const { Op } = require("sequelize");
 const moment = require("moment-timezone");
-// const InvoiceAudit = require("../models/InvoiceAudit");
+
 const {
   trackObjectChanges,
   trackProductChanges,
@@ -82,7 +83,7 @@ router.get("/", fetchUser, async (req, res) => {
           },
           {
             model: Product,
-            as: "Product",
+            as: "Products",
             through: "invoice_product",
             include: ["Tax", "Category"],
           },
@@ -119,7 +120,7 @@ router.get("/", fetchUser, async (req, res) => {
         },
         {
           model: Product,
-          as: "Product",
+          as: "Products",
           through: "invoice_product",
           include: ["Tax", "Category"],
         },
@@ -163,7 +164,7 @@ router.get("/:id", fetchUser, async (req, res) => {
         },
         {
           model: Product,
-          as: "Product",
+          as: "Products",
           through: "invoice_product",
           include: ["Tax"],
         },
@@ -210,7 +211,9 @@ router.post("/create", fetchUser, async (req, res) => {
                 quantity: product.quantity,
                 description: product.description,
                 price: product.price,
-                replacement_reminder_date: product.replacement_reminder_date ? product.replacement_reminder_date : null,
+                replacement_reminder_date: product.replacement_reminder_date
+                  ? product.replacement_reminder_date
+                  : null,
               },
             });
           }
@@ -231,7 +234,7 @@ router.post("/create", fetchUser, async (req, res) => {
         },
         {
           model: Product,
-          as: "Product",
+          as: "Products",
           through: "invoice_product",
           include: ["Tax"],
         },
@@ -258,7 +261,7 @@ router.put("/update/:id", fetchUser, async (req, res) => {
   try {
     let payload = req.body;
     const invoice = await Invoice.findByPk(req.params.id, {
-      include: ["Product"],
+      include: ["Products"],
     });
 
     if (!invoice) {
@@ -293,7 +296,7 @@ router.put("/update/:id", fetchUser, async (req, res) => {
       try {
         // Remove all existing products
         await Promise.all(
-          invoice.Product.map(async (product) => {
+          invoice.Products.map(async (product) => {
             await invoice.removeProduct(product);
           })
         );
@@ -308,7 +311,9 @@ router.put("/update/:id", fetchUser, async (req, res) => {
                   quantity: product.quantity,
                   description: product.description,
                   price: product.price,
-                  replacement_reminder_date: product.replacement_reminder_date ? product.replacement_reminder_date : null,
+                  replacement_reminder_date: product.replacement_reminder_date
+                    ? product.replacement_reminder_date
+                    : null,
                 },
               });
             }
@@ -333,7 +338,7 @@ router.put("/update/:id", fetchUser, async (req, res) => {
         },
         {
           model: Product,
-          as: "Product",
+          as: "Products",
           through: "invoice_product",
           include: ["Tax"],
         },
@@ -341,6 +346,186 @@ router.put("/update/:id", fetchUser, async (req, res) => {
           model: Business,
           as: "Business",
         },
+        {
+          model: Payment,
+          as: "Payments",
+        },
+      ],
+    });
+
+    return res
+      .status(200)
+      .json({ message: "Invoice updated successfully", data: currentInvoice });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+router.put("/update-level-two/:id", fetchUser, async (req, res) => {
+  try {
+    let payload = req.body;
+    const invoice = await Invoice.findByPk(req.params.id, {
+      include: [
+        {
+          model: Product,
+          as: "Products",
+          through: "invoice_product",
+          include: ["Tax", "Category"],
+        },
+        "Business",
+        {
+          model: Payment,
+          as: "Payments",
+        },
+      ],
+    });
+
+    if (!invoice) {
+      return res.status(404).json({ message: "Invoice not found" });
+    }
+
+    // Check if archived invoice already exists
+    isArchivedInvoiceExists = await ArchivedInvoice.findOne({
+      where: { originalInvoiceId: invoice.id },
+    });
+
+    if (isArchivedInvoiceExists) {
+      return res.status(409).json({
+        message: "Archived invoice already exists for this invoice",
+      });
+    }
+
+    // create archived invoice
+    const { id, Business, Payments, Products, ...restData } =
+      invoice.dataValues;
+
+    const payments = Payments.map((payment) => {
+      const { id, ...restObj } = payment?.dataValues;
+      return { ...restObj };
+    });
+    // Create archived invoice data
+    const invoiceData = {
+      originalInvoiceId: id,
+      payments: JSON.stringify(payments),
+      ...restData,
+    };
+    const newArchivedInvoice = await ArchivedInvoice.create(invoiceData);
+    if (Products && Products.length !== 0) {
+      await Promise.all(
+        Products.map(async (product) => {
+          if (product) {
+            await newArchivedInvoice.addProduct(product, {
+              through: {
+                quantity: product.invoice_product.quantity,
+                description: product.invoice_product.description,
+                price: product.invoice_product.price,
+                replacement_reminder_date: product.invoice_product
+                  .replacement_reminder_date
+                  ? product.invoice_product.replacement_reminder_date
+                  : null,
+              },
+            });
+          }
+        })
+      );
+    }
+
+    // get first cash payment
+    const getFirstCashPayment = invoice.Payments.find(
+      (payment) => payment.paymentMethod === "Cash"
+    );
+
+    // get Total amount of other payments
+    const getOtherPaymentsAmount = invoice.Payments.reduce((acc, payment) => {
+      if (payment.paymentMethod !== "Cash") {
+        return acc + parseFloat(payment.paidAmount);
+      }
+      return acc;
+    }, 0);
+
+    // get payment difference
+    const paymentDifference = (
+      parseFloat(payload.invoiceData.totalAmount) - getOtherPaymentsAmount
+    ).toFixed(2);
+
+    // Update invoice data
+    payload.invoiceData.paidAmount = payload.invoiceData.totalAmount;
+    if (payload.invoiceData) {
+      await invoice.update(payload.invoiceData);
+    }
+
+    // Update products
+    if (payload?.products && payload?.products.length > 0) {
+      try {
+        // Remove all existing products
+        await Promise.all(
+          invoice.Products.map(async (product) => {
+            await invoice.removeProduct(product);
+          })
+        );
+
+        // Add updated products
+        await Promise.all(
+          payload.products.map(async (product) => {
+            const productRecord = await Product.findByPk(product.id);
+            if (productRecord) {
+              await invoice.addProduct(productRecord, {
+                through: {
+                  quantity: product.quantity,
+                  description: product.description,
+                  price: product.price,
+                  replacement_reminder_date: product.replacement_reminder_date
+                    ? product.replacement_reminder_date
+                    : null,
+                },
+              });
+            }
+          })
+        );
+      } catch (error) {
+        console.error("Error updating products:", error);
+        return res.status(500).json({ message: "Internal Server Error" });
+      }
+    }
+
+    // Update Payments
+    if (paymentDifference !== 0) {
+      // Delete all cash payments
+      await Promise.all(
+        invoice.Payments.filter(
+          (payment) => payment.paymentMethod === "Cash"
+        ).map((payment) => Payment.destroy({ where: { id: payment.id } }))
+      );
+
+      const paymentData = {
+        InvoiceId: invoice.id,
+        paidAmount: paymentDifference,
+        totalAmount: paymentDifference,
+        paymentMethod: "Cash",
+        createdAt: getFirstCashPayment.createdAt,
+        updatedAt: getFirstCashPayment.updatedAt,
+      };
+
+      // create a new cash payment
+      await Payment.create(paymentData);
+    }
+
+    const currentInvoice = await Invoice.findByPk(invoice.id, {
+      include: [
+        {
+          model: Customer,
+          as: "Customer",
+          include: ["Address", "Vehicle"],
+        },
+        "CustomerVehicle",
+        {
+          model: Product,
+          as: "Products",
+          through: "invoice_product",
+          include: ["Tax"],
+        },
+        "Business",
         {
           model: Payment,
           as: "Payments",
@@ -470,14 +655,13 @@ router.get("/audit/:id", fetchUser, async (req, res) => {
   }
 });
 
-
-router.get('/today-reminders/:businessId', fetchUser, async (req, res) => {
+router.get("/today-reminders/:businessId", fetchUser, async (req, res) => {
   try {
     const business = await Business.findOne({
-      attributes: ['id', 'timezone'],
+      attributes: ["id", "timezone"],
       where: {
-        id: req.params.businessId
-      }
+        id: req.params.businessId,
+      },
     });
 
     if (!business) {
@@ -488,8 +672,10 @@ router.get('/today-reminders/:businessId', fetchUser, async (req, res) => {
       });
     }
 
-    const todayInBusinessTz = moment().tz(business.timezone || 'UTC').format('YYYY-MM-DD');
-        
+    const todayInBusinessTz = moment()
+      .tz(business.timezone || "UTC")
+      .format("YYYY-MM-DD");
+
     const reminders = await invoice_product.findAll({
       where: {
         replacement_reminder_date: todayInBusinessTz,
@@ -497,27 +683,27 @@ router.get('/today-reminders/:businessId', fetchUser, async (req, res) => {
       include: [
         {
           model: Invoice,
-          as: 'Invoice',
+          as: "Invoice",
           where: {
-            BusinessId: business.id
+            BusinessId: business.id,
           },
           include: [
             {
               model: Customer,
-              as: 'Customer',
+              as: "Customer",
               include: [
                 {
                   model: Business,
-                  as: 'Business'
-                }
-              ]
-            }
-          ]
+                  as: "Business",
+                },
+              ],
+            },
+          ],
         },
         {
           model: Product,
-          as: 'Product'
-        }
+          as: "Product",
+        },
       ],
     });
 
@@ -535,6 +721,5 @@ router.get('/today-reminders/:businessId', fetchUser, async (req, res) => {
     });
   }
 });
-
 
 module.exports = router;

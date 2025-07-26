@@ -111,7 +111,7 @@ module.exports = (sequelize) => {
         });
 
         Invoice.belongsToMany(models.Product, {
-            as: 'Product',
+            as: 'Products',
             through: 'invoice_product'
         })
 

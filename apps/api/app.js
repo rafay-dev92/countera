@@ -111,6 +111,7 @@ app.use("/api/productcategories", require("./routes/ProductCategory"));
 app.use("/api/tax", require("./routes/Tax"));
 app.use("/api/appointment", require("./routes/Appointment"));
 app.use("/api/invoice", require("./routes/Invoice"));
+app.use("/api/archived-invoice", require("./routes/ArchivedInvoices"));
 app.use("/api/quotation", require("./routes/Quotation"));
 app.use("/api/workorder", require("./routes/WorkOrder"));
 app.use("/api/inspection", require("./routes/Inspection"));

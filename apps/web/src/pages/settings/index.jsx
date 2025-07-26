@@ -18,19 +18,19 @@ export function Settings() {
 
   const sections = {
     profile: {
-      title: 'General Settings',
+      title: 'General',
       component: <Profile />
     },
     tax: {
-      title: 'Tax Settings',
+      title: 'Tax',
       component: <Taxes />
     },
     Users: {
-      title: 'Users Settings',
+      title: 'Users',
       component: <Users />
     },
     Vehicles: {
-      title: 'Vehicles Settings',
+      title: 'Vehicles',
       component: <Vehicles />
     },
     Product_Categories: {
@@ -63,11 +63,11 @@ export function Settings() {
             <nav>
               <ul>
                 {Object.keys(sections).map((section) => (
-                  <li key={section}>
+                  <li key={section} onClick={() => handleSectionClick(section)} className='cursor-pointer'>
                     <button
-                      onClick={() => handleSectionClick(section)}
+
                       className={`px-4 py-2 rounded-md font-semibold text-xs xl:text-sm 2xl:text-base
-                              ${activeSection === section ? 'bg-gray-200 text-gray-800' : 'text-gray-500'}`}
+                              ${activeSection === section ? 'bg-gray-200 text-gray-800 w-full text-left' : 'text-gray-500'}`}
                     >
                       {sections[section].title}
                     </button>

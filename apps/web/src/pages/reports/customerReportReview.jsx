@@ -117,7 +117,7 @@ const CustomerReportPreview = React.forwardRef(({ invoices, productsCategories, 
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
                         {invoices?.map((item, index) => {
-                            const productTaxes = calculateTaxes(item.Product, item.Customer?.customerType);
+                            const productTaxes = calculateTaxes(item.Products, item.Customer?.customerType);
                             const formattedDate = new Date(item.createdAt).toLocaleDateString("en-US", {
                                 timeZone: state.business.timezone ? state.business.timezone : '',
                                 year: "numeric",

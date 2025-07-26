@@ -120,7 +120,7 @@ const MonthlyReportPreview = React.forwardRef(({ filterValue, invoices, products
                     </thead>
                     <tbody>
                         {invoices?.map((item, index) => {
-                            const productTaxes = calculateTaxes(item.Product, item.Customer?.customerType);
+                            const productTaxes = calculateTaxes(item.Products, item.Customer?.customerType);
                             const formattedDate = new Date(item.createdAt).toLocaleDateString("en-US", {
                                 timeZone: state.business.timezone ? state.business.timezone : '',
                                 year: "numeric",
@@ -182,8 +182,8 @@ const MonthlyReportPreview = React.forwardRef(({ filterValue, invoices, products
                                         </Typography>
                                     </td>
                                     {productsCategories.map((category, idx) => {
-                                        const price = item.Product?.find(item => item.Category.name === category)?.price || 0;
-                                        const quantity = item.Product?.find(item => item.Category.name === category)?.invoice_product?.quantity || 0;
+                                        const price = item.Products?.find(item => item.Category.name === category)?.price || 0;
+                                        const quantity = item.Products?.find(item => item.Category.name === category)?.invoice_product?.quantity || 0;
                                         return (
                                             <td key={idx} className="p-4 border-b border-blue-gray-50">
                                                 <Typography

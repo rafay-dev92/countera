@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const { Product_Category, User, Business } = require("../models");
 const fetchUser = require("../middlewares/fetchUser");
+const { Op } = require("sequelize");
 require("dotenv").config();
 
 // routes below
@@ -85,6 +86,21 @@ router.put("/update/:id", fetchUser, async (req, res) => {
     if (!category) {
       return res.status(404).json({ message: "category not found" });
     }
+
+    const isExistingCategory = await Product_Category.findOne({
+      where: {
+        name: req.body.name,
+        BusinessId: req.body.BusinessId,
+        id: { [Op.ne]: req.params.id },
+      },
+    });
+
+    if (isExistingCategory) {
+      return res.status(409).json({
+        message: "Category with this name already exists",
+      });
+    }
+
     await category.update(req.body);
 
     return res.status(200).json({ message: "Category updated successfully" });

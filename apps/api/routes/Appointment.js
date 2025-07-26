@@ -3,9 +3,9 @@ const router = express.Router();
 const { Appointment, User } = require("../models");
 require("dotenv").config();
 const { Op } = require("sequelize");
-const nodemailer = require("nodemailer");
 const fetchUser = require("../middlewares/fetchUser");
 const sendMail = require("../utils/sendMail");
+const moment = require("moment-timezone");
 
 router.get("/", fetchUser, async (req, res) => {
   try {
@@ -32,6 +32,41 @@ router.get("/", fetchUser, async (req, res) => {
       order: [["createdAt", "ASC"]],
     });
     return res.status(200).json(appointments);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+router.get("/today", fetchUser, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const user = await User.findOne({
+      where: {
+        id: userId,
+        role: { [Op.ne]: "super-admin" },
+        BusinessId: { [Op.ne]: null },
+      },
+      include: ["Business"],
+    });
+
+    if (!user) return res.status(401).send("Unauthorized");
+    const timezone = user.Business?.timezone;
+    const startOfDay = moment().tz(timezone).startOf("day").toDate();
+    const endOfDay = moment().tz(timezone).endOf("day").toDate();
+
+    const appointments = await Appointment.findAll({
+      where: {
+        BusinessId: user.Business.id,
+        startDateTime: {
+          [Op.between]: [startOfDay, endOfDay],
+        },
+      },
+      include: ["Business"],
+      order: [["createdAt", "ASC"]],
+    });
+    return res
+      .status(200)
+      .json({ message: "Daily appointments fetched", data: appointments });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -103,12 +138,10 @@ router.post("/create", fetchUser, async (req, res) => {
       await Appointment.create(usefulData);
       //   if (newAppointment.sendEmail) {
       if (BusinessEmail === null) {
-        return res
-          .status(400)
-          .json({
-            message:
-              "Appointment scheduled, but email not sent to the customer as the business email is not set",
-          });
+        return res.status(400).json({
+          message:
+            "Appointment scheduled, but email not sent to the customer as the business email is not set",
+        });
       }
 
       const mailOptions = {

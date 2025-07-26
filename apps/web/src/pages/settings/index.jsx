@@ -10,6 +10,7 @@ import { State } from '@/state/Context';
 import Vehicles from './vehicles/vehicles';
 import ProductCategories from './productCategories/productCategories';
 import Packages from './packages';
+import Archived from './archived';
 
 export function Settings() {
   const { state } = State();
@@ -40,48 +41,52 @@ export function Settings() {
       title: 'Product Packages',
       component: <Packages />
     },
+    Archived: {
+      title: 'Archived Invoices',
+      component: <Archived />
+    },
   };
 
   const handleSectionClick = (section) => setActiveSection(section);
 
-    return (
-      <div>
-        <div className="flex items-center mb-2">
-          <Typography variant="h5" color="blue-gray" className="flex items-center">
-            <Cog8ToothIcon className='h-12 w-12 text-blueGray-500 ml-2' />
-            Settings
-          </Typography>
-        </div>
-        {Object.keys(state.userInfo).length !== 0 && (state.userInfo.Permission.some(obj => obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN" || obj.name === "IS_MANAGER") ?
-          <div className='flex flex-row w-full gap-4 mt-5'>
-            <div className='bg-white px-4 py-2 rounded-md shadow-md h-max w-[50%] md:w-[50%] lg:w-[40%] xl:w-[30%] 2xl:w-[20%]'>
-              <nav>
-                <ul>
-                  {Object.keys(sections).map((section) => (
-                    <li key={section}>
-                      <button
-                        onClick={() => handleSectionClick(section)}
-                        className={`px-4 py-2 rounded-md font-semibold text-xs xl:text-sm 2xl:text-base
+  return (
+    <div>
+      <div className="flex items-center mb-2">
+        <Typography variant="h5" color="blue-gray" className="flex items-center">
+          <Cog8ToothIcon className='h-12 w-12 text-blueGray-500 ml-2' />
+          Settings
+        </Typography>
+      </div>
+      {Object.keys(state.userInfo).length !== 0 && (state.userInfo.Permission.some(obj => obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN" || obj.name === "IS_MANAGER") ?
+        <div className='flex flex-row w-full gap-4 mt-5'>
+          <div className='bg-white px-4 py-2 rounded-md shadow-md h-max w-[50%] md:w-[50%] lg:w-[40%] xl:w-[30%] 2xl:w-[20%]'>
+            <nav>
+              <ul>
+                {Object.keys(sections).map((section) => (
+                  <li key={section}>
+                    <button
+                      onClick={() => handleSectionClick(section)}
+                      className={`px-4 py-2 rounded-md font-semibold text-xs xl:text-sm 2xl:text-base
                               ${activeSection === section ? 'bg-gray-200 text-gray-800' : 'text-gray-500'}`}
-                      >
-                        {sections[section].title}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </nav>
-            </div>
-            <div className='bg-white p-4 rounded-md shadow-md flex-grow w-2/3 sm:w-full lg:w-[80%]'>
-              <div className='overflow-y-auto h-[70vh]'>
-                {/* <Typography className='border-b border-gray-300 mr-10 pb-2' variant="h4" color="black">{sections[activeSection].title}</Typography> */}
-                {sections[activeSection].component}
-              </div>
+                    >
+                      {sections[section].title}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          </div>
+          <div className='bg-white p-4 rounded-md shadow-md flex-grow w-2/3 sm:w-full lg:w-[80%]'>
+            <div className='overflow-y-auto h-[70vh]'>
+              {/* <Typography className='border-b border-gray-300 mr-10 pb-2' variant="h4" color="black">{sections[activeSection].title}</Typography> */}
+              {sections[activeSection].component}
             </div>
           </div>
-          :
-          null)}
-      </div>
-    );
+        </div>
+        :
+        null)}
+    </div>
+  );
 };
 
 export default Settings;

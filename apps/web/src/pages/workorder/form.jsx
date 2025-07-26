@@ -164,7 +164,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedWorkOrder, setS
       setSelectedVehicle(selectedWorkOrder.CustomerVehicle)
       setVehicleOdometer(selectedWorkOrder.CustomerVehicle?.odometer)
       setDiscount(selectedWorkOrder.discount)
-      // setProducts(selectedInvoice.Product)
+      // setProducts(selectedinvoice.Products)
       setValues({ ...selectedWorkOrder, ['customer']: selectedWorkOrder.CustomerId, ['vehicle']: selectedWorkOrder.CustomerVehicleId })
       setEdit(true)
 

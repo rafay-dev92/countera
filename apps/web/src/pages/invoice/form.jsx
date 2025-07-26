@@ -37,6 +37,7 @@ import { fetchPackages } from "@/services/fetchPackages";
 import ProductForm from "../../utils/forms/productForm";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import { updateInvoiceLevel2 } from "@/services/updateInvoiceLevel2";
 
 const TABLE_HEAD = [
   "Product",
@@ -67,6 +68,7 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
   const productInputRef = useRef();
 
   const { state, dispatch } = State();
+  const [resetForm, setResetForm] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [customers, setCustomers] = useState([]);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
@@ -179,11 +181,11 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
       setSelectedCustomer(selectedInvoice.Customer)
       setSelectedVehicle(selectedInvoice.CustomerVehicle)
       setVehicleOdometer(selectedInvoice.CustomerVehicle?.odometer)
-      // setProducts(selectedInvoice.Product)
+      // setProducts(selectedinvoice.Products)
 
       setValues({ ...selectedInvoice, ['customer']: selectedInvoice.CustomerId, ['vehicle']: selectedInvoice.CustomerVehicleId })
       let selectedProd = [...selectedProducts]
-      selectedInvoice?.Product?.forEach((prod) => {
+      selectedInvoice?.Products?.forEach((prod) => {
         const aProd = {
           product: prod.id,
           id: prod.id,
@@ -223,7 +225,7 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
 
       setSelectedProducts(selectedProd);
     }
-  }, [state?.invoice?.viewData]);
+  }, [state?.invoice?.viewData, resetForm]);
 
   // handle submit
   const onSubmit = async (values) => {
@@ -264,17 +266,33 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
 
     try {
       if (edit) {
-        const res = await updateInvoice(printInvoice.id, data, state.userToken)
-        const invoice = await res.json();
-        setPrintInvoice(invoice?.data);
-        if (res.status === 200) {
-          showToastMessage('success', invoice.message)
+        if (printInvoice.paymentStatus !== "PAID") {
+          const res = await updateInvoice(printInvoice.id, data, state.userToken)
+          const invoice = await res.json();
+          setPrintInvoice(invoice?.data);
+          if (res.status === 200) {
+            showToastMessage('success', invoice.message)
+          }
+          else if (res.status === 404) {
+            showToastMessage('info', invoice.message)
+          }
+          else if (res.status === 409) {
+            showToastMessage('error', invoice.message)
+          }
         }
-        else if (res.status === 404) {
-          showToastMessage('info', invoice.message)
-        }
-        else if (res.status === 409) {
-          showToastMessage('error', invoice.message)
+        else {
+          const res = await updateInvoiceLevel2(printInvoice.id, data, state.userToken)
+          const invoice = await res.json();
+          setPrintInvoice(invoice?.data);
+          if (res.status === 200) {
+            showToastMessage('success', invoice.message)
+          }
+          else if (res.status === 404) {
+            showToastMessage('info', invoice.message)
+          }
+          else if (res.status === 409) {
+            showToastMessage('error', invoice.message)
+          }
         }
       }
       else {
@@ -329,6 +347,12 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
         setShowPackageModal(true);
       }
     }
+  };
+
+  // calculate changable amount
+  const getCashAmount = (invoice) => {
+    const cashAmount = invoice.Payments.reduce((acc, payment) => payment.paymentMethod === 'Cash' ? acc + payment.paidAmount : acc, 0);
+    return cashAmount.toFixed(2);
   };
 
   // Handle product change
@@ -400,15 +424,46 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
     setProductSearchText("");
   };
 
+  const isQuantityUpdateAccepted = (updatedItems) => {
+    const cashAmount = getCashAmount(printInvoice);
+    const totalCurrentAmount = updatedItems.reduce((acc, item) => {
+      return acc + (parseFloat(item.price) || 0) * (parseFloat(item.quantity) || 0);
+    }, 0);
+    const taxes = recalculateTaxes(updatedItems);
+    const totalTaxAmount = Object.values(taxes).reduce((acc, tax) => acc + parseFloat(tax), 0);
+    const paymentDifference = printInvoice.paidAmount - (totalCurrentAmount + totalTaxAmount);
+    return paymentDifference <= parseFloat(cashAmount);
+  };
+
   // Handle quantity change
   const handleQuantityChange = (index, quantity) => {
     const updatedItems = [...selectedProducts];
     updatedItems[index].quantity = Number(quantity);
 
+    if (printInvoice.paymentStatus === "PAID") {
+      const isAccepted = isQuantityUpdateAccepted(updatedItems);
+      if (!isAccepted) {
+        updatedItems[index].quantity = Number(quantity) + 1;
+        toast.error("update amount must be less than or equal to cash amount");
+        return;
+      }
+    }
+
     // Recalculate taxes
     recalculateTaxes(updatedItems);
 
     setSelectedProducts(updatedItems);
+  };
+
+  const isPriceUpdateAccepted = (updatedItems) => {
+    const cashAmount = getCashAmount(printInvoice);
+    const totalCurrentAmount = updatedItems.reduce((acc, item) => {
+      return acc + (parseFloat(item.price) || 0) * (parseFloat(item.quantity) || 0);
+    }, 0);
+    const taxes = recalculateTaxes(updatedItems);
+    const totalTaxAmount = Object.values(taxes).reduce((acc, tax) => acc + parseFloat(tax), 0);
+    const paymentDifference = printInvoice.paidAmount - (totalCurrentAmount + totalTaxAmount);
+    return paymentDifference <= parseFloat(cashAmount);
   };
 
   // Handle price change
@@ -416,15 +471,44 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
     const updatedItems = [...selectedProducts];
     updatedItems[index].price = Number(price);
 
+    if (printInvoice.paymentStatus === "PAID") {
+      // Check if the updated price exceeds the cash amount
+      const isAccepted = isPriceUpdateAccepted(updatedItems);
+      if (!isAccepted) {
+        updatedItems[index].price = Number(price) + 1;
+        toast.error("update amount must be less than or equal to cash amount");
+        return;
+      }
+    }
+
     // Recalculate taxes
     recalculateTaxes(updatedItems);
     setSelectedProducts(updatedItems);
+  };
+
+  const isProductRemovedAccepted = (updatedItems) => {
+    const cashAmount = getCashAmount(printInvoice);
+    const totalCurrentAmount = updatedItems.reduce((acc, item) => {
+      return acc + (parseFloat(item.price) || 0) * (parseFloat(item.quantity) || 0);
+    }, 0);
+    const taxes = recalculateTaxes(updatedItems);
+    const totalTaxAmount = Object.values(taxes).reduce((acc, tax) => acc + parseFloat(tax), 0);
+    const paymentDifference = printInvoice.paidAmount - (totalCurrentAmount + totalTaxAmount);
+    return paymentDifference <= parseFloat(cashAmount);
   };
 
   // Handle removing a product
   const handleRemoveProduct = (index) => {
     const updatedItems = [...selectedProducts];
     updatedItems.splice(index, 1);
+
+    if (printInvoice.paymentStatus === "PAID") {
+      const isAccepted = isProductRemovedAccepted(updatedItems);
+      if (!isAccepted) {
+        toast.error("update amount must be less than or equal to cash amount");
+        return;
+      }
+    }
 
     // Recalculate taxes if there are remaining items
     if (updatedItems.length > 0) {
@@ -460,6 +544,7 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
       });
     });
     setAppliedTaxes(productTaxes);
+    return productTaxes;
   };
 
   // calculate amount
@@ -1353,6 +1438,15 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
                         type="button"
                       >
                         Back
+                      </button>
+                    )}
+
+                    {edit && (
+                      <button className=" w-32 bg-gray-600 hover:bg-gray-900 text-white font-bold py-2 px-4"
+                        onClick={() => { clearForm(formikProps); setResetForm(!resetForm) }}
+                        type="button"
+                      >
+                        Reset
                       </button>
                     )}
 

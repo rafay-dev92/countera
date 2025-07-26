@@ -16,7 +16,6 @@ export function RemindersList({ color, title, reminders }) {
         <CardHeader variant="gradient" color={color} floated={false} shadow={false} className="h-12">
           <div className="flex items-center justify-between">
           <Typography variant="h6" color="black" className="flex items-center gap-2">
-            <ClockIcon className="h-6 w-6" />
             {title}
             <span className="rounded-full w-6 h-6 flex items-center justify-center text-xs font-semibold ml-2 bg-red-600 text-white">
               {reminders.length}

@@ -17,7 +17,7 @@ const printView = React.forwardRef(({ view, printInvoice, appliedTaxes }, ref) =
     const calculateTotalAmount = (products) => {
         let total = 0;
         products?.forEach((item) => {
-            total += parseFloat(calculateAmount(item.invoice_product.price, item.invoice_product.quantity));
+            total += parseFloat(calculateAmount(item.archived_invoice_product.price, item.archived_invoice_product.quantity));
         });
         return total.toFixed(2);
     };
@@ -129,7 +129,7 @@ const printView = React.forwardRef(({ view, printInvoice, appliedTaxes }, ref) =
                                             >
                                                 {item.name}
                                             </Typography>
-                                            <span className="text-gray-600 text-[10px]">{item?.invoice_product?.description}</span>
+                                            <span className="text-gray-600 text-[10px]">{item?.archived_invoice_product?.description}</span>
                                         </div>
                                     </td>
                                     <td className="p-2 border-b border-blue-gray-50 w-[10%] text-center">
@@ -138,7 +138,7 @@ const printView = React.forwardRef(({ view, printInvoice, appliedTaxes }, ref) =
                                             color="blue-gray"
                                             className="font-normal leading-none text-xs"
                                         >
-                                            {item.invoice_product.quantity}
+                                            {item.archived_invoice_product.quantity}
                                         </Typography>
                                     </td>
                                     <td className="p-2 border-b border-blue-gray-50 w-[15%] text-center">
@@ -147,7 +147,7 @@ const printView = React.forwardRef(({ view, printInvoice, appliedTaxes }, ref) =
                                             color="blue-gray"
                                             className="font-normal leading-none text-xs"
                                         >
-                                            {item.invoice_product.price}
+                                            {item.archived_invoice_product.price}
                                         </Typography>
                                     </td>
                                     <td className="p-2 border-b border-blue-gray-50 w-[10%] text-center">
@@ -164,7 +164,7 @@ const printView = React.forwardRef(({ view, printInvoice, appliedTaxes }, ref) =
                                             color="blue-gray"
                                             className="font-normal leading-none text-xs"
                                         >
-                                            {calculateAmount(item.invoice_product.price, item.invoice_product.quantity)}
+                                            {calculateAmount(item.archived_invoice_product.price, item.archived_invoice_product.quantity)}
                                         </Typography>
                                     </td>
                                 </tr>
@@ -232,8 +232,8 @@ const printView = React.forwardRef(({ view, printInvoice, appliedTaxes }, ref) =
                             Payments
                         </div>
 
-                        {printInvoice?.Payments.length > 0 ? (
-                            printInvoice.Payments.map((payment, index) => {
+                        {JSON.parse(printInvoice?.payments).length > 0 ? (
+                            JSON.parse(printInvoice?.payments).map((payment, index) => {
                                 const date = new Date(payment.createdAt);
                                 return (
                                     <div key={index} className="border-b border-x divide-x text-xs">
@@ -265,7 +265,6 @@ const printView = React.forwardRef(({ view, printInvoice, appliedTaxes }, ref) =
                             <div className="text-xs flex w-full mb-2">
                                 <span className="whitespace-nowrap">SignX</span>
                                 <div className=" border-t border-gray-500 mt-3 ms-2 w-48 mr-2">
-                                    {/* <p className="text-xs text-black text-center mt-1">(Customer Signature)</p> */}
                                 </div>
                                 <span>Date</span>
                                 <div className=" border-t border-gray-500 mt-3 ms-2 w-48">
@@ -301,35 +300,6 @@ const printView = React.forwardRef(({ view, printInvoice, appliedTaxes }, ref) =
                                 }}
                             >
                             </div>
-
-
-                            {/* <p className="text-[9px] py-1 leading-relaxed">
-                                <span className="block">## Terms & Conditions  </span>
-                                <div className="text-[9px] py-1 leading-tight">
-                                    No verbal agreement by any salesperson is binding on the company. You are authorized to deliver and/or install
-                                    the listed products under the terms of this order. Any operation of the vehicle for testing, inspection, or delivery
-                                    is at my risk. A mechanic's lien is placed on the vehicle to secure payment for installed products. The company is
-                                    not responsible for damage or loss of items in the vehicle due to fire, theft, accident, or other uncontrollable events.
-                                    If legal action is taken to collect payment, the purchaser will cover attorney fees, court costs, and collection expenses.
-                                    The dealership is not liable for wheel damage. I acknowledge receipt and approval of this order and its terms.
-                                </div>
-                            </p>
-                            <p className="text-[9px] py-1 leading-relaxed">
-                                <span className="block">## All Sales Are Final</span>
-                                <span className="block"><b>NOTICE:</b> We are not responsible for any goods left over 3 days from above date.</span>
-                                <span className="block"><b>Return/Exchange:</b> All returns or cancellations subject to freight and hauling charges and a 25% restocking fee.</span>
-                                <span className="block"><b>NOTICE:</b> Customer is responsible for maintaining:</span>
-                                <span className="block">a) tire air pressure per manufacturer specifications</span>
-                                <span className="block">b) wire wheels per manufacturer specifications .The dealership is not liable for issues with lugs, nuts, or studs.</span>
-                            </p>
-                            <p className="text-[9px] py-1 leading-relaxed">
-                                <span className="block"> ## Warranty Disclaimer</span>
-                                <div className="text-[9px] py-1 leading-tight">
-                                    All product warranties are provided solely by the manufacturer. The seller expressly disclaims all express or implied warranties,
-                                    including merchantability or fitness for a particular purpose, and does not authorize any other party to assume liability on its behalf.
-                                    The buyer may not claim consequential, incidental, or indirect damages, including property damage, lost time, or lost income.
-                                </div>
-                            </p> */}
                         </div>
                     </div>
                 </div>

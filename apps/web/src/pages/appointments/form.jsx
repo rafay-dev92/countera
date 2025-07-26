@@ -315,14 +315,14 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, close, refresh, 
                                             <DatePicker
                                                 id="startDateTime"
                                                 name="startDateTime"
-                                                selected={values.startDateTime}
+                                                selected={values.startDateTime ? new Date(values.startDateTime) : null}
                                                 onChange={(date) => setFieldValue("startDateTime", date)}
                                                 onBlur={handleBlur}
                                                 showTimeSelect
                                                 timeFormat="HH:mm"
                                                 timeIntervals={15}
                                                 dateFormat="yyyy-MM-dd HH:mm"
-                                                minDate={new Date()} // if you want to prevent selecting past dates
+                                                minDate={new Date()}
                                                 className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
                                             />
                                             {(touched.startDateTime && errors.startDateTime) ? (

@@ -7,7 +7,7 @@ import {
   Avatar,
 } from "@material-tailwind/react";
 import PropTypes from "prop-types";
-import { ClockIcon, ExclamationTriangleIcon } from '@heroicons/react/24/solid';
+import { ExclamationTriangleIcon } from '@heroicons/react/24/solid';
 
 export function RemindersList({ color, title, reminders }) {
   if (!reminders || reminders.length === 0) {
@@ -15,12 +15,12 @@ export function RemindersList({ color, title, reminders }) {
       <Card className="border border-blue-gray-100 shadow-sm">
         <CardHeader variant="gradient" color={color} floated={false} shadow={false} className="h-12">
           <div className="flex items-center justify-between">
-          <Typography variant="h6" color="black" className="flex items-center gap-2">
-            {title}
-            <span className="rounded-full w-6 h-6 flex items-center justify-center text-xs font-semibold ml-2 bg-red-600 text-white">
-              {reminders.length}
-            </span>
-          </Typography>
+            <Typography variant="h6" color="black" className="flex items-center gap-2">
+              {title}
+              <span className="rounded-full w-6 h-6 flex items-center justify-center text-xs font-semibold ml-2 bg-red-600 text-white">
+                {reminders.length}
+              </span>
+            </Typography>
           </div>
         </CardHeader>
         <CardBody className="px-6 pt-4">

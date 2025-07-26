@@ -8,7 +8,7 @@ import {
     Spinner,
 } from "@material-tailwind/react";
 import { StatisticsCard } from "@/widgets/cards";
-import { StatisticsChart, RemindersList } from "@/widgets/charts";
+import { StatisticsChart, RemindersList, AppointmentsList } from "@/widgets/charts";
 import {
     statisticsCardsData,
     statisticsChartsData,
@@ -21,6 +21,7 @@ import { fetchProducts } from '@/services/fetchProducts';
 import moment from 'moment-timezone';
 import { fetchMonthlySales } from '@/services/fetchMontlySales';
 import { fetchDailyReminders } from '@/services/fetchDailyRemiders';
+import { fetchDailyAppointments } from '@/services/fetchDailyAppointments';
 
 export function Home() {
     const { state } = State();
@@ -30,6 +31,7 @@ export function Home() {
     const [cardsData, setCardsData] = useState(statisticsCardsData);
     const [chartsData, setChartsData] = useState(statisticsChartsData);
     const [dailyReminders, setDailyReminders] = useState([]);
+    const [dailyAppointments, setDailyAppointments] = useState([]);
 
     useEffect(() => {
         setLoading(true);
@@ -86,10 +88,24 @@ export function Home() {
         }
     }
 
+    const getTodaysAppointments = async () => {
+        try {
+            const res = await fetchDailyAppointments(state.userToken);
+            const appointments = await res.json();
+            if (res.status === 200) {
+                setDailyAppointments(appointments.data || []);
+            }
+        } catch (error) {
+            console.log(error);
+            toast.error("Failed to load daily appointments")
+        }
+    }
+
     useEffect(() => {
         setChartLoading(true);
         dailySalesData();
         getTodaysReminders();
+        getTodaysAppointments()
         setTimeout(() => {
             setChartLoading(false);
         }, 2000);
@@ -240,13 +256,19 @@ export function Home() {
                                 title="Today's Reminders"
                                 reminders={dailyReminders}
                             />
-                            
-                            {chartsData.slice(1).map((props) => (
+
+                            {chartsData.slice(1, 2).map((props) => (
                                 <StatisticsChart
                                     key={props.title}
                                     {...props}
                                 />
                             ))}
+
+                            <AppointmentsList 
+                            color='white'
+                            title="Today's Appointments"
+                            appointments={dailyAppointments}
+                            />
                         </div>
                     }
                 </div>

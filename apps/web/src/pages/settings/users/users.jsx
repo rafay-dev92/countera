@@ -28,6 +28,11 @@ function Users() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
 
+  // Function to handle pagination
+  const paginate = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
+
   // Popup state
   const [isOpen, setIsOpen] = useState(false);
   const openPopup = () => {

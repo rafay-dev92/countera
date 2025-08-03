@@ -31,7 +31,7 @@ export function Sidenav({ routes }) {
               className="flex flex-col items-start justify-center"
             // color={sidenavType === "dark" ? "white" : "blue-gray"}
             >
-            <span className="text-xs font-medium">{state.business?.name}</span>
+              <span className="text-xs font-medium">{state.business?.name}</span>
             </Typography>
           </Link>
         </div>
@@ -46,13 +46,14 @@ export function Sidenav({ routes }) {
           <XMarkIcon strokeWidth={2.5} className="h-5 w-5 text-white" />
         </IconButton>
       </div>
-      <div className="m-4">
+      <div className="m-4 overflow-y-auto h-[calc(100vh-100px)]">
         {routes.map(({ layout, title, pages }, key) => (
 
           <ul key={key} className="mb-4 flex flex-col gap-1">
             {layout === 'dashboard' &&
               pages.map(({ icon, name, path }) => (
-                <li key={name}>
+                <li key={name}
+                  onClick={() => setOpenSidenav(dispatch, !openSidenav)}>
                   <NavLink to={`/${layout}${path}`}>
                     {({ isActive }) => (
                       <Button

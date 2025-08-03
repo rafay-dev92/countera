@@ -7,7 +7,7 @@ import { addPayment } from '@/services/addPayment';
 import { fetchInvoice } from '@/services/fetchInvoice';
 
 const schema = Yup.object().shape({
-    paymentMethod: Yup.string().required("Payment Method is required"),
+    paymentMethod: Yup.string().default("Card").required("Payment Method is required"),
     paidAmount: Yup.number().required("Amount is required"),
     cardNumber: Yup.string(),
 });
@@ -43,7 +43,7 @@ const PaymentForm = ({ open, close, totalAmount, totalAmountPaid, invoiceId, set
     const clearForm = (formikProps) => {
         formikProps.resetForm({
             values: {
-                paymentMethod: "",
+                paymentMethod: "Card",
                 paidAmount: "",
                 cardNumber: "",
             },
@@ -57,7 +57,7 @@ const PaymentForm = ({ open, close, totalAmount, totalAmountPaid, invoiceId, set
 
     const formikProps = useFormik({
         initialValues: {
-            paymentMethod: "",
+            paymentMethod: "Card",
             paidAmount: "",
             cardNumber: "",
         },
@@ -88,7 +88,7 @@ const PaymentForm = ({ open, close, totalAmount, totalAmountPaid, invoiceId, set
                 {open && (
                     <form onSubmit={handleSubmit} autoComplete="new" >
                         <div className="flex justify-center w-full">
-                            <div className="bg-white rounded shadow-xl">
+                            <div className="bg-white rounded shadow-xl w-[90vw] md:w-[80vw] lg:w-[70vw] xl:w-[60vw] 2xl:w-[50vw]">
                                 <div className="flex items-center justify-between sticky bg-gradient-to-br from-gray-800 to-gray-700">
                                     <div></div>
                                     <div className="text-white text-center text-lg">
@@ -116,14 +116,14 @@ const PaymentForm = ({ open, close, totalAmount, totalAmountPaid, invoiceId, set
                                     </button>
                                 </div>
 
-                                <div className="w-[30vw] p-6 space-y-4">
-                                    <div className="flex items-center justify-start space-x-4">
+                                <div className="p-6 space-y-4">
+                                    <div className="flex items-center justify-between space-x-4">
                                         <div className="">
                                             <label className="p-1 font-bold">Payment Method</label> <br />
                                             <select
                                                 id="paymentMethod"
                                                 name="paymentMethod"
-                                                className="w-48 lg:w-72 p-2.5 border border-gray-300 bg-inherit rounded-md"
+                                                className="w-full p-2.5 border border-gray-300 bg-inherit rounded-md"
                                                 value={values.paymentMethod}
                                                 onChange={handleChange}
                                                 onBlur={handleBlur}
@@ -147,13 +147,13 @@ const PaymentForm = ({ open, close, totalAmount, totalAmountPaid, invoiceId, set
                                                 name="paidAmount"
                                                 type="number"
                                                 value={values.paidAmount}
-                                                onChange={(e) => {          
-                                                    const maxValue = parseFloat((totalAmount - totalAmountPaid).toFixed(2));                                                                                                                                              
+                                                onChange={(e) => {
+                                                    const maxValue = parseFloat((totalAmount - totalAmountPaid).toFixed(2));
                                                     const value =
-                                                    Math.min(maxValue, parseInt(e.target.value, 10) || "") === 0
-                                                      ? ""
-                                                      : Math.min(maxValue, parseInt(e.target.value, 10) || "");
-                                                    setFieldValue("paidAmount", value);                                                   
+                                                        Math.min(maxValue, parseInt(e.target.value, 10) || "") === 0
+                                                            ? ""
+                                                            : Math.min(maxValue, parseInt(e.target.value, 10) || "");
+                                                    setFieldValue("paidAmount", value);
                                                 }}
                                                 onBlur={handleBlur}
                                             />
@@ -165,18 +165,18 @@ const PaymentForm = ({ open, close, totalAmount, totalAmountPaid, invoiceId, set
                                         </div>
                                     </div>
                                     {values.paymentMethod === "Card" && (
-                                    <div className="w-full">
-                                        <label className="font-bold">Card Number (optional)</label> <br />
-                                        <input
-                                            className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
-                                            id="cardNumber"
-                                            name="cardNumber"
-                                            type="text"
-                                            value={values.cardNumber}
-                                            onChange={handleChange}
-                                            onBlur={handleBlur}
-                                        />                                        
-                                    </div>
+                                        <div className="w-full">
+                                            <label className="font-bold">Card Number (optional)</label> <br />
+                                            <input
+                                                className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
+                                                id="cardNumber"
+                                                name="cardNumber"
+                                                type="text"
+                                                value={values.cardNumber}
+                                                onChange={handleChange}
+                                                onBlur={handleBlur}
+                                            />
+                                        </div>
                                     )}
                                 </div>
                                 <div className="flex items-center justify-end space-x-2 sticky bg-gradient-to-br from-gray-800 to-gray-700">

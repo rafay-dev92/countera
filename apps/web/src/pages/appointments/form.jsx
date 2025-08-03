@@ -275,9 +275,9 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, close, refresh, 
                                 </div>
 
                                 <div className="p-6 space-y-4">
-                                    <div className="flex items-center justify-start space-x-4">
-                                        <div className="basis-[33.33%]">
-                                            <label className="font-bold">Customer Name</label> <br />
+                                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                                        <div className="flex flex-col gap-1">
+                                            <label className="font-bold">Customer Name</label>
                                             <input
                                                 className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
                                                 id="customerName"
@@ -293,8 +293,8 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, close, refresh, 
                                                 </div>
                                             )}
                                         </div>
-                                        <div className="basis-[33.33%]">
-                                            <label className="font-bold">Customer Email</label> <br />
+                                        <div className="flex flex-col">
+                                            <label className="font-bold">Customer Email</label>
                                             <input
                                                 className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
                                                 id="customerEmail"
@@ -310,8 +310,8 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, close, refresh, 
                                                 </div>
                                             )}
                                         </div>
-                                        <div className="basis-[33.33%]">
-                                            <label className="font-bold">Start Date & Time</label> <br />
+                                        <div className="flex flex-col">
+                                            <label className="font-bold">Start Date & Time</label>
                                             <DatePicker
                                                 id="startDateTime"
                                                 name="startDateTime"

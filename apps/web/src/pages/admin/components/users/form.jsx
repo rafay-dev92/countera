@@ -11,6 +11,7 @@ import { addUser } from "@/services/addUser";
 import { updateUser } from "@/services/updateUser";
 import { fetchPermissions } from "@/services/fetchPermissions";
 import PermissionForm from "../permissions/form";
+import { userRolesForSelect } from "@/utils/enums/userRoles";
 
 const schema = Yup.object().shape({
     first_name: Yup.string().required("First name is required"),
@@ -22,7 +23,6 @@ const schema = Yup.object().shape({
 });
 
 const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setRefresh }) => {
-
     const { state } = State();
     const [isLoading, setIsLoading] = useState(false);
     const [edit, setEdit] = useState(false);
@@ -59,7 +59,9 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
         setEdit(false);
         setSelectedItem(null);
         setSelectPerms([]);
-        setBusiness(businesses[0].id)
+        if (businesses.length > 0) {
+            setBusiness(businesses[0].id)
+        }
         close();
     };
 
@@ -82,7 +84,9 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
         try {
             const res = await fetchBusinesses(state.userToken);
             const businesses = await res.json();
-            setBusiness(businesses[0].id)
+            if (businesses.length > 0) {
+                setBusiness(businesses[0].id)
+            }
             setBusinesses(businesses)
         } catch (error) {
             toast.error("Something went wrong")
@@ -91,7 +95,7 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
 
     useEffect(() => {
         if (selectedItem) {
-            const {password, Permission, BusinessId, ...rest} = selectedItem;
+            const { password, Permission, BusinessId, ...rest } = selectedItem;
             formikProps.setValues(rest);
             setBusiness(BusinessId)
             setSelectPerms(Permission.map((perm) => (perm.id)));
@@ -99,7 +103,7 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
         }
     }, [selectedItem]);
 
-    const onSubmit = async (values) => {       
+    const onSubmit = async (values) => {
         setIsLoading(true);
         const updatedValues = { ...values, BusinessId: business };
         if (values.dob === "") {
@@ -116,6 +120,9 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
                 const user = await res.json();
                 if (res.status === 200) {
                     showToastMessage('success', user.message)
+                }
+                else if (res.status === 400) {
+                    showToastMessage('error', user.message)
                 }
                 else if (res.status === 409) {
                     showToastMessage('error', user.message)
@@ -200,13 +207,13 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
         handleSubmit,
     } = formikProps;
 
-    const userRoles = [
-        { value: 'ADMIN', label: 'Admin' },
-        { value: 'USER', label: 'User' },
-        { value: 'MANAGER', label: 'Manager' },
-        { value: 'CASHIER', label: 'Cashier' },
-        { value: 'SALESMAN', label: 'Salesman' },
-    ];
+    // const userRoles = [
+    //     { value: 'ADMIN', label: 'Admin' },
+    //     { value: 'USER', label: 'User' },
+    //     { value: 'MANAGER', label: 'Manager' },
+    //     { value: 'CASHIER', label: 'Cashier' },
+    //     { value: 'SALESMAN', label: 'Salesman' },
+    // ];
 
     return (
         <>
@@ -296,7 +303,7 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
                                                 required
                                             >
                                                 <option key={''} value={''} disabled selected>Select Role</option>
-                                                {userRoles.map((role) => (
+                                                {userRolesForSelect.map((role) => (
                                                     <option key={role.value} value={role.value}>{role.label}</option>
                                                 ))}
                                             </select>
@@ -407,7 +414,7 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
                                                     </div>
                                                 ))}
                                         </div>
-                                    </div>                                    
+                                    </div>
                                 </div>
                                 <div className="flex items-center justify-end space-x-2 sticky bg-gradient-to-br from-gray-800 to-gray-700">
                                     <button

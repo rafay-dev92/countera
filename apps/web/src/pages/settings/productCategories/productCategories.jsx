@@ -28,6 +28,11 @@ function ProductCategories() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
 
+  // Function to handle pagination
+  const paginate = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
+
   // Popup state
   const [isOpen, setIsOpen] = useState(false);
   const openPopup = () => {
@@ -114,7 +119,7 @@ function ProductCategories() {
   }
   return (
     <>
-      <Card className="w-full max-h-[80vh] overflow-y-auto">
+      <Card className="w-full lg:max-h-[80vh] lg:overflow-y-auto">
         <CardHeader floated={false} shadow={false} className="rounded-none">
           <div className="flex flex-col md:flex-row items-center w-full h-max py-3 gap-4 ">
             <div className="w-full md:w-auto flex items-center justify-start gap-2">
@@ -153,7 +158,7 @@ function ProductCategories() {
         </CardHeader>
 
         <CardBody className="p-2 overflow-auto px-0">
-          <table className=" w-full min-w-max table-auto text-left">
+          <table className="w-full min-w-max table-auto text-left">
             <thead>
               <tr>
                 {TABLE_HEAD.map((head) => (

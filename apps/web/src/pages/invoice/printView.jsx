@@ -24,7 +24,7 @@ const printView = React.forwardRef(({ view, printInvoice, appliedTaxes }, ref) =
 
     if (Object.keys(printInvoice).length > 0) {
         return (
-            <div ref={ref} className={`print-page w-[794px] min-h-[1056px] bg-white mx-auto flex flex-col p-4 ${!view ? "hidden print:flex" : ""}`}>
+            <div ref={ref} className={`print-page w-[794px] min-h-[1056px] bg-white mx-auto flex flex-col p-4 ${!view ? "hidden print:flex print:w-[794px]" : ""}`}>
                 <div className="grid grid-cols-2 border-b">
                     <div className="col-span-1 h-full flex p-1">
                         <img src={printInvoice?.Business.logo} className="rounded-xl h-[100px]" alt="Business logo" height={100} />
@@ -223,7 +223,7 @@ const printView = React.forwardRef(({ view, printInvoice, appliedTaxes }, ref) =
 
                         <div className=" border divide-y text-xs">
                             <div className="flex justify-between px-2 py-1 font-medium">
-                                <span className="">Grand Total</span>
+                                <span className={` ${printInvoice?.isArchived ? 'text-blue-400' : ''}`}>Grand Total</span>
                                 <span className="">${printInvoice?.totalAmount.toFixed(2)}</span>
                             </div>
                         </div>
@@ -236,10 +236,10 @@ const printView = React.forwardRef(({ view, printInvoice, appliedTaxes }, ref) =
                             printInvoice.Payments.map((payment, index) => {
                                 const date = new Date(payment.createdAt);
                                 return (
-                                    <div key={index} className="border-b border-x divide-x text-xs">
+                                    <div key={index} className="border-x divide-x text-xs">
                                         <div className="flex justify-between px-2 py-1">
                                             <span className="">
-                                                {payment.paymentMethod} on {date.toLocaleDateString("en-US")}
+                                                {payment.paymentMethod} on {date.toLocaleDateString("en-US")} {date.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", timeZone: printInvoice?.Business?.timezone || "UTC" })}
                                             </span>
                                             <span className="">
                                                 ${payment.paidAmount}
@@ -249,13 +249,19 @@ const printView = React.forwardRef(({ view, printInvoice, appliedTaxes }, ref) =
                                 );
                             })
                         ) : (
-                            <div className="border-b border-x divide-x text-xs">
+                            <div className=" border-x divide-x text-xs">
                                 <div className="flex justify-between px-2 py-1">
                                     <span className="">N/A</span>
                                     <span className="">$0.00</span>
                                 </div>
                             </div>
                         )}
+                        <div className=" border divide-y text-xs">
+                            <div className="flex justify-between px-2 py-1 font-medium">
+                                <span className="">Balance</span>
+                                <span className="">${(printInvoice?.totalAmount - printInvoice?.paidAmount).toFixed(2)}</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div className="flex flex-col justify-center border-t border-gray-300 p-2 gap-8">
@@ -281,7 +287,7 @@ const printView = React.forwardRef(({ view, printInvoice, appliedTaxes }, ref) =
                                         { key: "noWarranty", label: "No Warranty" },
                                         { key: "flatRepairWarranty", label: "Flat Repair" },
                                         { key: "rotationWarranty", label: "Rotation" },
-                                        { key: "balance", label: "Balance" },
+                                        { key: "balanceWarranty", label: "Balance" },
                                     ].map(({ key, label }) => (
                                         <label key={key} className="flex items-center gap-1">
                                             <input

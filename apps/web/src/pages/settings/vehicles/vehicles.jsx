@@ -194,7 +194,7 @@ export default function Vehicles() {
                                 Vehicles
                             </Typography>
                             <Tooltip content="Add new vehicle">
-                            <PlusCircleIcon onClick={openPopup} className="ml-2 mr-1 h-7 w-7 text-blue-600 cursor-pointer" />
+                                <PlusCircleIcon onClick={openPopup} className="ml-2 mr-1 h-7 w-7 text-blue-600 cursor-pointer" />
                             </Tooltip>
                         </div>
                         <div className="flex flex-col sm:flex-row items-start gap-3 w-full md:w-auto md:ml-auto">
@@ -224,61 +224,63 @@ export default function Vehicles() {
                     </div>
                 </CardHeader>
 
-                <CardBody className="p-2 overflow-auto px-0">
-                    <table className=" w-full min-w-max table-auto text-left">
-                        <thead>
-                            <tr>
-                                {TABLE_HEAD.map((head) => (
-                                    <th
-                                        key={head}
-                                        className="border-y border-blue-gray-100 bg-blue-gray-50/50 p-4"
-                                    >
-                                        <Typography
-                                            variant="small"
-                                            color="blue-gray"
-                                            className="font-normal leading-none opacity-70"
+                <CardBody className="p-2 overflow-auto px-0 w-full">
+                    {/* <div className="w-full text-sm"> */}
+                        <table className=" w-full min-w-max table-auto text-left">
+                            <thead>
+                                <tr>
+                                    {TABLE_HEAD.map((head) => (
+                                        <th
+                                            key={head}
+                                            className="border-y border-blue-gray-100 bg-blue-gray-50/50 p-4"
                                         >
-                                            {head}
-                                        </Typography>
-                                    </th>
-                                ))}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {currentItems.map(({ make, model, id }, index) => {
-                                const isLast = index === currentItems.length - 1;
-                                const classes = isLast
-                                    ? "p-2"
-                                    : "p-2 border-b border-blue-gray-50";
-                                const isChecked = selectedRows.includes(index);
-                                return (
-                                    <tr key={id}>
-                                        <td className={classes}>
-                                            <Link
-                                                to="#"
-                                                className="text-blue-gray font-normal hover:underline"
-                                                onClick={() => {
-                                                    handleEditVehicle(index);
-                                                }}
-                                            >
-                                                {make}
-                                            </Link>
-                                        </td>
-                                        <td className={classes}>
                                             <Typography
                                                 variant="small"
                                                 color="blue-gray"
-                                                className="font-normal"
+                                                className="font-normal leading-none opacity-70"
                                             >
-                                                {model}
+                                                {head}
                                             </Typography>
-                                        </td>                                       
-                                    </tr>
-                                );
-                            },
-                            )}
-                        </tbody>
-                    </table>
+                                        </th>
+                                    ))}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {currentItems.map(({ make, model, id }, index) => {
+                                    const isLast = index === currentItems.length - 1;
+                                    const classes = isLast
+                                        ? "p-2"
+                                        : "p-2 border-b border-blue-gray-50";
+                                    const isChecked = selectedRows.includes(index);
+                                    return (
+                                        <tr key={id}>
+                                            <td className={classes}>
+                                                <Link
+                                                    to="#"
+                                                    className="text-blue-gray font-normal hover:underline"
+                                                    onClick={() => {
+                                                        handleEditVehicle(index);
+                                                    }}
+                                                >
+                                                    {make}
+                                                </Link>
+                                            </td>
+                                            <td className={classes}>
+                                                <Typography
+                                                    variant="small"
+                                                    color="blue-gray"
+                                                    className="font-normal"
+                                                >
+                                                    {model}
+                                                </Typography>
+                                            </td>
+                                        </tr>
+                                    );
+                                },
+                                )}
+                            </tbody>
+                        </table>
+                    {/* </div> */}
                 </CardBody>
                 <CardFooter className="flex items-center justify-between border-t border-blue-gray-50 p-4">
                     <Typography variant="small" color="blue-gray" className="font-normal">

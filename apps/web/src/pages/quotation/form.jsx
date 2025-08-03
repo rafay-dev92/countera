@@ -85,6 +85,11 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
 
   // product suggestions
   const [productSearchText, setProductSearchText] = useState("");
+  const [productsPosition, setProductsPosition] = useState({
+    top: 0,
+    left: 0,
+    width: 0,
+  });
 
   // product packages
   const [selectedPackage, setSelectedPackage] = useState("");
@@ -642,6 +647,18 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
     setDiscount(appliedDiscount);
   }
 
+  useEffect(() => {
+    if (showProductSuggestions && productInputRef.current) {
+      const rect = productInputRef.current.getBoundingClientRect()
+      setProductsPosition({
+        top: rect.bottom + window.scrollY,
+        left: rect.left + window.scrollX,
+        width: rect.width,
+      })
+    }
+  }, [showProductSuggestions, productInputRef])
+
+
   return (
     <>
       <Dialog open={open} size="lg">
@@ -958,197 +975,205 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
                         </div>
                       </div>
                     </div>
-
-                    <table className="w-full min-w-max table-auto text-left my-2">
-                      <thead>
-                        <tr>
-                          {TABLE_HEAD.map((head) => (
-                            <th
-                              key={head}
-                              className="border-y border-blue-gray-100 bg-blue-gray-50/50 p-4"
-                            >
-                              <Typography
-                                variant="small"
-                                color="blue-gray"
-                                className="font-normal leading-none opacity-70"
+                    <div className="overflow-x-auto my-2">
+                      <table className="w-full min-w-max table-auto text-left my-2">
+                        <thead>
+                          <tr>
+                            {TABLE_HEAD.map((head) => (
+                              <th
+                                key={head}
+                                className="border-y border-blue-gray-100 bg-blue-gray-50/50 p-4"
                               >
-                                {head}
-                              </Typography>
-                            </th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {selectedProducts.map((item, index) => (
-                          <tr key={index}>
-                            <td className="p-4 border-b border-blue-gray-50">
-                              {index !== (selectedProducts.length - 1) ?
-                                <div className="flex flex-col">
-                                  <div className="w-80 h-[97%] mx-2 p-2 border border-gray-300 rounded-md text-gray-600 font-small">
-                                    {item.name}
+                                <Typography
+                                  variant="small"
+                                  color="blue-gray"
+                                  className="font-normal leading-none opacity-70"
+                                >
+                                  {head}
+                                </Typography>
+                              </th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {selectedProducts.map((item, index) => (
+                            <tr key={index}>
+                              <td className="p-4 border-b border-blue-gray-50">
+                                {index !== (selectedProducts.length - 1) ?
+                                  <div className="flex flex-col">
+                                    <div className="w-80 h-[97%] mx-2 p-2 border border-gray-300 rounded-md text-gray-600 font-small">
+                                      {item.name}
+                                    </div>
+                                    {/* Product description */}
+                                    <div>
+                                      <input
+                                        id="description"
+                                        name="description"
+                                        className="w-80 h-[30%] mx-2 p-1 rounded-md text-gray-600 text-xs focus:outline-none "
+                                        type="text"
+                                        value={item.description}
+                                        onChange={(e) => { setSelectedProducts((prev) => { const newProducts = [...prev]; newProducts[index].description = e.target.value; return newProducts }) }}
+                                        onBlur={handleBlur}
+                                        autoComplete="off"
+                                        placeholder="Description"
+                                      />
+                                    </div>
                                   </div>
-                                  {/* Product description */}
-                                  <div>
+                                  :
+                                  <div ref={productInputRef} className="relative w-fit">
                                     <input
-                                      id="description"
-                                      name="description"
-                                      className="w-80 h-[30%] mx-2 p-1 rounded-md text-gray-600 text-xs focus:outline-none "
+                                      className="w-80 h-[97%] m-2 p-2 border border-gray-300 rounded-md text-gray-600 font-small"
+                                      id="product"
+                                      name="product"
                                       type="text"
-                                      value={item.description}
-                                      onChange={(e) => { setSelectedProducts((prev) => { const newProducts = [...prev]; newProducts[index].description = e.target.value; return newProducts }) }}
+                                      value={selectedProducts[index].name ? selectedProducts[index].name : productSearchText}
+                                      onClick={() => { selectedCustomer && setShowProductSuggestions(true) }}
+                                      onChange={(e) => setProductSearchText(e.target.value)}
                                       onBlur={handleBlur}
                                       autoComplete="off"
-                                      placeholder="Description"
+                                      placeholder="Select Product"
                                     />
-                                  </div>
-                                </div>
-                                :
-                                <div ref={productInputRef} className="relative w-fit">
-                                  <input
-                                    className="w-80 h-[97%] m-2 p-2 border border-gray-300 rounded-md text-gray-600 font-small"
-                                    id="product"
-                                    name="product"
-                                    type="text"
-                                    value={selectedProducts[index].name ? selectedProducts[index].name : productSearchText}
-                                    onClick={() => { selectedCustomer && setShowProductSuggestions(true) }}
-                                    onChange={(e) => setProductSearchText(e.target.value)}
-                                    onBlur={handleBlur}
-                                    autoComplete="off"
-                                    placeholder="Select Product"
-                                  />
-                                  {showProductSuggestions && (
-                                    <ul className="absolute left-0 right-0 z-50 bg-white border border-slate-700 mt-1 ml-2 overflow-y-auto min-h-24 max-h-48 w-80">
-                                      {products?.length > 0 ? (
-                                        products
-                                          .filter(product =>
-                                            product?.name?.toLowerCase().includes(productSearchText.toLowerCase())
-                                          )
-                                          .map(product => (
-                                            <li
-                                              key={product.id}
-                                              className="cursor-pointer px-2 py-1 rounded-sm hover:bg-gray-200"
+                                    {showProductSuggestions && (
+                                      <ul className="fixed bg-white border border-gray-300 overflow-y-auto min-h-24 max-h-48 w-80"
+                                        style={{
+                                          top: productsPosition.top,
+                                          left: productsPosition.left,
+                                          width: productsPosition.width,
+                                          zIndex: 9999,
+                                        }}
+                                      >
+                                        {products?.length > 0 ? (
+                                          products
+                                            .filter(product =>
+                                              product?.name?.toLowerCase().includes(productSearchText.toLowerCase())
+                                            )
+                                            .map(product => (
+                                              <li
+                                                key={product.id}
+                                                className="cursor-pointer px-2 py-1 rounded-sm hover:bg-gray-200"
+                                                onClick={() => {
+                                                  handleProductChange(index, item.quantity, product.id);
+                                                  setShowProductSuggestions(false);
+                                                }}
+                                              >
+                                                {product.name}
+                                              </li>
+                                            ))
+                                            .concat(
+                                              products.filter(product =>
+                                                product?.name?.toLowerCase().includes(productSearchText.toLowerCase())
+                                              ).length === 0
+                                                ? [
+                                                  <li key="no-product" className="px-2 py-1 rounded-sm flex justify-between items-center">
+                                                    <span>No Product Found</span>
+                                                    <Button
+                                                      className="rounded"
+                                                      size="sm"
+                                                      color="blue"
+                                                      onClick={() => {
+                                                        setShowProductSuggestions(false);
+                                                        dispatch({
+                                                          type: "SET_PRODUCT_DATA",
+                                                          payload:
+                                                            true,
+                                                        });
+                                                      }}
+                                                    >
+                                                      Add New Product
+                                                    </Button>
+                                                  </li>
+                                                ]
+                                                : []
+                                            )
+                                        ) : (
+                                          <li className="px-2 py-1 rounded-sm flex justify-between items-center">
+                                            <span>No Product Found</span>
+                                            <Button
+                                              className="rounded"
+                                              size="sm"
+                                              color="blue"
                                               onClick={() => {
-                                                handleProductChange(index, item.quantity, product.id);
                                                 setShowProductSuggestions(false);
+                                                dispatch({
+                                                  type: "SET_PRODUCT_DATA",
+                                                  payload:
+                                                    true,
+                                                });
                                               }}
                                             >
-                                              {product.name}
-                                            </li>
-                                          ))
-                                          .concat(
-                                            products.filter(product =>
-                                              product?.name?.toLowerCase().includes(productSearchText.toLowerCase())
-                                            ).length === 0
-                                              ? [
-                                                <li key="no-product" className="px-2 py-1 rounded-sm flex justify-between items-center">
-                                                  <span>No Product Found</span>
-                                                  <Button
-                                                    className="rounded"
-                                                    size="sm"
-                                                    color="blue"
-                                                    onClick={() => {
-                                                      setShowProductSuggestions(false);
-                                                      dispatch({
-                                                        type: "SET_PRODUCT_DATA",
-                                                        payload:
-                                                          true,
-                                                      });
-                                                    }}
-                                                  >
-                                                    Add New Product
-                                                  </Button>
-                                                </li>
-                                              ]
-                                              : []
-                                          )
-                                      ) : (
-                                        <li className="px-2 py-1 rounded-sm flex justify-between items-center">
-                                          <span>No Product Found</span>
-                                          <Button
-                                            className="rounded"
-                                            size="sm"
-                                            color="blue"
-                                            onClick={() => {
-                                              setShowProductSuggestions(false);
-                                              dispatch({
-                                                type: "SET_PRODUCT_DATA",
-                                                payload:
-                                                  true,
-                                              });
-                                            }}
-                                          >
-                                            Add New Product
-                                          </Button>
-                                        </li>
-                                      )}
-                                    </ul>
-                                  )}
-                                </div>
-                              }
-                            </td>
-                            <td className="p-4 border-b border-blue-gray-50">
-                              <input
-                                type="number"
-                                min={1}
-                                className="w-14 p-2 border rounded-md text-black"
-                                value={item.quantity}
-                                onChange={(e) =>
-                                  handleQuantityChange(index, e.target.value)
+                                              Add New Product
+                                            </Button>
+                                          </li>
+                                        )}
+                                      </ul>
+                                    )}
+                                  </div>
                                 }
-                              />
-                            </td>
-                            <td className="p-4 border-b border-blue-gray-50">
-                              <input
-                                type="number"
-                                min={0}
-                                step="0.01"
-                                className="w-24 p-2 border rounded-md text-black"
-                                value={item.price === 0 ? '' : item.price}
-                                placeholder="0.00"
-                                onChange={(e) =>
-                                  handlePriceChange(index, e.target.value)
-                                }
-                              />
-                            </td>
-                            <td className="p-4 border-b border-blue-gray-50">
-                              <input
-                                type="checkbox"
-                                checked={selectedCustomer?.taxable && item.taxable}
-                                readOnly
-                              />
-                            </td>
-                            <td className="p-4 border-b border-blue-gray-50">
-                              <Typography
-                                variant="small"
-                                color="blue-gray"
-                                className="font-normal opacity-70"
-                              >
-
-                                {calculateAmount(item.price, item.quantity)}
-                              </Typography>
-                            </td>
-                            <td className="p-4 border-b border-blue-gray-50 text-center px-4 py-2">
-                              {index !== selectedProducts.length - 1 ?
-                                <XCircleIcon
-                                  onClick={() => handleRemoveProduct(index)}
-                                  className="h-6 w-6 text-gray-600 hover:text-red-500 cursor-pointer"
+                              </td>
+                              <td className="p-4 border-b border-blue-gray-50">
+                                <input
+                                  type="number"
+                                  min={1}
+                                  className="w-14 p-2 border rounded-md text-black"
+                                  value={item.quantity}
+                                  onChange={(e) =>
+                                    handleQuantityChange(index, e.target.value)
+                                  }
                                 />
-                                :
-                                null
-                              }
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
+                              </td>
+                              <td className="p-4 border-b border-blue-gray-50">
+                                <input
+                                  type="number"
+                                  min={0}
+                                  step="0.01"
+                                  className="w-24 p-2 border rounded-md text-black"
+                                  value={item.price === 0 ? '' : item.price}
+                                  placeholder="0.00"
+                                  onChange={(e) =>
+                                    handlePriceChange(index, e.target.value)
+                                  }
+                                />
+                              </td>
+                              <td className="p-4 border-b border-blue-gray-50">
+                                <input
+                                  type="checkbox"
+                                  checked={selectedCustomer?.taxable && item.taxable}
+                                  readOnly
+                                />
+                              </td>
+                              <td className="p-4 border-b border-blue-gray-50">
+                                <Typography
+                                  variant="small"
+                                  color="blue-gray"
+                                  className="font-normal opacity-70"
+                                >
 
-                    </table>
+                                  {calculateAmount(item.price, item.quantity)}
+                                </Typography>
+                              </td>
+                              <td className="p-4 border-b border-blue-gray-50 text-center px-4 py-2">
+                                {index !== selectedProducts.length - 1 ?
+                                  <XCircleIcon
+                                    onClick={() => handleRemoveProduct(index)}
+                                    className="h-6 w-6 text-gray-600 hover:text-red-500 cursor-pointer"
+                                  />
+                                  :
+                                  null
+                                }
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+
+                      </table>
+                    </div>
 
                     <div className="flex">
                       <div className="basis-[50%] max-w-[50%]">
                       </div>
 
                       <div className="basis-[50%] max-w-[50%] border my-4 font-normal">
-                        <div className="flex items-center justify-between p-2 border-b-2 bg-yellow-300">
+                        <div className="flex items-center justify-between px-2 lg:p-2 border-b-2 bg-yellow-300">
                           <div className="text-md">
                             <Input
                               type="number"

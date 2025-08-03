@@ -11,6 +11,7 @@ import { signIn } from "@/services/signIn";
 import { toast } from 'react-toastify';
 import { getUserDetails } from "@/services/getUserDetails";
 import { fetchBusinessesForEmail } from "@/services/fetchBusinessesForEmail";
+import { UserRole } from "@/utils/enums/userRoles";
 
 export function SignIn() {
   const navigate = useNavigate();
@@ -48,7 +49,7 @@ export function SignIn() {
         }
         const user = await getUserInfo(token);
         setLoading(false);
-        if (user?.role === "SUPER_ADMIN") {
+        if (user?.role === UserRole.SUPER_ADMIN) {
           navigate("/super-admin/dashboard");
         } else {
           navigate("/dashboard/home");
@@ -77,7 +78,7 @@ export function SignIn() {
       const res = await fetchBusinessesForEmail(email)
       const data = await res.json();
       setLoading(false);
-      
+
       if (res.ok) {
         setBusinesses(data.businesses);
         if (data.isSuperAdmin || data.businesses.length === 1) {

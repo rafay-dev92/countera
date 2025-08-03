@@ -22,6 +22,7 @@ import { delCustomer } from "@/services/delCustomer";
 import { toast } from "react-toastify";
 import { State } from "@/state/Context";
 import { useConfirm } from "@/context/confirmContext";
+import { updateCustomer } from "@/services/updateCustomer";
 
 const TABLE_HEAD = ["Customer Name", "Email", "Phone", "Address", "Taxable", "Actions"];
 
@@ -170,7 +171,20 @@ export function Customers() {
           showToastMessage('info', customer.message)
         }
         else if (res.status === 500) {
-          showToastMessage('error', "You must delete its foreign key relations first");
+          const askInactive = await confirm("This customer has some data. Do you want to make this customer inactive?");
+          if (askInactive) {
+            const res = await updateCustomer(id, { isActive: false }, state.userToken);
+            const user = await res.json();
+            if (res.status === 200) {
+              showToastMessage('success', user.message)
+            }
+            else if (res.status === 400) {
+              showToastMessage('error', user.message)
+            }
+            else if (res.status === 409) {
+              showToastMessage('error', user.message)
+            }
+          }
         }
         setRefresh(!refresh);
       } catch (error) {
@@ -339,7 +353,7 @@ export function Customers() {
                           Address.city,
                           Address.state,
                           Address.zipcode
-                        ].filter(Boolean).join(', ')}                      
+                        ].filter(Boolean).join(', ')}
                       </Typography>
                     </td>
                     <td className={classes}>

@@ -28,6 +28,11 @@ function Packages() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
 
+  // Function to handle pagination
+  const paginate = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
+
   // Popup state
   const [isOpen, setIsOpen] = useState(false);
   const openPopup = () => {
@@ -115,7 +120,7 @@ function Packages() {
   }
   return (
     <>
-      <Card className="w-full max-h-[80vh] overflow-y-auto">
+      <Card className="w-full lg:max-h-[80vh] lg:overflow-y-auto">
         <CardHeader floated={false} shadow={false} className="rounded-none">
           <div className="flex flex-col md:flex-row items-center w-full h-max py-3 gap-4">
             <div className="w-full md:w-auto flex items-center justify-start gap-2">

@@ -1,6 +1,6 @@
-export async function updateInvoiceLevel2(id, data, token){
+export async function updateInvoiceShadow(id, data, token){
     try {
-        const invoice = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/invoice/update-level-two/${id}`, {
+        const invoice = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/invoice/update-shadow/${id}`, {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",

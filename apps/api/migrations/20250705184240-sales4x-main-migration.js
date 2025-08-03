@@ -1,5 +1,8 @@
 "use strict";
 
+const InvoicePaymentStatus = require("../utils/enums/invoiceStatuses");
+const UserRole = require("../utils/enums/userRoles");
+
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
@@ -38,8 +41,16 @@ module.exports = {
       fax: { type: STRING, allowNull: true },
       defaultMargin: { type: FLOAT, allowNull: true },
       termsAndConditions: { type: TEXT, allowNull: true },
-      createdAt: { type: DATE, allowNull: false },
-      updatedAt: { type: DATE, allowNull: false },
+      createdAt: {
+        type: DATE,
+        allowNull: false,
+        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+      },
+      updatedAt: {
+        type: DATE,
+        allowNull: false,
+        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+      },
     });
 
     await queryInterface.createTable("customers", {
@@ -57,9 +68,27 @@ module.exports = {
       licenseNo: { type: STRING, allowNull: true },
       notes: { type: TEXT, allowNull: true },
       taxable: { type: BOOLEAN, allowNull: false },
-      BusinessId: { type: UUID, allowNull: false },
-      createdAt: { type: DATE, allowNull: false },
-      updatedAt: { type: DATE, allowNull: false },
+      isActive: { type: BOOLEAN, allowNull: false, defaultValue: true },
+      BusinessId: {
+        type: UUID,
+        allowNull: false,
+        references: {
+          model: "businesses",
+          key: "id",
+        },
+        onDelete: "CASCADE",
+        onUpdate: "RESTRICT",
+      },
+      createdAt: {
+        type: DATE,
+        allowNull: false,
+        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+      },
+      updatedAt: {
+        type: DATE,
+        allowNull: false,
+        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+      },
     });
 
     await queryInterface.createTable("addresses", {
@@ -73,9 +102,26 @@ module.exports = {
       city: { type: STRING, allowNull: true },
       state: { type: STRING, allowNull: true },
       zipcode: { type: INTEGER, allowNull: true },
-      CustomerId: { type: UUID, allowNull: false },
-      createdAt: { type: DATE, allowNull: false },
-      updatedAt: { type: DATE, allowNull: false },
+      CustomerId: {
+        type: UUID,
+        allowNull: false,
+        references: {
+          model: "customers",
+          key: "id",
+        },
+        onDelete: "CASCADE",
+        onUpdate: "RESTRICT",
+      },
+      createdAt: {
+        type: DATE,
+        allowNull: false,
+        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+      },
+      updatedAt: {
+        type: DATE,
+        allowNull: false,
+        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+      },
     });
 
     await queryInterface.createTable("appointments", {
@@ -91,9 +137,26 @@ module.exports = {
       startDateTime: { type: DATE, allowNull: false },
       endDateTime: { type: DATE, allowNull: false },
       sendEmail: { type: BOOLEAN, allowNull: false },
-      BusinessId: { type: UUID, allowNull: false },
-      createdAt: { type: DATE, allowNull: false },
-      updatedAt: { type: DATE, allowNull: false },
+      BusinessId: {
+        type: UUID,
+        allowNull: false,
+        references: {
+          model: "businesses",
+          key: "id",
+        },
+        onDelete: "CASCADE",
+        onUpdate: "RESTRICT",
+      },
+      createdAt: {
+        type: DATE,
+        allowNull: false,
+        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+      },
+      updatedAt: {
+        type: DATE,
+        allowNull: false,
+        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+      },
     });
 
     await queryInterface.createTable("customer_vehicles", {
@@ -112,9 +175,26 @@ module.exports = {
       vinNo: { type: STRING, allowNull: true },
       color: { type: STRING, allowNull: true },
       notes: { type: TEXT, allowNull: true },
-      CustomerId: { type: UUID, allowNull: false },
-      createdAt: { type: DATE, allowNull: false },
-      updatedAt: { type: DATE, allowNull: false },
+      CustomerId: {
+        type: UUID,
+        allowNull: false,
+        references: {
+          model: "customers",
+          key: "id",
+        },
+        onDelete: "CASCADE",
+        onUpdate: "RESTRICT",
+      },
+      createdAt: {
+        type: DATE,
+        allowNull: false,
+        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+      },
+      updatedAt: {
+        type: DATE,
+        allowNull: false,
+        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+      },
     });
 
     await queryInterface.createTable("invoices", {
@@ -139,17 +219,34 @@ module.exports = {
         defaultValue: 0,
       },
       paymentStatus: {
-        type: ENUM("UNPAID", "PARTIALLY_PAID", "PAID", "REFUNDED", "VOID"),
+        type: ENUM(
+          InvoicePaymentStatus.PAID,
+          InvoicePaymentStatus.PARTIALLY_PAID,
+          InvoicePaymentStatus.UNPAID,
+          InvoicePaymentStatus.VOIDED,
+          InvoicePaymentStatus.REFUNDED
+        ),
         allowNull: false,
-        defaultValue: "UNPAID",
+        defaultValue: InvoicePaymentStatus.UNPAID,
       },
       paidAmount: {
         type: FLOAT,
         allowNull: false,
         defaultValue: 0,
       },
-      notes: STRING,
-      comments: STRING,
+      isArchived: {
+        type: Sequelize.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+      },
+      notes: {
+        type: STRING,
+        allowNull: true,
+      },
+      comments: {
+        type: STRING,
+        allowNull: true,
+      },
       manufactureWarranty: {
         type: BOOLEAN,
         allowNull: false,
@@ -183,17 +280,43 @@ module.exports = {
       CustomerId: {
         type: UUID,
         allowNull: false,
+        references: {
+          model: "customers",
+          key: "id",
+        },
+        onDelete: "RESTRICT",
+        onUpdate: "RESTRICT",
       },
       CustomerVehicleId: {
         type: UUID,
         allowNull: false,
+        references: {
+          model: "customer_vehicles",
+          key: "id",
+        },
+        onDelete: "RESTRICT",
+        onUpdate: "RESTRICT",
       },
       BusinessId: {
         type: UUID,
         allowNull: false,
+        references: {
+          model: "businesses",
+          key: "id",
+        },
+        onDelete: "CASCADE",
+        onUpdate: "RESTRICT",
       },
-      createdAt: DATE,
-      updatedAt: DATE,
+      createdAt: {
+        type: DATE,
+        allowNull: false,
+        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+      },
+      updatedAt: {
+        type: DATE,
+        allowNull: false,
+        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+      },
     });
 
     await queryInterface.createTable("quotations", {
@@ -227,17 +350,43 @@ module.exports = {
       CustomerId: {
         type: UUID,
         allowNull: false,
+        references: {
+          model: "customers",
+          key: "id",
+        },
+        onDelete: "RESTRICT",
+        onUpdate: "RESTRICT",
       },
       CustomerVehicleId: {
         type: UUID,
         allowNull: false,
+        references: {
+          model: "customer_vehicles",
+          key: "id",
+        },
+        onDelete: "RESTRICT",
+        onUpdate: "RESTRICT",
       },
       BusinessId: {
         type: UUID,
         allowNull: false,
+        references: {
+          model: "businesses",
+          key: "id",
+        },
+        onDelete: "CASCADE",
+        onUpdate: "RESTRICT",
       },
-      createdAt: DATE,
-      updatedAt: DATE,
+      createdAt: {
+        type: DATE,
+        allowNull: false,
+        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+      },
+      updatedAt: {
+        type: DATE,
+        allowNull: false,
+        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+      },
     });
 
     await queryInterface.createTable("workorders", {
@@ -271,17 +420,73 @@ module.exports = {
       CustomerId: {
         type: UUID,
         allowNull: false,
+        references: {
+          model: "customers",
+          key: "id",
+        },
+        onDelete: "RESTRICT",
+        onUpdate: "RESTRICT",
       },
       CustomerVehicleId: {
         type: UUID,
         allowNull: false,
+        references: {
+          model: "customer_vehicles",
+          key: "id",
+        },
+        onDelete: "RESTRICT",
       },
       BusinessId: {
         type: UUID,
         allowNull: false,
+        references: {
+          model: "businesses",
+          key: "id",
+        },
+        onDelete: "CASCADE",
+        onUpdate: "RESTRICT",
       },
-      createdAt: DATE,
-      updatedAt: DATE,
+      createdAt: {
+        type: DATE,
+        allowNull: false,
+        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+      },
+      updatedAt: {
+        type: DATE,
+        allowNull: false,
+        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+      },
+    });
+
+    await queryInterface.createTable("product_categories", {
+      id: {
+        type: UUID,
+        primaryKey: true,
+        allowNull: false,
+        defaultValue: UUIDV4,
+      },
+      name: { type: STRING, allowNull: false },
+      description: STRING,
+      BusinessId: {
+        type: UUID,
+        allowNull: false,
+        references: {
+          model: "businesses",
+          key: "id",
+        },
+        onDelete: "CASCADE",
+        onUpdate: "RESTRICT",
+      },
+      createdAt: {
+        type: DATE,
+        allowNull: false,
+        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+      },
+      updatedAt: {
+        type: DATE,
+        allowNull: false,
+        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+      },
     });
 
     await queryInterface.createTable("products", {
@@ -315,13 +520,33 @@ module.exports = {
       BusinessId: {
         type: UUID,
         allowNull: false,
+        references: {
+          model: "businesses",
+          key: "id",
+        },
+        onDelete: "CASCADE",
+        onUpdate: "RESTRICT",
       },
       CategoryId: {
         type: UUID,
         allowNull: false,
+        references: {
+          model: "product_categories",
+          key: "id",
+        },
+        onDelete: "CASCADE",
+        onUpdate: "RESTRICT",
       },
-      createdAt: DATE,
-      updatedAt: DATE,
+      createdAt: {
+        type: DATE,
+        allowNull: false,
+        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+      },
+      updatedAt: {
+        type: DATE,
+        allowNull: false,
+        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+      },
     });
 
     await queryInterface.createTable("taxes", {
@@ -348,9 +573,26 @@ module.exports = {
         allowNull: false,
         defaultValue: false,
       },
-      BusinessId: { type: UUID, allowNull: false },
-      createdAt: DATE,
-      updatedAt: DATE,
+      BusinessId: {
+        type: UUID,
+        allowNull: false,
+        references: {
+          model: "businesses",
+          key: "id",
+        },
+        onDelete: "CASCADE",
+        onUpdate: "RESTRICT",
+      },
+      createdAt: {
+        type: DATE,
+        allowNull: false,
+        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+      },
+      updatedAt: {
+        type: DATE,
+        allowNull: false,
+        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+      },
     });
 
     await queryInterface.createTable("users", {
@@ -377,13 +619,45 @@ module.exports = {
         allowNull: false,
       },
       role: {
-        type: STRING,
+        type: ENUM(
+          UserRole.SUPER_ADMIN,
+          UserRole.ADMIN,
+          UserRole.USER,
+          UserRole.MANAGER,
+          UserRole.CASHIER,
+          UserRole.SALESMAN
+        ),
         allowNull: false,
+        defaultValue: UserRole.USER,
       },
-      dob: DATEONLY,
-      BusinessId: UUID,
-      createdAt: DATE,
-      updatedAt: DATE,
+      phone: {
+        type: STRING,
+        allowNull: true,
+      },
+      dob: {
+        type: DATEONLY,
+        allowNull: true,
+      },
+      BusinessId: {
+        type: UUID,
+        allowNull: true,
+        references: {
+          model: "businesses",
+          key: "id",
+        },
+        onDelete: "CASCADE",
+        onUpdate: "RESTRICT",
+      },
+      createdAt: {
+        type: DATE,
+        allowNull: false,
+        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+      },
+      updatedAt: {
+        type: DATE,
+        allowNull: false,
+        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+      },
     });
 
     await queryInterface.createTable("vehicles", {
@@ -395,8 +669,16 @@ module.exports = {
       },
       make: { type: STRING, allowNull: false },
       model: { type: STRING, allowNull: false },
-      createdAt: DATE,
-      updatedAt: DATE,
+      createdAt: {
+        type: DATE,
+        allowNull: false,
+        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+      },
+      updatedAt: {
+        type: DATE,
+        allowNull: false,
+        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+      },
     });
 
     await queryInterface.createTable("permissions", {
@@ -408,8 +690,16 @@ module.exports = {
       },
       name: { type: STRING, allowNull: false },
       description: STRING,
-      createdAt: DATE,
-      updatedAt: DATE,
+      createdAt: {
+        type: DATE,
+        allowNull: false,
+        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+      },
+      updatedAt: {
+        type: DATE,
+        allowNull: false,
+        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+      },
     });
 
     await queryInterface.createTable("user_permission", {
@@ -438,10 +728,12 @@ module.exports = {
       createdAt: {
         type: DATE,
         allowNull: false,
+        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
       },
       updatedAt: {
         type: DATE,
         allowNull: false,
+        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
       },
     });
 
@@ -456,9 +748,25 @@ module.exports = {
       paidAmount: { type: FLOAT, allowNull: false },
       paymentMethod: { type: STRING, allowNull: false },
       cardNumber: STRING,
-      InvoiceId: { type: UUID, allowNull: false },
-      createdAt: DATE,
-      updatedAt: DATE,
+      InvoiceId: {
+        type: UUID,
+        allowNull: false,
+        references: {
+          model: "invoices",
+          key: "id",
+        },
+        onDelete: "CASCADE",
+      },
+      createdAt: {
+        type: DATE,
+        allowNull: false,
+        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+      },
+      updatedAt: {
+        type: DATE,
+        allowNull: false,
+        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+      },
     });
 
     await queryInterface.createTable("packages", {
@@ -470,38 +778,93 @@ module.exports = {
       },
       name: { type: STRING, allowNull: false },
       description: STRING,
-      BusinessId: { type: UUID, allowNull: false },
-      createdAt: DATE,
-      updatedAt: DATE,
+      BusinessId: {
+        type: UUID,
+        allowNull: false,
+        references: {
+          model: "businesses",
+          key: "id",
+        },
+        onDelete: "CASCADE",
+        onUpdate: "RESTRICT",
+      },
+      createdAt: {
+        type: DATE,
+        allowNull: false,
+        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+      },
+      updatedAt: {
+        type: DATE,
+        allowNull: false,
+        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+      },
     });
 
     await queryInterface.createTable("package_product", {
-      PackageId: { type: UUID, primaryKey: true, allowNull: false },
-      ProductId: { type: UUID, primaryKey: true, allowNull: false },
-      quantity: { type: INTEGER, allowNull: false },
-      createdAt: DATE,
-      updatedAt: DATE,
-    });
-
-    await queryInterface.createTable("product_tax", {
-      ProductId: { type: UUID, primaryKey: true, allowNull: false },
-      TaxId: { type: UUID, primaryKey: true, allowNull: false },
-      createdAt: DATE,
-      updatedAt: DATE,
-    });
-
-    await queryInterface.createTable("product_categories", {
-      id: {
+      PackageId: {
         type: UUID,
         primaryKey: true,
         allowNull: false,
-        defaultValue: UUIDV4,
+        references: {
+          model: "packages",
+          key: "id",
+        },
+        onDelete: "CASCADE",
       },
-      name: { type: STRING, allowNull: false },
-      description: STRING,
-      BusinessId: { type: UUID, allowNull: false },
-      createdAt: DATE,
-      updatedAt: DATE,
+      ProductId: {
+        type: UUID,
+        primaryKey: true,
+        allowNull: false,
+        references: {
+          model: "products",
+          key: "id",
+        },
+        onDelete: "CASCADE",
+      },
+      quantity: { type: INTEGER, allowNull: false },
+      createdAt: {
+        type: DATE,
+        allowNull: false,
+        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+      },
+      updatedAt: {
+        type: DATE,
+        allowNull: false,
+        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+      },
+    });
+
+    await queryInterface.createTable("product_tax", {
+      ProductId: {
+        type: UUID,
+        primaryKey: true,
+        allowNull: false,
+        references: {
+          model: "products",
+          key: "id",
+        },
+        onDelete: "CASCADE",
+      },
+      TaxId: {
+        type: UUID,
+        primaryKey: true,
+        allowNull: false,
+        references: {
+          model: "taxes",
+          key: "id",
+        },
+        onDelete: "CASCADE",
+      },
+      createdAt: {
+        type: DATE,
+        allowNull: false,
+        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+      },
+      updatedAt: {
+        type: DATE,
+        allowNull: false,
+        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+      },
     });
 
     await queryInterface.createTable("invoice_audits", {
@@ -511,8 +874,23 @@ module.exports = {
         primaryKey: true,
         defaultValue: UUIDV4,
       },
-      invoiceId: { type: UUID, allowNull: false },
-      userId: { type: UUID, allowNull: false },
+      invoiceId: {
+        type: UUID,
+        allowNull: false,
+        references: {
+          model: "invoices",
+          key: "id",
+        },
+        onDelete: "CASCADE",
+        onUpdate: "RESTRICT",
+      },
+      userId: {
+        type: UUID,
+        allowNull: false,
+        references: { model: "users", key: "id" },
+        onDelete: "CASCADE",
+        onUpdate: "RESTRICT",
+      },
       fieldName: { type: STRING, allowNull: false },
       oldValue: TEXT,
       newValue: TEXT,
@@ -529,8 +907,16 @@ module.exports = {
         allowNull: false,
       },
       timestamp: { type: DATE },
-      createdAt: DATE,
-      updatedAt: DATE,
+      createdAt: {
+        type: DATE,
+        allowNull: false,
+        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+      },
+      updatedAt: {
+        type: DATE,
+        allowNull: false,
+        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+      },
     });
 
     await queryInterface.createTable("invoice_product", {
@@ -538,30 +924,114 @@ module.exports = {
       description: { type: STRING, allowNull: true, defaultValue: "" },
       price: { type: FLOAT, allowNull: false, defaultValue: 0 },
       replacement_reminder_date: { type: DATE, allowNull: true },
-      ProductId: { type: UUID, primaryKey: true, allowNull: false },
-      InvoiceId: { type: UUID, primaryKey: true, allowNull: false },
-      createdAt: DATE,
-      updatedAt: DATE,
+      ProductId: {
+        type: UUID,
+        primaryKey: true,
+        allowNull: false,
+        references: {
+          model: "products",
+          key: "id",
+        },
+        onDelete: "CASCADE",
+        onUpdate: "RESTRICT",
+      },
+      InvoiceId: {
+        type: UUID,
+        primaryKey: true,
+        allowNull: false,
+        references: {
+          model: "invoices",
+          key: "id",
+        },
+        onDelete: "CASCADE",
+        onUpdate: "RESTRICT",
+      },
+      createdAt: {
+        type: DATE,
+        allowNull: false,
+        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+      },
+      updatedAt: {
+        type: DATE,
+        allowNull: false,
+        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+      },
     });
 
     await queryInterface.createTable("quotation_product", {
       quantity: { type: INTEGER, allowNull: false, defaultValue: 1 },
       description: { type: STRING, allowNull: true, defaultValue: "" },
       price: { type: FLOAT, allowNull: false, defaultValue: 0 },
-      ProductId: { type: UUID, primaryKey: true, allowNull: false },
-      QuotationId: { type: UUID, primaryKey: true, allowNull: false },
-      createdAt: DATE,
-      updatedAt: DATE,
+      ProductId: {
+        type: UUID,
+        primaryKey: true,
+        allowNull: false,
+        references: {
+          model: "products",
+          key: "id",
+        },
+        onDelete: "CASCADE",
+        onUpdate: "RESTRICT",
+      },
+      QuotationId: {
+        type: UUID,
+        primaryKey: true,
+        allowNull: false,
+        references: {
+          model: "quotations",
+          key: "id",
+        },
+        onDelete: "CASCADE",
+        onUpdate: "RESTRICT",
+      },
+      createdAt: {
+        type: DATE,
+        allowNull: false,
+        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+      },
+      updatedAt: {
+        type: DATE,
+        allowNull: false,
+        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+      },
     });
 
     await queryInterface.createTable("workorder_product", {
       quantity: { type: INTEGER, allowNull: false, defaultValue: 1 },
       description: { type: STRING, allowNull: true, defaultValue: "" },
       price: { type: FLOAT, allowNull: false, defaultValue: 0 },
-      ProductId: { type: UUID, primaryKey: true, allowNull: false },
-      WorkOrderId: { type: UUID, primaryKey: true, allowNull: false },
-      createdAt: DATE,
-      updatedAt: DATE,
+      ProductId: {
+        type: UUID,
+        primaryKey: true,
+        allowNull: false,
+        references: {
+          model: "products",
+          key: "id",
+        },
+        onDelete: "CASCADE",
+        onUpdate: "RESTRICT",
+      },
+      WorkOrderId: {
+        type: UUID,
+        primaryKey: true,
+        allowNull: false,
+        references: {
+          model: "workorders",
+          key: "id",
+        },
+        onDelete: "CASCADE",
+        onUpdate: "RESTRICT",
+      },
+      createdAt: {
+        type: DATE,
+        allowNull: false,
+        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+      },
+      updatedAt: {
+        type: DATE,
+        allowNull: false,
+        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+      },
     });
 
     await queryInterface.createTable("inspections", {
@@ -572,20 +1042,220 @@ module.exports = {
         defaultValue: UUIDV4,
       },
       data: { type: JSON, allowNull: false },
-      CustomerId: { type: UUID, allowNull: true },
-      CustomerVehicleId: { type: UUID, allowNull: true },
-      createdAt: DATE,
-      updatedAt: DATE,
+      CustomerId: {
+        type: UUID,
+        allowNull: false,
+        references: {
+          model: "customers",
+          key: "id",
+        },
+        onDelete: "CASCADE",
+        onUpdate: "RESTRICT",
+      },
+      CustomerVehicleId: {
+        type: UUID,
+        allowNull: true,
+        references: {
+          model: "customer_vehicles",
+          key: "id",
+        },
+        onDelete: "CASCADE",
+        onUpdate: "RESTRICT",
+      },
+      createdAt: {
+        type: DATE,
+        allowNull: false,
+        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+      },
+      updatedAt: {
+        type: DATE,
+        allowNull: false,
+        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+      },
+    });
+
+    await queryInterface.createTable("archived_invoices", {
+      id: {
+        type: Sequelize.UUID,
+        defaultValue: Sequelize.UUIDV4,
+        primaryKey: true,
+        allowNull: false,
+      },
+      originalInvoiceId: {
+        type: Sequelize.UUID,
+        allowNull: false,
+      },
+      invoiceNumber: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        defaultValue: 0,
+      },
+      totalAmount: {
+        type: Sequelize.FLOAT,
+        allowNull: false,
+      },
+      discount: {
+        type: Sequelize.FLOAT,
+        allowNull: false,
+        defaultValue: 0,
+      },
+      paymentStatus: {
+        type: Sequelize.ENUM(
+          "UNPAID",
+          "PARTIALLY_PAID",
+          "PAID",
+          "REFUNDED",
+          "VOIDED"
+        ),
+        allowNull: false,
+        defaultValue: "UNPAID",
+      },
+      paidAmount: {
+        type: Sequelize.FLOAT,
+        allowNull: false,
+        defaultValue: 0,
+      },
+      notes: {
+        type: Sequelize.STRING,
+        allowNull: true,
+      },
+      comments: {
+        type: Sequelize.STRING,
+        allowNull: true,
+      },
+      manufactureWarranty: {
+        type: Sequelize.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+      },
+      roadHazardWarranty: {
+        type: Sequelize.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+      },
+      flatRepairWarranty: {
+        type: Sequelize.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+      },
+      rotationWarranty: {
+        type: Sequelize.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+      },
+      noWarranty: {
+        type: Sequelize.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+      },
+      balanceWarranty: {
+        type: Sequelize.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+      },
+      payments: {
+        type: Sequelize.TEXT,
+        allowNull: true,
+      },
+      CustomerId: {
+        type: Sequelize.UUID,
+        allowNull: false,
+        references: {
+          model: "customers",
+          key: "id",
+        },
+        onDelete: "RESTRICT",
+        onUpdate: "RESTRICT",
+      },
+      CustomerVehicleId: {
+        type: Sequelize.UUID,
+        allowNull: false,
+        references: {
+          model: "customer_vehicles",
+          key: "id",
+        },
+        onDelete: "RESTRICT",
+        onUpdate: "RESTRICT",
+      },
+      BusinessId: {
+        type: UUID,
+        allowNull: false,
+        references: {
+          model: "businesses",
+          key: "id",
+        },
+        onDelete: "CASCADE",
+        onUpdate: "RESTRICT",
+      },
+      createdAt: {
+        type: Sequelize.DATE,
+        allowNull: false,
+        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+      },
+      updatedAt: {
+        type: Sequelize.DATE,
+        allowNull: false,
+        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+      },
+    });
+
+    // create archived invoice & products junction table
+    await queryInterface.createTable("archived_invoice_product", {
+      ArchivedInvoiceId: {
+        type: Sequelize.UUID,
+        allowNull: false,
+        primaryKey: true,
+        references: {
+          model: "archived_invoices",
+          key: "id",
+        },
+        onDelete: "CASCADE",
+        onUpdate: "RESTRICT",
+      },
+      ProductId: {
+        type: Sequelize.UUID,
+        allowNull: false,
+        primaryKey: true,
+        references: {
+          model: "products",
+          key: "id",
+        },
+        onDelete: "CASCADE",
+        onUpdate: "RESTRICT",
+      },
+      quantity: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        defaultValue: 1,
+      },
+      description: {
+        type: Sequelize.STRING,
+        allowNull: true,
+        defaultValue: "",
+      },
+      price: { type: Sequelize.FLOAT, allowNull: false, defaultValue: 0 },
+      replacement_reminder_date: { type: Sequelize.DATE, allowNull: true },
+      createdAt: {
+        type: Sequelize.DATE,
+        allowNull: false,
+        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+      },
+      updatedAt: {
+        type: Sequelize.DATE,
+        allowNull: false,
+        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+      },
     });
   },
 
   async down(queryInterface, Sequelize) {
+    await queryInterface.dropTable("archived_invoice_product");
+    await queryInterface.dropTable("archived_invoices");
     await queryInterface.dropTable("inspections");
     await queryInterface.dropTable("workorder_product");
     await queryInterface.dropTable("quotation_product");
     await queryInterface.dropTable("invoice_product");
     await queryInterface.dropTable("invoice_audits");
-    await queryInterface.dropTable("product_categories");
     await queryInterface.dropTable("product_tax");
     await queryInterface.dropTable("package_product");
     await queryInterface.dropTable("packages");
@@ -595,8 +1265,9 @@ module.exports = {
     await queryInterface.dropTable("vehicles");
     await queryInterface.dropTable("users");
     await queryInterface.dropTable("taxes");
-    await queryInterface.dropTable("products");
     await queryInterface.dropTable("workorders");
+    await queryInterface.dropTable("product_categories");
+    await queryInterface.dropTable("products");
     await queryInterface.dropTable("quotations");
     await queryInterface.dropTable("invoices");
     await queryInterface.dropTable("customer_vehicles");

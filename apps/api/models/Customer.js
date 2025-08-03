@@ -42,12 +42,17 @@ module.exports = (sequelize) => {
         type: DataTypes.BOOLEAN,
         allowNull: false,
       },
+      isActive: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: true,
+      },
       BusinessId: {
         type: DataTypes.UUID,
         allowNull: false,
         onDelete: "RESTRICT",
         onUpdate: "CASCADE",
-      }
+      },
     },
     {
       tableName: "customers",
@@ -59,10 +64,10 @@ module.exports = (sequelize) => {
       as: "Business",
     });
 
-    Customer.hasOne(models.Address, { 
-        onDelete: 'CASCADE',
-        foreignKey: 'CustomerId',
-        as: 'Address',
+    Customer.hasOne(models.Address, {
+      onDelete: "CASCADE",
+      foreignKey: "CustomerId",
+      as: "Address",
     });
 
     Customer.hasMany(models.Invoice, {
@@ -82,9 +87,9 @@ module.exports = (sequelize) => {
     });
 
     Customer.hasMany(models.CustomerVehicle, {
-        onDelete: 'CASCADE',
-        foreignKey: 'CustomerId',
-        as: 'Vehicle',
+      onDelete: "CASCADE",
+      foreignKey: "CustomerId",
+      as: "Vehicle",
     });
   };
 

@@ -13,7 +13,7 @@ const {
   ArchivedInvoice,
 } = require("../models");
 const fetchUser = require("../middlewares/fetchUser");
-const { Op } = require("sequelize");
+const { Op, fn, where, col } = require("sequelize");
 const moment = require("moment-timezone");
 
 const {
@@ -27,8 +27,14 @@ router.get("/", fetchUser, async (req, res) => {
     const { page = 1, limit = 10, filters } = req.query;
 
     const parsedFilters = JSON.parse(filters);
-    const { CustomerId, paymentStatus, startDate, endDate, isReport, order } =
-      parsedFilters;
+    const {
+      CustomerDetails,
+      paymentStatus,
+      startDate,
+      endDate,
+      isReport,
+      order,
+    } = parsedFilters;
     const selectedFilters = {};
 
     if (Array.isArray(paymentStatus) && paymentStatus.length > 0) {
@@ -36,7 +42,28 @@ router.get("/", fetchUser, async (req, res) => {
         [Op.in]: paymentStatus,
       };
     }
-    if (CustomerId) selectedFilters.CustomerId = CustomerId;
+
+    let customers = null;
+    if (
+      CustomerDetails?.name &&
+      typeof CustomerDetails.name === "string" &&
+      CustomerDetails.name.trim() !== ""
+    ) {
+      customers = await Customer.findAll({
+        where: where(fn("CONCAT", col("firstName"), " ", col("lastName")), {
+          [Op.like]: `%${CustomerDetails.name.trim()}%`,
+        }),
+        attributes: ["id"],
+      });
+    }
+
+    if (customers && customers.length > 0) {
+      const customerIds = customers.map((customer) => customer.id);
+      selectedFilters.CustomerId = { [Op.in]: customerIds };
+    } else if (CustomerDetails?.name?.trim()) {
+      // Name was entered but no customers found — force empty result
+      selectedFilters.CustomerId = { [Op.in]: [null] };
+    }
 
     if (startDate && endDate) {
       const parsedStartDate = moment.utc(startDate).toDate();
@@ -362,7 +389,7 @@ router.put("/update/:id", fetchUser, async (req, res) => {
   }
 });
 
-router.put("/update-level-two/:id", fetchUser, async (req, res) => {
+router.put("/update-shadow/:id", fetchUser, async (req, res) => {
   try {
     let payload = req.body;
     const invoice = await Invoice.findByPk(req.params.id, {
@@ -451,6 +478,7 @@ router.put("/update-level-two/:id", fetchUser, async (req, res) => {
 
     // Update invoice data
     payload.invoiceData.paidAmount = payload.invoiceData.totalAmount;
+    payload.invoiceData.isArchived = true;
     if (payload.invoiceData) {
       await invoice.update(payload.invoiceData);
     }
@@ -490,7 +518,7 @@ router.put("/update-level-two/:id", fetchUser, async (req, res) => {
     }
 
     // Update Payments
-    if (paymentDifference !== 0) {
+    if (parseInt(paymentDifference) !== 0) {
       // Delete all cash payments
       await Promise.all(
         invoice.Payments.filter(
@@ -572,10 +600,10 @@ router.delete("/delete/:id/:status", fetchUser, async (req, res) => {
           .json({ message: "Error deleting invoice payments" });
       }
     } else {
-      if (invoice.paymentStatus === "Refund") {
+      if (invoice.paymentStatus === "REFUNDED") {
         return res.status(409).json({ message: "Invoice already refunded" });
       }
-      if (invoice.paymentStatus === "Void") {
+      if (invoice.paymentStatus === "VOIDED") {
         return res.status(409).json({ message: "Invoice already voided" });
       }
     }

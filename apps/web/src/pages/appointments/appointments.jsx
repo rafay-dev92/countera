@@ -205,29 +205,30 @@ export function Appointments() {
                             </Tooltip>
                         </div>
                     </div>
-
-                    <div className="grid grid-cols-7">
-                        {weekDaysList.map((day, index) => (
-                            <div key={index} className="p-1 font-semibold border border-gray-300 h-8 text-center bg-blue-gray-50/50">
-                                {day}
-                            </div>
-                        ))}
-                        {Array.from({ length: loopTotal }, (_, i) => {
-                            return (
-                                <div key={i} className="p-1 border border-gray-300 h-28 max-h-44">
-                                    {i >= firstDay && i < firstDay + monthDays ?
-                                        <>
-                                            <div className=''>{i - (firstDay - 1)}</div>
-                                            <div className="mt-1 py-2 h-20 overflow-y-auto">
-                                                {renderAppointmentsForDate(format(new Date(currentYear, currentMonth, 0).setDate(i - (firstDay - 1)), 'yyyy-MM-dd'))}
-                                            </div>
-                                        </>
-                                        :
-                                        ''
-                                    }
+                    <div className='w-full h-full overflow-x-auto overflow-y-hidden'>
+                        <div className="grid grid-cols-7 min-w-[700px]">
+                            {weekDaysList.map((day, index) => (
+                                <div key={index} className="p-1 font-semibold border border-gray-300 h-8 text-center bg-gray-100 text-sm flex items-center justify-center">
+                                    {day}
                                 </div>
-                            );
-                        })}
+                            ))}
+                            {Array.from({ length: loopTotal }, (_, i) => {
+                                return (
+                                    <div key={i} className="p-1 border border-gray-300 h-28 max-h-44">
+                                        {i >= firstDay && i < firstDay + monthDays ?
+                                            <>
+                                                <div className=''>{i - (firstDay - 1)}</div>
+                                                <div className="mt-1 py-2 h-20 overflow-y-auto">
+                                                    {renderAppointmentsForDate(format(new Date(currentYear, currentMonth, 0).setDate(i - (firstDay - 1)), 'yyyy-MM-dd'))}
+                                                </div>
+                                            </>
+                                            :
+                                            ''
+                                        }
+                                    </div>
+                                );
+                            })}
+                        </div>
                     </div>
                 </div>
             </CardBody>

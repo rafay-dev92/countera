@@ -327,7 +327,7 @@ const CustomerForm = ({ open, close, selectedItem, setSelectedItem, refresh, set
 
   return (
     <>
-      <Dialog className="bg-transparent p-0" open={open}>
+      <Dialog className="bg-transparent shadow-none p-0" open={open}>
         {open && (
           <form onSubmit={handleSubmit} autoComplete="new">
             <div className="fixed -top-16 lg:top-0 left-0 w-full h-full flex justify-center items-center">

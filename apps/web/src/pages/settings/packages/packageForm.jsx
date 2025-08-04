@@ -333,12 +333,12 @@ function PackageForm({ packageData, setPackageData, open, close, refresh, setRef
 
     return (
         <>
-            <Dialog open={open} >
+            <Dialog className="bg-transparent shadow-none p-0" open={open} >
                 {open && (
                     <form autoComplete="new">
-                        <div className="flex justify-center w-full">
-                            {/* <div className="fixed top-0 left-0 w-full h-full flex items-center justify-center"> */}
-                            <div className="bg-white rounded shadow-xl w-full">
+                        {/* <div className="flex justify-center w-full"> */}
+                        <div className="fixed -top-16 lg:top-0 left-0 w-full h-full flex justify-center items-center">
+                            <div className="bg-white rounded shadow-xl">
                                 <div className="flex items-center justify-between sticky bg-gradient-to-br from-gray-800 to-gray-700">
                                     <div></div>
                                     <div className="text-white text-center text-lg">
@@ -365,27 +365,27 @@ function PackageForm({ packageData, setPackageData, open, close, refresh, setRef
                                         </svg>
                                     </button>
                                 </div>
-
-                                <div className="p-6 space-y-4 w-full overflow-y-auto">
-                                    <div className="flex items-center justify-start space-x-4 w-full">
-                                        <div className="w-full">
-                                            <label className="font-bold">Name</label> <br />
-                                            <input
-                                                className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
-                                                id="name"
-                                                name="name"
-                                                type="text"
-                                                value={values.name}
-                                                onChange={handleChange}
-                                                onBlur={handleBlur}
-                                            />
-                                            {(touched.name && errors.name) ? (
-                                                <div className="text-red-500">
-                                                    {errors.name}
-                                                </div>
-                                            ) : (<div></div>)}
-                                        </div>
-                                        {/* <div className="basis-[50%]">
+                                <div className="2xl:w-[50vw] xl:w-[60vw] lg:w-[70vw] md:w-[80vw] w-[90vw] p-3 max-h-[70vh] lg:max-h-[80vh] overflow-y-auto">
+                                    <div className="space-y-4 w-full overflow-y-auto ">
+                                        <div className="flex items-center justify-between space-x-4 ">
+                                            <div className="w-full">
+                                                <label className="font-bold">Name</label> <br />
+                                                <input
+                                                    className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
+                                                    id="name"
+                                                    name="name"
+                                                    type="text"
+                                                    value={values.name}
+                                                    onChange={handleChange}
+                                                    onBlur={handleBlur}
+                                                />
+                                                {(touched.name && errors.name) ? (
+                                                    <div className="text-red-500">
+                                                        {errors.name}
+                                                    </div>
+                                                ) : (<div></div>)}
+                                            </div>
+                                            {/* <div className="basis-[50%]">
                                                 <label className="font-bold">Quantity Of Each</label> <br />
                                                 <input
                                                     className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
@@ -403,115 +403,116 @@ function PackageForm({ packageData, setPackageData, open, close, refresh, setRef
                                                     </div>
                                                 ) : (<div></div>)}
                                             </div> */}
-                                    </div>
-                                    <div className="flex items-center justify-start space-x-4">
-                                        <div className="w-full">
-                                            <label className="font-bold">Description</label> <br />
-                                            <textarea
-                                                rows={3}
-                                                className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
-                                                id="description"
-                                                name="description"
-                                                type="text"
-                                                value={values.description}
-                                                onChange={handleChange}
-                                                onBlur={handleBlur}
-                                            />
                                         </div>
-                                    </div>
+                                        <div className="flex items-center justify-start space-x-4">
+                                            <div className="w-full">
+                                                <label className="font-bold">Description</label> <br />
+                                                <textarea
+                                                    rows={3}
+                                                    className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
+                                                    id="description"
+                                                    name="description"
+                                                    type="text"
+                                                    value={values.description}
+                                                    onChange={handleChange}
+                                                    onBlur={handleBlur}
+                                                />
+                                            </div>
+                                        </div>
 
-                                    {/* Products */}
-                                    <div className="overflow-x-auto my-2">
-                                        <table className="w-full border border-collapse table-auto mb-16">
-                                            <thead className="bg-gray-100">
-                                                <tr>
-                                                    <th className="p-2 border">Product</th>
-                                                    <th className="p-2 border">Quantity</th>
-                                                    <th className="p-2 border">Price</th>
-                                                    <th className="p-2 border">Total</th>
-                                                    <th className="p-2 border">Action</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody className="max-h-48 overflow-y-auto">
-                                                {selectedProducts.map((item, index) => (
-                                                    <tr key={index} className="text-center">
-                                                        <td className="p-2 border ">
-                                                            {index !== (selectedProducts.length - 1) ? (
-                                                                <div className="w-80 h-[30%] mx-2 p-1 rounded-md text-gray-600 text-base text-left focus:outline-none "
-                                                                >{item.name}</div>
-                                                            ) : (
-                                                                <div ref={productInputRef} className="relative w-fit">
-                                                                    <input
-                                                                        className="lg:w-80 h-[97%] m-2 p-2 border border-gray-300 rounded-md text-gray-600 font-small"
-                                                                        id="product"
-                                                                        name="product"
-                                                                        type="text"
-                                                                        value={selectedProducts[index].name || productSearchText}
-                                                                        onClick={() => { setShowProductSuggestions(true) }}
-                                                                        onChange={(e) => setProductSearchText(e.target.value)}
-                                                                        onBlur={handleBlur}
-                                                                        autoComplete="off"
-                                                                        placeholder="Select Product"
-                                                                    />
-                                                                    {showProductSuggestions && (
-                                                                        <ul className="fixed bg-white border border-gray-300 overflow-y-auto min-h-24 max-h-48 lg:w-80"
-                                                                            style={{
-                                                                                top: productsPosition.top,
-                                                                                left: productsPosition.left,
-                                                                                width: productsPosition.width,
-                                                                                zIndex: 9999,
-                                                                            }}
-                                                                        >
-                                                                            {products?.length > 0 ? (
-                                                                                products
-                                                                                    .filter(product => product.name.toLowerCase().includes(productSearchText.toLowerCase()))
-                                                                                    .map((product) => (
-                                                                                        <li
-                                                                                            key={product.id}
-                                                                                            className="cursor-pointer px-2 py-1 hover:bg-gray-200"
-                                                                                            onClick={() => {
-                                                                                                handleProductChange(index, item.quantity, product.id);
-                                                                                                setShowProductSuggestions(false);
-                                                                                            }}
-                                                                                        >
-                                                                                            {product.name}
-                                                                                        </li>
-                                                                                    ))
-                                                                            ) : (
-                                                                                <li className="px-2 py-1">No Product</li>
-                                                                            )}
-                                                                        </ul>
-                                                                    )}
-                                                                </div>
-                                                            )}
-                                                        </td>
-
-                                                        <td className="p-2 border">
-                                                            <input
-                                                                type="number"
-                                                                min={1}
-                                                                className="w-14 p-2 border rounded-md text-black text-center"
-                                                                value={item.quantity}
-                                                                onChange={(e) => handleQuantityChange(index, e.target.value)}
-                                                            />
-                                                        </td>
-
-                                                        <td className="w-24 p-2 border">{item.price}</td>
-
-                                                        <td className="p-2 border">{calculateAmount(item.price, item.quantity)}</td>
-
-                                                        <td className="p-2 border">
-                                                            {index !== (selectedProducts.length - 1) && (
-                                                                <XCircleIcon
-                                                                    onClick={() => handleRemoveProduct(index)}
-                                                                    className="h-5 w-5 mx-auto text-gray-600 hover:text-red-500 cursor-pointer"
-                                                                />
-                                                            )}
-                                                        </td>
+                                        {/* Products */}
+                                        <div className="overflow-x-auto my-2">
+                                            <table className="w-full border border-collapse table-auto mb-16">
+                                                <thead className="bg-gray-100">
+                                                    <tr>
+                                                        <th className="p-2 border">Product</th>
+                                                        <th className="p-2 border">Quantity</th>
+                                                        <th className="p-2 border">Price</th>
+                                                        <th className="p-2 border">Total</th>
+                                                        <th className="p-2 border">Action</th>
                                                     </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
+                                                </thead>
+                                                <tbody className="max-h-48 overflow-y-auto">
+                                                    {selectedProducts.map((item, index) => (
+                                                        <tr key={index} className="text-center">
+                                                            <td className="p-2 border ">
+                                                                {index !== (selectedProducts.length - 1) ? (
+                                                                    <div className="w-80 h-[30%] mx-2 p-1 rounded-md text-gray-600 text-base text-left focus:outline-none "
+                                                                    >{item.name}</div>
+                                                                ) : (
+                                                                    <div ref={productInputRef} className="relative w-fit">
+                                                                        <input
+                                                                            className="lg:w-80 h-[97%] m-2 p-2 border border-gray-300 rounded-md text-gray-600 font-small"
+                                                                            id="product"
+                                                                            name="product"
+                                                                            type="text"
+                                                                            value={selectedProducts[index].name || productSearchText}
+                                                                            onClick={() => { setShowProductSuggestions(true) }}
+                                                                            onChange={(e) => setProductSearchText(e.target.value)}
+                                                                            onBlur={handleBlur}
+                                                                            autoComplete="off"
+                                                                            placeholder="Select Product"
+                                                                        />
+                                                                        {showProductSuggestions && (
+                                                                            <ul className="fixed bg-white border border-gray-300 overflow-y-auto min-h-24 max-h-48 lg:w-80"
+                                                                                style={{
+                                                                                    top: productsPosition.top,
+                                                                                    left: productsPosition.left,
+                                                                                    width: productsPosition.width,
+                                                                                    zIndex: 9999,
+                                                                                }}
+                                                                            >
+                                                                                {products?.length > 0 ? (
+                                                                                    products
+                                                                                        .filter(product => product.name.toLowerCase().includes(productSearchText.toLowerCase()))
+                                                                                        .map((product) => (
+                                                                                            <li
+                                                                                                key={product.id}
+                                                                                                className="cursor-pointer px-2 py-1 hover:bg-gray-200"
+                                                                                                onClick={() => {
+                                                                                                    handleProductChange(index, item.quantity, product.id);
+                                                                                                    setShowProductSuggestions(false);
+                                                                                                }}
+                                                                                            >
+                                                                                                {product.name}
+                                                                                            </li>
+                                                                                        ))
+                                                                                ) : (
+                                                                                    <li className="px-2 py-1">No Product</li>
+                                                                                )}
+                                                                            </ul>
+                                                                        )}
+                                                                    </div>
+                                                                )}
+                                                            </td>
+
+                                                            <td className="p-2 border">
+                                                                <input
+                                                                    type="number"
+                                                                    min={1}
+                                                                    className="w-14 p-2 border rounded-md text-black text-center"
+                                                                    value={item.quantity}
+                                                                    onChange={(e) => handleQuantityChange(index, e.target.value)}
+                                                                />
+                                                            </td>
+
+                                                            <td className="w-24 p-2 border">{item.price}</td>
+
+                                                            <td className="p-2 border">{calculateAmount(item.price, item.quantity)}</td>
+
+                                                            <td className="p-2 border">
+                                                                {index !== (selectedProducts.length - 1) && (
+                                                                    <XCircleIcon
+                                                                        onClick={() => handleRemoveProduct(index)}
+                                                                        className="h-5 w-5 mx-auto text-gray-600 hover:text-red-500 cursor-pointer"
+                                                                    />
+                                                                )}
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
                                     </div>
                                 </div>
                                 <div className="flex items-center justify-end space-x-2 sticky bg-gradient-to-br from-gray-800 to-gray-700">
@@ -537,8 +538,8 @@ function PackageForm({ packageData, setPackageData, open, close, refresh, setRef
                                     </button>
                                 </div>
                             </div>
-                            {/* </div> */}
                         </div>
+                        {/* </div> */}
                     </form>
                 )}
             </Dialog>

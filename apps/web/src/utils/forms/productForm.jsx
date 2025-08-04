@@ -215,10 +215,10 @@ const ProductForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
   } = formikProps;
 
   return (
-    <Dialog open={state.product?.openForm}>
+    <Dialog className="bg-transparent shadow-none p-0" open={state.product?.openForm}>
       {state.product?.openForm && (
         <form onSubmit={handleSubmit} autoComplete="new">
-          <div className="">
+          <div className="fixed -top-16 lg:top-0 left-0 w-full h-full flex justify-center items-center">
             <div className="bg-white rounded shadow-xl">
               <div className="flex items-center justify-between sticky bg-gradient-to-br from-gray-800 to-gray-700">
                 <div></div>
@@ -247,7 +247,7 @@ const ProductForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
                 </button>
               </div>
 
-              <div className="p-6 overflow-y-auto max-h-[80vh]">
+              <div className="2xl:w-[50vw] xl:w-[60vw] lg:w-[70vw] md:w-[80vw] w-[90vw] p-6 space-y-3 max-h-[70vh] lg:max-h-[80vh] overflow-y-auto">
                 <div className="flex justify-between space-x-4 mb-3 w-full">
                   <div className="basis-[50%]">
                     <label className="font-bold">Image</label>

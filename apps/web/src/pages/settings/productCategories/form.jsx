@@ -18,7 +18,7 @@ const Form = ({ open, close, selectedItem, setSelectedItem, refresh, setRefresh 
     const { state } = State();
     const [isLoading, setIsLoading] = useState(false);
     const [edit, setEdit] = useState(false);
-   
+
     const showToastMessage = (type, message) => {
         if (type === 'success') {
             toast.success(message)
@@ -39,16 +39,16 @@ const Form = ({ open, close, selectedItem, setSelectedItem, refresh, setRefresh 
     };
 
     useEffect(() => {
-        if (selectedItem) {            
+        if (selectedItem) {
             formikProps.setValues(selectedItem);
             setEdit(true);
         }
     }, [selectedItem]);
 
-    const onSubmit = async (values) => {       
+    const onSubmit = async (values) => {
         setIsLoading(true);
         try {
-            const data = { ...values, BusinessId: state.business.id}
+            const data = { ...values, BusinessId: state.business.id }
             console.log(data)
             if (!edit) {
                 // saving category data            
@@ -126,7 +126,7 @@ const Form = ({ open, close, selectedItem, setSelectedItem, refresh, setRefresh 
             <Dialog open={open} size="xs">
                 {open && (
                     <form onSubmit={handleSubmit} autoComplete="new">
-                        <div className="">
+                        <div className="fixed -top-16 lg:top-0 left-0 w-full h-full flex justify-center items-center">
                             <div className="bg-white rounded shadow-xl">
                                 <div className="flex items-center justify-between sticky bg-gradient-to-br from-gray-800 to-gray-700">
                                     <div></div>
@@ -156,34 +156,34 @@ const Form = ({ open, close, selectedItem, setSelectedItem, refresh, setRefresh 
                                 </div>
 
                                 <div className="p-6 space-y-4">
-                                        <div>
-                                            <label className="font-bold">Name</label> <br />
-                                            <input
-                                                className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
-                                                id="name"
-                                                name="name"
-                                                type="text"
-                                                value={values.name}
-                                                onChange={handleChange}
-                                                onBlur={handleBlur}
-                                            />
-                                            {(touched.name && errors.name) ? (
-                                                <div className="text-red-500">
-                                                    {errors.name}
-                                                </div>
-                                            ) : (<div></div>)}
-                                        </div>
-                                        <div className="w-full">
-                                            <label className="font-bold">Description</label> <br />
-                                            <textarea
-                                                className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
-                                                id="description"
-                                                name="description"
-                                                value={values.description}
-                                                onChange={handleChange}
-                                                onBlur={handleBlur}
-                                            />                                            
-                                        </div>                                                                                                                                             
+                                    <div>
+                                        <label className="font-bold">Name</label> <br />
+                                        <input
+                                            className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
+                                            id="name"
+                                            name="name"
+                                            type="text"
+                                            value={values.name}
+                                            onChange={handleChange}
+                                            onBlur={handleBlur}
+                                        />
+                                        {(touched.name && errors.name) ? (
+                                            <div className="text-red-500">
+                                                {errors.name}
+                                            </div>
+                                        ) : (<div></div>)}
+                                    </div>
+                                    <div className="w-full">
+                                        <label className="font-bold">Description</label> <br />
+                                        <textarea
+                                            className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
+                                            id="description"
+                                            name="description"
+                                            value={values.description}
+                                            onChange={handleChange}
+                                            onBlur={handleBlur}
+                                        />
+                                    </div>
                                 </div>
                                 <div className="flex items-center justify-end space-x-2 sticky bg-gradient-to-br from-gray-800 to-gray-700">
                                     <button

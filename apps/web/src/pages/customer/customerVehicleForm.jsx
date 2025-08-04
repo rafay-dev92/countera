@@ -216,10 +216,10 @@ const CustomerVehicleForm = ({ open, close, refresh, setRefresh, CustomerId, get
     }, []);
 
     return (
-        <Dialog open={open} size="lg">
+        <Dialog className="bg-transparent p-0" open={open} size="lg">
             {open && (
                 <form onSubmit={handleSubmit} autoComplete="new" >
-                    <div className="fixed top-0 left-0 w-full h-full flex items-center justify-center">
+                    <div className="fixed -top-16 lg:top-0 left-0 w-full h-full flex justify-center items-center">
                         <div className="bg-white rounded shadow-xl">
                             <div className="flex items-center justify-between sticky bg-gradient-to-br from-gray-800 to-gray-700">
                                 <div></div>
@@ -248,7 +248,7 @@ const CustomerVehicleForm = ({ open, close, refresh, setRefresh, CustomerId, get
                                 </button>
                             </div>
 
-                            <div className="p-6 2xl:w-[40vw] xl:w-[60vw] lg:w-[80vw] w-[80vw] max-h-[80vh] overflow-y-auto">
+                            <div className="p-6 2xl:w-[40vw] xl:w-[60vw] lg:w-[80vw] w-[80vw] max-h-[70vh] lg:max-h-[80vh] overflow-y-auto">
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                                     <div className="col-span-1">
                                         <label className="font-bold">Year</label> <br />

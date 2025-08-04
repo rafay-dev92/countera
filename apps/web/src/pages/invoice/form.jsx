@@ -775,7 +775,7 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
 
   return (
     <>
-      <Dialog className="bg-transparent p-0" open={state?.invoice?.openForm} size="lg">
+      <Dialog className="bg-transparent shadow-none p-0" open={state?.invoice?.openForm} size="lg">
         {state?.invoice?.openForm && (
           <form onSubmit={handleSubmit}>
             <div className="flex justify-center items-start lg:items-center min-h-screen lg:max-h-[90vh]">

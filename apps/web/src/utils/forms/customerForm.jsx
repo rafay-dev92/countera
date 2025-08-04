@@ -327,10 +327,10 @@ const CustomerForm = ({ open, close, selectedItem, setSelectedItem, refresh, set
 
   return (
     <>
-      <Dialog open={open}>
+      <Dialog className="bg-transparent p-0" open={open}>
         {open && (
           <form onSubmit={handleSubmit} autoComplete="new">
-            <div className="flex justify-center w-full ">
+            <div className="fixed -top-16 lg:top-0 left-0 w-full h-full flex justify-center items-center">
               <div className="bg-white rounded shadow-xl">
                 <div className="flex items-center justify-between sticky bg-gradient-to-br from-gray-800 to-gray-700">
                   <div></div>
@@ -359,7 +359,7 @@ const CustomerForm = ({ open, close, selectedItem, setSelectedItem, refresh, set
                   </button>
                 </div>
 
-                <div className="2xl:w-[50vw] xl:w-[60vw] lg:w-[70vw] md:w-[80vw] w-[90vw] p-6 space-y-3 max-h-[80vh] overflow-y-auto">
+                <div className="2xl:w-[50vw] xl:w-[60vw] lg:w-[70vw] md:w-[80vw] w-[90vw] p-6 space-y-3 max-h-[70vh] lg:max-h-[80vh] overflow-y-auto">
                   <div className="flex justify-around">
                     <div className="flex space-x-4">
                       <label className="flex items-center cursor-pointer">

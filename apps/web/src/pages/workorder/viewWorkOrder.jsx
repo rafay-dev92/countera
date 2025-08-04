@@ -244,7 +244,7 @@ const ViewWorkOrder = ({ workOrderData, setWorkOrderData, componentRef, appliedT
 
     return (
         <>
-            <div className="h-[90vh] overflow-hidden">
+            <div className="h-[70vh] lg:h-[90vh] overflow-hidden">
                 <div className="hidden lg:flex h-full">
                     <div className="flex-1 overflow-x-auto overflow-y-auto p-2">
                         <div className="max-h-[88vh] mx-auto">

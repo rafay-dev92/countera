@@ -650,10 +650,10 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedWorkOrder, setS
 
   return (
     <>
-      <Dialog open={open} size="lg">
+      <Dialog className="bg-transparent shadow-none p-0" open={open} size="lg">
         {open && (
           <form onSubmit={handleSubmit}>
-            <div className="flex justify-center items-center h-[90vh]">
+            <div className="flex justify-center items-start lg:items-center min-h-screen lg:max-h-[90vh]">
               <div className="bg-white rounded shadow-xl w-[95vw] md:w-[95vw] lg:w-[95vw] xl:w-[80vw] 2xl:w-[65vw] mx-auto">
                 <div className="flex items-center justify-between sticky bg-gradient-to-br from-gray-800 to-gray-700">
                   <div></div>
@@ -685,7 +685,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedWorkOrder, setS
                 {state?.workorder?.isViewOpen ? (
                   <ViewWorkOrder workOrderData={printWorkOrder} setWorkOrderData={setPrintWorkOrder} componentRef={componentRef} appliedTaxes={appliedTaxes} setEdit={setEdit} close={handleClose} />
                 ) : (
-                  <div className="overflow-y-auto h-[85vh] overflow-x-hidden p-4 md:p-6 w-[95vw] md:w-[95vw] lg:w-[95vw] xl:w-[80vw] 2xl:w-[65vw]">
+                  <div className="overflow-y-auto h-[65vh] lg:h-[85vh] overflow-x-hidden p-4 md:p-6 w-[95vw] md:w-[95vw] lg:w-[95vw] xl:w-[80vw] 2xl:w-[65vw]">
                     <div className="flex flex-col lg:flex-row gap-4">
                       <div className="w-full lg:w-[35%]">
                         <div className="relative mb-7" ref={customerInputRef}>
@@ -1167,11 +1167,11 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedWorkOrder, setS
                       </table>
                     </div>
 
-                    <div className="flex">
-                      <div className="basis-[50%] max-w-[50%]">
+                    <div className="flex flex-col lg:flex-row gap-4">
+                      <div className="lg:basis-[50%] lg:max-w-[50%]">
                       </div>
 
-                      <div className="basis-[50%] max-w-[50%] border my-4 font-normal">
+                      <div className="lg:basis-[50%] lg:max-w-[50%] border my-4 font-normal">
                         <div className="flex items-center justify-between px-2 lg:p-2 border-b-2 bg-yellow-300">
                           <div className="text-md">
                             <Input

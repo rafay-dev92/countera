@@ -79,7 +79,7 @@ const printView = React.forwardRef(({ view, workOrderData, appliedTaxes }, ref) 
                                     {workOrderData?.Customer?.Address?.city ? workOrderData.Customer.Address.city : ''}
                                     {workOrderData?.Customer?.Address?.city && workOrderData?.Customer?.Address?.state ? ', ' : ''}
                                     {workOrderData?.Customer?.Address?.state ? workOrderData.Customer.Address.state : ''}
-                                    {(workOrderData?.Customer?.Address?.city || workOrderData?.Customer?.Address?.state) && quotationData?.Customer?.Address?.zipcode ? ', ' : ''}
+                                    {(workOrderData?.Customer?.Address?.city || workOrderData?.Customer?.Address?.state) && workOrderData?.Customer?.Address?.zipcode ? ', ' : ''}
                                     {workOrderData?.Customer?.Address?.zipcode ? workOrderData.Customer.Address.zipcode : ''}
                                 </span>
                             )}

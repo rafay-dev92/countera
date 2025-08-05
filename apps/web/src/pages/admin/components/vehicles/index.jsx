@@ -205,7 +205,7 @@ export default function Vehicles() {
                     expectedColumns.every(col => actualColumns.includes(col));
 
                 if (!hasOnlyExpectedColumns) {
-                    toast.error("CSV must have exactly two columns: Make and Model");
+                    toast.error("File must be a CSV and have exactly two columns: Make and Model");
                     setLoading(false);
                     return;
                 }
@@ -223,18 +223,20 @@ export default function Vehicles() {
                     }
                 } catch (err) {
                     toast.error(err.message)
+                } finally {
+                    setLoading(false);
                 }
             },
             error: function (err) {
                 toast.error(err.message)
             }
         });
-        setLoading(false)
+
     };
 
-    if (loading) {
-        return <Spinner className="mx-auto mt-[30vh] h-10 w-10 text-gray-900/50" />
-    }
+    // if (loading) {
+    //     return <Spinner className="mx-auto mt-[30vh] h-10 w-10 text-gray-900/50" />
+    // }
     return (
         <>
             <Card className="w-full max-h-[80vh] overflow-y-auto">
@@ -299,87 +301,92 @@ export default function Vehicles() {
                     </div>
                     {/* </div> */}
                 </CardHeader>
-
-                <CardBody className="p-2 overflow-auto px-0">
-                    <table className="w-full min-w-max table-auto text-left">
-                        <thead>
-                            <tr>
-                                <th className="border-y border-blue-gray-100 bg-blue-gray-50/50 p-4">
-                                    <label className="inline-flex items-center">
-                                        <input
-                                            type="checkbox"
-                                            className="form-checkbox text-blue-500 rounded border-gray-400 shadow-sm ml-1"
-                                            checked={selectAll}
-                                            onChange={handleSelectAll}
-                                        />
-                                    </label>
-                                </th>
-                                {TABLE_HEAD.map((head) => (
-                                    <th
-                                        key={head}
-                                        className="border-y border-blue-gray-100 bg-blue-gray-50/50 p-4"
-                                    >
-                                        <Typography
-                                            variant="small"
-                                            color="blue-gray"
-                                            className="font-normal leading-none opacity-70"
-                                        >
-                                            {head}
-                                        </Typography>
-                                    </th>
-                                ))}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {currentItems.map(({ make, model, id }, index) => {
-                                const isLast = index === currentItems.length - 1;
-                                const classes = isLast
-                                    ? "p-4"
-                                    : "p-4 border-b border-blue-gray-50";
-                                const isChecked = selectedRows.includes(index);
-                                return (
-                                    <tr key={id}>
-                                        <td className={classes}>
+                {loading ? (
+                    <div className="flex justify-center items-center h-64">
+                        <Spinner className="h-10 w-10 text-gray-900/50" />
+                    </div>
+                ) : (
+                    <CardBody className="p-2 overflow-auto px-0">
+                        <table className="w-full min-w-max table-auto text-left">
+                            <thead>
+                                <tr>
+                                    <th className="border-y border-blue-gray-100 bg-blue-gray-50/50 p-4">
+                                        <label className="inline-flex items-center">
                                             <input
                                                 type="checkbox"
-                                                checked={isChecked}
-                                                onChange={() => handleRowSelect(index)}
+                                                className="form-checkbox text-blue-500 rounded border-gray-400 shadow-sm ml-1"
+                                                checked={selectAll}
+                                                onChange={handleSelectAll}
                                             />
-                                        </td>
-                                        <td className={classes}>
-                                            <Link
-                                                to="#"
-                                                className="text-blue-gray font-normal hover:underline"
-                                                onClick={() => {
-                                                    handleEditVehicle(index);
-                                                }}
-                                            >
-                                                {make}
-                                            </Link>
-                                        </td>
-                                        <td className={classes}>
+                                        </label>
+                                    </th>
+                                    {TABLE_HEAD.map((head) => (
+                                        <th
+                                            key={head}
+                                            className="border-y border-blue-gray-100 bg-blue-gray-50/50 p-4"
+                                        >
                                             <Typography
                                                 variant="small"
                                                 color="blue-gray"
-                                                className="font-normal"
+                                                className="font-normal leading-none opacity-70"
                                             >
-                                                {model}
+                                                {head}
                                             </Typography>
-                                        </td>
-                                        <td className={classes}>
-                                            <Tooltip content="Delete Vehicle">
-                                                <IconButton variant="text" onClick={() => handleDelete(id)}>
-                                                    <TrashIcon className="h-6 w-6 text-red-600" />
-                                                </IconButton>
-                                            </Tooltip>
-                                        </td>
-                                    </tr>
-                                );
-                            },
-                            )}
-                        </tbody>
-                    </table>
-                </CardBody>
+                                        </th>
+                                    ))}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {currentItems.map(({ make, model, id }, index) => {
+                                    const isLast = index === currentItems.length - 1;
+                                    const classes = isLast
+                                        ? "p-4"
+                                        : "p-4 border-b border-blue-gray-50";
+                                    const isChecked = selectedRows.includes(index);
+                                    return (
+                                        <tr key={id}>
+                                            <td className={classes}>
+                                                <input
+                                                    type="checkbox"
+                                                    checked={isChecked}
+                                                    onChange={() => handleRowSelect(index)}
+                                                />
+                                            </td>
+                                            <td className={classes}>
+                                                <Link
+                                                    to="#"
+                                                    className="text-blue-gray font-normal hover:underline"
+                                                    onClick={() => {
+                                                        handleEditVehicle(index);
+                                                    }}
+                                                >
+                                                    {make}
+                                                </Link>
+                                            </td>
+                                            <td className={classes}>
+                                                <Typography
+                                                    variant="small"
+                                                    color="blue-gray"
+                                                    className="font-normal"
+                                                >
+                                                    {model}
+                                                </Typography>
+                                            </td>
+                                            <td className={classes}>
+                                                <Tooltip content="Delete Vehicle">
+                                                    <IconButton variant="text" onClick={() => handleDelete(id)}>
+                                                        <TrashIcon className="h-6 w-6 text-red-600" />
+                                                    </IconButton>
+                                                </Tooltip>
+                                            </td>
+                                        </tr>
+                                    );
+                                },
+                                )}
+                            </tbody>
+                        </table>
+                    </CardBody>
+                )}
                 <CardFooter className="flex items-center justify-between border-t border-blue-gray-50 p-4">
                     <Typography variant="small" color="blue-gray" className="font-normal">
                         Showing {indexOfFirstItem + 1} - {Math.min(indexOfLastItem, filteredRows.length)} of {filteredRows.length}

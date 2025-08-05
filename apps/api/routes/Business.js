@@ -14,6 +14,7 @@ const multer = require("multer");
 const { Op, Transaction } = require("sequelize");
 const getDefaultPackages = require("../data/default-packages");
 const getDefaultProducts = require("../data/default-products");
+const defaultTandCs = require("../data/defaultT&Cs");
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -53,9 +54,10 @@ router.get("/:id", fetchUser, async (req, res) => {
 
 router.post("/create", upload.single("logo"), async (req, res) => {
   try {
+    const businessData = req.body;
     const transaction = await sequelize.transaction();
 
-    const { name, email, licenseNumber, permitNumber } = req.body;
+    const { name, email, licenseNumber, permitNumber } = businessData;
     const existingBusiness = await Business.findOne({
       where: {
         [Op.or]: [
@@ -72,10 +74,12 @@ router.post("/create", upload.single("logo"), async (req, res) => {
     }
     if (req.file) {
       const imageUrl = `${process.env.STATIC_FILE_BASE_URL}/business/${req.file.filename}`;
-      req.body.logo = imageUrl;
+      businessData.logo = imageUrl;
     }
 
-    const newBusiness = await Business.create(req.body, {
+    businessData.termsAndConditions = defaultTandCs();
+
+    const newBusiness = await Business.create(businessData, {
       transaction,
     });
 

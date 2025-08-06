@@ -380,12 +380,12 @@ export function Inspection() {
                                                         variant="static"
                                                         type="text"
                                                         placeholder="Enter details..."
-                                                        className="px-2 py-1 w-full focus:outline-none focus:border-blue-500 text-xs"                                                    
+                                                        className="px-2 py-1 w-full focus:outline-none focus:border-blue-500 text-xs min-w-[100px]"                                                    
                                                         value={values.data[idx].detail}
                                                         onChange={e => setFieldValue(`data[${idx}].detail`, e.target.value)}
                                                     />
                                                 </td> : <td></td>}
-                                            <td className="hidden print:inline text-sm text-gray-900 my-auto"><span>{item.detail}</span></td>
+                                            <td className="hidden print:inline min-w-[100px] text-sm text-gray-900 my-auto"><span>{item.detail}</span></td>
                                             {!item.category ?
                                                 <td className="border-b border-gray-200 px-4 py-2 print:hidden">
                                                     <TrashIcon id='delButton' onClick={() => handleDel(idx)} className='h-4 w-4 text-red-500 cursor-pointer' />
@@ -403,7 +403,7 @@ export function Inspection() {
                                 </div>
                             </div>
                         </div>
-                        <div className="flex justify-end gap-3 m-4">
+                        <div className="flex lg:justify-end justify-start gap-3 m-4">
                             {!state.inspection?.selected && (
                                 <Button onClick={() => onSubmit(values)} type='submit' className="bg-blue-800 hover:bg-blue-900 text-white font-bold py-2 px-4 rounded">
                                     Submit & Print

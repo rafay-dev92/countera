@@ -10,16 +10,32 @@ module.exports = {
     const now = new Date();
 
     const permissionNames = [
-      "IS_SUPER_ADMIN",
-      "IS_ADMIN",
-      "IS_MANAGER",
-      "IS_USER",
-      "IS_VIEWER",
-      "IS_SALESMAN",
-      "IS_CASHIER",
-      "CAN_DELETE",
-      "CAN_ADD",
-      "CAN_UPDATE",
+      "invoice:create",
+      "invoice:read",
+      "invoice:update",
+      "invoice:delete",
+      "customer:create",
+      "customer:read",
+      "customer:update",
+      "customer:delete",
+      "product:create",
+      "product:read",
+      "product:update",
+      "product:delete",
+      "quote:create",
+      "quote:read",
+      "quote:update",
+      "quote:delete",
+      "workorder:create",
+      "workorder:read",
+      "workorder:update",
+      "workorder:delete",
+      "appointment:create",
+      "appointment:read",
+      "appointment:update",
+      "appointment:delete",
+      "setting:view",
+      "setting:update",
     ];
 
     const permissionMap = {};
@@ -62,14 +78,15 @@ module.exports = {
     ]);
 
     // Assign IS_SUPER_ADMIN permission to super admin
-    await queryInterface.bulkInsert("user_permission", [
-      {
-        UserId: superAdminId,
-        PermissionId: permissionMap["IS_SUPER_ADMIN"],
-        createdAt: now,
-        updatedAt: now,
-      },
-    ]);
+    // Assign all permissions to super admin
+    const userPermissions = permissionNames.map((perm) => ({
+      UserId: superAdminId,
+      PermissionId: permissionMap[perm],
+      createdAt: now,
+      updatedAt: now,
+    }));
+
+    await queryInterface.bulkInsert("user_permission", userPermissions);
   },
 
   async down(queryInterface) {

@@ -81,6 +81,12 @@ router.post(
         return res.status(400).json({ message: "BusinessId is required" });
       }
 
+      if (req.body.permissions && req.body.permissions.length === 0) {
+        return res
+          .status(400)
+          .json({ message: "At least one permission is required" });
+      }
+
       const existingUser = await User.findOne({
         where: {
           email: userData.email,
@@ -185,10 +191,7 @@ router.post("/businesses-for-email", async (req, res) => {
       },
     });
 
-    if (
-      users.length > 0 &&
-      (users[0].role === UserRole.SUPER_ADMIN)
-    ) {
+    if (users.length > 0 && users[0].role === UserRole.SUPER_ADMIN) {
       return res.json({ isSuperAdmin: true });
     }
 

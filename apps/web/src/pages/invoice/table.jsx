@@ -109,52 +109,42 @@ export function Invoice() {
   }, [debouncedTerm]);
 
   const handleEditInvoice = (index) => {
-    if (state.userInfo.Permission.some(obj => obj.name === "CAN_EDIT_INVOICE" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
-      const selected = invoices[index];
-      dispatch({ type: 'SET_INVOICE_VIEW_DATA', payload: selected });
-      openPopup();
-    }
-    else {
-      toast.error("You are not allowed to update an invoice");
-    }
+    const selected = invoices[index];
+    dispatch({ type: 'SET_INVOICE_VIEW_DATA', payload: selected });
+    openPopup();
   };
 
   const handleDeleteInvoice = async (index) => {
-    if (state.userInfo.Permission.some(obj => obj.name === "CAN_DELETE" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
 
-      const result = await confirmDeleteInvoice();
-      if (result === null) return;
+    const result = await confirmDeleteInvoice();
+    if (result === null) return;
 
-      const invoice = invoices[index];
-      if (invoice.paymentStatus === "VOIDED" || invoice.paymentStatus === "REFUNDED") {
-        showToastMessage('info', `Invoice is already ${invoice.paymentStatus.toLowerCase()}`);
-        return;
-      }
-
-      const updatedInvoices = invoices?.filter((_, rowIndex) => rowIndex !== index);
-      const deletedInvoiceId = invoices?.find((_, rowIndex) => rowIndex === index);
-      setInvoices(updatedInvoices);
-      try {
-        const res = await softDelInvoice(deletedInvoiceId['id'], result, state.userToken);
-        // const res = await delInvoice(deletedInvoiceId['id'], state.userToken);
-        const invoice = await res.json();
-        if (res.status === 200) {
-          showToastMessage('success', invoice.message)
-        }
-        else if (res.status === 404) {
-          showToastMessage('info', invoice.message)
-        }
-        else if (res.status === 409) {
-          showToastMessage('info', invoice.message)
-        }
-        setRefresh(!refresh);
-      } catch (error) {
-        console.log(error)
-        showToastMessage('error', "Something went wrong");
-      }
+    const invoice = invoices[index];
+    if (invoice.paymentStatus === "VOIDED" || invoice.paymentStatus === "REFUNDED") {
+      showToastMessage('info', `Invoice is already ${invoice.paymentStatus.toLowerCase()}`);
+      return;
     }
-    else {
-      toast.error("You are not allowed to delete an invoice");
+
+    const updatedInvoices = invoices?.filter((_, rowIndex) => rowIndex !== index);
+    const deletedInvoiceId = invoices?.find((_, rowIndex) => rowIndex === index);
+    setInvoices(updatedInvoices);
+    try {
+      const res = await softDelInvoice(deletedInvoiceId['id'], result, state.userToken);
+      // const res = await delInvoice(deletedInvoiceId['id'], state.userToken);
+      const invoice = await res.json();
+      if (res.status === 200) {
+        showToastMessage('success', invoice.message)
+      }
+      else if (res.status === 404) {
+        showToastMessage('info', invoice.message)
+      }
+      else if (res.status === 409) {
+        showToastMessage('info', invoice.message)
+      }
+      setRefresh(!refresh);
+    } catch (error) {
+      console.log(error)
+      showToastMessage('error', "Something went wrong");
     }
   };
 
@@ -189,13 +179,8 @@ export function Invoice() {
   };
 
   const openPopup = () => {
-    if (state.userInfo.Permission.some(obj => obj.name === "CAN_CREATE_INVOICE" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
-      dispatch({ type: 'SET_INVOICE_FORM', payload: true });
-      setIsFormOpen(true);
-    }
-    else {
-      toast.error("You are not allowed to add an invoice");
-    }
+    dispatch({ type: 'SET_INVOICE_FORM', payload: true });
+    setIsFormOpen(true);
   };
 
   const invoiceStatusColors = {

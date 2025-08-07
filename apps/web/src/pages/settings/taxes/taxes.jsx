@@ -32,7 +32,7 @@ function Taxes() {
   const paginate = (pageNumber) => {
     setCurrentPage(pageNumber);
   };
-  
+
   // Popup state
   const [isOpen, setIsOpen] = useState(false);
   const openPopup = () => {
@@ -60,41 +60,31 @@ function Taxes() {
   const handleDelete = async (id) => {
     const confirmed = await confirm("Do you really want to delete this tax?");
     if (!confirmed) return;
-    if (state.userInfo.Permission.some(obj => obj.name === "CAN_DELETE" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
-      try {
-        const res = await delTax(id, state.userToken);
-        const tax = await res.json();
-        if (res.status === 200) {
-          toast.success(tax.message)
-        }
-        else if (res.status === 404) {
-          toast.info(tax.message)
-        }
-        else if (res.status === 500) {
-          toast.error("You must delete its foreign key relations first");
-        }
-        setRefresh(!refresh);
-      } catch (error) {
-        console.log(error)
-        showToastMessage('error', "You must delete its foreign key relations first");
+    try {
+      const res = await delTax(id, state.userToken);
+      const tax = await res.json();
+      if (res.status === 200) {
+        toast.success(tax.message)
       }
-    }
-    else {
-      toast.error("You are not allowed to delete a tax");
+      else if (res.status === 404) {
+        toast.info(tax.message)
+      }
+      else if (res.status === 500) {
+        toast.error("You must delete its foreign key relations first");
+      }
+      setRefresh(!refresh);
+    } catch (error) {
+      console.log(error)
+      showToastMessage('error', "You must delete its foreign key relations first");
     }
   };
 
   // Modify handleRowSelect to update the selected item's data
   const handleEditTax = (index) => {
     // Assuming currentItems holds the filtered rows for display
-    if (state.userInfo.Permission.some(obj => obj.name === "CAN_UPDATE" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
-      const selected = currentItems[index];
-      setSelectedItem(selected);
-      openPopup();
-    }
-    else {
-      toast.error("You are not allowed to update a tax");
-    }
+    const selected = currentItems[index];
+    setSelectedItem(selected);
+    openPopup();
   };
 
   const filteredRows = taxes.filter(

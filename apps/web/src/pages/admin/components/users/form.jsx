@@ -11,7 +11,7 @@ import { addUser } from "@/services/addUser";
 import { updateUser } from "@/services/updateUser";
 import { fetchPermissions } from "@/services/fetchPermissions";
 import PermissionForm from "../permissions/form";
-import { userRolesForSelect } from "@/utils/enums/userRoles";
+import { UserRole, userRolesForSelect } from "@/utils/enums/userRoles";
 
 const schema = Yup.object().shape({
     first_name: Yup.string().required("First name is required"),
@@ -74,7 +74,7 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
         try {
             const res = await fetchPermissions(state.userToken);
             const permissions = await res.json();
-            setPermissions(permissions.filter(permission => permission.name !== "IS_SUPER_ADMIN"))
+            setPermissions(permissions)
         } catch (error) {
             toast.error("Something went wrong")
         }
@@ -122,7 +122,9 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
                     showToastMessage('success', user.message)
                 }
                 else if (res.status === 400) {
-                    showToastMessage('error', user.message)
+                    showToastMessage('info', user.message)
+                    setIsLoading(false);
+                    return;
                 }
                 else if (res.status === 409) {
                     showToastMessage('error', user.message)
@@ -155,13 +157,16 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
         }
     };
 
-    const handlePermission = (value, event) => {
-        const isChecked = event.target.checked;
-        if (isChecked) {
-            setSelectPerms([...selectPerms, value]);
-        } else {
-            setSelectPerms(selectPerms.filter(id => id !== value));
-        }
+    const handlePermission = (id, e) => {
+        // const isChecked = e.target.checked;
+        // if (isChecked) {
+        //     setSelectPerms([...selectPerms, value]);
+        // } else {
+        //     setSelectPerms(selectPerms.filter(id => id !== value));
+        // }
+        setSelectPerms(prev =>
+            e.target.checked ? [...prev, id] : prev.filter(pid => pid !== id)
+        );
     }
 
     const clearForm = (formikProps) => {
@@ -214,6 +219,14 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
     //     { value: 'CASHIER', label: 'Cashier' },
     //     { value: 'SALESMAN', label: 'Salesman' },
     // ];
+
+
+    const groupedPermissions = permissions.reduce((acc, perm) => {
+        const [resource, action] = perm.name.split(":");
+        if (!acc[resource]) acc[resource] = [];
+        acc[resource].push({ ...perm, action });
+        return acc;
+    }, {});
 
     return (
         <>
@@ -291,28 +304,31 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
                                             <select
                                                 id="role"
                                                 className="w-56 p-2 border border-gray-400 bg-inherit rounded-md text-gray-600 text-black font-medium"
-                                                label="Select Role"
-                                                animate={{
-                                                    mount: { y: 0 },
-                                                    unmount: { y: 25 },
-                                                }}
                                                 value={values.role}
-                                                onChange={handleChange}
+                                                onChange={(e) => {
+                                                    const selectedRole = e.target.value;
+                                                    handleChange(e);
+                                                    if (selectedRole === UserRole.ADMIN || selectedRole === UserRole.MANAGER) {
+                                                        const allPermissionIds = permissions.map((perm) => perm.id);
+                                                        setSelectPerms(allPermissionIds);
+                                                    } else {
+                                                        setSelectPerms([]);
+                                                    }
+                                                }}
                                                 onBlur={handleBlur}
-                                                size="md"
                                                 required
                                             >
-                                                <option key={''} value={''} disabled selected>Select Role</option>
+                                                <option key={''} value={''} disabled>Select Role</option>
                                                 {userRolesForSelect.map((role) => (
                                                     <option key={role.value} value={role.value}>{role.label}</option>
                                                 ))}
                                             </select>
-                                            {(touched.role && errors.role) ? (
-                                                <div className="text-red-500">
-                                                    {errors.role}
-                                                </div>
-                                            ) : (<div></div>)}
+
+                                            {touched.role && errors.role && (
+                                                <div className="text-red-500">{errors.role}</div>
+                                            )}
                                         </div>
+
 
                                         <div className="basis-[20%]">
                                             <label className="font-bold">DOB</label> <br />
@@ -394,27 +410,63 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
                                     </div>
 
                                     <div className="w-full mt-2">
-                                        <div className="flex items-center gap-1 my-4">
-                                            <label className=" font-bold">Permissions</label>
-                                            <PlusCircleIcon className="w-6 h-6 text-blue-600 cursor-pointer" onClick={openPopup} />
+                                        <div className="flex items-center gap-1 my-2">
+                                            <label className="font-bold">Permissions</label>
+                                            {/* <PlusCircleIcon className="w-6 h-6 text-blue-600 cursor-pointer" onClick={openPopup} /> */}
                                         </div>
-                                        <div className="max-h-24 py-4 overflow-y-auto">
-                                            {permissions &&
-                                                permissions.map((permission) => (
-                                                    <div key={permission.id} className="flex mb-1">
-                                                        <input
-                                                            className="form-checkbox text-indigo-600 transition duration-150 ease-in-out cursor-pointer"
-                                                            type="checkbox"
-                                                            id={`permission-${permission.id}`}
-                                                            value={JSON.stringify(permission)}
-                                                            checked={selectPerms.includes(permission.id)}
-                                                            onChange={(e) => handlePermission(permission.id, e)}
-                                                        />
-                                                        <span className="ml-2 font-normal text-sm" htmlFor={`permission-${permission.id}`}>{permission.name}</span>
+
+                                        <div className="space-y-4 h-56 overflow-y-auto">
+                                            {Object.entries(groupedPermissions).map(([resource, perms]) => {
+                                                const allSelected = perms.every(p => selectPerms.includes(p.id));
+                                                const someSelected = perms.some(p => selectPerms.includes(p.id));
+
+                                                const handleGroupToggle = () => {
+                                                    if (allSelected) {
+                                                        // Uncheck all
+                                                        perms.forEach(p => handlePermission(p.id, { target: { checked: false } }));
+                                                    } else {
+                                                        // Check all
+                                                        perms.forEach(p => handlePermission(p.id, { target: { checked: true } }));
+                                                    }
+                                                };
+
+                                                return (
+                                                    <div key={resource} className="border p-2 rounded shadow-sm bg-gray-50">
+                                                        <div className="flex items-center mb-2">
+                                                            <input
+                                                                type="checkbox"
+                                                                className="form-checkbox text-indigo-600 mr-2"
+                                                                checked={allSelected}
+                                                                ref={el => {
+                                                                    if (el) el.indeterminate = !allSelected && someSelected;
+                                                                }}
+                                                                onChange={handleGroupToggle}
+                                                            />
+                                                            <label className="font-semibold capitalize">{resource}</label>
+                                                        </div>
+
+                                                        <div className="grid grid-cols-2 gap-x-4 gap-y-1 pl-6">
+                                                            {perms.map((permission) => (
+                                                                <div key={permission.id} className="flex items-center">
+                                                                    <input
+                                                                        className="form-checkbox text-indigo-600"
+                                                                        type="checkbox"
+                                                                        id={`permission-${permission.id}`}
+                                                                        checked={selectPerms.includes(permission.id)}
+                                                                        onChange={(e) => handlePermission(permission.id, e)}
+                                                                    />
+                                                                    <label htmlFor={`permission-${permission.id}`} className="ml-2 text-sm capitalize">
+                                                                        {permission.action}
+                                                                    </label>
+                                                                </div>
+                                                            ))}
+                                                        </div>
                                                     </div>
-                                                ))}
+                                                );
+                                            })}
                                         </div>
                                     </div>
+
                                 </div>
                                 <div className="flex items-center justify-end space-x-2 sticky bg-gradient-to-br from-gray-800 to-gray-700">
                                     <button

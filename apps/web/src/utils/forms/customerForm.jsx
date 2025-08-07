@@ -50,10 +50,7 @@ const CustomerForm = ({ open, close, selectedItem, setSelectedItem, refresh, set
   const [isOpen, setIsOpen] = useState(false);
 
   const openPopup = () => {
-    if (state.userInfo.Permission.some(obj => obj.name === "IS_CASHIER" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN"))
-      setIsOpen(true);
-    else
-      toast.error("You are not allowed to add a customer vehicle")
+    setIsOpen(true);
   };
 
   const closePopup = () => {

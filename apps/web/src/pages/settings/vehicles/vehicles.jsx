@@ -42,14 +42,9 @@ export default function Vehicles() {
     // Modify handleRowSelect to update the selected item's data
     const handleEditVehicle = (index) => {
         // Assuming currentItems holds the filtered rows for display
-        if (state.userInfo.Permission.some(obj => obj.name === "CAN_UPDATE" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
-            const selected = currentItems[index];
-            setSelectedItem(selected);
-            openPopup();
-        }
-        else {
-            toast.error("You are not allowed to update a vehicle");
-        }
+        const selected = currentItems[index];
+        setSelectedItem(selected);
+        openPopup();
     };
 
     const showToastMessage = (type, message) => {
@@ -136,27 +131,22 @@ export default function Vehicles() {
     const handleDelete = async (id) => {
         const confirmed = await confirm("Do you really want to delete this vehicle?");
         if (!confirmed) return;
-        if (state.userInfo.Permission.some(obj => obj.name === "CAN_DELETE" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
-            try {
-                const res = await delVehicle(id, state.userToken);
-                const vehicle = await res.json();
-                if (res.status === 200) {
-                    showToastMessage('success', vehicle.message)
-                }
-                else if (res.status === 404) {
-                    showToastMessage('info', vehicle.message)
-                }
-                else if (res.status === 500) {
-                    showToastMessage('error', "You must delete its foreign key relations first");
-                }
-                setRefresh(!refresh);
-            } catch (error) {
-                console.log(error)
+        try {
+            const res = await delVehicle(id, state.userToken);
+            const vehicle = await res.json();
+            if (res.status === 200) {
+                showToastMessage('success', vehicle.message)
+            }
+            else if (res.status === 404) {
+                showToastMessage('info', vehicle.message)
+            }
+            else if (res.status === 500) {
                 showToastMessage('error', "You must delete its foreign key relations first");
             }
-        }
-        else {
-            toast.error("You are not allowed to delete a vehicle");
+            setRefresh(!refresh);
+        } catch (error) {
+            console.log(error)
+            showToastMessage('error', "You must delete its foreign key relations first");
         }
     };
 
@@ -170,12 +160,7 @@ export default function Vehicles() {
     const [isOpen, setIsOpen] = useState(false);
 
     const openPopup = () => {
-        if (state.userInfo.Permission.some(obj => obj.name === "CAN_ADD" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
-            setIsOpen(true);
-        }
-        else {
-            toast.error("You are not allowed to add a vehicle")
-        }
+        setIsOpen(true);
     };
     const closePopup = () => {
         setIsOpen(false);
@@ -226,60 +211,60 @@ export default function Vehicles() {
 
                 <CardBody className="p-2 overflow-auto px-0 w-full">
                     {/* <div className="w-full text-sm"> */}
-                        <table className=" w-full min-w-max table-auto text-left">
-                            <thead>
-                                <tr>
-                                    {TABLE_HEAD.map((head) => (
-                                        <th
-                                            key={head}
-                                            className="border-y border-blue-gray-100 bg-blue-gray-50/50 p-4"
+                    <table className=" w-full min-w-max table-auto text-left">
+                        <thead>
+                            <tr>
+                                {TABLE_HEAD.map((head) => (
+                                    <th
+                                        key={head}
+                                        className="border-y border-blue-gray-100 bg-blue-gray-50/50 p-4"
+                                    >
+                                        <Typography
+                                            variant="small"
+                                            color="blue-gray"
+                                            className="font-normal leading-none opacity-70"
                                         >
+                                            {head}
+                                        </Typography>
+                                    </th>
+                                ))}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {currentItems.map(({ make, model, id }, index) => {
+                                const isLast = index === currentItems.length - 1;
+                                const classes = isLast
+                                    ? "p-2"
+                                    : "p-2 border-b border-blue-gray-50";
+                                const isChecked = selectedRows.includes(index);
+                                return (
+                                    <tr key={id}>
+                                        <td className={classes}>
+                                            <Link
+                                                to="#"
+                                                className="text-blue-gray font-normal hover:underline"
+                                                onClick={() => {
+                                                    handleEditVehicle(index);
+                                                }}
+                                            >
+                                                {make}
+                                            </Link>
+                                        </td>
+                                        <td className={classes}>
                                             <Typography
                                                 variant="small"
                                                 color="blue-gray"
-                                                className="font-normal leading-none opacity-70"
+                                                className="font-normal"
                                             >
-                                                {head}
+                                                {model}
                                             </Typography>
-                                        </th>
-                                    ))}
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {currentItems.map(({ make, model, id }, index) => {
-                                    const isLast = index === currentItems.length - 1;
-                                    const classes = isLast
-                                        ? "p-2"
-                                        : "p-2 border-b border-blue-gray-50";
-                                    const isChecked = selectedRows.includes(index);
-                                    return (
-                                        <tr key={id}>
-                                            <td className={classes}>
-                                                <Link
-                                                    to="#"
-                                                    className="text-blue-gray font-normal hover:underline"
-                                                    onClick={() => {
-                                                        handleEditVehicle(index);
-                                                    }}
-                                                >
-                                                    {make}
-                                                </Link>
-                                            </td>
-                                            <td className={classes}>
-                                                <Typography
-                                                    variant="small"
-                                                    color="blue-gray"
-                                                    className="font-normal"
-                                                >
-                                                    {model}
-                                                </Typography>
-                                            </td>
-                                        </tr>
-                                    );
-                                },
-                                )}
-                            </tbody>
-                        </table>
+                                        </td>
+                                    </tr>
+                                );
+                            },
+                            )}
+                        </tbody>
+                    </table>
                     {/* </div> */}
                 </CardBody>
                 <CardFooter className="flex items-center justify-between border-t border-blue-gray-50 p-4">

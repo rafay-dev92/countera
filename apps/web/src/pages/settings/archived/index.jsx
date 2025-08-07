@@ -67,49 +67,39 @@ function Archived() {
     const handleDelete = async (id) => {
         const confirmed = await confirm("Do you really want to delete this invoice?");
         if (!confirmed) return;
-        if (state.userInfo.Permission.some(obj => obj.name === "CAN_DELETE" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
-            try {
-                const res = await delArchivedInvoice(id, state.userToken);
-                const tax = await res.json();
-                if (res.status === 200) {
-                    toast.success(tax.message)
-                }
-                else if (res.status === 404) {
-                    toast.info(tax.message)
-                }
-                else if (res.status === 500) {
-                    toast.error("You must delete its foreign key relations first");
-                }
-                setRefresh(!refresh);
-            } catch (error) {
-                console.log(error)
-                showToastMessage('error', "You must delete its foreign key relations first");
+        try {
+            const res = await delArchivedInvoice(id, state.userToken);
+            const tax = await res.json();
+            if (res.status === 200) {
+                toast.success(tax.message)
             }
-        }
-        else {
-            toast.error("You are not allowed to delete a tax");
+            else if (res.status === 404) {
+                toast.info(tax.message)
+            }
+            else if (res.status === 500) {
+                toast.error("You must delete its foreign key relations first");
+            }
+            setRefresh(!refresh);
+        } catch (error) {
+            console.log(error)
+            showToastMessage('error', "You must delete its foreign key relations first");
         }
     };
 
     const handleEditInvoice = async (index) => {
         // setLoading(true);
-        if (state.userInfo.Permission.some(obj => obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
-            const selected = filteredRows[index];
-            recalculateTaxes(selected.Products, selected.Customer);
-            setSelectedItem(selected);
+        const selected = filteredRows[index];
+        recalculateTaxes(selected.Products, selected.Customer);
+        setSelectedItem(selected);
 
-            setTimeout(() => {
-                if (reactToPrintRef.current) {
-                    reactToPrintRef.current.handlePrint();
-                    // setLoading(false);
-                } else {
-                    toast.error("Print ref not ready");
-                }
-            }, 500);
-
-        } else {
-            toast.error("You are not allowed to update an invoice");
-        }
+        setTimeout(() => {
+            if (reactToPrintRef.current) {
+                reactToPrintRef.current.handlePrint();
+                // setLoading(false);
+            } else {
+                toast.error("Print ref not ready");
+            }
+        }, 500);
     };
 
     const recalculateTaxes = (products, selectedCustomer) => {

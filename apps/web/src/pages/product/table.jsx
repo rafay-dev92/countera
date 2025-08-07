@@ -43,14 +43,9 @@ export function Product() {
     // Modify handleRowSelect to update the selected item's data
     const handleEditProduct = (index) => {
         // Assuming currentItems holds the filtered rows for display
-        if (state.userInfo.Permission.some(obj => obj.name === "CAN_UPDATE" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
-            const selected = currentItems[index];
-            setSelectedItem(selected);
-            openPopup();
-        }
-        else {
-            toast.error("You are not allowed to update a product");
-        }
+        const selected = currentItems[index];
+        setSelectedItem(selected);
+        openPopup();
     };
 
     const showToastMessage = (type, message) => {
@@ -149,27 +144,22 @@ export function Product() {
         // setSelectAll(false);
         const confirmed = await confirm("Do you really want to delete this product?");
         if (!confirmed) return;
-        if (state.userInfo.Permission.some(obj => obj.name === "CAN_DELETE" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
-            try {
-                const res = await delProduct(id, state.userToken);
-                const product = await res.json();
-                if (res.status === 200) {
-                    showToastMessage('success', product.message)
-                }
-                else if (res.status === 404) {
-                    showToastMessage('info', product.message)
-                }
-                else if (res.status === 500) {
-                    showToastMessage('error', "You must delete its foreign key relations first");
-                }
-                setRefresh(!refresh);
-            } catch (error) {
-                console.log(error)
+        try {
+            const res = await delProduct(id, state.userToken);
+            const product = await res.json();
+            if (res.status === 200) {
+                showToastMessage('success', product.message)
+            }
+            else if (res.status === 404) {
+                showToastMessage('info', product.message)
+            }
+            else if (res.status === 500) {
                 showToastMessage('error', "You must delete its foreign key relations first");
             }
-        }
-        else {
-            toast.error("You are not allowed to delete a product");
+            setRefresh(!refresh);
+        } catch (error) {
+            console.log(error)
+            showToastMessage('error', "You must delete its foreign key relations first");
         }
     };
 
@@ -182,18 +172,12 @@ export function Product() {
     // Popup state
     const [isOpen, setIsOpen] = useState(false);
     const openPopup = () => {
-        if (state.userInfo.Permission.some(obj => obj.name === "CAN_ADD" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
-
-            // setIsOpen(true);
-            dispatch({
-                type: "SET_PRODUCT_DATA",
-                payload:
-                    true,
-            });
-        }
-        else {
-            toast.error("You are not allowed to add a product")
-        }
+        // setIsOpen(true);
+        dispatch({
+            type: "SET_PRODUCT_DATA",
+            payload:
+                true,
+        });
     };
     const closePopup = () => {
         // setIsOpen(false);

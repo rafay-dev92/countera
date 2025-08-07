@@ -67,7 +67,7 @@ export default function Permissions() {
     const getPermissions = async () => {
         try {
             const permissions = await (await fetchPermissions(state.userToken)).json();
-            setFinalItems(permissions.filter(permission => permission.namw !== 'IS_SUPER_ADMIN'));
+            setFinalItems(permissions);
             setLoading(false);
         } catch (error) {
             console.log(error.message);

@@ -210,13 +210,13 @@ const ViewQuotation = ({ quotationData, setQuotationData, componentRef, appliedT
                             <Spinner className="h-6 w-6 text-gray-400/50" />
                         </div>
                     }
-                    <div onClick={() => !quotationData?.approved && setQuotationApproved()} className={`flex items-center gap-2 w-full p-3 mx-auto ${!quotationData?.approved ? "hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer" : "text-green-500 font-bold"}`}><FileCheck className="w-5 h-5 inline-block mr-1" />{!quotationData?.approved ? 'Approve' : 'Approved'}</div>
+                    <button type="button" disabled={!state.userInfo.Permission.includes("quote:update")} onClick={() => !quotationData?.approved && setQuotationApproved()} className={`flex items-center gap-2 w-full p-3 mx-auto ${!quotationData?.approved ? "hover:bg-gradient-to-br from-gray-700 to-gray-600" : "text-green-500 font-bold"} ${state.userInfo?.Permission.includes("quote:update") ? "" : "cursor-not-allowed opacity-50"}`}><FileCheck className="w-5 h-5 inline-block mr-1" />{!quotationData?.approved ? 'Approve' : 'Approved'}</button>
                     {!quotationData?.approved && (
-                        <div onClick={() => { dispatch({ type: 'SET_QUOTATION_VIEW', payload: false }); setEdit(true) }} className="flex items-center gap-2 w-full p-3 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer"><Edit className="w-5 h-5 inline-block mr-1" />Edit</div>
+                        <button type="button" disabled={!state.userInfo.Permission.includes("quote:update")} onClick={() => { dispatch({ type: 'SET_QUOTATION_VIEW', payload: false }); setEdit(true) }} className={`flex items-center gap-2 w-full p-3 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 ${state.userInfo?.Permission.includes("quote:update") ? "" : "cursor-not-allowed opacity-50"}`}><Edit className="w-5 h-5 inline-block mr-1" />Edit</button>
                     )}
-                    <div onClick={() => setIsNotesFormOpen(true)} className="flex items-center gap-2 w-full p-3 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer"><FileText className="w-5 h-5 inline-block mr-1" />Notes</div>
+                    <button type="button" disabled={!state.userInfo.Permission.includes("quote:update")} onClick={() => setIsNotesFormOpen(true)} className={`flex items-center gap-2 w-full p-3 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 ${state.userInfo?.Permission.includes("quote:update") ? "" : "cursor-not-allowed opacity-50"}`}><FileText className="w-5 h-5 inline-block mr-1" />Notes</button>
                     {!isLoading.delete ?
-                        <div onClick={handleDel} className="flex items-center gap-2 w-full p-3 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer"><Trash2 className="w-5 h-5 inline-block mr-1" />Delete</div>
+                        <button type="button" disabled={!state.userInfo.Permission.includes("quote:delete")} onClick={handleDel} className={`flex items-center gap-2 w-full p-3 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 ${state.userInfo?.Permission.includes("quote:delete") ? "" : "cursor-not-allowed opacity-50"}`}><Trash2 className="w-5 h-5 inline-block mr-1" />Delete</button>
                         :
                         <div className="flex items-center p-3">
                             <Spinner className="h-6 w-6 text-gray-400/50" />
@@ -224,10 +224,10 @@ const ViewQuotation = ({ quotationData, setQuotationData, componentRef, appliedT
                     }
 
                     {!isLoading.createInvoice ?
-                        <div onClick={createInvoice} className="flex items-center gap-2 w-full p-3 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer">
+                        <button type="button" disabled={!state.userInfo.Permission.includes("invoice:create")} onClick={createInvoice} className={`flex items-center gap-2 w-full p-3 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 ${state.userInfo?.Permission.includes("invoice:create") ? "" : "cursor-not-allowed opacity-50"}`}>
                             <BookCopy className="w-5 h-5 inline-block mr-1" />
                             Create Invoice
-                        </div>
+                        </button>
                         :
                         <div className="flex items-center p-3">
                             <Spinner className="h-6 w-6 text-gray-400/50" />
@@ -235,10 +235,10 @@ const ViewQuotation = ({ quotationData, setQuotationData, componentRef, appliedT
                     }
 
                     {!isLoading.createCopy ?
-                        <div onClick={createCopy} className="flex items-center gap-2 w-full p-3 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer">
+                        <button type="button" disabled={!state.userInfo.Permission.includes("quote:create")} onClick={createCopy} className={`flex items-center gap-2 w-full p-3 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 ${state.userInfo?.Permission.includes("quote:create") ? "" : "cursor-not-allowed opacity-50"}`}>
                             <Copy className="w-5 h-5 inline-block mr-1" />
                             Create Duplicate
-                        </div>
+                        </button>
                         :
                         <div className="flex items-center justify-center h-fit py-2.5">
                             <div className="w-6 h-6 border-4 border-gray-500 border-t-transparent rounded-full animate-spin"></div>
@@ -274,63 +274,6 @@ const ViewQuotation = ({ quotationData, setQuotationData, componentRef, appliedT
                         <SidebarContent />
                     </div>
                 </div>
-
-                {/* <div className="basis-[20%] h-full overflow-y-auto flex flex-col items-center gap-6 bg-gradient-to-br from-gray-800 to-gray-700">
-                        <div className="text-center py-4">
-                            <h2 className="text-lg font-normal text-gray-400">Total Amount</h2>
-                            <h5 className="text-4xl text-white font-normal">${(quotationData?.totalAmount).toFixed(2)}</h5>
-                        </div>
-                        <div className="flex flex-col items-center justify-start h-full w-full">
-                            <div className="text-white w-full text-center font-medium">
-                                {!isLoading.sendMail ?
-                                    <div onClick={sendMailToUser} className="w-full py-2 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer">Send</div>
-                                    :
-                                    <div className="flex items-center justify-center h-fit py-2.5">
-                                        <div className="w-6 h-6 border-4 border-gray-500 border-t-transparent rounded-full animate-spin"></div>
-                                    </div>
-                                }
-                                <div onClick={() => !quotationData?.approved && setQuotationApproved()} className={`w-full py-2 mx-auto ${!quotationData?.approved ? "hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer" : "text-green-500 font-bold"}`}>{!quotationData?.approved ? 'Approve' : 'Approved'}</div>
-                                <div onClick={() => { dispatch({ type: 'SET_QUOTATION_VIEW', payload: false }); setEdit(true) }} className="w-full py-2 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer">Edit</div>
-                                <div onClick={() => setIsNotesFormOpen(true)} className="w-full py-2 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer">Notes</div>
-                                {!isLoading.delete ?
-                                    <div onClick={handleDel} className="w-full py-2 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer">Delete</div>
-                                    :
-                                    <div className="flex items-center justify-center h-fit py-2.5">
-                                        <div className="w-6 h-6 border-4 border-gray-500 border-t-transparent rounded-full animate-spin"></div>
-                                    </div>
-                                }
-
-                                {!isLoading.createInvoice ?
-                                    <div onClick={createInvoice} className="w-full py-2 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer">
-                                        Create Invoice
-                                    </div>
-                                    :
-                                    <div className="flex items-center justify-center h-fit py-2.5">
-                                        <div className="w-6 h-6 border-4 border-gray-500 border-t-transparent rounded-full animate-spin"></div>
-                                    </div>
-                                }
-
-                                {!isLoading.createCopy ?
-                                    <div onClick={createCopy} className="w-full py-2 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer">
-                                        Create Duplicate
-                                    </div>
-                                    :
-                                    <div className="flex items-center justify-center h-fit py-2.5">
-                                        <div className="w-6 h-6 border-4 border-gray-500 border-t-transparent rounded-full animate-spin"></div>
-                                    </div>
-                                }
-                                <ReactToPrint
-                                    trigger={() => <button
-                                        className="w-full py-2 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer"
-                                        type="button"
-                                    >
-                                        Print
-                                    </button>}
-                                    content={() => componentRef.current}
-                                />
-                            </div>
-                        </div>
-                    </div> */}
 
                 {/* Mobile Layout */}
                 <div className="lg:hidden h-full flex flex-col relative overflow-hidden">

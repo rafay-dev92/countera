@@ -31,11 +31,15 @@ export function Dashboard() {
             const user = await UserInfo.json();
             if (user?.role === 'SUPER_ADMIN') {
               navigate("/super-admin/dashboard");
+              const permissions = user.Permission.map(perm => perm.name);
+              user.Permission = permissions;
               dispatch({ type: 'SET_USER', payload: user });
               localStorage.setItem('User', JSON.stringify(user));
               dispatch({ type: 'SET_BUSINESS', payload: null });
               localStorage.removeItem('Business');
             } else {
+              const permissions = user.Permission.map(perm => perm.name);
+              user.Permission = permissions;
               dispatch({ type: 'SET_USER', payload: user });
               localStorage.setItem('User', JSON.stringify(user));
               if (user.Business) {
@@ -108,18 +112,18 @@ export function Dashboard() {
         {/* brandImg={
           sidenavType === "dark" ? "/img/logo-ct.png" : "/img/logo-ct-dark.png"
         } */}
-        
-          <div className="p-4 xl:ml-72 ">
-            <Routes>
-              {routes.map(
-                ({ layout, pages }) =>
-                  layout === "dashboard" &&
-                  pages.map(({ path, element }) => (
-                    <Route exact path={path} element={element} />
-                  ))
-              )}
-            </Routes>
-          </div>
+
+        <div className="p-4 xl:ml-72 ">
+          <Routes>
+            {routes.map(
+              ({ layout, pages }) =>
+                layout === "dashboard" &&
+                pages.map(({ path, element }) => (
+                  <Route exact path={path} element={element} />
+                ))
+            )}
+          </Routes>
+        </div>
       </div>
       {/* <div className="bg-blue-gray-50/50"> */}
       {/* <Footer /> */}

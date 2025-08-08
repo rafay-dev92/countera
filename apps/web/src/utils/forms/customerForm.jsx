@@ -141,6 +141,9 @@ const CustomerForm = ({ open, close, selectedItem, setSelectedItem, refresh, set
             }
           }
         }
+        else if (res.status === 403) {
+          showToastMessage('info', customer.message)
+        }
         else if (res.status === 409) {
           showToastMessage('error', customer.message)
         }
@@ -193,6 +196,9 @@ const CustomerForm = ({ open, close, selectedItem, setSelectedItem, refresh, set
               }
             }
           }
+        }
+        else if (res.status === 403) {
+          showToastMessage('info', customer.message)
         }
         else if (res.status === 404) {
           showToastMessage('info', customer.message)

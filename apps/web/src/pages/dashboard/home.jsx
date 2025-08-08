@@ -129,7 +129,7 @@ export function Home() {
             const startDate = moment.tz(currentDate, timezone).startOf('day').utc().toDate();
             const endDate = moment.tz(currentDate, timezone).endOf('day').utc().toDate();
 
-            const fetchedInvoices = await fetchInvoices(state.userToken, null, null, { paymentStatus: ['PAID', 'PARTIALLY_PAID', 'UNPAID'], startDate, endDate, isReport: true });
+            const fetchedInvoices = await fetchInvoices(state.userToken, null, null, { paymentStatus: ['PAID', 'PARTIALLY_PAID'], startDate, endDate, isReport: true });
             let totalInvoices = await fetchedInvoices.json();
             // if (state.Settings.General.invoice === 'all') {
             // }
@@ -138,7 +138,7 @@ export function Home() {
             // }
 
             if (fetchedInvoices.status === 200) {
-                const invoicesWithCurrentDate = totalInvoices.length > 0 ? totalInvoices?.data?.filter(obj => {
+                const invoicesWithCurrentDate = totalInvoices.data.length > 0 ? totalInvoices?.data?.filter(obj => {
                     const invoiceDate = moment(obj.createdAt).tz(timezone).format('YYYY-MM-DD');
                     return invoiceDate === currentDate;
                 }) : [];

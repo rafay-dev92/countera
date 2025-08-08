@@ -62,7 +62,7 @@ export function Settings() {
           Settings
         </Typography>
       </div>
-      {Object.keys(state.userInfo).length !== 0 && (state.userInfo.Permission.some(obj => obj.name === "setting:view") ? (
+      {Object.keys(state.userInfo).length !== 0 && (state.userInfo.Permission.includes("setting:view") ? (
         <div className="mt-5">
           {/* Mobile Dropdown - visible on small screens */}
           <div className="block lg:hidden mb-4">
@@ -134,7 +134,11 @@ export function Settings() {
             </div>
           </div>
         </div>
-      ) : null)}
+      ) :
+        <div className="text-red-500 text-center mt-10">
+          <Typography variant="h6">You do not have permission to view this page.</Typography>
+        </div>
+      )}
     </div>
   );
 };

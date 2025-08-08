@@ -91,6 +91,9 @@ export function Quotation() {
             else if (res.status === 404) {
                 showToastMessage('info', quotation.message)
             }
+            else if (res.status === 403) {
+                showToastMessage('error', quotation.message)
+            }
             setRefresh(!refresh);
 
         } catch (error) {
@@ -153,6 +156,7 @@ export function Quotation() {
             description: product.description || '',
             price: product.price
         })).filter(product => product.id);
+
         const data = {
             invoiceData: {
                 totalAmount: quotationData.totalAmount,
@@ -178,6 +182,9 @@ export function Quotation() {
             }
             else if (res.status === 404) {
                 showToastMessage('info', invoice.message)
+            }
+            else if (res.status === 403) {
+                showToastMessage('error', invoice.message)
             }
             setLoading(false)
         } catch (error) {
@@ -210,10 +217,9 @@ export function Quotation() {
                                 />
                             </div>
                             <div className="flex gap-2 lg:gap-4">
-                                <Button className="w-full bg-blue-900 lg:w-auto" size="md" onClick={openPopup} >
+                                <Button disabled={!state.userInfo?.Permission.includes("quote:create")} className={`w-full bg-blue-900 lg:w-auto`} size="md" onClick={openPopup}>
                                     New
                                 </Button>
-
                             </div>
                         </div>
                         <div className="flex items-center mt-4 lg:mt-0 lg:ml-auto">

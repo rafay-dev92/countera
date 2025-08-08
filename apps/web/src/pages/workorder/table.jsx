@@ -210,10 +210,9 @@ export function WorkOrder() {
                                 />
                             </div>
                             <div className="flex gap-2 lg:gap-4">
-                                <Button className="w-full bg-blue-900 lg:w-auto" size="md" onClick={openPopup} >
+                                <Button disabled={!state.userInfo?.Permission.includes("workorder:create")} className={`w-full bg-blue-900 lg:w-auto`} size="md" onClick={openPopup} >
                                     New
                                 </Button>
-
                             </div>
                         </div>
                         <div className="flex items-center mt-4 lg:mt-0 lg:ml-auto">

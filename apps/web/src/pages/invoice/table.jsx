@@ -70,7 +70,6 @@ export function Invoice() {
   };
 
   const getInvoices = async () => {
-    console.log("Fetching invoices...");
     try {
       const filters = {
         paymentStatus: ["PAID", "PARTIALLY_PAID", "UNPAID", "VOIDED", "REFUNDED"]
@@ -134,6 +133,9 @@ export function Invoice() {
       const invoice = await res.json();
       if (res.status === 200) {
         showToastMessage('success', invoice.message)
+      }
+      else if (res.status === 403) {
+        showToastMessage('info', invoice.message)
       }
       else if (res.status === 404) {
         showToastMessage('info', invoice.message)
@@ -215,7 +217,7 @@ export function Invoice() {
                 />
               </div>
               <div className="flex gap-2 lg:gap-4">
-                <Button className="w-full bg-blue-900 lg:w-auto" size="md" onClick={openPopup}>
+                <Button disabled={!state.userInfo?.Permission.includes("invoice:create")} className={`w-full bg-blue-900 lg:w-auto`} size="md" onClick={openPopup}>
                   New
                 </Button>
               </div>

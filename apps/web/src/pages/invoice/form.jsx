@@ -906,8 +906,8 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
                               name="address"
                               type="text"
                               value={selectedCustomer ? [
-                                selectedCustomer?.Address.street,
-                                selectedCustomer?.Address.city
+                                selectedCustomer?.Address?.street,
+                                selectedCustomer?.Address?.city
                               ].filter(Boolean).join(', ') : ''}
                               disabled
                             />

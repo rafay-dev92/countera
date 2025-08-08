@@ -18,6 +18,7 @@ import { format } from 'date-fns';
 import { fetchInvoiceAudits } from "@/services/fetchInvoiceAudit";
 import { ArrowLongRightIcon, XCircleIcon, Bars3Icon, XMarkIcon } from '@heroicons/react/24/solid'
 import { Printer, Send, Edit, FileText, Trash2, CreditCard, History } from "lucide-react"
+import { PaymentStatus } from "@/utils/enums/paymentStatuses";
 
 const ViewInvoice = ({ printInvoice, setPrintInvoice, componentRef, appliedTaxes, setEdit, close }) => {
     const confirm = useConfirm();
@@ -148,20 +149,20 @@ const ViewInvoice = ({ printInvoice, setPrintInvoice, componentRef, appliedTaxes
         setIsLoading({ ...isLoading, sendMail: false });
     }
 
-    useEffect(() => {
-        if (Object.keys(printInvoice).length > 0 && printInvoice?.Payments.length > 0) {
-            const paidAmount = printInvoice?.Payments.reduce((acc, payment) => acc + payment.paidAmount, 0);
-            if (paidAmount !== totalAmountPaid) {
-                setTotalAmountPaid(paidAmount);
-                if (paidAmount === printInvoice?.totalAmount && printInvoice?.paymentStatus !== "PAID") {
-                    setInvoiceStatus(printInvoice?.id, "PAID");
-                }
-                else if (paidAmount > 0 && paidAmount < printInvoice?.totalAmount && printInvoice?.paymentStatus !== "PARTIALLY_PAID") {
-                    setInvoiceStatus(printInvoice?.id, "PARTIALLY_PAID");
-                }
-            }
-        }
-    }, [printInvoice])
+    // useEffect(() => {
+    //     if (Object.keys(printInvoice).length > 0 && printInvoice?.Payments.length > 0) {
+    //         const paidAmount = printInvoice?.Payments.reduce((acc, payment) => acc + payment.paidAmount, 0);
+    //         if (paidAmount !== totalAmountPaid) {
+    //             setTotalAmountPaid(paidAmount);
+    //             if (paidAmount === printInvoice?.totalAmount && printInvoice?.paymentStatus !== PaymentStatus.PAID) {
+    //                 setInvoiceStatus(printInvoice?.id, PaymentStatus.PAID);
+    //             }
+    //             else if (paidAmount > 0 && paidAmount < printInvoice?.totalAmount && printInvoice?.paymentStatus !== PaymentStatus.PARTIALLY_PAID) {
+    //                 setInvoiceStatus(printInvoice?.id, PaymentStatus.PARTIALLY_PAID);
+    //             }
+    //         }
+    //     }
+    // }, [printInvoice])
 
     const fetchAuditTrail = async () => {
         try {
@@ -324,7 +325,7 @@ const ViewInvoice = ({ printInvoice, setPrintInvoice, componentRef, appliedTaxes
             {/* Balance Due */}
             <div className="text-center py-4 border-b border-gray-600">
                 <h2 className="text-lg font-normal text-gray-400 mb-1">Balance Due</h2>
-                <h5 className="text-3xl lg:text-4xl text-white font-normal">${(printInvoice?.totalAmount - totalAmountPaid).toFixed(2)}</h5>
+                <h5 className="text-3xl lg:text-4xl text-white font-normal">${(printInvoice?.totalAmount - printInvoice.paidAmount).toFixed(2)}</h5>
             </div>
 
             <div className="flex flex-col items-center justify-start h-full w-full">
@@ -338,11 +339,11 @@ const ViewInvoice = ({ printInvoice, setPrintInvoice, componentRef, appliedTaxes
                     }
                     {printInvoice?.paymentStatus !== 'VOIDED' && printInvoice?.paymentStatus !== 'REFUNDED' && (
                         <div>
-                            <div onClick={() => printInvoice?.paymentStatus !== 'PAID' && setIsPaymentFormOpen(true)} className={`flex items-center gap-2 w-full p-3 mx-auto ${printInvoice?.paymentStatus !== 'PAID' ? "hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer" : "text-green-500 font-bold"}`}><CreditCard className="w-5 h-5 inline-block mr-1" />{printInvoice?.paymentStatus !== 'PAID' ? 'PAY' : 'PAID'}</div>
-                            <div onClick={() => { handleUpdate() }} className="flex items-center gap-2 w-full p-3 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer"><Edit className="w-5 h-5 inline-block mr-1" />Edit</div>
-                            <div onClick={() => setIsNotesFormOpen(true)} className="flex items-center gap-2 w-full p-3 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer"><FileText className="w-5 h-5 inline-block mr-1" />Notes</div>
+                            <button type="button" disabled={state.userInfo.Permission.includes("invoice:update")} onClick={() => printInvoice?.paymentStatus !== 'PAID' && setIsPaymentFormOpen(true)} className={`flex items-center gap-2 w-full p-3 mx-auto ${printInvoice?.paymentStatus !== 'PAID' ? "hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer" : "text-green-500 font-bold"}`}><CreditCard className="w-5 h-5 inline-block mr-1" />{printInvoice?.paymentStatus !== 'PAID' ? 'PAY' : 'PAID'}</button>
+                            <button type="button" onClick={handleUpdate} disabled={!state.userInfo?.Permission.includes("invoice:update")} className={`flex items-center gap-2 w-full p-3 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 ${state.userInfo?.Permission.includes("invoice:update") ? "" : "cursor-not-allowed opacity-50"}`}><Edit className="w-5 h-5 inline-block mr-1" />Edit</button>
+                            <button type="button" onClick={() => setIsNotesFormOpen(true)} disabled={!state.userInfo?.Permission.includes("invoice:update")} className={`flex items-center gap-2 w-full p-3 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 ${state.userInfo?.Permission.includes("invoice:update") ? "" : "cursor-not-allowed opacity-50"}`}><FileText className="w-5 h-5 inline-block mr-1" />Notes</button>
                             {!isLoading.delete ?
-                                <div onClick={handleDel} className="flex items-center gap-2 w-full p-3 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer"><Trash2 className="w-5 h-5 inline-block mr-1" />Delete</div>
+                                <button type="button" onClick={handleDel} disabled={!state.userInfo?.Permission.includes("invoice:delete")} className={`flex items-center gap-2 w-full p-3 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 ${state.userInfo?.Permission.includes("invoice:delete") ? "" : "cursor-not-allowed opacity-50"}`}><Trash2 className="w-5 h-5 inline-block mr-1" />Delete</button>
                                 :
                                 <div className="flex items-center p-3">
                                     <Spinner className="h-6 w-6 text-gray-400/50" />
@@ -360,10 +361,10 @@ const ViewInvoice = ({ printInvoice, setPrintInvoice, componentRef, appliedTaxes
                         </button>}
                         content={() => componentRef.current}
                     />
-                    <div className="flex items-center gap-2 w-full text-blue-300 p-3 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer" onClick={handleVersionsClick}>
+                    <button type="button" disabled={!state.userInfo?.Permission.includes("invoice:update")} className={`flex items-center gap-2 w-full p-3 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 ${state.userInfo?.Permission.includes("invoice:update") ? "" : "cursor-not-allowed opacity-50"}`} onClick={handleVersionsClick}>
                         <History className="w-5 h-5 inline-block mr-1" />
                         Versions
-                    </div>
+                    </button>
                 </div>
             </div>
         </div>
@@ -396,7 +397,7 @@ const ViewInvoice = ({ printInvoice, setPrintInvoice, componentRef, appliedTaxes
                         <div className="text-white">
                             <h2 className="text-sm font-normal text-gray-400">Balance Due</h2>
                             <h5 className="text-xl text-white font-normal">
-                                ${(printInvoice?.totalAmount - totalAmountPaid).toFixed(2)}
+                                ${(printInvoice?.paidAmount).toFixed(2)}
                             </h5>
                         </div>
                         <div>
@@ -429,53 +430,8 @@ const ViewInvoice = ({ printInvoice, setPrintInvoice, componentRef, appliedTaxes
                 </div>
             </div>
 
-            {/* <div className="basis-[20%] h-full overflow-y-auto flex flex-col items-center gap-6 bg-gradient-to-br from-gray-800 to-gray-700">
-                        <div className="text-center py-4">
-                            <h2 className="text-lg font-normal text-gray-400">Balance Due</h2>
-                            <h5 className="text-4xl text-white font-normal">${(printInvoice?.totalAmount - totalAmountPaid).toFixed(2)}</h5>
-                        </div>
-                        <div className="flex flex-col items-center justify-start h-full w-full">
-                            <div className="text-white w-full text-center font-medium">
-                                {!isLoading.sendMail ?
-                                    <div onClick={sendMailToUser} className="w-full py-2 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer">Send</div>
-                                    :
-                                    <div className="flex items-center justify-center h-fit py-2.5">
-                                        <div className="w-6 h-6 border-4 border-gray-500 border-t-transparent rounded-full animate-spin"></div>
-                                    </div>
-                                }
-                                {printInvoice?.paymentStatus !== 'VOIDED' && printInvoice?.paymentStatus !== 'REFUNDED' && (
-                                    <div>
-                                        <div onClick={() => printInvoice?.paymentStatus !== 'PAID' && setIsPaymentFormOpen(true)} className={`w-full py-2 mx-auto ${printInvoice?.paymentStatus !== 'PAID' ? "hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer" : "text-green-500 font-bold"}`}>{printInvoice?.paymentStatus !== 'PAID' ? 'PAY' : 'PAID'}</div>
-                                        <div onClick={() => { handleUpdate() }} className="w-full py-2 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer">Edit</div>
-                                        <div onClick={() => setIsNotesFormOpen(true)} className="w-full py-2 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer">Notes</div>
-                                        {!isLoading.delete ?
-                                            <div onClick={handleDel} className="w-full py-2 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer">Delete</div>
-                                            :
-                                            <div className="flex items-center justify-center h-fit py-2.5">
-                                                <div className="w-6 h-6 border-4 border-gray-500 border-t-transparent rounded-full animate-spin"></div>
-                                            </div>
-                                        }
-                                    </div>
-                                )}
-                                <ReactToPrint
-                                    trigger={() => <button
-                                        className="w-full py-2 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer"
-                                        type="button"
-                                    >
-                                        Print
-                                    </button>}
-                                    content={() => componentRef.current}
-                                />
-                                <div className="w-full text-blue-300 py-2 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer" onClick={handleVersionsClick}>
-                                    Versions
-                                </div>
-                            </div>
-                        </div>
-                    </div> */}
-            {/* </div> */}
-            {/* </div> */}
             <NotesForm open={isNotesFormOpen} close={() => setIsNotesFormOpen(false)} invoiceId={printInvoice?.id} setPrintInvoice={setPrintInvoice} currentValue={printInvoice?.notes} />
-            <PaymentForm open={isPaymentFormOpen} close={() => setIsPaymentFormOpen(false)} totalAmount={printInvoice?.totalAmount} totalAmountPaid={totalAmountPaid} invoiceId={printInvoice?.id} setPrintInvoice={setPrintInvoice} />
+            <PaymentForm open={isPaymentFormOpen} close={() => setIsPaymentFormOpen(false)} totalAmount={printInvoice?.totalAmount} totalAmountPaid={printInvoice?.paidAmount} invoiceId={printInvoice?.id} setPrintInvoice={setPrintInvoice} />
             <Dialog
                 open={showVersionsModal}
                 handler={() => setShowVersionsModal(false)}

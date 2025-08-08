@@ -32,6 +32,10 @@ export function Reports() {
         try {
             const res = await fetchTaxes(state.userToken);
             const taxes = await res.json();
+            if (res.status !== 200) {
+                toast.error(taxes.message || "Failed to fetch taxes");
+                return;
+            }
             setTaxes(taxes.map(tax => tax.name));
         } catch (error) {
             console.log(error);
@@ -49,23 +53,23 @@ export function Reports() {
     }
 
     useEffect(() => {
-        getTaxes();
-        getProductCategories();
+        if (Object.keys(state.userInfo).length !== 0 && (state.userInfo.Permission.includes("report:read"))) {
+            getTaxes();
+            getProductCategories();
+        }
     }, []);
 
 
     useEffect(() => {
-        // setOriginalData(reportData);
         setFilteredData(reportData);
     }, [reportData]);
 
     const openReportForm = (reportType) => {
-        console.log(window.innerWidth)
         if (window.innerWidth < 1600) {
             toast.info("Please use a screen width of 1600px or larger to view reports")
             return
         }
-        switch(reportType) {
+        switch (reportType) {
             case 'monthly':
                 setIsMonthlyReportOpen(true);
                 break;
@@ -91,24 +95,30 @@ export function Reports() {
                         </Typography>
                     </div>
                 </CardHeader>
-                <div className='grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-4 gap-3 sm:gap-4 p-2 sm:p-4 mt-4'>
-                    <CardBody className="border-2 border-gray-300 rounded-lg flex flex-col items-center justify-center p-3 sm:p-4 lg:p-6">
-                        <h2 className="text-sm md:text-base 2xl:text-[16px] font-semibold text-gray-800 text-center">Monthly Reports</h2>
-                        <Button onClick={() => openReportForm('monthly')} className='cursor-pointer mt-2 sm:mt-3 p-1.5 sm:p-2 hover:bg-gray-600 hover:text-white w-full text-center font-medium rounded text-[11px] md:text-xs 2xl:text-sm'>Generate</Button>
-                    </CardBody>
-                    <CardBody className="border-2 border-gray-300 rounded-lg flex flex-col items-center justify-center p-3 sm:p-4 lg:p-6">
-                        <h2 className="text-sm md:text-base 2xl:text-[16px] font-semibold text-gray-800 text-center">Daily Sales Reports</h2>
-                        <Button onClick={() => openReportForm('daily')} className='cursor-pointer mt-2 sm:mt-3 p-1.5 sm:p-2 hover:bg-gray-600 hover:text-white w-full text-center font-medium rounded ttext-[11px] md:text-xs 2xl:text-sm'>Generate</Button>
-                    </CardBody>
-                    <CardBody className="border-2 border-gray-300 rounded-lg flex flex-col items-center justify-center p-3 sm:p-4 lg:p-6">
-                        <h2 className="text-sm md:text-base 2xl:text-[16px] font-semibold text-gray-800 text-center">Customer Sales Reports</h2>
-                        <Button onClick={() => openReportForm('customer')} className='cursor-pointer mt-2 sm:mt-3 p-1.5 sm:p-2 hover:bg-gray-600 hover:text-white w-full text-center font-medium rounded text-[11px] md:text-xs 2xl:text-sm'>Generate</Button>
-                    </CardBody>
-                    {/* <CardBody className="border-2 border-gray-300 rounded-lg flex flex-col items-center justify-center p-3 sm:p-4 lg:p-6">
+                {Object.keys(state.userInfo).length !== 0 && (state.userInfo.Permission.includes("report:read") ? (
+                    <div className='grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-4 gap-3 sm:gap-4 p-2 sm:p-4 mt-4'>
+                        <CardBody className="border-2 border-gray-300 rounded-lg flex flex-col items-center justify-center p-3 sm:p-4 lg:p-6">
+                            <h2 className="text-sm md:text-base 2xl:text-[16px] font-semibold text-gray-800 text-center">Monthly Reports</h2>
+                            <Button onClick={() => openReportForm('monthly')} className='cursor-pointer mt-2 sm:mt-3 p-1.5 sm:p-2 hover:bg-gray-600 hover:text-white w-full text-center font-medium rounded text-[11px] md:text-xs 2xl:text-sm'>Generate</Button>
+                        </CardBody>
+                        <CardBody className="border-2 border-gray-300 rounded-lg flex flex-col items-center justify-center p-3 sm:p-4 lg:p-6">
+                            <h2 className="text-sm md:text-base 2xl:text-[16px] font-semibold text-gray-800 text-center">Daily Sales Reports</h2>
+                            <Button onClick={() => openReportForm('daily')} className='cursor-pointer mt-2 sm:mt-3 p-1.5 sm:p-2 hover:bg-gray-600 hover:text-white w-full text-center font-medium rounded ttext-[11px] md:text-xs 2xl:text-sm'>Generate</Button>
+                        </CardBody>
+                        <CardBody className="border-2 border-gray-300 rounded-lg flex flex-col items-center justify-center p-3 sm:p-4 lg:p-6">
+                            <h2 className="text-sm md:text-base 2xl:text-[16px] font-semibold text-gray-800 text-center">Customer Sales Reports</h2>
+                            <Button onClick={() => openReportForm('customer')} className='cursor-pointer mt-2 sm:mt-3 p-1.5 sm:p-2 hover:bg-gray-600 hover:text-white w-full text-center font-medium rounded text-[11px] md:text-xs 2xl:text-sm'>Generate</Button>
+                        </CardBody>
+                        {/* <CardBody className="border-2 border-gray-300 rounded-lg flex flex-col items-center justify-center p-3 sm:p-4 lg:p-6">
                         <h2 className="text-sm sm:text-base lg:text-lg font-semibold text-gray-800 text-center">Product Sales Reports</h2>
                         <Button onClick={() => setIsProductReportOpen(true)} className='cursor-pointer mt-2 sm:mt-3 p-1.5 sm:p-2 hover:bg-gray-600 hover:text-white w-full text-center font-medium rounded text-xs sm:text-sm lg:text-base'>Generate</Button>
                     </CardBody> */}
-                </div>
+                    </div>
+                ) : (
+                    <div className="text-red-500 text-center mt-10">
+                        <Typography variant="h6">You do not have permission to view this page.</Typography>
+                    </div>
+                ))}
             </Card>
             <MonthlyReportForm open={isMonthlyReportOpen} close={() => setIsMonthlyReportOpen(false)} setReportData={setReportData} onReportGenerated={() => setCurrentReport('monthly')} />
             <SalesByCustomerForm open={isCustomerReportOpen} close={() => setIsCustomerReportOpen(false)} setReportData={setReportData} onReportGenerated={() => setCurrentReport('customer')} />

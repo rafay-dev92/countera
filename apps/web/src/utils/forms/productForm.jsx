@@ -455,9 +455,8 @@ const ProductForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
                 </div>
 
                 {values.taxable &&
-                  taxes &&
-                  taxes.map((tax) => (
-
+                  Array.isArray(taxes) &&
+                  taxes?.map((tax) => (
                     <div key={tax.id} className="mb-1 flex">
                       <input
                         className="form-checkbox h-5 w-5 text-indigo-600 transition duration-150 ease-in-out cursor-pointer"

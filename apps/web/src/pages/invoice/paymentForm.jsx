@@ -140,7 +140,7 @@ const PaymentForm = ({ open, close, totalAmount, totalAmountPaid, invoiceId, set
                                             ) : (<div></div>)}
                                         </div>
                                         <div className="">
-                                            <label className="font-bold">Amount Paid</label> <br />
+                                            <label className="font-bold">Amount</label> <br />
                                             <input
                                                 className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
                                                 id="paidAmount"

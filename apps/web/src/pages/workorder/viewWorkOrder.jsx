@@ -16,6 +16,7 @@ import { addWorkOrder } from "@/services/addWorkOrder";
 import { Printer, Edit, FileText, Trash2, CheckCheck, BookCopy, Copy } from "lucide-react"
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/solid';
 import { Spinner } from "@material-tailwind/react";
+import { WorkOrderStatus } from "@/utils/enums/workorderStatuses";
 
 const ViewWorkOrder = ({ workOrderData, setWorkOrderData, componentRef, appliedTaxes, setEdit, close }) => {
     const confirm = useConfirm();
@@ -26,6 +27,7 @@ const ViewWorkOrder = ({ workOrderData, setWorkOrderData, componentRef, appliedT
         createInvoice: false,
         createCopy: false,
         sendMail: false,
+        finish: false
     });
     const [isNotesFormOpen, setIsNotesFormOpen] = useState(false);
 
@@ -54,6 +56,9 @@ const ViewWorkOrder = ({ workOrderData, setWorkOrderData, componentRef, appliedT
     }
 
     const setWorkOrderFinished = async () => {
+        const confirmed = await confirm("Are you sure you want to finish this work order? You won't be able to edit it after this.");
+        if (!confirmed) return;
+        setIsLoading({ ...isLoading, finish: true });
         try {
             const res = await updateWorkOrder(workOrderData.id, { workOrderData: { status: 'Finished' }, products: [] }, state.userToken);
             const workorder = await res.json();
@@ -62,6 +67,8 @@ const ViewWorkOrder = ({ workOrderData, setWorkOrderData, componentRef, appliedT
             }
         } catch (error) {
             console.log(error);
+        } finally {
+            setIsLoading({ ...isLoading, finish: false });
         }
     }
 
@@ -197,11 +204,19 @@ const ViewWorkOrder = ({ workOrderData, setWorkOrderData, componentRef, appliedT
 
             <div className="flex flex-col items-center justify-start h-full w-full">
                 <div className="text-white w-full text-left font-medium">
-                    <div onClick={() => workOrderData?.status === 'PENDING' && setWorkOrderFinished()} className={`flex items-center gap-2 w-full p-3 mx-auto ${workOrderData?.status === 'PENDING' ? "hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer" : "text-green-500 font-bold"}`}><CheckCheck className="h-5 w-5 inline-block mr-2" />{workOrderData?.status === 'PENDING' ? 'Finish' : 'Finished'}</div>
-                    <div onClick={() => { dispatch({ type: 'SET_WORKORDER_VIEW', payload: false }); setEdit(true) }} className="flex items-center gap-2 w-full p-3 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer"><Edit className="h-5 w-5 inline-block mr-2" />Edit</div>
-                    <div onClick={() => setIsNotesFormOpen(true)} className="flex items-center gap-2 w-full p-3 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer"><FileText className="h-5 w-5 inline-block mr-2" />Notes</div>
+                    {!isLoading.finish ?
+                        <button type="button" disabled={!state.userInfo.Permission.includes("workorder:update")} onClick={() => workOrderData?.status === WorkOrderStatus.PENDING && setWorkOrderFinished()} className={`flex items-center gap-2 w-full p-3 mx-auto ${workOrderData?.status === WorkOrderStatus.PENDING ? "hover:bg-gradient-to-br from-gray-700 to-gray-600" : "text-green-500 font-bold"} ${state.userInfo?.Permission.includes("workorder:update") ? "cursor-pointer" : "cursor-not-allowed opacity-50"}`}><CheckCheck className="h-5 w-5 inline-block mr-2" />{workOrderData?.status === WorkOrderStatus.PENDING ? 'Finish' : 'Finished'}</button>
+                        :
+                        <div className="flex items-center p-3">
+                            <Spinner className="h-6 w-6 text-gray-400/50" />
+                        </div>
+                    }
+                    {workOrderData?.status === WorkOrderStatus.PENDING && (
+                        <button type="button" disabled={!state.userInfo.Permission.includes("workorder:update")} onClick={() => { dispatch({ type: 'SET_WORKORDER_VIEW', payload: false }); setEdit(true) }} className={`flex items-center gap-2 w-full p-3 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 ${state.userInfo?.Permission.includes("workorder:update") ? "cursor-pointer" : "cursor-not-allowed opacity-50"}`}><Edit className="h-5 w-5 inline-block mr-2" />Edit</button>
+                    )}
+                    <button type="button" disabled={!state.userInfo.Permission.includes("workorder:update")} onClick={() => setIsNotesFormOpen(true)} className={`flex items-center gap-2 w-full p-3 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 ${state.userInfo?.Permission.includes("workorder:update") ? "cursor-pointer" : "cursor-not-allowed opacity-50"}`}><FileText className="h-5 w-5 inline-block mr-2" />Notes</button>
                     {!isLoading.delete ?
-                        <div onClick={handleDel} className="flex items-center gap-2 w-full p-3 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer"><Trash2 className="h-5 w-5 inline-block mr-2" />Delete</div>
+                        <button type="button" disabled={!state.userInfo.Permission.includes("workorder:delete")} onClick={handleDel} className={`flex items-center gap-2 w-full p-3 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 ${state.userInfo?.Permission.includes("workorder:delete") ? "cursor-pointer" : "cursor-not-allowed opacity-50"}`}><Trash2 className="h-5 w-5 inline-block mr-2" />Delete</button>
                         :
                         <div className="flex items-center p-3">
                             <Spinner className="h-6 w-6 text-gray-400/50" />
@@ -209,9 +224,9 @@ const ViewWorkOrder = ({ workOrderData, setWorkOrderData, componentRef, appliedT
                     }
 
                     {!isLoading.createInvoice ?
-                        <div onClick={createInvoice} className="flex items-center gap-2 w-full p-3 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer">
+                        <button onClick={createInvoice} disabled={!state.userInfo?.Permission.includes("invoice:create")} className={`flex items-center gap-2 w-full p-3 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 ${state.userInfo?.Permission.includes("invoice:create") ? "cursor-pointer" : "cursor-not-allowed opacity-50"}`}>
                             <BookCopy className="h-5 w-5 inline-block mr-2" />Create Invoice
-                        </div>
+                        </button>
                         :
                         <div className="flex items-center p-3">
                             <Spinner className="h-6 w-6 text-gray-400/50" />
@@ -219,9 +234,9 @@ const ViewWorkOrder = ({ workOrderData, setWorkOrderData, componentRef, appliedT
                     }
 
                     {!isLoading.createCopy ?
-                        <div onClick={createCopy} className="flex items-center gap-2 w-full p-3 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer">
+                        <button type="button" disabled={!state.userInfo?.Permission.includes("workorder:create")} onClick={createCopy} className={`flex items-center gap-2 w-full p-3 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 ${state.userInfo?.Permission.includes("workorder:create") ? "cursor-pointer" : "cursor-not-allowed opacity-50"}`}>
                             <Copy className="h-5 w-5 inline-block mr-2" />Create Duplicate
-                        </div>
+                        </button>
                         :
                         <div className="flex items-center p-3">
                             <Spinner className="h-6 w-6 text-gray-400/50" />

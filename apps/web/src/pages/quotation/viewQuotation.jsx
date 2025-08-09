@@ -26,6 +26,7 @@ const ViewQuotation = ({ quotationData, setQuotationData, componentRef, appliedT
         createInvoice: false,
         createCopy: false,
         sendMail: false,
+        approve: false
     });
     const [isNotesFormOpen, setIsNotesFormOpen] = useState(false);
 
@@ -54,6 +55,10 @@ const ViewQuotation = ({ quotationData, setQuotationData, componentRef, appliedT
     }
 
     const setQuotationApproved = async () => {
+        const confirmed = await confirm("Do you really want to approve this quotation? You won't be able to edit it after this.");
+        if (!confirmed) return;
+        setIsLoading({ ...isLoading, approve: true });
+
         try {
             const res = await updateQuotation(quotationData.id, { quotationData: { approved: true }, products: [] }, state.userToken);
             const quotation = await res.json();
@@ -62,6 +67,8 @@ const ViewQuotation = ({ quotationData, setQuotationData, componentRef, appliedT
             }
         } catch (error) {
             console.log(error);
+        } finally {
+            setIsLoading({ ...isLoading, approve: false });
         }
     }
 
@@ -210,13 +217,19 @@ const ViewQuotation = ({ quotationData, setQuotationData, componentRef, appliedT
                             <Spinner className="h-6 w-6 text-gray-400/50" />
                         </div>
                     }
-                    <button type="button" disabled={!state.userInfo.Permission.includes("quote:update")} onClick={() => !quotationData?.approved && setQuotationApproved()} className={`flex items-center gap-2 w-full p-3 mx-auto ${!quotationData?.approved ? "hover:bg-gradient-to-br from-gray-700 to-gray-600" : "text-green-500 font-bold"} ${state.userInfo?.Permission.includes("quote:update") ? "" : "cursor-not-allowed opacity-50"}`}><FileCheck className="w-5 h-5 inline-block mr-1" />{!quotationData?.approved ? 'Approve' : 'Approved'}</button>
+                    {!isLoading.approve ?
+                        <button type="button" disabled={!state.userInfo.Permission.includes("quote:update")} onClick={() => !quotationData?.approved && setQuotationApproved()} className={`flex items-center gap-2 w-full p-3 mx-auto ${!quotationData?.approved ? "hover:bg-gradient-to-br from-gray-700 to-gray-600" : "text-green-500 font-bold"} ${state.userInfo?.Permission.includes("quote:update") ? "cursor-pointer" : "cursor-not-allowed opacity-50"}`}><FileCheck className="w-5 h-5 inline-block mr-1" />{!quotationData?.approved ? 'Approve' : 'Approved'}</button>
+                        :
+                        <div className="flex items-center p-3">
+                            <Spinner className="h-6 w-6 text-gray-400/50" />
+                        </div>
+                    }
                     {!quotationData?.approved && (
-                        <button type="button" disabled={!state.userInfo.Permission.includes("quote:update")} onClick={() => { dispatch({ type: 'SET_QUOTATION_VIEW', payload: false }); setEdit(true) }} className={`flex items-center gap-2 w-full p-3 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 ${state.userInfo?.Permission.includes("quote:update") ? "" : "cursor-not-allowed opacity-50"}`}><Edit className="w-5 h-5 inline-block mr-1" />Edit</button>
+                        <button type="button" disabled={!state.userInfo.Permission.includes("quote:update")} onClick={() => { dispatch({ type: 'SET_QUOTATION_VIEW', payload: false }); setEdit(true) }} className={`flex items-center gap-2 w-full p-3 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 ${state.userInfo?.Permission.includes("quote:update") ? "cursor-pointer" : "cursor-not-allowed opacity-50"}`}><Edit className="w-5 h-5 inline-block mr-1" />Edit</button>
                     )}
-                    <button type="button" disabled={!state.userInfo.Permission.includes("quote:update")} onClick={() => setIsNotesFormOpen(true)} className={`flex items-center gap-2 w-full p-3 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 ${state.userInfo?.Permission.includes("quote:update") ? "" : "cursor-not-allowed opacity-50"}`}><FileText className="w-5 h-5 inline-block mr-1" />Notes</button>
+                    <button type="button" disabled={!state.userInfo.Permission.includes("quote:update")} onClick={() => setIsNotesFormOpen(true)} className={`flex items-center gap-2 w-full p-3 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 ${state.userInfo?.Permission.includes("quote:update") ? "cursor-pointer" : "cursor-not-allowed opacity-50"}`}><FileText className="w-5 h-5 inline-block mr-1" />Notes</button>
                     {!isLoading.delete ?
-                        <button type="button" disabled={!state.userInfo.Permission.includes("quote:delete")} onClick={handleDel} className={`flex items-center gap-2 w-full p-3 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 ${state.userInfo?.Permission.includes("quote:delete") ? "" : "cursor-not-allowed opacity-50"}`}><Trash2 className="w-5 h-5 inline-block mr-1" />Delete</button>
+                        <button type="button" disabled={!state.userInfo.Permission.includes("quote:delete")} onClick={handleDel} className={`flex items-center gap-2 w-full p-3 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 ${state.userInfo?.Permission.includes("quote:delete") ? "cursor-pointer" : "cursor-not-allowed opacity-50"}`}><Trash2 className="w-5 h-5 inline-block mr-1" />Delete</button>
                         :
                         <div className="flex items-center p-3">
                             <Spinner className="h-6 w-6 text-gray-400/50" />
@@ -224,7 +237,7 @@ const ViewQuotation = ({ quotationData, setQuotationData, componentRef, appliedT
                     }
 
                     {!isLoading.createInvoice ?
-                        <button type="button" disabled={!state.userInfo.Permission.includes("invoice:create")} onClick={createInvoice} className={`flex items-center gap-2 w-full p-3 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 ${state.userInfo?.Permission.includes("invoice:create") ? "" : "cursor-not-allowed opacity-50"}`}>
+                        <button type="button" disabled={!state.userInfo.Permission.includes("invoice:create")} onClick={createInvoice} className={`flex items-center gap-2 w-full p-3 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 ${state.userInfo?.Permission.includes("invoice:create") ? "cursor-pointer" : "cursor-not-allowed opacity-50"}`}>
                             <BookCopy className="w-5 h-5 inline-block mr-1" />
                             Create Invoice
                         </button>
@@ -235,7 +248,7 @@ const ViewQuotation = ({ quotationData, setQuotationData, componentRef, appliedT
                     }
 
                     {!isLoading.createCopy ?
-                        <button type="button" disabled={!state.userInfo.Permission.includes("quote:create")} onClick={createCopy} className={`flex items-center gap-2 w-full p-3 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 ${state.userInfo?.Permission.includes("quote:create") ? "" : "cursor-not-allowed opacity-50"}`}>
+                        <button type="button" disabled={!state.userInfo.Permission.includes("quote:create")} onClick={createCopy} className={`flex items-center gap-2 w-full p-3 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 ${state.userInfo?.Permission.includes("quote:create") ? "cursor-pointer" : "cursor-not-allowed opacity-50"}`}>
                             <Copy className="w-5 h-5 inline-block mr-1" />
                             Create Duplicate
                         </button>

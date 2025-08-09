@@ -184,7 +184,7 @@ export function Quotation() {
                 showToastMessage('info', invoice.message)
             }
             else if (res.status === 403) {
-                showToastMessage('error', invoice.message)
+                showToastMessage('info', invoice.message)
             }
             setLoading(false)
         } catch (error) {

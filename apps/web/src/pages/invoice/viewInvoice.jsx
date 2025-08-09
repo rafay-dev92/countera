@@ -339,7 +339,7 @@ const ViewInvoice = ({ printInvoice, setPrintInvoice, componentRef, appliedTaxes
                     }
                     {printInvoice?.paymentStatus !== 'VOIDED' && printInvoice?.paymentStatus !== 'REFUNDED' && (
                         <div>
-                            <button type="button" disabled={state.userInfo.Permission.includes("invoice:update")} onClick={() => printInvoice?.paymentStatus !== 'PAID' && setIsPaymentFormOpen(true)} className={`flex items-center gap-2 w-full p-3 mx-auto ${printInvoice?.paymentStatus !== 'PAID' ? "hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer" : "text-green-500 font-bold"}`}><CreditCard className="w-5 h-5 inline-block mr-1" />{printInvoice?.paymentStatus !== 'PAID' ? 'PAY' : 'PAID'}</button>
+                            <button type="button" disabled={!state.userInfo.Permission.includes("invoice:update")} onClick={() => printInvoice?.paymentStatus !== 'PAID' && setIsPaymentFormOpen(true)} className={`flex items-center gap-2 w-full p-3 mx-auto ${printInvoice?.paymentStatus !== 'PAID' ? "hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer" : "text-green-500 font-bold cursor-not-allowed"} ${state.userInfo?.Permission.includes("quote:update") ? "" : "cursor-not-allowed opacity-50"}`}><CreditCard className="w-5 h-5 inline-block mr-1" />{printInvoice?.paymentStatus !== 'PAID' ? 'PAY' : 'PAID'}</button>
                             <button type="button" onClick={handleUpdate} disabled={!state.userInfo?.Permission.includes("invoice:update")} className={`flex items-center gap-2 w-full p-3 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 ${state.userInfo?.Permission.includes("invoice:update") ? "" : "cursor-not-allowed opacity-50"}`}><Edit className="w-5 h-5 inline-block mr-1" />Edit</button>
                             <button type="button" onClick={() => setIsNotesFormOpen(true)} disabled={!state.userInfo?.Permission.includes("invoice:update")} className={`flex items-center gap-2 w-full p-3 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 ${state.userInfo?.Permission.includes("invoice:update") ? "" : "cursor-not-allowed opacity-50"}`}><FileText className="w-5 h-5 inline-block mr-1" />Notes</button>
                             {!isLoading.delete ?
@@ -361,7 +361,7 @@ const ViewInvoice = ({ printInvoice, setPrintInvoice, componentRef, appliedTaxes
                         </button>}
                         content={() => componentRef.current}
                     />
-                    <button type="button" disabled={!state.userInfo?.Permission.includes("invoice:update")} className={`flex items-center gap-2 w-full p-3 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 ${state.userInfo?.Permission.includes("invoice:update") ? "" : "cursor-not-allowed opacity-50"}`} onClick={handleVersionsClick}>
+                    <button type="button" disabled={!state.userInfo?.Permission.includes("invoice:update")} className={`flex items-center gap-2 w-full p-3 text-blue-300 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 ${state.userInfo?.Permission.includes("invoice:update") ? "" : "cursor-not-allowed opacity-50"}`} onClick={handleVersionsClick}>
                         <History className="w-5 h-5 inline-block mr-1" />
                         Versions
                     </button>

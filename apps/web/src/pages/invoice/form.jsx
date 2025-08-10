@@ -1026,7 +1026,7 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
                               <div>
                                 <div className="flex items-center pl-2">
                                   <label className="font-bold">Odometer</label>
-                                  <Tooltip content="reset" className="z-[9999]">
+                                  <Tooltip content="Reset" className="z-[9999]">
                                     <IconButton
                                       variant="text"
                                       onClick={() => setVehicleOdometer(selectedVehicle?.odometer)}

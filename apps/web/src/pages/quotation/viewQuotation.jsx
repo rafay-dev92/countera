@@ -224,9 +224,9 @@ const ViewQuotation = ({ quotationData, setQuotationData, componentRef, appliedT
                             <Spinner className="h-6 w-6 text-gray-400/50" />
                         </div>
                     }
-                    {!quotationData?.approved && (
-                        <button type="button" disabled={!state.userInfo.Permission.includes("quote:update")} onClick={() => { dispatch({ type: 'SET_QUOTATION_VIEW', payload: false }); setEdit(true) }} className={`flex items-center gap-2 w-full p-3 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 ${state.userInfo?.Permission.includes("quote:update") ? "cursor-pointer" : "cursor-not-allowed opacity-50"}`}><Edit className="w-5 h-5 inline-block mr-1" />Edit</button>
-                    )}
+                    {/* {!quotationData?.approved && ( */}
+                    <button type="button" disabled={!state.userInfo.Permission.includes("quote:update")} onClick={() => { dispatch({ type: 'SET_QUOTATION_VIEW', payload: false }); setEdit(true) }} className={`flex items-center gap-2 w-full p-3 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 ${state.userInfo?.Permission.includes("quote:update") ? "cursor-pointer" : "cursor-not-allowed opacity-50"}`}><Edit className="w-5 h-5 inline-block mr-1" />Edit</button>
+                    {/* )} */}
                     <button type="button" disabled={!state.userInfo.Permission.includes("quote:update")} onClick={() => setIsNotesFormOpen(true)} className={`flex items-center gap-2 w-full p-3 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 ${state.userInfo?.Permission.includes("quote:update") ? "cursor-pointer" : "cursor-not-allowed opacity-50"}`}><FileText className="w-5 h-5 inline-block mr-1" />Notes</button>
                     {!isLoading.delete ?
                         <button type="button" disabled={!state.userInfo.Permission.includes("quote:delete")} onClick={handleDel} className={`flex items-center gap-2 w-full p-3 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 ${state.userInfo?.Permission.includes("quote:delete") ? "cursor-pointer" : "cursor-not-allowed opacity-50"}`}><Trash2 className="w-5 h-5 inline-block mr-1" />Delete</button>

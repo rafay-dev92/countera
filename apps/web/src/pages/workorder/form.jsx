@@ -10,6 +10,7 @@ import {
   IconButton,
   Button,
   Input,
+  Tooltip,
 } from "@material-tailwind/react";
 import {
   XCircleIcon
@@ -912,9 +913,15 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedWorkOrder, setS
                               <div>
                                 <div className="flex items-center pl-2">
                                   <label className="font-bold">Odometer</label>
-                                  <IconButton variant='text' onClick={() => setVehicleOdometer(selectedVehicle?.odometer)}>
-                                    <ArrowUturnLeftIcon className="h-5 w-5 text-blue-600 cursor-pointer" />
-                                  </IconButton>
+                                  <Tooltip content="Reset" className="z-[9999]">
+                                    <IconButton
+                                      variant='text'
+                                      onClick={() => setVehicleOdometer(selectedVehicle?.odometer)}
+                                      disabled={String(vehicleOdometer) === String(selectedVehicle?.odometer)}
+                                    >
+                                      <ArrowUturnLeftIcon className="h-5 w-5 text-blue-600 cursor-pointer" />
+                                    </IconButton>
+                                  </Tooltip>
                                 </div>
                                 <div className="px-2">
                                   <input

@@ -2,13 +2,14 @@ import React, { useState } from "react";
 import { useEffect } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
-import { Dialog } from "@material-tailwind/react";
+import { Dialog, Tooltip } from "@material-tailwind/react";
 import { toast } from "react-toastify";
 import { State } from "@/state/Context";
 import { addUser } from "@/services/addUser";
 import { updateUser } from "@/services/updateUser";
 import { fetchPermissions } from "@/services/fetchPermissions";
 import { UserRole, userRolesForSelect } from "@/utils/enums/userRoles";
+import { TimerReset } from "lucide-react";
 
 const schema = Yup.object().shape({
     first_name: Yup.string().required("First name is required"),
@@ -180,14 +181,10 @@ const UserForm = ({ open, close, selectedItem, setSelectedItem, refresh, setRefr
         setFieldValue,
     } = formikProps;
 
-    const userRoles = [
-        // { value: 'ADMIN', label: 'Admin' },
-        { value: 'USER', label: 'User' },
-        { value: 'MANAGER', label: 'Manager' },
-        { value: 'CASHIER', label: 'Cashier' },
-        { value: 'SALESMAN', label: 'Salesman' },
-    ];
-
+    const resetPermissions = () => {
+        if (!selectedItem) setSelectPerms([]);
+        else setSelectPerms(selectedItem?.Permission?.map((perm) => perm.id));
+    };
 
     const groupedPermissions = permissions.reduce((acc, perm) => {
         const [resource, action] = perm.name.split(":");
@@ -362,7 +359,26 @@ const UserForm = ({ open, close, selectedItem, setSelectedItem, refresh, setRefr
 
                                     <div className="w-full mt-2">
                                         <div className="flex items-center gap-1 my-2">
+                                            <input
+                                                type="checkbox"
+                                                className="form-checkbox text-indigo-600 mr-2"
+                                                value={selectPerms?.length == permissions?.length}
+                                                checked={selectPerms?.length === permissions?.length}
+                                                onChange={(e) => {
+                                                    const isChecked = e.target.checked;
+                                                    handleChange(e);
+                                                    if (isChecked) {
+                                                        const allPermissionIds = permissions.map((perm) => perm.id);
+                                                        setSelectPerms(allPermissionIds);
+                                                    } else {
+                                                        setSelectPerms([]);
+                                                    }
+                                                }}
+                                            />
                                             <label className="font-bold">Permissions</label>
+                                            <Tooltip content="Reset" placement="top" className="z-[9999]">
+                                                <TimerReset className="w-6 h-6 text-blue-600 cursor-pointer" onClick={resetPermissions} />
+                                            </Tooltip>
                                             {/* <PlusCircleIcon className="w-6 h-6 text-blue-600 cursor-pointer" onClick={openPopup} /> */}
                                         </div>
 

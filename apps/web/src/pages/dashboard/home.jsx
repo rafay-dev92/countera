@@ -143,7 +143,7 @@ export function Home() {
                     return invoiceDate === currentDate;
                 }) : [];
                 const money = invoicesWithCurrentDate.reduce((sum, invoice) => {
-                    return sum + Number(invoice.totalAmount || 0);
+                    return sum + Number(invoice.paidAmount || 0);
                 }, 0);
                 const newArray = [...cardsData];
 
@@ -264,10 +264,10 @@ export function Home() {
                                 />
                             ))}
 
-                            <AppointmentsList 
-                            color='white'
-                            title="Today's Appointments"
-                            appointments={dailyAppointments}
+                            <AppointmentsList
+                                color='white'
+                                title="Today's Appointments"
+                                appointments={dailyAppointments}
                             />
                         </div>
                     }

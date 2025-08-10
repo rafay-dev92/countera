@@ -25,6 +25,16 @@ function getDefaultPackages() {
       description: "Used Tire 55 PKG",
       products: ["Used Tire 20:1", "Used Tire Labor 25:1"],
     },
+    {
+      name: "Regular Oil Change 79.99",
+      description: "5Q Motor OIL Regular Oil",
+      products: ["Oil Change Labor:1", "Oil Filter Standard:1", "Oil Reg:5"],
+    },
+    {
+      name: "Oil Sync 89.99",
+      description: "5Q Motor OIL FULL SYNTHETIC",
+      products: ["Oil Filter Standard:1", "Oil Change Labor:1", "Oil Sync:5"],
+    },
   ];
 }
 

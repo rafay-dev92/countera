@@ -35,6 +35,16 @@ function getDefaultPackages() {
       description: "5Q Motor OIL FULL SYNTHETIC",
       products: ["Oil Filter Standard:1", "Oil Change Labor:1", "Oil Sync:5"],
     },
+    {
+      name: "Alignment Front Wheel",
+      description: "",
+      products: ["FRONT END ALIGNMENT:1"],
+    },
+    {
+      name: "Alignment All Wheel",
+      description: "",
+      products: ["FOUR WHEEL ALIGNMENT:1"],
+    },
   ];
 }
 

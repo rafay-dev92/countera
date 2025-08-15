@@ -435,6 +435,7 @@ module.exports = {
           key: "id",
         },
         onDelete: "RESTRICT",
+        onUpdate: "RESTRICT",
       },
       BusinessId: {
         type: UUID,

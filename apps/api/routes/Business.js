@@ -5,6 +5,10 @@ const {
   Tax,
   Product,
   Package,
+  Invoice,
+  Quotation,
+  WorkOrder,
+  Customer,
   Product_Category,
   sequelize,
 } = require("../models");
@@ -259,12 +263,29 @@ router.delete("/delete/:id", async (req, res) => {
       return res.status(404).json({ message: "business not found" });
     }
 
-    await business.destroy();
+    const transaction = await sequelize.transaction();
 
+    // Delete associated products, packages, and taxes
+    await Invoice.destroy({ where: { BusinessId: business.id }, transaction });
+    await Quotation.destroy({
+      where: { BusinessId: business.id },
+      transaction,
+    });
+    await WorkOrder.destroy({
+      where: { BusinessId: business.id },
+      transaction,
+    });
+    await Customer.destroy({ where: { BusinessId: business.id }, transaction });
+    await Product.destroy({ where: { BusinessId: business.id }, transaction });
+    await Package.destroy({ where: { BusinessId: business.id }, transaction });
+    await Tax.destroy({ where: { BusinessId: business.id }, transaction });
+    await business.destroy({ transaction });
+
+    await transaction.commit();
     res.json({ message: "Business deleted successfully" });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Error deleting permission" });
+    res.status(500).json({ message: "Error deleting business" });
   }
 });
 

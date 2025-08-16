@@ -6,6 +6,7 @@ const bcryptjs = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const fetchUser = require("../middlewares/fetchUser");
 const { Op } = require("sequelize");
+const UserRole = require("../utils/enums/userRoles");
 require("dotenv").config();
 
 router.get("/", fetchUser, async (req, res) => {
@@ -14,7 +15,7 @@ router.get("/", fetchUser, async (req, res) => {
     const loggedInUser = await User.findOne({
       where: {
         id: userId,
-        role: { [Op.ne]: "SUPER_ADMIN" },
+        role: { [Op.ne]: UserRole.SUPER_ADMIN },
         BusinessId: { [Op.ne]: null },
       },
     });
@@ -28,7 +29,10 @@ router.get("/", fetchUser, async (req, res) => {
     }
     const user = await User.findAll({
       include: ["Permission", "Business"],
-      order: [[Business, 'name', 'ASC'], ['createdAt', 'ASC']],
+      order: [
+        [Business, "name", "ASC"],
+        ["createdAt", "ASC"],
+      ],
     });
     return res.json(user);
   } catch (error) {
@@ -66,15 +70,27 @@ router.post(
     const errors = validationResult(req);
 
     if (!errors.isEmpty())
-      return res.status(400).json({ message: `User not created. ${errors.errors[0]?.msg}` });
+      return res
+        .status(400)
+        .json({ message: `User not created. ${errors.errors[0]?.msg}` });
 
     try {
       const userData = req.body.user;
 
+      if (userData.role !== UserRole.SUPER_ADMIN && !userData.BusinessId) {
+        return res.status(400).json({ message: "BusinessId is required" });
+      }
+
+      if (req.body.permissions && req.body.permissions.length === 0) {
+        return res
+          .status(400)
+          .json({ message: "At least one permission is required" });
+      }
+
       const existingUser = await User.findOne({
         where: {
           email: userData.email,
-          BusinessId: userData.BusinessId
+          BusinessId: userData.BusinessId,
         },
       });
 
@@ -165,21 +181,21 @@ router.post("/businesses-for-email", async (req, res) => {
     if (!email) {
       return res.status(400).json({ message: "Email is required" });
     }
-    
+
     const users = await User.findAll({
       where: { email },
       include: {
         model: Business,
-        as: 'Business',
-        attributes: ['id', 'name'],
+        as: "Business",
+        attributes: ["id", "name"],
       },
     });
 
-    if (users.length > 0 && (users[0].role === 'SUPER_ADMIN' || users[0].isSuperAdmin)) {
+    if (users.length > 0 && users[0].role === UserRole.SUPER_ADMIN) {
       return res.json({ isSuperAdmin: true });
     }
 
-    const businesses = users.map(user => user.Business).filter(Boolean);
+    const businesses = users.map((user) => user.Business).filter(Boolean);
     res.json({ businesses });
   } catch (error) {
     console.error(error);

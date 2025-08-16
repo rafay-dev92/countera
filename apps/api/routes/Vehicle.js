@@ -29,8 +29,8 @@ router.get("/:id", fetchUser, async (req, res) => {
 router.post("/create", fetchUser, async (req, res) => {
   try {
     let { make, model } = req.body;
-    make=make.toUpperCase();
-    model=model.toUpperCase();
+    make = make.toUpperCase();
+    model = model.toUpperCase();
     const existingVehicle = await Vehicle.findOne({
       where: { make: make, model: model },
     });
@@ -38,7 +38,7 @@ router.post("/create", fetchUser, async (req, res) => {
     if (existingVehicle) {
       return res.status(409).json({ message: "Vehicle already exists" });
     }
-    await Vehicle.create({make, model});
+    await Vehicle.create({ make, model });
     return res.status(200).json({ message: "Vehicle added successfully" });
   } catch (error) {
     console.error(error);
@@ -89,7 +89,7 @@ router.post("/import", fetchUser, async (req, res) => {
         where: { make: make, model: model },
       });
       if (!existingVehicle) {
-        await Vehicle.create({make, model});
+        await Vehicle.create({ make, model });
       }
     }
     return res.status(200).json({ message: "Vehicle uploaded successfully" });

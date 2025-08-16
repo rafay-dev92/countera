@@ -47,7 +47,7 @@ router.get("/", fetchUser, async (req, res) => {
       return res.status(200).json(products);
     }
 
-    const products = await Product.findAll({ 
+    const products = await Product.findAll({
       order: [["createdAt", "DESC"]],
       include: [
         {
@@ -89,23 +89,21 @@ router.post("/create", fetchUser, upload.single("image"), async (req, res) => {
   try {
     const productData = req.body;
     const existingProduct = await Product.findOne({
-      where: { 
+      where: {
         [Op.or]: [
-          {name: productData.name, BusinessId: productData.BusinessId},
+          { name: productData.name, BusinessId: productData.BusinessId },
           // {itemCode: productData.itemCode, BusinessId: productData.BusinessId}
-        ]
-      }
+        ],
+      },
     });
 
     if (existingProduct) {
-      return res
-        .status(409)
-        .json({ message: "Product with this name or item code already exists" });
+      return res.status(409).json({
+        message: "Product with this name or item code already exists",
+      });
     }
     if (req.file) {
-      const imageUrl = `${process.env.STATIC_FILE_BASE_URL}/products/${
-        req.file.filename
-      }`;
+      const imageUrl = `${process.env.STATIC_FILE_BASE_URL}/products/${req.file.filename}`;
       productData.image = imageUrl;
     }
 
@@ -148,18 +146,18 @@ router.put(
         return res.status(404).json({ message: "product not found" });
       }
       if (req.file) {
-        const imageUrl = `${process.env.STATIC_FILE_BASE_URL}/products/${
-          req.file.filename
-        }`;
+        const imageUrl = `${process.env.STATIC_FILE_BASE_URL}/products/${req.file.filename}`;
         req.body.image = imageUrl;
       }
       await product.update(req.body);
 
       const deletedItems = product.Tax.filter(
         (originalTaxes) =>
-          !JSON.parse(req.body.taxes).some((item) => item === originalTaxes.dataValues.id)
+          !JSON.parse(req.body.taxes).some(
+            (item) => item === originalTaxes.dataValues.id
+          )
       ).map((changeItem) => changeItem.dataValues.id);
-  
+
       const addItems = JSON.parse(req.body.taxes).filter(
         (tax) => !product.Tax.some((item) => item.dataValues.id === tax)
       );
@@ -172,7 +170,7 @@ router.put(
           })
         );
       }
-  
+
       if (deletedItems.length !== 0) {
         await Promise.all(
           deletedItems.map(async (item) => {
@@ -180,7 +178,7 @@ router.put(
             await product.removeTax(tax);
           })
         );
-      }  
+      }
 
       return res.status(200).json({ message: "Product updated successfully" });
     } catch (error) {

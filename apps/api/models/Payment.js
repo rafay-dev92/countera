@@ -39,6 +39,11 @@ module.exports= (sequelize) => {
             foreignKey: 'InvoiceId',
             as: 'Invoice', 
         });
+
+        // Payment.belongsTo(models.ArchivedInvoice, {
+        //     foreignKey: 'AInvoiceId',
+        //     as: 'ArchivedInvoice', 
+        // });
     }
 
     return Payment;

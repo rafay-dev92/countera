@@ -7,6 +7,10 @@
     "dev": "nodemon app.js",
     "start": "node app.js",
     "test": "echo \"Error: no test specified\" && exit 1",
+    "db:generate": "npx sequelize-cli migration:generate --name $npm_config_name",
+    "db:migrate": "npx sequelize-cli db:migrate",
+    "db:seed": "npx sequelize-cli db:seed:all",
+    "db:undo-seed": "npx sequelize-cli db:seed:undo:all",
     "db:makemigrations": "node ./node_modules/sequelize-auto-migrations/bin/makemigration.js"
   },
   "author": "",

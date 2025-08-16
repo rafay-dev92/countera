@@ -1,14 +1,17 @@
 const { DataTypes } = require("sequelize");
-const InvoicePaymentStatus = require("../utils/enums/invoiceStatuses");
 
 module.exports = (sequelize) => {
-  const Invoice = sequelize.define(
-    "Invoice",
+  const ArchivedInvoice = sequelize.define(
+    "ArchivedInvoice",
     {
       id: {
         type: DataTypes.UUID,
         defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
+        allowNull: false,
+      },
+      originalInvoiceId: {
+        type: DataTypes.UUID,
         allowNull: false,
       },
       invoiceNumber: {
@@ -27,26 +30,18 @@ module.exports = (sequelize) => {
       },
       paymentStatus: {
         type: DataTypes.ENUM(
-          InvoicePaymentStatus.PAID,
-          InvoicePaymentStatus.PARTIALLY_PAID,
-          InvoicePaymentStatus.UNPAID,
-          InvoicePaymentStatus.VOIDED,
-          InvoicePaymentStatus.REFUNDED
+          "UNPAID",
+          "PARTIALLY_PAID",
+          "PAID",
+          "REFUNDED",
+          "VOID"
         ),
         allowNull: false,
-        defaultValue: InvoicePaymentStatus.UNPAID,
+        defaultValue: "UNPAID",
         validate: {
           isIn: {
-            args: [
-              [
-                InvoicePaymentStatus.PAID,
-                InvoicePaymentStatus.PARTIALLY_PAID,
-                InvoicePaymentStatus.UNPAID,
-                InvoicePaymentStatus.VOIDED,
-                InvoicePaymentStatus.REFUNDED,
-              ],
-            ],
-            msg: "Payment status must be either 'PAID', 'PARTIALLY_PAID', 'UNPAID', 'VOIDED', or 'REFUNDED'",
+            args: [["PAID", "PARTIALLY_PAID", "UNPAID", "VOID", "REFUNDED"]],
+            msg: "Payment status must be either 'PAID', 'PARTIALLY_PAID', 'UNPAID', 'VOID', or 'REFUNDED'",
           },
         },
       },
@@ -54,11 +49,6 @@ module.exports = (sequelize) => {
         type: DataTypes.FLOAT,
         allowNull: false,
         defaultValue: 0,
-      },
-      isArchived: {
-        type: DataTypes.BOOLEAN,
-        allowNull: false,
-        defaultValue: false,
       },
       notes: {
         type: DataTypes.STRING,
@@ -98,6 +88,17 @@ module.exports = (sequelize) => {
         allowNull: false,
         defaultValue: false,
       },
+      payments: {
+        type: DataTypes.TEXT,
+        allowNull: false,
+        get() {
+          const rawValue = this.getDataValue("payments");
+          return rawValue ? JSON.parse(rawValue) : [];
+        },
+        set(value) {
+          this.setDataValue("payments", JSON.stringify(value));
+        },
+      },
       CustomerId: {
         type: DataTypes.UUID,
         allowNull: false,
@@ -118,57 +119,54 @@ module.exports = (sequelize) => {
       },
     },
     {
-      tableName: "invoices",
+      tableName: "archived_invoices",
     }
   );
 
-  Invoice.associate = (models) => {
-    Invoice.hasMany(models.Payment, {
-      foreignKey: "InvoiceId",
-      as: "Payments",
-    });
+  ArchivedInvoice.associate = (models) => {
+    // ArchivedInvoice.hasMany(models.Payment, {
+    //     foreignKey: 'AInvoiceId',
+    //     as: 'Payments'
+    // });
 
-    Invoice.belongsToMany(models.Product, {
+    ArchivedInvoice.belongsToMany(models.Product, {
       as: "Products",
-      through: "invoice_product",
+      through: "archived_invoice_product",
     });
 
-    Invoice.belongsTo(models.Customer, {
+    ArchivedInvoice.belongsTo(models.Customer, {
       as: "Customer",
     });
 
-    Invoice.belongsTo(models.CustomerVehicle, {
+    ArchivedInvoice.belongsTo(models.CustomerVehicle, {
       as: "CustomerVehicle",
     });
 
-    Invoice.belongsTo(models.Business, {
+    ArchivedInvoice.belongsTo(models.Business, {
       as: "Business",
     });
   };
 
   // Define a hook to set the invoiceNumber before creating a new invoice
-  Invoice.beforeCreate(async (invoice, options) => {
-    const transaction =
-      options.transaction || (await Invoice.sequelize.transaction());
-    try {
-      const latestInvoice = await Invoice.findOne({
-        where: { BusinessId: invoice.BusinessId }, // Filter by BusinessId
-        order: [["createdAt", "DESC"]], // Sort by creation date
-        lock: transaction.LOCK.UPDATE, // Lock rows to prevent race conditions
-        transaction,
-      });
+  // Invoice.beforeCreate(async (invoice, options) => {
+  //     const transaction = options.transaction || await Invoice.sequelize.transaction();
+  //     try {
+  //         const latestInvoice = await Invoice.findOne({
+  //             where: { BusinessId: invoice.BusinessId }, // Filter by BusinessId
+  //             order: [['createdAt', 'DESC']], // Sort by creation date
+  //             lock: transaction.LOCK.UPDATE, // Lock rows to prevent race conditions
+  //             transaction,
+  //         });
 
-      const nextInvoiceNumber = latestInvoice
-        ? latestInvoice.invoiceNumber + 1
-        : 1;
-      invoice.invoiceNumber = nextInvoiceNumber;
+  //         const nextInvoiceNumber = latestInvoice ? latestInvoice.invoiceNumber + 1 : 1;
+  //         invoice.invoiceNumber = nextInvoiceNumber;
 
-      if (!options.transaction) await transaction.commit();
-    } catch (error) {
-      if (!options.transaction) await transaction.rollback();
-      throw error;
-    }
-  });
+  //         if (!options.transaction) await transaction.commit();
+  //     } catch (error) {
+  //         if (!options.transaction) await transaction.rollback();
+  //         throw error;
+  //     }
+  // });
 
-  return Invoice;
+  return ArchivedInvoice;
 };

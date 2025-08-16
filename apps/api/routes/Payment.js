@@ -23,9 +23,36 @@ router.post("/create", async (req, res) => {
     const paymentData = req.body;
     const newPayment = await Payment.create(paymentData);
     const invoice = await newPayment.getInvoice();
-    const updatedInvoice = await invoice.update({
-      paidAmount: invoice.paidAmount + newPayment.paidAmount,
-    });
+    if (!invoice) {
+      return res.status(404).json({ message: "Invoice not found" });
+    }
+
+    if (invoice.paidAmount === invoice.totalAmount) {
+      return res.status(400).json({ message: "Invoice is already fully paid" });
+    }
+
+    if (newPayment.paidAmount + invoice.paidAmount > invoice.totalAmount) {
+      return res
+        .status(400)
+        .json({ message: "Payment exceeds total invoice amount" });
+    }
+
+    let updatedInvoice = null;
+    if (newPayment.paidAmount + invoice.paidAmount < invoice.totalAmount) {
+      updatedInvoice = await invoice.update({
+        paidAmount: invoice.paidAmount + newPayment.paidAmount,
+        paymentStatus: "PARTIALLY_PAID",
+      });
+    } else if (
+      newPayment.paidAmount + invoice.paidAmount ===
+      invoice.totalAmount
+    ) {
+      updatedInvoice = await invoice.update({
+        paidAmount: invoice.totalAmount,
+        paymentStatus: "PAID",
+      });
+    }
+
     await updatedInvoice.save();
     res.json(newPayment);
   } catch (error) {

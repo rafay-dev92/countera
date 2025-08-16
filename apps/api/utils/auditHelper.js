@@ -81,7 +81,7 @@ const trackObjectChanges = async (
     const newValue = newObject?.[field];
 
     // Special handling for products
-    if (field === "products" || field === "Product") {
+    if (field === "products" || field === "Products") {
       const oldProducts = Array.isArray(oldValue) ? oldValue : [];
       const newProducts = Array.isArray(newValue) ? newValue : [];
 

@@ -216,10 +216,10 @@ const CustomerVehicleForm = ({ open, close, refresh, setRefresh, CustomerId, get
     }, []);
 
     return (
-        <Dialog open={open} size="lg">
+        <Dialog className="bg-transparent p-0" open={open} size="lg">
             {open && (
                 <form onSubmit={handleSubmit} autoComplete="new" >
-                    <div className="fixed top-0 left-0 w-full h-full flex items-center justify-center">
+                    <div className="fixed -top-16 lg:top-0 left-0 w-full h-full flex justify-center items-center">
                         <div className="bg-white rounded shadow-xl">
                             <div className="flex items-center justify-between sticky bg-gradient-to-br from-gray-800 to-gray-700">
                                 <div></div>
@@ -248,10 +248,9 @@ const CustomerVehicleForm = ({ open, close, refresh, setRefresh, CustomerId, get
                                 </button>
                             </div>
 
-                            <div className="p-6 2xl:w-[40vw] xl:w-[60vw] lg:w-[80vw] w-[80vw]">
-                                <div className="flex items-center justify-start space-x-4">
-
-                                    <div className="basis-[20%] max-w-20%">
+                            <div className="p-6 2xl:w-[40vw] xl:w-[60vw] lg:w-[80vw] w-[80vw] max-h-[70vh] lg:max-h-[80vh] overflow-y-auto">
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                    <div className="col-span-1">
                                         <label className="font-bold">Year</label> <br />
                                         <select
                                             className="w-full p-2 border border-gray-300 rounded-md text-black font-small"
@@ -274,95 +273,95 @@ const CustomerVehicleForm = ({ open, close, refresh, setRefresh, CustomerId, get
                                         ) : (<div></div>)}
                                     </div>
 
-                                    <div className="relative basis-[60%] max-w-60%">
-                                        <div className="flex items-center gap-2">
-                                            <div ref={makeInputRef} className="relative">
-                                                <label className="font-bold">Make</label> <br />
-                                                <input
-                                                    className="w-full p-2 border border-gray-300 rounded-md text-black font-small"
-                                                    id="make"
-                                                    name="make"
-                                                    type="text"
-                                                    value={values.make}
-                                                    onClick={() => setShowMakeSuggestions(true)}
-                                                    onChange={handleChange}
-                                                    onBlur={handleBlur}
-                                                    autoComplete="off"
-                                                />
-                                                {showMakeSuggestions && (
-                                                    <ul className="absolute left-0 right-0 z-50 bg-white border border-slate-700 w-full mt-1 overflow-y-auto min-h-24 max-h-48">
-                                                        {vehicles.length > 0 ?
-                                                            [...new Set(vehicles.map(v => v.make))]
-                                                                .filter(make => make.toLowerCase().includes(values.make.toLowerCase()))
-                                                                .sort((a, b) => a.localeCompare(b))
-                                                                .map((make) => (
-                                                                    <li
-                                                                        key={make}
-                                                                        className="cursor-pointer px-2 py-1 rounded-sm hover:bg-gray-200"
-                                                                        onClick={() => {
-                                                                            setValues({ ...values, make: make, model: '' });
-                                                                            setShowMakeSuggestions(false);
-                                                                            setShowModelSuggestions(true);
-                                                                        }}
-                                                                    >
-                                                                        {make}
-                                                                    </li>
-                                                                ))
-                                                            :
-                                                            <Spinner className="mx-auto my-auto h-6 w-6 text-blue-900/50" />
-                                                        }
-                                                    </ul>
-                                                )}
-                                            </div>
+                                    {/* <div className="col-span-full md:col-span-2 lg:col-span-2">
+                                        <div className="flex flex-col md:flex-row gap-4"> */}
+                                    <div ref={makeInputRef} className="relative flex-1">
+                                        <label className="font-bold">Make</label>
+                                        <input
+                                            className="w-full p-2 border border-gray-300 rounded-md text-black font-small"
+                                            id="make"
+                                            name="make"
+                                            type="text"
+                                            value={values.make}
+                                            onClick={() => setShowMakeSuggestions(true)}
+                                            onChange={handleChange}
+                                            onBlur={handleBlur}
+                                            autoComplete="off"
+                                        />
+                                        {showMakeSuggestions && (
+                                            <ul className="absolute left-0 right-0 z-50 bg-white border border-slate-700 w-full mt-1 overflow-y-auto min-h-24 max-h-48">
+                                                {vehicles.length > 0 ?
+                                                    [...new Set(vehicles.map(v => v.make))]
+                                                        .filter(make => make.toLowerCase().includes(values.make.toLowerCase()))
+                                                        .sort((a, b) => a.localeCompare(b))
+                                                        .map((make) => (
+                                                            <li
+                                                                key={make}
+                                                                className="cursor-pointer px-2 py-1 rounded-sm hover:bg-gray-200"
+                                                                onClick={() => {
+                                                                    setValues({ ...values, make: make, model: '' });
+                                                                    setShowMakeSuggestions(false);
+                                                                    setShowModelSuggestions(true);
+                                                                }}
+                                                            >
+                                                                {make}
+                                                            </li>
+                                                        ))
+                                                    :
+                                                    <Spinner className="mx-auto my-auto h-6 w-6 text-blue-900/50" />
+                                                }
+                                            </ul>
+                                        )}
+                                    </div>
 
-                                            <div ref={modelInputRef} className="relative">
-                                                <label className="font-bold">Model</label> <br />
-                                                <input
-                                                    className="w-full p-2 border border-gray-300 rounded-md text-black font-small disabled:bg-gray-100"
-                                                    id="model"
-                                                    name="model"
-                                                    type="text"
-                                                    value={values.model}
-                                                    onClick={() => values.make && setShowModelSuggestions(true)}
-                                                    onChange={handleChange}
-                                                    onBlur={handleBlur}
-                                                    autoComplete="off"
-                                                    disabled={!values.make}
-                                                    placeholder={!values.make ? "Select make first" : "Select model"}
-                                                />
-                                                {showModelSuggestions && values.make && (
-                                                    <ul className="absolute left-0 right-0 z-50 bg-white border border-slate-700 w-full mt-1 overflow-y-auto min-h-24 max-h-48">
-                                                        {vehicles.length > 0 ?
-                                                            vehicles
-                                                                .filter(vehicle => (vehicle.make === values.make) && vehicle.model.toLowerCase().includes(values.model.toLowerCase()))
-                                                                .sort((a, b) => a.model.localeCompare(b.model))
-                                                                .map((vehicle) => (
-                                                                    <li
-                                                                        key={vehicle.id}
-                                                                        className="cursor-pointer px-2 py-1 rounded-sm hover:bg-gray-200"
-                                                                        onClick={() => {
-                                                                            setValues({ ...values, model: vehicle.model });
-                                                                            setShowModelSuggestions(false);
-                                                                        }}
-                                                                    >
-                                                                        {vehicle.model}
-                                                                    </li>
-                                                                ))
-                                                            :
-                                                            <Spinner className="mx-auto my-auto h-6 w-6 text-blue-900/50" />
-                                                        }
-                                                    </ul>
-                                                )}
-                                            </div>
-                                        </div>
+                                    <div ref={modelInputRef} className="relative col-span-1">
+                                        <label className="font-bold">Model</label>
+                                        <input
+                                            className="w-full p-2 border border-gray-300 rounded-md text-black font-small disabled:bg-gray-100"
+                                            id="model"
+                                            name="model"
+                                            type="text"
+                                            value={values.model}
+                                            onClick={() => values.make && setShowModelSuggestions(true)}
+                                            onChange={handleChange}
+                                            onBlur={handleBlur}
+                                            autoComplete="off"
+                                            disabled={!values.make}
+                                            placeholder={!values.make ? "Select make first" : "Select model"}
+                                        />
+                                        {showModelSuggestions && values.make && (
+                                            <ul className="absolute left-0 right-0 z-50 bg-white border border-slate-700 w-full mt-1 overflow-y-auto min-h-24 max-h-48">
+                                                {vehicles.length > 0 ?
+                                                    vehicles
+                                                        .filter(vehicle => (vehicle.make === values.make) && vehicle.model.toLowerCase().includes(values.model.toLowerCase()))
+                                                        .sort((a, b) => a.model.localeCompare(b.model))
+                                                        .map((vehicle) => (
+                                                            <li
+                                                                key={vehicle.id}
+                                                                className="cursor-pointer px-2 py-1 rounded-sm hover:bg-gray-200"
+                                                                onClick={() => {
+                                                                    setValues({ ...values, model: vehicle.model });
+                                                                    setShowModelSuggestions(false);
+                                                                }}
+                                                            >
+                                                                {vehicle.model}
+                                                            </li>
+                                                        ))
+                                                    :
+                                                    <Spinner className="mx-auto my-auto h-6 w-6 text-blue-900/50" />
+                                                }
+                                            </ul>
+                                        )}
+                                    </div>
+                                    {/* </div> */}
 
-                                        {/* {(touched.make && errors.make) ? (
+                                    {/* {(touched.make && errors.make) ? (
                                             <div className="text-red-500">
                                                 {errors.make}
                                             </div>
                                         ) : (<div></div>)} */}
-                                    </div>
-                                    <div className="basis-[20%] max-w-20%">
+                                    {/* </div> */}
+                                    <div className="col-span-1">
                                         <label className="font-bold">Odometer</label> <br />
                                         <input
                                             className="w-full p-2 border border-gray-300 rounded-md text-black font-small"
@@ -382,8 +381,10 @@ const CustomerVehicleForm = ({ open, close, refresh, setRefresh, CustomerId, get
                                     </div>
                                 </div>
 
-                                <div className="flex items-center justify-start space-x-4 mt-4">
-                                    <div className="basis-1/3 max-w-33.33%">
+                                {/* <div className="flex items-center justify-start space-x-4 mt-4"> */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+
+                                    <div className="col-span-1">
                                         <label className="font-bold">License No.</label> <br />
                                         <input
                                             className="w-full p-2 border border-gray-300 rounded-md text-black font-small"
@@ -401,7 +402,7 @@ const CustomerVehicleForm = ({ open, close, refresh, setRefresh, CustomerId, get
                                             </div>
                                         ) : (<div></div>)}
                                     </div>
-                                    <div className="basis-1/3 max-w-33.33%">
+                                    <div className="col-span-1">
                                         <label className="font-bold">Vin No.</label> <br />
                                         <input
                                             className="w-full p-2 border border-gray-300 rounded-md text-black font-small"
@@ -455,8 +456,8 @@ const CustomerVehicleForm = ({ open, close, refresh, setRefresh, CustomerId, get
                                             </div>
                                         ) : (<div></div>)}
                                     </div>
-
                                 </div>
+                                {/* </div> */}
                                 <div className="mt-4">
                                     <label className="font-bold">Notes</label> <br />
                                     <textarea
@@ -497,9 +498,9 @@ const CustomerVehicleForm = ({ open, close, refresh, setRefresh, CustomerId, get
                             </div>
                         </div>
                     </div>
-                </form>
+                </form >
             )}
-        </Dialog>
+        </Dialog >
     );
 };
 export default CustomerVehicleForm;

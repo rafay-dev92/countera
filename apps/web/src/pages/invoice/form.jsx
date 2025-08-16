@@ -37,6 +37,8 @@ import { fetchPackages } from "@/services/fetchPackages";
 import ProductForm from "../../utils/forms/productForm";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import { updateInvoiceShadow } from "@/services/updateInvoiceShadow";
+import { useConfirm } from "@/context/confirmContext";
 
 const TABLE_HEAD = [
   "Product",
@@ -62,11 +64,14 @@ const schema = Yup.object().shape({
 
 const MyPopUpForm = ({ refresh, setRefresh, close }) => {
   const componentRef = useRef();
+  const confirm = useConfirm();
+
   const printRef = useRef();
   const customerInputRef = useRef();
   const productInputRef = useRef();
 
   const { state, dispatch } = State();
+  const [resetForm, setResetForm] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [customers, setCustomers] = useState([]);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
@@ -86,7 +91,7 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
   const [discount, setDiscount] = useState(0);
   const [lumSum, setLumSum] = useState(0);
   const [edit, setEdit] = useState(false);
-  const [printInvoice, setPrintInvoice] = useState([]);
+  const [printInvoice, setPrintInvoice] = useState({});
   const [appliedTaxes, setAppliedTaxes] = useState({});
   const [showCustomerSuggestions, setShowCustomerSuggestions] = useState(false);
   const [showProductSuggestions, setShowProductSuggestions] = useState(false);
@@ -98,6 +103,7 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
 
   // product suggestions
   const [productSearchText, setProductSearchText] = useState("");
+  const [productsPosition, setProductsPosition] = useState({ top: 0, left: 0, width: 0 })
 
   // product packages
   const [selectedPackage, setSelectedPackage] = useState("");
@@ -179,11 +185,10 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
       setSelectedCustomer(selectedInvoice.Customer)
       setSelectedVehicle(selectedInvoice.CustomerVehicle)
       setVehicleOdometer(selectedInvoice.CustomerVehicle?.odometer)
-      // setProducts(selectedInvoice.Product)
 
       setValues({ ...selectedInvoice, ['customer']: selectedInvoice.CustomerId, ['vehicle']: selectedInvoice.CustomerVehicleId })
       let selectedProd = [...selectedProducts]
-      selectedInvoice?.Product?.forEach((prod) => {
+      selectedInvoice?.Products?.forEach((prod) => {
         const aProd = {
           product: prod.id,
           id: prod.id,
@@ -223,7 +228,7 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
 
       setSelectedProducts(selectedProd);
     }
-  }, [state?.invoice?.viewData]);
+  }, [state?.invoice?.viewData, resetForm]);
 
   // handle submit
   const onSubmit = async (values) => {
@@ -264,17 +269,39 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
 
     try {
       if (edit) {
-        const res = await updateInvoice(printInvoice.id, data, state.userToken)
-        const invoice = await res.json();
-        setPrintInvoice(invoice?.data);
-        if (res.status === 200) {
-          showToastMessage('success', invoice.message)
+        const confirmed = await confirm("Are you sure you want to update this invoice?");
+        if (!confirmed) {
+          setIsLoading(false);
+          return;
         }
-        else if (res.status === 404) {
-          showToastMessage('info', invoice.message)
+
+        if (printInvoice.paymentStatus !== "PAID") {
+          const res = await updateInvoice(printInvoice.id, data, state.userToken)
+          const invoice = await res.json();
+          setPrintInvoice(invoice?.data);
+          if (res.status === 200) {
+            showToastMessage('success', invoice.message)
+          }
+          else if (res.status === 404) {
+            showToastMessage('info', invoice.message)
+          }
+          else if (res.status === 409) {
+            showToastMessage('error', invoice.message)
+          }
         }
-        else if (res.status === 409) {
-          showToastMessage('error', invoice.message)
+        else {
+          const res = await updateInvoiceShadow(printInvoice.id, data, state.userToken)
+          const invoice = await res.json();
+          setPrintInvoice(invoice?.data);
+          if (res.status === 200) {
+            showToastMessage('success', invoice.message)
+          }
+          else if (res.status === 404) {
+            showToastMessage('info', invoice.message)
+          }
+          else if (res.status === 409) {
+            showToastMessage('error', invoice.message)
+          }
         }
       }
       else {
@@ -329,6 +356,12 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
         setShowPackageModal(true);
       }
     }
+  };
+
+  // calculate changable amount
+  const getCashAmount = (invoice) => {
+    const cashAmount = invoice.Payments.reduce((acc, payment) => payment.paymentMethod === 'Cash' ? acc + payment.paidAmount : acc, 0);
+    return cashAmount.toFixed(2);
   };
 
   // Handle product change
@@ -400,15 +433,46 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
     setProductSearchText("");
   };
 
+  const isQuantityUpdateAccepted = (updatedItems) => {
+    const cashAmount = getCashAmount(printInvoice);
+    const totalCurrentAmount = updatedItems.reduce((acc, item) => {
+      return acc + (parseFloat(item.price) || 0) * (parseFloat(item.quantity) || 0);
+    }, 0);
+    const taxes = recalculateTaxes(updatedItems);
+    const totalTaxAmount = Object.values(taxes).reduce((acc, tax) => acc + parseFloat(tax), 0);
+    const paymentDifference = printInvoice.paidAmount - (totalCurrentAmount + totalTaxAmount);
+    return paymentDifference <= parseFloat(cashAmount);
+  };
+
   // Handle quantity change
   const handleQuantityChange = (index, quantity) => {
     const updatedItems = [...selectedProducts];
     updatedItems[index].quantity = Number(quantity);
 
+    if (printInvoice.paymentStatus === "PAID") {
+      const isAccepted = isQuantityUpdateAccepted(updatedItems);
+      if (!isAccepted) {
+        updatedItems[index].quantity = Number(quantity) + 1;
+        toast.error("update amount must be less than or equal to invoice amount");
+        return;
+      }
+    }
+
     // Recalculate taxes
     recalculateTaxes(updatedItems);
 
     setSelectedProducts(updatedItems);
+  };
+
+  const isPriceUpdateAccepted = (updatedItems) => {
+    const cashAmount = getCashAmount(printInvoice);
+    const totalCurrentAmount = updatedItems.reduce((acc, item) => {
+      return acc + (parseFloat(item.price) || 0) * (parseFloat(item.quantity) || 0);
+    }, 0);
+    const taxes = recalculateTaxes(updatedItems);
+    const totalTaxAmount = Object.values(taxes).reduce((acc, tax) => acc + parseFloat(tax), 0);
+    const paymentDifference = printInvoice.paidAmount - (totalCurrentAmount + totalTaxAmount);
+    return paymentDifference <= parseFloat(cashAmount);
   };
 
   // Handle price change
@@ -416,15 +480,44 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
     const updatedItems = [...selectedProducts];
     updatedItems[index].price = Number(price);
 
+    if (printInvoice.paymentStatus === "PAID") {
+      // Check if the updated price exceeds the cash amount
+      const isAccepted = isPriceUpdateAccepted(updatedItems);
+      if (!isAccepted) {
+        updatedItems[index].price = Number(price) + 1;
+        toast.error("update amount must be less than or equal to cash amount");
+        return;
+      }
+    }
+
     // Recalculate taxes
     recalculateTaxes(updatedItems);
     setSelectedProducts(updatedItems);
+  };
+
+  const isProductRemovedAccepted = (updatedItems) => {
+    const cashAmount = getCashAmount(printInvoice);
+    const totalCurrentAmount = updatedItems.reduce((acc, item) => {
+      return acc + (parseFloat(item.price) || 0) * (parseFloat(item.quantity) || 0);
+    }, 0);
+    const taxes = recalculateTaxes(updatedItems);
+    const totalTaxAmount = Object.values(taxes).reduce((acc, tax) => acc + parseFloat(tax), 0);
+    const paymentDifference = printInvoice.paidAmount - (totalCurrentAmount + totalTaxAmount);
+    return paymentDifference <= parseFloat(cashAmount);
   };
 
   // Handle removing a product
   const handleRemoveProduct = (index) => {
     const updatedItems = [...selectedProducts];
     updatedItems.splice(index, 1);
+
+    if (printInvoice.paymentStatus === "PAID") {
+      const isAccepted = isProductRemovedAccepted(updatedItems);
+      if (!isAccepted) {
+        toast.error("update amount must be less than or equal to cash amount");
+        return;
+      }
+    }
 
     // Recalculate taxes if there are remaining items
     if (updatedItems.length > 0) {
@@ -460,6 +553,7 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
       });
     });
     setAppliedTaxes(productTaxes);
+    return productTaxes;
   };
 
   // calculate amount
@@ -649,10 +743,6 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
   useEffect(() => {
     if (printInvoice && Object.keys(printInvoice).length > 0) {
       dispatch({ type: 'SET_INVOICE_VIEW', payload: true });
-      // if (printRef.current) {
-      //   printRef.current.handlePrint();
-      //   handleClose();
-      // }
     }
   }, [printInvoice])
 
@@ -672,12 +762,23 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
     setDiscount(appliedDiscount);
   }
 
+  useEffect(() => {
+    if (showProductSuggestions && productInputRef.current) {
+      const rect = productInputRef.current.getBoundingClientRect()
+      setProductsPosition({
+        top: rect.bottom + window.scrollY,
+        left: rect.left + window.scrollX,
+        width: rect.width,
+      })
+    }
+  }, [showProductSuggestions, productInputRef])
+
   return (
     <>
-      <Dialog open={state?.invoice?.openForm} size="lg">
+      <Dialog className="bg-transparent shadow-none p-0" open={state?.invoice?.openForm} size="lg">
         {state?.invoice?.openForm && (
           <form onSubmit={handleSubmit}>
-            <div className="flex justify-center items-center h-[90vh]">
+            <div className="flex justify-center items-start lg:items-center min-h-screen lg:max-h-[90vh]">
               <div className="bg-white rounded shadow-xl w-[95vw] md:w-[95vw] lg:w-[95vw] xl:w-[80vw] 2xl:w-[65vw] mx-auto">
                 <div className="flex items-center justify-between sticky bg-gradient-to-br from-gray-800 to-gray-700">
                   <div></div>
@@ -709,7 +810,7 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
                 {state?.invoice?.isViewOpen ? (
                   <ViewInvoice printInvoice={printInvoice} setPrintInvoice={setPrintInvoice} componentRef={componentRef} appliedTaxes={appliedTaxes} setEdit={setEdit} close={handleClose} />
                 ) : (
-                  <div className="overflow-y-auto h-[85vh] overflow-x-hidden p-4 md:p-6 w-[95vw] md:w-[95vw] lg:w-[95vw] xl:w-[80vw] 2xl:w-[65vw]">
+                  <div className="overflow-y-auto h-[65vh] lg:h-[85vh] overflow-x-hidden p-4 md:p-6 w-[95vw] md:w-[95vw] lg:w-[95vw] xl:w-[80vw] 2xl:w-[65vw]">
                     <div className="flex flex-col lg:flex-row gap-4">
                       <div className="w-full lg:w-[35%]">
                         <div className="relative mb-7" ref={customerInputRef}>
@@ -805,8 +906,8 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
                               name="address"
                               type="text"
                               value={selectedCustomer ? [
-                                selectedCustomer?.Address.street,
-                                selectedCustomer?.Address.city
+                                selectedCustomer?.Address?.street,
+                                selectedCustomer?.Address?.city
                               ].filter(Boolean).join(', ') : ''}
                               disabled
                             />
@@ -925,7 +1026,7 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
                               <div>
                                 <div className="flex items-center pl-2">
                                   <label className="font-bold">Odometer</label>
-                                  <Tooltip content="reset" className="z-[9999]">
+                                  <Tooltip content="Reset" className="z-[9999]">
                                     <IconButton
                                       variant="text"
                                       onClick={() => setVehicleOdometer(selectedVehicle?.odometer)}
@@ -994,268 +1095,261 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
                       </div>
                     </div>
 
-                    <table className="w-full min-w-max table-auto text-left my-2">
-                      <thead>
-                        <tr>
-                          {TABLE_HEAD.map((head) => (
-                            <th
-                              key={head}
-                              className="border-y border-blue-gray-100 bg-blue-gray-50/50 p-4"
-                            >
-                              <Typography
-                                variant="small"
-                                color="blue-gray"
-                                className="font-normal leading-none opacity-70"
+                    <div className="overflow-x-auto my-2">
+                      <table className="w-full min-w-max table-auto text-left my-2">
+                        <thead>
+                          <tr>
+                            {TABLE_HEAD.map((head) => (
+                              <th
+                                key={head}
+                                className="border-y border-blue-gray-100 bg-blue-gray-50/50 p-4"
                               >
-                                {head}
-                              </Typography>
-                            </th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {selectedProducts.map((item, index) => (
-                          <tr key={index}>
-                            <td className="p-4 border-b border-blue-gray-50">
-                              {index !== (selectedProducts.length - 1) ?
-                                <div className="flex flex-col">
-                                  <div className="w-80 h-[97%] mx-2 p-2 border border-gray-300 rounded-md text-gray-600 font-small">
-                                    {item.name}
+                                <Typography
+                                  variant="small"
+                                  color="blue-gray"
+                                  className="font-normal leading-none opacity-70"
+                                >
+                                  {head}
+                                </Typography>
+                              </th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {selectedProducts.map((item, index) => (
+                            <tr key={index}>
+                              <td className="p-4 border-b border-blue-gray-50">
+                                {index !== (selectedProducts.length - 1) ?
+                                  <div className="flex flex-col">
+                                    <div className="w-80 h-[97%] mx-2 p-2 border border-gray-300 rounded-md text-gray-600 font-small">
+                                      {item.name}
+                                    </div>
+                                    {/* Product description */}
+                                    <div>
+                                      <input
+                                        id="description"
+                                        name="description"
+                                        className="w-80 h-[30%] mx-2 p-1 rounded-md text-gray-600 text-xs focus:outline-none "
+                                        type="text"
+                                        value={item.description}
+                                        onChange={(e) => { setSelectedProducts((prev) => { const newProducts = [...prev]; newProducts[index].description = e.target.value; return newProducts }) }}
+                                        onBlur={handleBlur}
+                                        autoComplete="off"
+                                        placeholder="Description"
+                                      />
+                                    </div>
                                   </div>
-                                  {/* Product description */}
-                                  <div>
+                                  :
+                                  <div ref={productInputRef} className="relative w-fit">
                                     <input
-                                      id="description"
-                                      name="description"
-                                      className="w-80 h-[30%] mx-2 p-1 rounded-md text-gray-600 text-xs focus:outline-none "
+                                      className="w-80 h-[97%] m-2 p-2 border border-gray-300 rounded-md text-gray-600 font-small"
+                                      id="product"
+                                      name="product"
                                       type="text"
-                                      value={item.description}
-                                      onChange={(e) => { setSelectedProducts((prev) => { const newProducts = [...prev]; newProducts[index].description = e.target.value; return newProducts }) }}
+                                      value={selectedProducts[index].name ? selectedProducts[index].name : productSearchText}
+                                      onClick={() => { selectedCustomer && setShowProductSuggestions(true) }}
+                                      onChange={(e) => setProductSearchText(e.target.value)}
                                       onBlur={handleBlur}
                                       autoComplete="off"
-                                      placeholder="Description"
+                                      placeholder="Select Product"
                                     />
-                                  </div>
-                                </div>
-                                :
-                                <div ref={productInputRef} className="relative w-fit">
-                                  <input
-                                    className="w-80 h-[97%] m-2 p-2 border border-gray-300 rounded-md text-gray-600 font-small"
-                                    id="product"
-                                    name="product"
-                                    type="text"
-                                    value={selectedProducts[index].name ? selectedProducts[index].name : productSearchText}
-                                    onClick={() => { selectedCustomer && setShowProductSuggestions(true) }}
-                                    onChange={(e) => setProductSearchText(e.target.value)}
-                                    onBlur={handleBlur}
-                                    autoComplete="off"
-                                    placeholder="Select Product"
-                                  />
-                                  {showProductSuggestions && (
-                                    <ul className="absolute left-0 right-0 z-50 bg-white border border-slate-700 mt-1 ml-2 overflow-y-auto min-h-24 max-h-48 w-80">
-                                      {products?.length > 0 ? (
-                                        products
-                                          .filter(product =>
-                                            product?.name?.toLowerCase().includes(productSearchText.toLowerCase())
-                                          )
-                                          .map(product => (
-                                            <li
-                                              key={product.id}
-                                              className="cursor-pointer px-2 py-1 rounded-sm hover:bg-gray-200"
+                                    {showProductSuggestions && (
+                                      <ul className="fixed bg-white border border-gray-300 overflow-y-auto min-h-24 max-h-48 w-80"
+                                        style={{
+                                          top: productsPosition.top,
+                                          left: productsPosition.left,
+                                          width: productsPosition.width,
+                                          zIndex: 9999,
+                                        }}
+                                      >
+                                        {products?.length > 0 ? (
+                                          products
+                                            .filter(product =>
+                                              product?.name?.toLowerCase().includes(productSearchText.toLowerCase())
+                                            )
+                                            .map(product => (
+                                              <li
+                                                key={product.id}
+                                                className="cursor-pointer px-2 py-1 rounded-sm hover:bg-gray-200"
+                                                onClick={() => {
+                                                  handleProductChange(index, item.quantity, product.id);
+                                                  setShowProductSuggestions(false);
+                                                }}
+                                              >
+                                                {product.name}
+                                              </li>
+                                            ))
+                                            .concat(
+                                              products.filter(product =>
+                                                product?.name?.toLowerCase().includes(productSearchText.toLowerCase())
+                                              ).length === 0
+                                                ? [
+                                                  <li key="no-product" className="px-2 py-1 rounded-sm flex justify-between items-center">
+                                                    <span>No Product Found</span>
+                                                    <Button
+                                                      className="rounded"
+                                                      size="sm"
+                                                      color="blue"
+                                                      onClick={() => {
+                                                        setShowProductSuggestions(false);
+                                                        dispatch({
+                                                          type: "SET_PRODUCT_DATA",
+                                                          payload:
+                                                            true,
+                                                        });
+                                                      }}
+                                                    >
+                                                      Add New Product
+                                                    </Button>
+                                                  </li>
+                                                ]
+                                                : []
+                                            )
+                                        ) : (
+                                          <li className="px-2 py-1 rounded-sm flex justify-between items-center">
+                                            <span>No Product Found</span>
+                                            <Button
+                                              className="rounded"
+                                              size="sm"
+                                              color="blue"
                                               onClick={() => {
-                                                handleProductChange(index, item.quantity, product.id);
                                                 setShowProductSuggestions(false);
+                                                dispatch({
+                                                  type: "SET_PRODUCT_DATA",
+                                                  payload:
+                                                    true,
+                                                });
                                               }}
                                             >
-                                              {product.name}
-                                            </li>
-                                          ))
-                                          .concat(
-                                            products.filter(product =>
-                                              product?.name?.toLowerCase().includes(productSearchText.toLowerCase())
-                                            ).length === 0
-                                              ? [
-                                                <li key="no-product" className="px-2 py-1 rounded-sm flex justify-between items-center">
-                                                  <span>No Product Found</span>
-                                                  <Button
-                                                    className="rounded"
-                                                    size="sm"
-                                                    color="blue"
-                                                    onClick={() => {
-                                                      setShowProductSuggestions(false);
-                                                      dispatch({
-                                                        type: "SET_PRODUCT_DATA",
-                                                        payload:
-                                                          true,
-                                                      });
-                                                    }}
-                                                  >
-                                                    Add New Product
-                                                  </Button>
-                                                </li>
-                                              ]
-                                              : []
-                                          )
-                                      ) : (
-                                        <li className="px-2 py-1 rounded-sm flex justify-between items-center">
-                                          <span>No Product Found</span>
-                                          <Button
-                                            className="rounded"
-                                            size="sm"
-                                            color="blue"
-                                            onClick={() => {
-                                              setShowProductSuggestions(false);
-                                              dispatch({
-                                                type: "SET_PRODUCT_DATA",
-                                                payload:
-                                                  true,
-                                              });
-                                            }}
-                                          >
-                                            Add New Product
-                                          </Button>
-                                        </li>
-                                      )}
-                                    </ul>
+                                              Add New Product
+                                            </Button>
+                                          </li>
+                                        )}
+                                      </ul>
 
-                                  )}
-                                </div>
-                              }
-                            </td>
-                            <td className="p-4 border-b border-blue-gray-50">
-                              <input
-                                type="number"
-                                min={1}
-                                className="w-14 p-2 border rounded-md text-black"
-                                value={item.quantity}
-                                onChange={(e) =>
-                                  handleQuantityChange(index, e.target.value)
+                                    )}
+                                  </div>
                                 }
-                              />
-                            </td>
-                            <td className="p-4 border-b border-blue-gray-50">
-                              <input
-                                type="number"
-                                min={0}
-                                step="0.01"
-                                className="w-24 p-2 border rounded-md text-black"
-                                value={item.price == 0 ? '' : item.price}
-                                placeholder="0.00"
-                                onChange={(e) =>
-                                  handlePriceChange(index, e.target.value)
-                                }
-                              />
-                            </td>
-                            <td className="p-4 border-b border-blue-gray-50">
-                              <input
-                                type="checkbox"
-                                checked={selectedCustomer?.taxable && item.taxable}
-                                readOnly
-                              />
-                            </td>
-                            <td className="p-4 border-b border-blue-gray-50">
-                              <Typography
-                                variant="small"
-                                color="blue-gray"
-                                className="font-normal opacity-70"
-                              >
-                                {calculateAmount(item.price, item.quantity)}
-                              </Typography>
-                            </td>
-                            <td className="p-4 border-b border-blue-gray-50">
-                              <DatePicker
-                                selected={item.replacement_reminder_date}
-                                onChange={(date) => {
-                                  const newProducts = [...selectedProducts];
-                                  newProducts[index].replacement_reminder_date = date;
-                                  setSelectedProducts(newProducts);
-                                }}
-                                className="w-36 p-2 border rounded-md text-black"
-                                dateFormat="MM/dd/yyyy"
-                                placeholderText="Select a date"
-                              />
-                            </td>
-                            <td className="p-4 border-b border-blue-gray-50 text-center px-4 py-2">
-                              {index !== selectedProducts.length - 1 ?
-                                <XCircleIcon
-                                  onClick={() => handleRemoveProduct(index)}
-                                  className="h-6 w-6 text-gray-600 hover:text-red-500 cursor-pointer"
+                              </td>
+                              <td className="p-4 border-b border-blue-gray-50">
+                                <input
+                                  type="number"
+                                  min={1}
+                                  className="w-14 p-2 border rounded-md text-black"
+                                  value={item.quantity}
+                                  onChange={(e) =>
+                                    handleQuantityChange(index, e.target.value)
+                                  }
                                 />
-                                :
-                                null
-                              }
-                            </td>
-                          </tr>
+                              </td>
+                              <td className="p-4 border-b border-blue-gray-50">
+                                <input
+                                  type="number"
+                                  min={0}
+                                  step="0.01"
+                                  className="w-24 p-2 border rounded-md text-black"
+                                  value={item.price == 0 ? '' : item.price}
+                                  placeholder="0.00"
+                                  onChange={(e) =>
+                                    handlePriceChange(index, e.target.value)
+                                  }
+                                />
+                              </td>
+                              <td className="p-4 border-b border-blue-gray-50">
+                                <input
+                                  type="checkbox"
+                                  checked={selectedCustomer?.taxable && item.taxable}
+                                  readOnly
+                                />
+                              </td>
+                              <td className="p-4 border-b border-blue-gray-50">
+                                <Typography
+                                  variant="small"
+                                  color="blue-gray"
+                                  className="font-normal opacity-70"
+                                >
+                                  {calculateAmount(item.price, item.quantity)}
+                                </Typography>
+                              </td>
+                              <td className="p-4 border-b border-blue-gray-50">
+                                <DatePicker
+                                  selected={item.replacement_reminder_date}
+                                  onChange={(date) => {
+                                    const newProducts = [...selectedProducts];
+                                    newProducts[index].replacement_reminder_date = date;
+                                    setSelectedProducts(newProducts);
+                                  }}
+                                  className="w-36 p-2 border rounded-md text-black"
+                                  dateFormat="MM/dd/yyyy"
+                                  placeholderText="Select a date"
+                                />
+                              </td>
+                              <td className="p-4 border-b border-blue-gray-50 text-center px-4 py-2">
+                                {index !== selectedProducts.length - 1 ?
+                                  <XCircleIcon
+                                    onClick={() => handleRemoveProduct(index)}
+                                    className="h-6 w-6 text-gray-600 hover:text-red-500 cursor-pointer"
+                                  />
+                                  :
+                                  null
+                                }
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+
+                      </table>
+                    </div>
+
+                    <div className="flex flex-col lg:flex-row gap-4">
+                      <div className="w-full grid grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+                        {[
+                          { id: 'manufactureWarranty', name: 'manufactureWarranty', label: 'Manufacture Warranty', value: values.manufactureWarranty },
+                          { id: 'roadHazardWarranty', name: 'roadHazardWarranty', label: 'Road Hazard Warranty', value: values.roadHazardWarranty },
+                          { id: 'flatRepairWarranty', name: 'flatRepairWarranty', label: 'Flat Repair Warranty', value: values.flatRepairWarranty },
+                          { id: 'rotationWarranty', name: 'rotationWarranty', label: 'Rotation Warranty', value: values.rotationWarranty },
+                          { id: 'noWarranty', name: 'noWarranty', label: 'No Warranty', value: values.noWarranty },
+                          { id: 'balanceWarranty', name: 'balanceWarranty', label: 'Balance', value: values.balanceWarranty },
+                        ].map((item) => (
+                          <label
+                            key={item.id}
+                            htmlFor={item.id}
+                            className="flex items-start gap-2 text-gray-800 text-xs sm:text-sm cursor-pointer w-fit"
+                          >
+                            <input
+                              id={item.id}
+                              name={item.name}
+                              type="checkbox"
+                              checked={item.value}
+                              onChange={handleChange}
+                              className=" h-4 w-4 shrink-0 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 cursor-pointer"
+                            />
+                            <span className="leading-snug break-words">{item.label}</span>
+                          </label>
                         ))}
-                      </tbody>
-
-                    </table>
-
-                    <div className="flex">
-                      <div className="basis-[50%] max-w-[50%] grid grid-cols-1 sm:grid-cols-2 gap-4 p-4">
-                        <Checkbox
-                          id="manufactureWarranty"
-                          name="manufactureWarranty"
-                          label="Manufacture Warranty"
-                          checked={values.manufactureWarranty}
-                          onChange={handleChange}
-                        />
-                        <Checkbox
-                          id="roadHazardWarranty"
-                          name="roadHazardWarranty"
-                          label="Road Hazard Warranty"
-                          checked={values.roadHazardWarranty}
-                          onChange={handleChange}
-                        />
-                        <Checkbox
-                          id="flatRepairWarranty"
-                          name="flatRepairWarranty"
-                          label="Flat Repair Warranty"
-                          checked={values.flatRepairWarranty}
-                          onChange={handleChange}
-                        />
-                        <Checkbox
-                          id="rotationWarranty"
-                          name="rotationWarranty"
-                          label="Rotation Warranty"
-                          checked={values.rotationWarranty}
-                          onChange={handleChange}
-                        />
-                        <Checkbox
-                          id="noWarranty"
-                          name="noWarranty"
-                          label="No Warranty"
-                          checked={values.noWarranty}
-                          onChange={handleChange}
-                        />
-                        <Checkbox
-                          id="balanceWarranty"
-                          name="balanceWarranty"
-                          label="Balance"
-                          checked={values.balance}
-                          onChange={handleChange}
-                        />
                       </div>
 
 
-                      <div className="basis-[50%] max-w-[50%] border my-1 font-normal">
-                        <div className="flex items-center justify-between p-2 border-b-2 bg-yellow-300">
-                          <div className="text-md">
-                            <Input
-                              type="number"
-                              step="any"
-                              min={0}
-                              className="w-fit no-spinner text-left border-none focus:border-none focus:ring-0"
-                              placeholder="Lumsum"
-                              value={lumSum === 0 ? '' : lumSum}
-                              onChange={(e) => setLumSum(parseFloat(e.target.value) || 0)}
-                              labelProps={{
-                                className: "before:content-none after:content-none",
-                              }}
-                            />
+                      <div className="lg:basis-[50%] lg:max-w-[50%] border my-1 font-normal">
+                        {!edit && (
+                          <div className="flex items-center justify-between px-2 lg:p-2 border-b-2 bg-yellow-300">
+                            <div className="text-md">
+                              <Input
+                                type="number"
+                                step="any"
+                                min={0}
+                                className="w-fit no-spinner text-left border-none focus:border-none focus:ring-0"
+                                placeholder="Lumsum"
+                                value={lumSum === 0 ? '' : lumSum}
+                                onChange={(e) => setLumSum(parseFloat(e.target.value) || 0)}
+                                labelProps={{
+                                  className: "before:content-none after:content-none",
+                                }}
+                              />
+                            </div>
+                            <Button className="" disabled={lumSum === 0 || lumSum > calculateTotalAmountWithTax()} size="sm" color="blue" onClick={handleLumSum}>Apply</Button>
                           </div>
-                          <Button disabled={lumSum === 0 || lumSum > calculateTotalAmountWithTax()} size="sm" color="blue" onClick={handleLumSum}>Apply</Button>
-                        </div>
+                        )}
                         <div className="flex justify-between p-2">
                           <div className="text-md">
                             <h1>Subtotal</h1>
@@ -1298,30 +1392,6 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
                             />
                           </div>
                         </div>
-                        {/* <div className="flex justify-between mx-10">
-                        <div className="w-min" >
-                          <select
-                            className="w-min p-2 border border-gray-300 bg-inherit rounded-md outline-none"
-                            value={""}
-                            onChange={(e) =>
-                              handleTaxChange(e.target.value)
-                            }
-                          >
-                            <option value="">Select Tax</option>
-                            {taxes.map((tax) => (
-                              <option
-                                key={tax.id}
-                                value={tax.id}
-                              >
-                                {tax.name}
-                              </option>
-                            ))}
-                           </select>
-                        </div>
-                        
-                        <div></div>                        
-                      </div> */}
-
                         <div className="flex items-center justify-between p-2 font-medium text-black bg-yellow-700">
                           <div className="text-md">
                             <h1>Total</h1>
@@ -1349,12 +1419,21 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
                   /> */}
                     {edit && (
                       <button className=" w-32 bg-gray-600 hover:bg-gray-900 text-white font-bold py-2 px-4"
-                        onClick={() => { setEdit(false); dispatch({ type: 'SET_INVOICE_VIEW', payload: true }) }}
+                        onClick={() => { setEdit(false); dispatch({ type: 'SET_INVOICE_VIEW', payload: true }); clearForm(formikProps); setResetForm(!resetForm) }}
                         type="button"
                       >
                         Back
                       </button>
                     )}
+
+                    {/* {edit && (
+                      <button className=" w-32 bg-gray-600 hover:bg-gray-900 text-white font-bold py-2 px-4"
+                        onClick={() => { clearForm(formikProps); setResetForm(!resetForm) }}
+                        type="button"
+                      >
+                        Reset
+                      </button>
+                    )} */}
 
                     <button
                       className=" w-32 bg-gray-600 hover:bg-gray-900 text-white font-bold py-2 px-4"

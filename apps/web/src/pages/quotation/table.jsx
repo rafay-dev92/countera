@@ -71,41 +71,34 @@ export function Quotation() {
 
     const handleEditQuotation = (index) => {
         // Assuming currentItems holds the filtered rows for display
-        if (state.userInfo.Permission.some(obj => obj.name === "CAN_EDIT_QUOTATION" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
-            const selected = currentItems[index];
-            setSelectedQuotation(selected);
-            openPopup();
-        }
-        else {
-            toast.error("You are not allowed to update a quotation");
-        }
+        const selected = currentItems[index];
+        setSelectedQuotation(selected);
+        openPopup();
     };
 
     const handleDeleteQuotation = async (index) => {
         const confirmed = await confirm("Do you really want to delete this quotation?");
         if (!confirmed) return;
-        if (state.userInfo.Permission.some(obj => obj.name === "CAN_DELETE_QUOTATION" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
-            const updatedQuotations = quotations.filter((_, rowIndex) => rowIndex !== index);
-            const deletedQuotationId = quotations.find((_, rowIndex) => rowIndex === index);
-            setQuotations(updatedQuotations);
-            try {
-                const res = await delQuotation(deletedQuotationId['id'], state.userToken);
-                const quotation = await res.json();
-                if (res.status === 200) {
-                    showToastMessage('success', quotation.message)
-                }
-                else if (res.status === 404) {
-                    showToastMessage('info', quotation.message)
-                }
-                setRefresh(!refresh);
-
-            } catch (error) {
-                console.log(error);
-                showToastMessage('error', "Something went wrong");
+        const updatedQuotations = quotations.filter((_, rowIndex) => rowIndex !== index);
+        const deletedQuotationId = quotations.find((_, rowIndex) => rowIndex === index);
+        setQuotations(updatedQuotations);
+        try {
+            const res = await delQuotation(deletedQuotationId['id'], state.userToken);
+            const quotation = await res.json();
+            if (res.status === 200) {
+                showToastMessage('success', quotation.message)
             }
-        }
-        else {
-            toast.error("You are not allowed to delete a quotation");
+            else if (res.status === 404) {
+                showToastMessage('info', quotation.message)
+            }
+            else if (res.status === 403) {
+                showToastMessage('error', quotation.message)
+            }
+            setRefresh(!refresh);
+
+        } catch (error) {
+            console.log(error);
+            showToastMessage('error', "Something went wrong");
         }
     };
 
@@ -146,12 +139,7 @@ export function Quotation() {
     };
 
     const openPopup = () => {
-        if (state.userInfo?.Permission?.some(obj => obj.name === "CAN_CREATE_QUOTATION" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
-            setIsOpen(true);
-        }
-        else {
-            toast.error("You are not allowed to create a quotation");
-        }
+        setIsOpen(true);
     };
 
     const closePopup = () => {
@@ -168,6 +156,7 @@ export function Quotation() {
             description: product.description || '',
             price: product.price
         })).filter(product => product.id);
+
         const data = {
             invoiceData: {
                 totalAmount: quotationData.totalAmount,
@@ -192,6 +181,9 @@ export function Quotation() {
                 router('/dashboard/invoice');
             }
             else if (res.status === 404) {
+                showToastMessage('info', invoice.message)
+            }
+            else if (res.status === 403) {
                 showToastMessage('info', invoice.message)
             }
             setLoading(false)
@@ -225,10 +217,9 @@ export function Quotation() {
                                 />
                             </div>
                             <div className="flex gap-2 lg:gap-4">
-                                <Button className="w-full bg-blue-900 lg:w-auto" size="md" onClick={openPopup} >
+                                <Button disabled={!state.userInfo?.Permission.includes("quote:create")} className={`w-full bg-blue-900 lg:w-auto`} size="md" onClick={openPopup}>
                                     New
                                 </Button>
-
                             </div>
                         </div>
                         <div className="flex items-center mt-4 lg:mt-0 lg:ml-auto">
@@ -249,7 +240,7 @@ export function Quotation() {
                 </CardHeader>
 
                 <CardBody className="p-2 overflow-scroll px-0">
-                    <table className=" w-full min-w-max table-auto text-left">
+                    <table className="w-full min-w-max table-auto text-left">
                         <thead>
                             <tr>
                                 {TABLE_HEAD.map((head) => (

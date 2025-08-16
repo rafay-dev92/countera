@@ -175,7 +175,7 @@ function Profile() {
     return (
         <div className="flex flex-col w-full bg-transparent rounded-md divide-y-2 scroll-smooth">
             {/* General Form */}
-            <div className="py-5 w-full md:w-[70%] lg:w-[60%] 2xl:w-[50%]">
+            <div className="p-5 w-full lg:w-[60%] 2xl:w-[50%]">
                 <h2 className="text-lg font-semibold mb-4">General:</h2>
                 {/* <form className="flex flex-col space-y-4 w-48">
                     <Select

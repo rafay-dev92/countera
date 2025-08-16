@@ -10,6 +10,7 @@ import {
   IconButton,
   Tooltip,
   Spinner,
+  Checkbox,
 } from "@material-tailwind/react";
 import { DocumentTextIcon, TrashIcon } from "@heroicons/react/24/solid";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
@@ -19,18 +20,17 @@ import { delInvoice } from "@/services/delInvoice";
 import { Link } from "react-router-dom";
 import { State } from "../../state/Context";
 import { toast } from "react-toastify";
-import { useConfirm } from "@/context/confirmContext";
 import { softDelInvoice } from "@/services/softDelInvoice";
 import { useDeleteInvoiceConfirm } from "@/context/deleteInvoiceConfirmContext";
 import CustomerForm from "./customerForm";
 
-const TABLE_HEAD = ["Invoice", "Customer", "Total", "Status", "Invoice Date", "Vehicle", "Actions"];
+const TABLE_HEAD = ["Invoice", "Customer", "Total", "Status", "Invoice Date", "Vehicle", "isArchived", "Actions"];
 
 export function Invoice() {
-  const confirm = useConfirm();
   const confirmDeleteInvoice = useDeleteInvoiceConfirm();
   const { state, dispatch } = State();
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedTerm, setDebouncedTerm] = useState(searchQuery);
   const [invoices, setInvoices] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
@@ -59,81 +59,99 @@ export function Invoice() {
     }
   };
 
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+
+    if (value.trim() === "") {
+      setSearchQuery(null)
+    } else {
+      setSearchQuery(value);
+    }
+  };
+
   const getInvoices = async () => {
     try {
-      const filters = { paymentStatus: ["PAID", "PARTIALLY_PAID", "UNPAID", "VOID", "REFUND"] };
+      const filters = {
+        paymentStatus: ["PAID", "PARTIALLY_PAID", "UNPAID", "VOIDED", "REFUNDED"]
+      };
+
+      if (searchQuery && searchQuery.trim()) {
+        filters.CustomerDetails = { name: searchQuery };
+      }
       const response = await fetchInvoices(state.userToken, currentPage, itemsPerPage, filters);
       const totalInvoices = await response.json();
       setInvoices(totalInvoices?.data)
 
       setTotalCount(totalInvoices.total || 0);
-      setLoading(false);
     } catch (error) {
       console.log(error.message);
       showToastMessage('error', "Something went wrong");
+    } finally {
+      setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedTerm(searchQuery);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   useEffect(() => {
     getInvoices();
   }, [refresh, currentPage, itemsPerPage]);
 
+  useEffect(() => {
+    getInvoices();
+  }, [debouncedTerm]);
+
   const handleEditInvoice = (index) => {
-    if (state.userInfo.Permission.some(obj => obj.name === "CAN_EDIT_INVOICE" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
-      const selected = filteredRows[index];
-      dispatch({ type: 'SET_INVOICE_VIEW_DATA', payload: selected });
-      openPopup();
-    }
-    else {
-      toast.error("You are not allowed to update an invoice");
-    }
+    const selected = invoices[index];
+    dispatch({ type: 'SET_INVOICE_VIEW_DATA', payload: selected });
+    openPopup();
   };
 
   const handleDeleteInvoice = async (index) => {
-    if (state.userInfo.Permission.some(obj => obj.name === "CAN_DELETE" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
 
-      const result = await confirmDeleteInvoice();
-      if (result === null) return;
+    const result = await confirmDeleteInvoice();
+    if (result === null) return;
 
-      const invoice = invoices[index];
-      if (result === "Void" && invoice.paymentStatus === "Void") {
-        showToastMessage('info', "Invoice is already voided");
-        return;
-      }
-      if (result === "Refund" && invoice.paymentStatus === "Refund") {
-        showToastMessage('info', "Invoice is already refunded");
-        return;
-      }
-
-      const updatedInvoices = invoices?.filter((_, rowIndex) => rowIndex !== index);
-      const deletedInvoiceId = invoices?.find((_, rowIndex) => rowIndex === index);
-      setInvoices(updatedInvoices);
-      try {
-        const res = await softDelInvoice(deletedInvoiceId['id'], result, state.userToken);
-        // const res = await delInvoice(deletedInvoiceId['id'], state.userToken);
-        const invoice = await res.json();
-        if (res.status === 200) {
-          showToastMessage('success', invoice.message)
-        }
-        else if (res.status === 404) {
-          showToastMessage('info', invoice.message)
-        }
-        else if (res.status === 409) {
-          showToastMessage('info', invoice.message)
-        }
-        setRefresh(!refresh);
-      } catch (error) {
-        console.log(error)
-        showToastMessage('error', "Something went wrong");
-      }
+    const invoice = invoices[index];
+    if (invoice.paymentStatus === "VOIDED" || invoice.paymentStatus === "REFUNDED") {
+      showToastMessage('info', `Invoice is already ${invoice.paymentStatus.toLowerCase()}`);
+      return;
     }
-    else {
-      toast.error("You are not allowed to delete an invoice");
+
+    const updatedInvoices = invoices?.filter((_, rowIndex) => rowIndex !== index);
+    const deletedInvoiceId = invoices?.find((_, rowIndex) => rowIndex === index);
+    setInvoices(updatedInvoices);
+    try {
+      const res = await softDelInvoice(deletedInvoiceId['id'], result, state.userToken);
+      // const res = await delInvoice(deletedInvoiceId['id'], state.userToken);
+      const invoice = await res.json();
+      if (res.status === 200) {
+        showToastMessage('success', invoice.message)
+      }
+      else if (res.status === 403) {
+        showToastMessage('info', invoice.message)
+      }
+      else if (res.status === 404) {
+        showToastMessage('info', invoice.message)
+      }
+      else if (res.status === 409) {
+        showToastMessage('info', invoice.message)
+      }
+      setRefresh(!refresh);
+    } catch (error) {
+      console.log(error)
+      showToastMessage('error', "Something went wrong");
     }
   };
 
   const showCustomer = (index) => {
-    const selected = filteredRows[index];
+    const selected = invoices[index];
     setIsCustomerFormOpen(true);
     setSelectedCustomer(selected.Customer);
   }
@@ -143,14 +161,14 @@ export function Invoice() {
     return date.toLocaleString();
   };
 
-  let filteredRows = [];
-  if (invoices?.length !== 0) {
-    filteredRows = invoices?.filter(
-      ({ Customer }) =>
-        Customer['firstName'].toLowerCase().includes(searchQuery.toLowerCase()) ||
-        Customer['lastName'].toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }
+  // let filteredRows = [];
+  // if (invoices?.length !== 0) {
+  //   filteredRows = invoices?.filter(
+  //     ({ Customer }) =>
+  //       Customer['firstName'].toLowerCase().includes(searchQuery.toLowerCase()) ||
+  //       Customer['lastName'].toLowerCase().includes(searchQuery.toLowerCase())
+  //   );
+  // }
 
   const handleItemsPerPageChange = (event) => {
     const selectedItemsPerPage = parseInt(event.target.value, 10);
@@ -163,21 +181,16 @@ export function Invoice() {
   };
 
   const openPopup = () => {
-    if (state.userInfo.Permission.some(obj => obj.name === "CAN_CREATE_INVOICE" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
-      dispatch({ type: 'SET_INVOICE_FORM', payload: true });
-      setIsFormOpen(true);
-    }
-    else {
-      toast.error("You are not allowed to add an invoice");
-    }
+    dispatch({ type: 'SET_INVOICE_FORM', payload: true });
+    setIsFormOpen(true);
   };
 
   const invoiceStatusColors = {
     "PAID": "green",
     "PARTIALLY_PAID": "orange",
     "UNPAID": "red",
-    "VOID": "purple",
-    "REFUND": "blue",
+    "VOIDED": "purple",
+    "REFUNDED": "blue",
   };
 
   if (loading) {
@@ -199,12 +212,12 @@ export function Invoice() {
                 <Input
                   label="Search"
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={handleSearchChange}
                   icon={<MagnifyingGlassIcon className="h-5 w-5" />}
                 />
               </div>
               <div className="flex gap-2 lg:gap-4">
-                <Button className="w-full bg-blue-900 lg:w-auto" size="md" onClick={openPopup}>
+                <Button disabled={!state.userInfo?.Permission.includes("invoice:create")} className={`w-full bg-blue-900 lg:w-auto`} size="md" onClick={openPopup}>
                   New
                 </Button>
               </div>
@@ -240,14 +253,14 @@ export function Invoice() {
               </tr>
             </thead>
             <tbody>
-              {invoices?.map(({ id, invoiceNumber, Customer, paymentStatus, totalAmount, createdAt, CustomerVehicle }, index) => {
+              {invoices?.map(({ id, invoiceNumber, Customer, paymentStatus, totalAmount, createdAt, CustomerVehicle, isArchived }, index) => {
                 const isLast = index === invoices.length - 1;
                 const classes = isLast ? "p-4" : "p-4 border-b border-blue-gray-50";
                 return (
                   <tr key={id}>
                     <td className={classes}>
                       <Link
-                        to="#"
+                        to="javascript:void(0)"
                         className="text-blue-gray font-normal hover:underline"
                         onClick={() => handleEditInvoice(index)}
                       >
@@ -286,6 +299,9 @@ export function Invoice() {
                       <Typography variant="small" color="blue-gray" className="font-normal">
                         {`${CustomerVehicle['make']} ${CustomerVehicle['model']} ${CustomerVehicle['year']}`}
                       </Typography>
+                    </td>
+                    <td className={classes}>
+                      <Checkbox color="green" checked={isArchived ? 'checked' : ''} readOnly />
                     </td>
                     <td className={classes}>
                       <Tooltip content="Delete Invoice">

@@ -50,10 +50,7 @@ const CustomerForm = ({ open, close, selectedItem, setSelectedItem, refresh, set
   const [isOpen, setIsOpen] = useState(false);
 
   const openPopup = () => {
-    if (state.userInfo.Permission.some(obj => obj.name === "IS_CASHIER" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN"))
-      setIsOpen(true);
-    else
-      toast.error("You are not allowed to add a customer vehicle")
+    setIsOpen(true);
   };
 
   const closePopup = () => {
@@ -144,6 +141,9 @@ const CustomerForm = ({ open, close, selectedItem, setSelectedItem, refresh, set
             }
           }
         }
+        else if (res.status === 403) {
+          showToastMessage('info', customer.message)
+        }
         else if (res.status === 409) {
           showToastMessage('error', customer.message)
         }
@@ -196,6 +196,9 @@ const CustomerForm = ({ open, close, selectedItem, setSelectedItem, refresh, set
               }
             }
           }
+        }
+        else if (res.status === 403) {
+          showToastMessage('info', customer.message)
         }
         else if (res.status === 404) {
           showToastMessage('info', customer.message)
@@ -327,10 +330,10 @@ const CustomerForm = ({ open, close, selectedItem, setSelectedItem, refresh, set
 
   return (
     <>
-      <Dialog open={open}>
+      <Dialog className="bg-transparent shadow-none p-0" open={open}>
         {open && (
           <form onSubmit={handleSubmit} autoComplete="new">
-            <div className="flex justify-center w-full">
+            <div className="fixed -top-16 lg:top-0 left-0 w-full h-full flex justify-center items-center">
               <div className="bg-white rounded shadow-xl">
                 <div className="flex items-center justify-between sticky bg-gradient-to-br from-gray-800 to-gray-700">
                   <div></div>
@@ -359,7 +362,7 @@ const CustomerForm = ({ open, close, selectedItem, setSelectedItem, refresh, set
                   </button>
                 </div>
 
-                <div className="2xl:w-[50vw] xl:w-[60vw] lg:w-[70vw] md:w-[80vw] w-[90vw] p-6 space-y-3">
+                <div className="2xl:w-[50vw] xl:w-[60vw] lg:w-[70vw] md:w-[80vw] w-[90vw] p-6 space-y-3 max-h-[70vh] lg:max-h-[80vh] overflow-y-auto">
                   <div className="flex justify-around">
                     <div className="flex space-x-4">
                       <label className="flex items-center cursor-pointer">
@@ -397,9 +400,9 @@ const CustomerForm = ({ open, close, selectedItem, setSelectedItem, refresh, set
                       </label>
                     </div>
                   </div>
-                  <div className="flex items-center justify-start space-x-4">
-                    <div className="basis-[33.33%]">
-                      <label className="font-bold">First Name</label> <br />
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    <div className="flex flex-col">
+                      <label className="font-bold">First Name</label>
                       <input
                         className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
                         id="firstName"
@@ -415,8 +418,8 @@ const CustomerForm = ({ open, close, selectedItem, setSelectedItem, refresh, set
                         </div>
                       ) : (<div></div>)}
                     </div>
-                    <div className="basis-[33.33%]">
-                      <label className="font-bold">Last Name</label> <br />
+                    <div className="flex flex-col">
+                      <label className="font-bold">Last Name</label>
                       <input
                         className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
                         id="lastName"
@@ -433,8 +436,8 @@ const CustomerForm = ({ open, close, selectedItem, setSelectedItem, refresh, set
                       ) : (<div></div>)}
                     </div>
 
-                    <div className="basis-[33.33%]">
-                      <label className="font-bold">Mobile Phone</label> <br />
+                    <div className="flex flex-col">
+                      <label className="font-bold">Mobile Phone</label>
                       <input
                         className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
                         id="phone"
@@ -452,9 +455,9 @@ const CustomerForm = ({ open, close, selectedItem, setSelectedItem, refresh, set
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-start space-x-4">
-                    <div className="basis-[33.33%]">
-                      <label className="font-bold">Email</label> <br />
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    <div className="flex flex-col">
+                      <label className="font-bold">Email</label>
                       <input
                         className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
                         id="email"
@@ -470,8 +473,8 @@ const CustomerForm = ({ open, close, selectedItem, setSelectedItem, refresh, set
                         </div>
                       )}
                     </div>
-                    <div className="basis-[33.33%]">
-                      <label className="font-bold">Permit/License No</label> <br />
+                    <div className="flex flex-col">
+                      <label className="font-bold">Permit/License No</label>
                       <input
                         className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
                         id="licenseNo"
@@ -489,14 +492,12 @@ const CustomerForm = ({ open, close, selectedItem, setSelectedItem, refresh, set
                       )}
                     </div>
 
-                    <div className="basis-[33.33%]">
-
-                    </div>
+                    <div></div>
                   </div>
 
-                  <div className="flex items-center justify-start space-x-4">
-                    <div className="basis-[40%]">
-                      <label className="font-bold">Street</label> <br />
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-8">
+                    <div className="flex flex-col gap-1.5 lg:col-span-3">
+                      <label className="font-bold">Street</label>
                       <input className="p-2 w-full border border-gray-300 rounded-md text-black font-medium"
                         id="Address.street"
                         name="Address.street"
@@ -512,8 +513,8 @@ const CustomerForm = ({ open, close, selectedItem, setSelectedItem, refresh, set
                       ) : (<div></div>)}
                     </div>
 
-                    <div className="basis-[20%]">
-                      <label className="font-bold">City</label> <br />
+                    <div className="flex flex-col gap-1.5 lg:col-span-2">
+                      <label className="font-bold">City</label>
                       <input className="p-2 w-full border border-gray-300 rounded-md text-black font-medium"
                         id="Address.city"
                         name="Address.city"
@@ -529,8 +530,8 @@ const CustomerForm = ({ open, close, selectedItem, setSelectedItem, refresh, set
                       ) : (<div></div>)}
                     </div>
 
-                    <div className="basis-[20%]">
-                      <label className="font-bold">State</label> <br />
+                    <div className="flex flex-col gap-1.5 lg:col-span-2">
+                      <label className="font-bold">State</label>
                       <input className="p-2 w-full border border-gray-300 rounded-md text-black font-medium"
                         id="Address.state"
                         name="Address.state"
@@ -546,8 +547,8 @@ const CustomerForm = ({ open, close, selectedItem, setSelectedItem, refresh, set
                       ) : (<div></div>)}
                     </div>
 
-                    <div className="basis-[20%]">
-                      <label className="font-bold">Zip Code</label> <br />
+                    <div className="flex flex-col gap-1.5 lg:col-span-1">
+                      <label className="font-bold">Zip Code</label>
                       <input className="p-2 w-full border border-gray-300 rounded-md text-black font-medium"
                         id="Address.zipcode"
                         name="Address.zipcode"

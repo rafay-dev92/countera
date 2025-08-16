@@ -301,8 +301,8 @@ export default function Businesses() {
                                             </Typography>
                                         </td>                                        
                                         <td className={classes}>
-                                            <Tooltip content="Delete Product">
-                                                <IconButton variant="text" onClick={() => handleDelete(id)} disabled>
+                                            <Tooltip content="Delete Business">
+                                                <IconButton variant="text" onClick={() => handleDelete(id)}>
                                                     <TrashIcon className="h-6 w-6 text-red-600" />
                                                 </IconButton>
                                             </Tooltip>

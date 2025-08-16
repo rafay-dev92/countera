@@ -242,10 +242,10 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, close, refresh, 
 
     return (
         <>
-            <Dialog open={open} >
+            <Dialog className="bg-transparent shadow-none p-0" open={open} >
                 {open && (
                     <form onSubmit={handleSubmit} autoComplete="new" >
-                        <div className="">
+                        <div className="fixed -top-16 lg:top-0 left-0 w-full h-full flex justify-center items-center">
                             <div className="bg-white rounded shadow-xl">
                                 <div className="flex items-center justify-between sticky bg-gradient-to-br from-gray-800 to-gray-700">
                                     <div></div>
@@ -274,66 +274,67 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, close, refresh, 
                                     </button>
                                 </div>
 
-                                <div className="p-6 space-y-4">
-                                    <div className="flex items-center justify-start space-x-4">
-                                        <div className="basis-[33.33%]">
-                                            <label className="font-bold">Customer Name</label> <br />
-                                            <input
-                                                className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
-                                                id="customerName"
-                                                name="customerName"
-                                                type="customerName"
-                                                value={values.customerName}
-                                                onChange={handleChange}
-                                                onBlur={handleBlur}
-                                            />
-                                            {touched.customerName && errors.customerName && (
-                                                <div className="text-red-500">
-                                                    {errors.customerName}
-                                                </div>
-                                            )}
+                                <div className="2xl:w-[50vw] xl:w-[60vw] lg:w-[70vw] md:w-[80vw] w-[90vw] p-6 space-y-3 max-h-[70vh] lg:max-h-[80vh] overflow-y-auto">
+                                    <div className="space-y-4">
+                                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                                            <div className="flex flex-col gap-1">
+                                                <label className="font-bold">Customer Name</label>
+                                                <input
+                                                    className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
+                                                    id="customerName"
+                                                    name="customerName"
+                                                    type="customerName"
+                                                    value={values.customerName}
+                                                    onChange={handleChange}
+                                                    onBlur={handleBlur}
+                                                />
+                                                {touched.customerName && errors.customerName && (
+                                                    <div className="text-red-500">
+                                                        {errors.customerName}
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div className="flex flex-col">
+                                                <label className="font-bold">Customer Email</label>
+                                                <input
+                                                    className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
+                                                    id="customerEmail"
+                                                    name="customerEmail"
+                                                    type="customerEmail"
+                                                    value={values.customerEmail}
+                                                    onChange={handleChange}
+                                                    onBlur={handleBlur}
+                                                />
+                                                {touched.customerEmail && errors.customerEmail && (
+                                                    <div className="text-red-500">
+                                                        {errors.customerEmail}
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div className="flex flex-col">
+                                                <label className="font-bold">Start Date & Time</label>
+                                                <DatePicker
+                                                    id="startDateTime"
+                                                    name="startDateTime"
+                                                    selected={values.startDateTime ? new Date(values.startDateTime) : null}
+                                                    onChange={(date) => setFieldValue("startDateTime", date)}
+                                                    onBlur={handleBlur}
+                                                    showTimeSelect
+                                                    timeFormat="HH:mm"
+                                                    timeIntervals={15}
+                                                    dateFormat="yyyy-MM-dd HH:mm"
+                                                    minDate={new Date()}
+                                                    className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
+                                                />
+                                                {(touched.startDateTime && errors.startDateTime) ? (
+                                                    <div className="text-red-500">
+                                                        {errors.startDateTime}
+                                                    </div>
+                                                ) : (<div></div>)}
+                                            </div>
                                         </div>
-                                        <div className="basis-[33.33%]">
-                                            <label className="font-bold">Customer Email</label> <br />
-                                            <input
-                                                className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
-                                                id="customerEmail"
-                                                name="customerEmail"
-                                                type="customerEmail"
-                                                value={values.customerEmail}
-                                                onChange={handleChange}
-                                                onBlur={handleBlur}
-                                            />
-                                            {touched.customerEmail && errors.customerEmail && (
-                                                <div className="text-red-500">
-                                                    {errors.customerEmail}
-                                                </div>
-                                            )}
-                                        </div>
-                                        <div className="basis-[33.33%]">
-                                            <label className="font-bold">Start Date & Time</label> <br />
-                                            <DatePicker
-                                                id="startDateTime"
-                                                name="startDateTime"
-                                                selected={values.startDateTime}
-                                                onChange={(date) => setFieldValue("startDateTime", date)}
-                                                onBlur={handleBlur}
-                                                showTimeSelect
-                                                timeFormat="HH:mm"
-                                                timeIntervals={15}
-                                                dateFormat="yyyy-MM-dd HH:mm"
-                                                minDate={new Date()} // if you want to prevent selecting past dates
-                                                className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
-                                            />
-                                            {(touched.startDateTime && errors.startDateTime) ? (
-                                                <div className="text-red-500">
-                                                    {errors.startDateTime}
-                                                </div>
-                                            ) : (<div></div>)}
-                                        </div>
-                                    </div>
 
-                                    {/* <div className="flex items-center justify-start space-x-4 w-full">
+                                        {/* <div className="flex items-center justify-start space-x-4 w-full">
                                         <div className="basis-[50%]">
                                             <label className="font-bold">Start Date & Time</label> <br />
                                             <input
@@ -371,22 +372,23 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, close, refresh, 
                                         </div>
                                     </div> */}
 
-                                    <div>
-                                        <label className="font-bold">Description</label> <br />
-                                        <textarea
-                                            className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
-                                            id="description"
-                                            name="description"
-                                            type="description"
-                                            value={values.description}
-                                            onChange={handleChange}
-                                            onBlur={handleBlur}
-                                        />
-                                        {touched.description && errors.description && (
-                                            <div className="text-red-500">
-                                                {errors.description}
-                                            </div>
-                                        )}
+                                        <div>
+                                            <label className="font-bold">Description</label> <br />
+                                            <textarea
+                                                className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
+                                                id="description"
+                                                name="description"
+                                                type="description"
+                                                value={values.description}
+                                                onChange={handleChange}
+                                                onBlur={handleBlur}
+                                            />
+                                            {touched.description && errors.description && (
+                                                <div className="text-red-500">
+                                                    {errors.description}
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                                 <div className="flex items-center justify-end space-x-2 sticky bg-gradient-to-br from-gray-800 to-gray-700">

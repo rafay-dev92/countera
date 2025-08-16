@@ -16,7 +16,9 @@ import { softDelInvoice } from "@/services/softDelInvoice";
 import { Dialog, Spinner } from '@material-tailwind/react'
 import { format } from 'date-fns';
 import { fetchInvoiceAudits } from "@/services/fetchInvoiceAudit";
-import { ArrowLongRightIcon, XCircleIcon } from '@heroicons/react/24/solid'
+import { ArrowLongRightIcon, XCircleIcon, Bars3Icon, XMarkIcon } from '@heroicons/react/24/solid'
+import { Printer, Send, Edit, FileText, Trash2, CreditCard, History } from "lucide-react"
+import { PaymentStatus } from "@/utils/enums/paymentStatuses";
 
 const ViewInvoice = ({ printInvoice, setPrintInvoice, componentRef, appliedTaxes, setEdit, close }) => {
     const confirm = useConfirm();
@@ -32,6 +34,8 @@ const ViewInvoice = ({ printInvoice, setPrintInvoice, componentRef, appliedTaxes
     });
     const [showVersionsModal, setShowVersionsModal] = useState(false);
     const [auditTrail, setAuditTrail] = useState([]);
+
+    const [isOpen, setIsOpen] = useState(false);
 
     const showToastMessage = (type, message) => {
         if (type === 'success') {
@@ -64,6 +68,10 @@ const ViewInvoice = ({ printInvoice, setPrintInvoice, componentRef, appliedTaxes
         if (result === null) return;
 
         setIsLoading({ ...isLoading, delete: true });
+        if (printInvoice.paymentStatus === "VOIDED" || printInvoice.paymentStatus === "REFUNDED") {
+            showToastMessage('info', `Invoice is already ${printInvoice.paymentStatus.toLowerCase()}`);
+            return;
+        }
         try {
             const res = await softDelInvoice(printInvoice.id, result, state.userToken);
             const invoice = await res.json();
@@ -141,20 +149,20 @@ const ViewInvoice = ({ printInvoice, setPrintInvoice, componentRef, appliedTaxes
         setIsLoading({ ...isLoading, sendMail: false });
     }
 
-    useEffect(() => {
-        if (Object.keys(printInvoice).length > 0 && printInvoice.Payments.length > 0) {
-            const paidAmount = printInvoice.Payments.reduce((acc, payment) => acc + payment.paidAmount, 0);
-            if (paidAmount !== totalAmountPaid) {
-                setTotalAmountPaid(paidAmount);
-                if (paidAmount === printInvoice.totalAmount && printInvoice.paymentStatus !== "PAID") {
-                    setInvoiceStatus(printInvoice.id, "PAID");
-                }
-                else if (paidAmount > 0 && paidAmount < printInvoice.totalAmount && printInvoice.paymentStatus !== "PARTIALLY_PAID") {
-                    setInvoiceStatus(printInvoice.id, "PARTIALLY_PAID");
-                }
-            }
-        }
-    }, [printInvoice])
+    // useEffect(() => {
+    //     if (Object.keys(printInvoice).length > 0 && printInvoice?.Payments.length > 0) {
+    //         const paidAmount = printInvoice?.Payments.reduce((acc, payment) => acc + payment.paidAmount, 0);
+    //         if (paidAmount !== totalAmountPaid) {
+    //             setTotalAmountPaid(paidAmount);
+    //             if (paidAmount === printInvoice?.totalAmount && printInvoice?.paymentStatus !== PaymentStatus.PAID) {
+    //                 setInvoiceStatus(printInvoice?.id, PaymentStatus.PAID);
+    //             }
+    //             else if (paidAmount > 0 && paidAmount < printInvoice?.totalAmount && printInvoice?.paymentStatus !== PaymentStatus.PARTIALLY_PAID) {
+    //                 setInvoiceStatus(printInvoice?.id, PaymentStatus.PARTIALLY_PAID);
+    //             }
+    //         }
+    //     }
+    // }, [printInvoice])
 
     const fetchAuditTrail = async () => {
         try {
@@ -312,62 +320,118 @@ const ViewInvoice = ({ printInvoice, setPrintInvoice, componentRef, appliedTaxes
         );
     };
 
+    const SidebarContent = () => (
+        <div className="flex flex-col h-full">
+            {/* Balance Due */}
+            <div className="text-center py-4 border-b border-gray-600">
+                <h2 className="text-lg font-normal text-gray-400 mb-1">Balance Due</h2>
+                <h5 className="text-3xl lg:text-4xl text-white font-normal">${(printInvoice?.totalAmount - printInvoice.paidAmount).toFixed(2)}</h5>
+            </div>
+
+            <div className="flex flex-col items-center justify-start h-full w-full">
+                <div className="text-white w-full text-left font-medium">
+                    {!isLoading.sendMail ?
+                        <div onClick={sendMailToUser} className="flex items-center gap-2 w-full p-3 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer"><Send className="w-5 h-5 inline-block mr-1" />Send</div>
+                        :
+                        <div className="flex items-center p-3">
+                            <Spinner className="h-6 w-6 text-gray-400/50" />
+                        </div>
+                    }
+                    {printInvoice?.paymentStatus !== 'VOIDED' && printInvoice?.paymentStatus !== 'REFUNDED' && (
+                        <div>
+                            <button type="button" disabled={!state.userInfo.Permission.includes("invoice:update")} onClick={() => printInvoice?.paymentStatus !== 'PAID' && setIsPaymentFormOpen(true)} className={`flex items-center gap-2 w-full p-3 mx-auto ${printInvoice?.paymentStatus !== 'PAID' ? "hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer" : "text-green-500 font-bold cursor-not-allowed"} ${state.userInfo?.Permission.includes("quote:update") ? "" : "cursor-not-allowed opacity-50"}`}><CreditCard className="w-5 h-5 inline-block mr-1" />{printInvoice?.paymentStatus !== 'PAID' ? 'PAY' : 'PAID'}</button>
+                            <button type="button" onClick={handleUpdate} disabled={!state.userInfo?.Permission.includes("invoice:update")} className={`flex items-center gap-2 w-full p-3 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 ${state.userInfo?.Permission.includes("invoice:update") ? "" : "cursor-not-allowed opacity-50"}`}><Edit className="w-5 h-5 inline-block mr-1" />Edit</button>
+                            <button type="button" onClick={() => setIsNotesFormOpen(true)} disabled={!state.userInfo?.Permission.includes("invoice:update")} className={`flex items-center gap-2 w-full p-3 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 ${state.userInfo?.Permission.includes("invoice:update") ? "" : "cursor-not-allowed opacity-50"}`}><FileText className="w-5 h-5 inline-block mr-1" />Notes</button>
+                            {!isLoading.delete ?
+                                <button type="button" onClick={handleDel} disabled={!state.userInfo?.Permission.includes("invoice:delete")} className={`flex items-center gap-2 w-full p-3 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 ${state.userInfo?.Permission.includes("invoice:delete") ? "" : "cursor-not-allowed opacity-50"}`}><Trash2 className="w-5 h-5 inline-block mr-1" />Delete</button>
+                                :
+                                <div className="flex items-center p-3">
+                                    <Spinner className="h-6 w-6 text-gray-400/50" />
+                                </div>
+                            }
+                        </div>
+                    )}
+                    <ReactToPrint
+                        trigger={() => <button
+                            className="flex items-center gap-2 w-full p-3 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer text-left"
+                            type="button"
+                        >
+                            <Printer className="w-5 h-5 inline-block mr-1" />
+                            Print
+                        </button>}
+                        content={() => componentRef.current}
+                    />
+                    <button type="button" disabled={!state.userInfo?.Permission.includes("invoice:update")} className={`flex items-center gap-2 w-full p-3 text-blue-300 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 ${state.userInfo?.Permission.includes("invoice:update") ? "" : "cursor-not-allowed opacity-50"}`} onClick={handleVersionsClick}>
+                        <History className="w-5 h-5 inline-block mr-1" />
+                        Versions
+                    </button>
+                </div>
+            </div>
+        </div>
+    )
+
     return (
         <>
-            <div className="overflow-y-auto h-[90vh] overflow-x-hidden p-2">
-                <div className="flex h-full">
-                    <div className="basis-[80%]">
-                        <div className="max-h-[88vh] overflow-y-auto">
-                            {printInvoice && Object.keys(printInvoice).length > 0 ? <PrintView view={true} printInvoice={printInvoice} ref={componentRef} appliedTaxes={appliedTaxes} /> : null}
+            <div className="h-[70vh] lg:h-[90vh] overflow-hidden">
+                {/* Desktop Layout */}
+                <div className="hidden lg:flex h-full">
+                    {/* Main Content */}
+                    <div className="flex-1 overflow-x-auto overflow-y-auto p-2">
+                        <div className="max-h-[68vh] lg:max-h-[88vh] mx-auto">
+                            {printInvoice && Object.keys(printInvoice).length > 0 ? (
+                                <PrintView view={true} printInvoice={printInvoice} ref={componentRef} appliedTaxes={appliedTaxes} />
+                            ) : null}
                         </div>
                     </div>
-                    <div className="basis-[20%] h-full overflow-y-auto flex flex-col items-center gap-6 bg-gradient-to-br from-gray-800 to-gray-700">
-                        <div className="text-center py-4">
-                            <h2 className="text-lg font-normal text-gray-400">Balance Due</h2>
-                            <h5 className="text-4xl text-white font-normal">${(printInvoice?.totalAmount - totalAmountPaid).toFixed(2)}</h5>
+
+                    {/* Desktop Sidebar */}
+                    <div className="w-64 bg-gradient-to-br from-gray-800 to-gray-700">
+                        <SidebarContent />
+                    </div>
+                </div>
+
+                {/* Mobile Layout */}
+                <div className="lg:hidden h-full flex flex-col relative overflow-hidden">
+                    {/* Mobile Header with Menu */}
+                    <div className="flex items-center justify-between p-4 bg-gradient-to-br from-gray-800 to-gray-700">
+                        <div className="text-white">
+                            <h2 className="text-sm font-normal text-gray-400">Balance Due</h2>
+                            <h5 className="text-xl text-white font-normal">
+                                ${(printInvoice?.paidAmount).toFixed(2)}
+                            </h5>
                         </div>
-                        <div className="flex flex-col items-center justify-start h-full w-full">
-                            <div className="text-white w-full text-center font-medium">
-                                {!isLoading.sendMail ?
-                                    <div onClick={sendMailToUser} className="w-full py-2 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer">Send</div>
-                                    :
-                                    <div className="flex items-center justify-center h-fit py-2.5">
-                                        <div className="w-6 h-6 border-4 border-gray-500 border-t-transparent rounded-full animate-spin"></div>
-                                    </div>
-                                }
-                                {printInvoice?.paymentStatus !== 'Void' && printInvoice?.paymentStatus !== 'Refund' && (
-                                    <div>
-                                        <div onClick={() => printInvoice?.paymentStatus !== 'PAID' && setIsPaymentFormOpen(true)} className={`w-full py-2 mx-auto ${printInvoice?.paymentStatus !== 'PAID' ? "hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer" : "text-green-500 font-bold"}`}>{printInvoice?.paymentStatus !== 'PAID' ? 'PAY' : 'PAID'}</div>
-                                        <div onClick={() => { handleUpdate() }} className="w-full py-2 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer">Edit</div>
-                                        <div onClick={() => setIsNotesFormOpen(true)} className="w-full py-2 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer">Notes</div>
-                                        {!isLoading.delete ?
-                                            <div onClick={handleDel} className="w-full py-2 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer">Delete</div>
-                                            :
-                                            <div className="flex items-center justify-center h-fit py-2.5">
-                                                <div className="w-6 h-6 border-4 border-gray-500 border-t-transparent rounded-full animate-spin"></div>
-                                            </div>
-                                        }
-                                    </div>
-                                )}
-                                <ReactToPrint
-                                    trigger={() => <button
-                                        className="w-full py-2 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer"
-                                        type="button"
-                                    >
-                                        Print
-                                    </button>}
-                                    content={() => componentRef.current}
-                                />
-                                <div className="w-full text-blue-300 py-2 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer" onClick={handleVersionsClick}>
-                                    Versions
-                                </div>
+                        <div>
+                            <button type="button" onClick={() => setIsOpen(!isOpen)} className="text-white bg-transparent p-2 rounded">
+                                {isOpen ? <XMarkIcon className="h-6 w-6" /> : <Bars3Icon className="h-6 w-6" />}
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Mobile Content Container */}
+                    <div className="flex-1 relative overflow-hidden">
+                        {/* Mobile Content - Horizontally Scrollable */}
+                        <div
+                            className={`absolute inset-0 overflow-x-auto overflow-y-auto p-2 transition-transform duration-300 ease-in-out ${isOpen ? "transform -translate-x-64" : "transform translate-x-0"}`}
+                        >
+                            <div className="min-w-[794px]">
+                                {printInvoice && Object.keys(printInvoice).length > 0 ? (
+                                    <PrintView view={true} printInvoice={printInvoice} ref={componentRef} appliedTaxes={appliedTaxes} />
+                                ) : null}
                             </div>
+                        </div>
+
+                        {/* Mobile Sidebar */}
+                        <div
+                            className={`absolute top-0 right-0 w-64 h-full bg-gradient-to-br from-gray-800 to-gray-700 border-l border-gray-600 shadow-lg transition-transform duration-300 ease-in-out ${isOpen ? "transform translate-x-0" : "transform translate-x-full"}`}
+                        >
+                            <SidebarContent />
                         </div>
                     </div>
                 </div>
             </div>
-            <NotesForm open={isNotesFormOpen} close={() => setIsNotesFormOpen(false)} invoiceId={printInvoice?.id} setPrintInvoice={setPrintInvoice} currentValue={printInvoice.notes} />
-            <PaymentForm open={isPaymentFormOpen} close={() => setIsPaymentFormOpen(false)} totalAmount={printInvoice?.totalAmount} totalAmountPaid={totalAmountPaid} invoiceId={printInvoice?.id} setPrintInvoice={setPrintInvoice} />
+
+            <NotesForm open={isNotesFormOpen} close={() => setIsNotesFormOpen(false)} invoiceId={printInvoice?.id} setPrintInvoice={setPrintInvoice} currentValue={printInvoice?.notes} />
+            <PaymentForm open={isPaymentFormOpen} close={() => setIsPaymentFormOpen(false)} totalAmount={printInvoice?.totalAmount} totalAmountPaid={printInvoice?.paidAmount} invoiceId={printInvoice?.id} setPrintInvoice={setPrintInvoice} />
             <Dialog
                 open={showVersionsModal}
                 handler={() => setShowVersionsModal(false)}
@@ -400,9 +464,6 @@ const ViewInvoice = ({ printInvoice, setPrintInvoice, componentRef, appliedTaxes
                                             <div className="text-sm text-gray-400">
                                                 {format(new Date(audit.createdAt), 'MMM dd, yyyy HH:mm')}
                                             </div>
-                                            {/* <div className="text-xs px-2 py-1 rounded bg-gray-700">
-                                                {audit.changeType}
-                                            </div> */}
                                         </div>
                                         {renderAuditChange(audit)}
                                     </div>

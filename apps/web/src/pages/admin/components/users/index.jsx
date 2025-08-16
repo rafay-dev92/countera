@@ -20,12 +20,13 @@ import { State } from "@/state/Context";
 import { fetchUsers } from "@/services/fetchUsers";
 import { delUser } from "@/services/delUser";
 import { useConfirm } from "@/context/confirmContext";
+import { UserRole } from "@/utils/enums/userRoles";
 
 const TABLE_HEAD = ["Name", "Role", "Email", "Business", "Actions"];
 
 export default function Users() {
     const confirm = useConfirm();
-    const {state} = State();
+    const { state } = State();
     const [selectAll, setSelectAll] = useState(false);
     const [selectedRows, setSelectedRows] = useState([]);
     const [searchQuery, setSearchQuery] = useState("");
@@ -58,21 +59,20 @@ export default function Users() {
         }
     };
 
-
-    useEffect(() => {
-        getUsers();
-    }, [refresh]);
-
     const getUsers = async () => {
         try {
             const users = await (await fetchUsers(state.userToken)).json();
-            setFinalItems(users.filter(user => user.role !== 'SUPER_ADMIN'));
+            setFinalItems(users.filter(user => user.role !== UserRole.SUPER_ADMIN));
             setLoading(false);
         } catch (error) {
             console.log(error.message);
             showToastMessage('error', "Something went wrong");
         }
     }
+
+    useEffect(() => {
+        getUsers();
+    }, [refresh]);
 
     // Function to handle header checkbox change
     const handleSelectAll = (event) => {
@@ -125,9 +125,9 @@ export default function Users() {
     };
 
     // Function to handle deletion of selected items
-    const handleDelete = async (id) => {    
+    const handleDelete = async (id) => {
         const confirmed = await confirm("Do you really want to delete this user?");
-        if (!confirmed) return; 
+        if (!confirmed) return;
         try {
             const res = await delUser(id, state.userToken);
             const user = await res.json();
@@ -188,7 +188,7 @@ export default function Users() {
                             <div className="flex gap-2 lg:gap-4">
                                 <Button className="w-full bg-blue-900 lg:w-auto" size="md" onClick={openPopup} >
                                     New
-                                </Button>                                
+                                </Button>
                             </div>
                         </div>
                         <div className="flex items-center mt-4 lg:mt-0 lg:ml-auto">
@@ -264,7 +264,7 @@ export default function Users() {
                                             >
                                                 {first_name + ' ' + last_name}
                                             </Link>
-                                        </td> 
+                                        </td>
                                         <td className={classes}>
                                             <Typography
                                                 variant="small"
@@ -273,7 +273,7 @@ export default function Users() {
                                             >
                                                 {role}
                                             </Typography>
-                                        </td>                                                                              
+                                        </td>
                                         <td className={classes}>
                                             <Typography
                                                 variant="small"
@@ -288,10 +288,10 @@ export default function Users() {
                                                 variant="small"
                                                 color="blue-gray"
                                                 className="font-normal opacity-70"
-                                            >   
+                                            >
                                                 {Business?.name}
                                             </Typography>
-                                        </td>                                                                                                                     
+                                        </td>
                                         <td className={classes}>
                                             <Tooltip content="Delete User">
                                                 <IconButton variant="text" onClick={() => handleDelete(id)}>

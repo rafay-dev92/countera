@@ -76,11 +76,11 @@ const NotesForm = ({ open, close, invoiceId, setPrintInvoice, currentValue }) =>
 
     return (
         <>
-            <Dialog size='xs' open={open} >
+            <Dialog open={open} size='xs' >
                 {open && (
                     <form onSubmit={handleSubmit} autoComplete="new" >
                         <div className="flex justify-center w-full">
-                            <div className="bg-white rounded shadow-xl">
+                            <div className="bg-white rounded shadow-xl w-[90vw] md:w-[80vw] lg:w-[70vw] xl:w-[60vw] 2xl:w-[50vw]">
                                 <div className="flex items-center justify-between sticky bg-gradient-to-br from-gray-800 to-gray-700">
                                     <div></div>
                                     <div className="text-white text-center text-lg">
@@ -108,11 +108,11 @@ const NotesForm = ({ open, close, invoiceId, setPrintInvoice, currentValue }) =>
                                     </button>
                                 </div>
 
-                                <div className="w-[30vw] p-6 space-y-4">
+                                <div className="p-6 space-y-4">
                                     <div className="w-full">
                                         <label className="font-bold">Notes</label> <br />
-                                        <input
-                                            className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
+                                        <textarea
+                                            className={`w-full p-2 border border-gray-300 rounded-md text-black font-medium ${errors.notes && touched.notes ? "border-red-500" : ""}`}
                                             id="notes"
                                             name="notes"
                                             type="text"
@@ -120,6 +120,9 @@ const NotesForm = ({ open, close, invoiceId, setPrintInvoice, currentValue }) =>
                                             onChange={handleChange}
                                             onBlur={handleBlur}
                                         />
+                                        {errors.notes && touched.notes && (
+                                            <div className="text-red-500 text-sm mt-1">{errors.notes}</div>
+                                        )}
                                     </div>
                                 </div>
                                 <div className="flex items-center justify-end space-x-2 sticky bg-gradient-to-br from-gray-800 to-gray-700">

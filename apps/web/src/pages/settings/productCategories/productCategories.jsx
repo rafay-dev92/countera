@@ -28,6 +28,11 @@ function ProductCategories() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
 
+  // Function to handle pagination
+  const paginate = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
+
   // Popup state
   const [isOpen, setIsOpen] = useState(false);
   const openPopup = () => {
@@ -56,41 +61,31 @@ function ProductCategories() {
   const handleDelete = async (id) => {
     const confirmed = await confirm("Do you really want to delete this category?");
     if (!confirmed) return;
-    if (state.userInfo.Permission.some(obj => obj.name === "CAN_DELETE" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
-      try {
-        const res = await delProductCategory(id, state.userToken);
-        const user = await res.json();
-        if (res.status === 200) {
-          toast.success(user.message)
-        }
-        else if (res.status === 404) {
-          toast.info(user.message)
-        }
-        else if (res.status === 500) {
-          toast.error("You must delete its foreign key relations first");
-        }
-        setRefresh(!refresh);
-      } catch (error) {
-        console.log(error)
-        showToastMessage('error', "You must delete its foreign key relations first");
+    try {
+      const res = await delProductCategory(id, state.userToken);
+      const user = await res.json();
+      if (res.status === 200) {
+        toast.success(user.message)
       }
-    }
-    else {
-      toast.error("You are not allowed to delete a user");
+      else if (res.status === 404) {
+        toast.info(user.message)
+      }
+      else if (res.status === 500) {
+        toast.error("You must delete its foreign key relations first");
+      }
+      setRefresh(!refresh);
+    } catch (error) {
+      console.log(error)
+      showToastMessage('error', "You must delete its foreign key relations first");
     }
   };
 
   // Modify handleRowSelect to update the selected item's data
   const handleEditUser = (index) => {
     // Assuming currentItems holds the filtered rows for display
-    if (state.userInfo.Permission.some(obj => obj.name === "CAN_UPDATE" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
-      const selected = currentItems[index];
-      setSelectedItem(selected);
-      openPopup();
-    }
-    else {
-      toast.error("You are not allowed to update a user");
-    }
+    const selected = currentItems[index];
+    setSelectedItem(selected);
+    openPopup();
   };
 
   const filteredRows = categories?.filter(
@@ -114,7 +109,7 @@ function ProductCategories() {
   }
   return (
     <>
-      <Card className="w-full max-h-[80vh] overflow-y-auto">
+      <Card className="w-full lg:max-h-[80vh] lg:overflow-y-auto">
         <CardHeader floated={false} shadow={false} className="rounded-none">
           <div className="flex flex-col md:flex-row items-center w-full h-max py-3 gap-4 ">
             <div className="w-full md:w-auto flex items-center justify-start gap-2">
@@ -153,7 +148,7 @@ function ProductCategories() {
         </CardHeader>
 
         <CardBody className="p-2 overflow-auto px-0">
-          <table className=" w-full min-w-max table-auto text-left">
+          <table className="w-full min-w-max table-auto text-left">
             <thead>
               <tr>
                 {TABLE_HEAD.map((head) => (

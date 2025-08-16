@@ -2,12 +2,14 @@ import React, { useState } from "react";
 import { useEffect } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
-import { Dialog } from "@material-tailwind/react";
+import { Dialog, Tooltip } from "@material-tailwind/react";
 import { toast } from "react-toastify";
 import { State } from "@/state/Context";
 import { addUser } from "@/services/addUser";
 import { updateUser } from "@/services/updateUser";
 import { fetchPermissions } from "@/services/fetchPermissions";
+import { UserRole, userRolesForSelect } from "@/utils/enums/userRoles";
+import { TimerReset } from "lucide-react";
 
 const schema = Yup.object().shape({
     first_name: Yup.string().required("First name is required"),
@@ -25,7 +27,7 @@ const UserForm = ({ open, close, selectedItem, setSelectedItem, refresh, setRefr
     const [edit, setEdit] = useState(false);
     const [permissions, setPermissions] = useState([]);
     const [selectPerms, setSelectPerms] = useState([]);
-   
+
     const showToastMessage = (type, message) => {
         if (type === 'success') {
             toast.success(message)
@@ -61,7 +63,7 @@ const UserForm = ({ open, close, selectedItem, setSelectedItem, refresh, setRefr
 
     useEffect(() => {
         if (selectedItem) {
-            const {password, Permission, BusinessId, ...rest} = selectedItem;
+            const { password, Permission, BusinessId, ...rest } = selectedItem;
             formikProps.setValues(rest);
             setFieldValue('password', undefined);
             setSelectPerms(Permission.map((perm) => (perm.id)));
@@ -69,7 +71,7 @@ const UserForm = ({ open, close, selectedItem, setSelectedItem, refresh, setRefr
         }
     }, [selectedItem]);
 
-    const onSubmit = async (values) => {       
+    const onSubmit = async (values) => {
         setIsLoading(true);
         const updatedValues = { ...values, BusinessId: state.business.id };
         if (values.dob === "") {
@@ -89,6 +91,8 @@ const UserForm = ({ open, close, selectedItem, setSelectedItem, refresh, setRefr
                 }
                 else if (res.status === 400) {
                     showToastMessage('info', user.message)
+                    setIsLoading(false);
+                    return;
                 }
                 else if (res.status === 409) {
                     showToastMessage('error', user.message)
@@ -121,13 +125,16 @@ const UserForm = ({ open, close, selectedItem, setSelectedItem, refresh, setRefr
         }
     };
 
-    const handlePermission = (value, event) => {
-        const isChecked = event.target.checked;
-        if (isChecked) {
-            setSelectPerms([...selectPerms, value]);
-        } else {
-            setSelectPerms(selectPerms.filter(id => id !== value));
-        }
+    const handlePermission = (id, e) => {
+        // const isChecked = e.target.checked;
+        // if (isChecked) {
+        //     setSelectPerms([...selectPerms, value]);
+        // } else {
+        //     setSelectPerms(selectPerms.filter(id => id !== value));
+        // }
+        setSelectPerms(prev =>
+            e.target.checked ? [...prev, id] : prev.filter(pid => pid !== id)
+        );
     }
 
     const clearForm = (formikProps) => {
@@ -174,13 +181,17 @@ const UserForm = ({ open, close, selectedItem, setSelectedItem, refresh, setRefr
         setFieldValue,
     } = formikProps;
 
-    const userRoles = [
-        // { value: 'ADMIN', label: 'Admin' },
-        { value: 'USER', label: 'User' },
-        { value: 'MANAGER', label: 'Manager' },
-        { value: 'CASHIER', label: 'Cashier' },
-        { value: 'SALESMAN', label: 'Salesman' },
-    ];
+    const resetPermissions = () => {
+        if (!selectedItem) setSelectPerms([]);
+        else setSelectPerms(selectedItem?.Permission?.map((perm) => perm.id));
+    };
+
+    const groupedPermissions = permissions.reduce((acc, perm) => {
+        const [resource, action] = perm.name.split(":");
+        if (!acc[resource]) acc[resource] = [];
+        acc[resource].push({ ...perm, action });
+        return acc;
+    }, {});
 
     return (
         <>
@@ -264,13 +275,22 @@ const UserForm = ({ open, close, selectedItem, setSelectedItem, refresh, setRefr
                                                     unmount: { y: 25 },
                                                 }}
                                                 value={values.role}
-                                                onChange={handleChange}
+                                                onChange={(e) => {
+                                                    const selectedRole = e.target.value;
+                                                    handleChange(e);
+                                                    if (selectedRole === UserRole.ADMIN || selectedRole === UserRole.MANAGER) {
+                                                        const allPermissionIds = permissions.map((perm) => perm.id);
+                                                        setSelectPerms(allPermissionIds);
+                                                    } else {
+                                                        setSelectPerms([]);
+                                                    }
+                                                }}
                                                 onBlur={handleBlur}
-                                                size="md"
                                                 required
+                                                size="md"
                                             >
                                                 <option key={''} value={''} selected >Select Role</option>
-                                                {userRoles.map((role) => (
+                                                {userRolesForSelect.filter(role => role.value !== UserRole.ADMIN).map((role) => (
                                                     <option key={role.value} value={role.value}>{role.label}</option>
                                                 ))}
                                             </select>
@@ -279,7 +299,7 @@ const UserForm = ({ open, close, selectedItem, setSelectedItem, refresh, setRefr
                                                     {errors.role}
                                                 </div>
                                             ) : (<div></div>)}
-                                        </div>                                        
+                                        </div>
                                     </div>
 
                                     <div className="flex items-center justify-start space-x-4">
@@ -334,28 +354,85 @@ const UserForm = ({ open, close, selectedItem, setSelectedItem, refresh, setRefr
                                                     {errors.dob}
                                                 </div>
                                             ) : (<div></div>)}
-                                        </div>                                
+                                        </div>
                                     </div>
 
                                     <div className="w-full mt-2">
-                                        <label className=" font-bold">Permissions</label>
-                                        <div className="max-h-24 py-4 overflow-y-auto">
-                                            {permissions &&
-                                                permissions.map((permission) => (
-                                                    <div key={permission.id} className="flex mb-1">
-                                                        <input
-                                                            className="form-checkbox text-indigo-600 transition duration-150 ease-in-out cursor-pointer"
-                                                            type="checkbox"
-                                                            id={`permission-${permission.id}`}
-                                                            value={JSON.stringify(permission)}
-                                                            checked={selectPerms.includes(permission.id)}
-                                                            onChange={(e) => handlePermission(permission.id, e)}
-                                                        />
-                                                        <span className="ml-2 font-normal text-sm" htmlFor={`permission-${permission.id}`}>{permission.name}</span>
-                                                    </div>
-                                                ))}
+                                        <div className="flex items-center gap-1 my-2">
+                                            <input
+                                                type="checkbox"
+                                                className="form-checkbox text-indigo-600 mr-2"
+                                                value={selectPerms?.length == permissions?.length}
+                                                checked={selectPerms?.length === permissions?.length}
+                                                onChange={(e) => {
+                                                    const isChecked = e.target.checked;
+                                                    handleChange(e);
+                                                    if (isChecked) {
+                                                        const allPermissionIds = permissions.map((perm) => perm.id);
+                                                        setSelectPerms(allPermissionIds);
+                                                    } else {
+                                                        setSelectPerms([]);
+                                                    }
+                                                }}
+                                            />
+                                            <label className="font-bold">Permissions</label>
+                                            <Tooltip content="Reset" placement="top" className="z-[9999]">
+                                                <TimerReset className="w-6 h-6 text-blue-600 cursor-pointer" onClick={resetPermissions} />
+                                            </Tooltip>
+                                            {/* <PlusCircleIcon className="w-6 h-6 text-blue-600 cursor-pointer" onClick={openPopup} /> */}
                                         </div>
-                                    </div>                                    
+
+                                        <div className="space-y-4 h-56 overflow-y-auto">
+                                            {Object.entries(groupedPermissions).map(([resource, perms]) => {
+                                                const allSelected = perms.every(p => selectPerms.includes(p.id));
+                                                const someSelected = perms.some(p => selectPerms.includes(p.id));
+
+                                                const handleGroupToggle = () => {
+                                                    if (allSelected) {
+                                                        // Uncheck all
+                                                        perms.forEach(p => handlePermission(p.id, { target: { checked: false } }));
+                                                    } else {
+                                                        // Check all
+                                                        perms.forEach(p => handlePermission(p.id, { target: { checked: true } }));
+                                                    }
+                                                };
+
+                                                return (
+                                                    <div key={resource} className="border p-2 rounded shadow-sm bg-gray-50">
+                                                        <div className="flex items-center mb-2">
+                                                            <input
+                                                                type="checkbox"
+                                                                className="form-checkbox text-indigo-600 mr-2"
+                                                                checked={allSelected}
+                                                                ref={el => {
+                                                                    if (el) el.indeterminate = !allSelected && someSelected;
+                                                                }}
+                                                                onChange={handleGroupToggle}
+                                                            />
+                                                            <label className="font-semibold capitalize">{resource}</label>
+                                                        </div>
+
+                                                        <div className="grid grid-cols-2 gap-x-4 gap-y-1 pl-6">
+                                                            {perms.map((permission) => (
+                                                                <div key={permission.id} className="flex items-center">
+                                                                    <input
+                                                                        className="form-checkbox text-indigo-600"
+                                                                        type="checkbox"
+                                                                        id={`permission-${permission.id}`}
+                                                                        checked={selectPerms.includes(permission.id)}
+                                                                        onChange={(e) => handlePermission(permission.id, e)}
+                                                                    />
+                                                                    <label htmlFor={`permission-${permission.id}`} className="ml-2 text-sm capitalize">
+                                                                        {permission.action}
+                                                                    </label>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
                                 </div>
                                 <div className="flex items-center justify-end space-x-2 sticky bg-gradient-to-br from-gray-800 to-gray-700">
                                     <button

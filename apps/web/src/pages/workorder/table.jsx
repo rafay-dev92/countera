@@ -71,41 +71,34 @@ export function WorkOrder() {
 
     const handleEditWorkOrder = (index) => {
         // Assuming currentItems holds the filtered rows for display
-        if (state.userInfo.Permission.some(obj => obj.name === "CAN_EDIT_QUOTATION" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
-            const selected = currentItems[index];
-            setSelectetWorkOrder(selected);
-            openPopup();
-        }
-        else {
-            toast.error("You are not allowed to update a workorder");
-        }
+        const selected = currentItems[index];
+        setSelectetWorkOrder(selected);
+        openPopup();
     };
 
     const handleDeleteWorkOrder = async (index) => {
         const confirmed = await confirm("Do you really want to delete this workorder?");
         if (!confirmed) return;
-        if (state.userInfo.Permission.some(obj => obj.name === "CAN_DELETE_QUOTATION" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
-            const updatedWorkOrders = workOrders.filter((_, rowIndex) => rowIndex !== index);
-            const deletedWorkOrderId = workOrders.find((_, rowIndex) => rowIndex === index);
-            setWorkOrders(updatedWorkOrders);
-            try {
-                const res = await delWorkOrder(deletedWorkOrderId['id'], state.userToken);
-                const workorder = await res.json();
-                if (res.status === 200) {
-                    showToastMessage('success', workorder.message)
-                }
-                else if (res.status === 404) {
-                    showToastMessage('info', workorder.message)
-                }
-                setRefresh(!refresh);
-
-            } catch (error) {
-                console.log(error);
-                showToastMessage('error', "Something went wrong");
+        const updatedWorkOrders = workOrders.filter((_, rowIndex) => rowIndex !== index);
+        const deletedWorkOrderId = workOrders.find((_, rowIndex) => rowIndex === index);
+        setWorkOrders(updatedWorkOrders);
+        try {
+            const res = await delWorkOrder(deletedWorkOrderId['id'], state.userToken);
+            const workorder = await res.json();
+            if (res.status === 200) {
+                showToastMessage('success', workorder.message)
             }
-        }
-        else {
-            toast.error("You are not allowed to delete a workorder");
+            else if (res.status === 403) {
+                showToastMessage('info', workorder.message)
+            }
+            else if (res.status === 404) {
+                showToastMessage('info', workorder.message)
+            }
+            setRefresh(!refresh);
+
+        } catch (error) {
+            console.log(error);
+            showToastMessage('error', "Something went wrong");
         }
     };
 
@@ -145,12 +138,7 @@ export function WorkOrder() {
     };
 
     const openPopup = () => {
-        if (state.userInfo.Permission.some(obj => obj.name === "CAN_CREATE_QUOTATION" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
-            setIsOpen(true);
-        }
-        else {
-            toast.error("You are not allowed to create a workorder");
-        }
+        setIsOpen(true);
     };
 
     const closePopup = () => {
@@ -191,6 +179,9 @@ export function WorkOrder() {
                 dispatch({ type: 'SET_INVOICE_FORM', payload: true });
                 router('/dashboard/invoice');
             }
+            else if (res.status === 403) {
+                showToastMessage('info', invoice.message)
+            }
             else if (res.status === 404) {
                 showToastMessage('info', invoice.message)
             }
@@ -225,10 +216,9 @@ export function WorkOrder() {
                                 />
                             </div>
                             <div className="flex gap-2 lg:gap-4">
-                                <Button className="w-full bg-blue-900 lg:w-auto" size="md" onClick={openPopup} >
+                                <Button disabled={!state.userInfo?.Permission.includes("workorder:create")} className={`w-full bg-blue-900 lg:w-auto`} size="md" onClick={openPopup} >
                                     New
                                 </Button>
-
                             </div>
                         </div>
                         <div className="flex items-center mt-4 lg:mt-0 lg:ml-auto">

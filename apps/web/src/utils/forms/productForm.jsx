@@ -215,10 +215,10 @@ const ProductForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
   } = formikProps;
 
   return (
-    <Dialog open={state.product?.openForm}>
+    <Dialog className="bg-transparent shadow-none p-0" open={state.product?.openForm}>
       {state.product?.openForm && (
         <form onSubmit={handleSubmit} autoComplete="new">
-          <div className="">
+          <div className="fixed -top-16 lg:top-0 left-0 w-full h-full flex justify-center items-center">
             <div className="bg-white rounded shadow-xl">
               <div className="flex items-center justify-between sticky bg-gradient-to-br from-gray-800 to-gray-700">
                 <div></div>
@@ -247,7 +247,7 @@ const ProductForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
                 </button>
               </div>
 
-              <div className="p-6 overflow-y-auto max-h-[80vh]">
+              <div className="2xl:w-[50vw] xl:w-[60vw] lg:w-[70vw] md:w-[80vw] w-[90vw] p-6 space-y-3 max-h-[70vh] lg:max-h-[80vh] overflow-y-auto">
                 <div className="flex justify-between space-x-4 mb-3 w-full">
                   <div className="basis-[50%]">
                     <label className="font-bold">Image</label>
@@ -270,9 +270,12 @@ const ProductForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
                     <img src={productPreviewPic ? productPreviewPic : dummyImage} alt="Product" width={150} height={150} />
                   </div>
                 </div>
-                <div className="flex items-center justify-start space-x-4 mb-3 w-full">
-                  <div className="basis-[20%]">
-                    <label className="font-bold">Type</label>
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-3 w-full">
+                  {/* Type Field */}
+                  <div>
+                    <label htmlFor="type" className="font-bold">
+                      Type
+                    </label>
                     <select
                       className="w-full p-2 border border-gray-300 bg-inherit rounded-md"
                       id="type"
@@ -286,14 +289,17 @@ const ProductForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
                       <option value="Service">Service</option>
                     </select>
                     {touched.type && errors.type ? (
-                      <div className="text-red-500">
-                        {errors.type}
-                      </div>
-                    ) : (<div></div>)}
+                      <div className="text-red-500 text-sm mt-1">{errors.type}</div>
+                    ) : (
+                      <div className="h-5"></div> // Placeholder to maintain height
+                    )}
                   </div>
 
-                  <div className="basis-[30%]">
-                    <label className="font-bold">Category</label>
+                  {/* Category Field */}
+                  <div>
+                    <label htmlFor="category" className="font-bold">
+                      Category
+                    </label>
                     <select
                       className="w-full p-2 border border-gray-300 bg-inherit rounded-md"
                       id="category"
@@ -310,14 +316,17 @@ const ProductForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
                       ))}
                     </select>
                     {touched.category && errors.category ? (
-                      <div className="text-red-500">
-                        {errors.category}
-                      </div>
-                    ) : (<div></div>)}
+                      <div className="text-red-500 text-sm mt-1">{errors.category}</div>
+                    ) : (
+                      <div className="h-5"></div> // Placeholder to maintain height
+                    )}
                   </div>
 
-                  <div className="basis-[35%]">
-                    <label className="font-bold">Name</label> <br />
+                  {/* Name Field */}
+                  <div>
+                    <label htmlFor="name" className="font-bold">
+                      Name
+                    </label>
                     <input
                       className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
                       id="name"
@@ -327,15 +336,18 @@ const ProductForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
                       onChange={handleChange}
                       onBlur={handleBlur}
                     />
-                    {touched.name && errors.name && (
-                      <div className="text-red-500">
-                        {errors.name}
-                      </div>
+                    {touched.name && errors.name ? (
+                      <div className="text-red-500 text-sm mt-1">{errors.name}</div>
+                    ) : (
+                      <div className="h-5"></div> // Placeholder to maintain height
                     )}
                   </div>
 
-                  <div className="basis-[15%]">
-                    <label className="font-bold whitespace-nowrap">Item Code</label> <br />
+                  {/* Item Code Field */}
+                  <div>
+                    <label htmlFor="itemCode" className="font-bold whitespace-nowrap">
+                      Item Code
+                    </label>
                     <input
                       className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
                       id="itemCode"
@@ -345,11 +357,11 @@ const ProductForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
                       onChange={handleChange}
                       onBlur={handleBlur}
                     />
-                    {(touched.itemCode && errors.itemCode) ? (
-                      <div className="text-red-500">
-                        {errors.itemCode}
-                      </div>
-                    ) : (<div></div>)}
+                    {touched.itemCode && errors.itemCode ? (
+                      <div className="text-red-500 text-sm mt-1">{errors.itemCode}</div>
+                    ) : (
+                      <div className="h-5"></div> // Placeholder to maintain height
+                    )}
                   </div>
                 </div>
 
@@ -443,9 +455,8 @@ const ProductForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
                 </div>
 
                 {values.taxable &&
-                  taxes &&
-                  taxes.map((tax) => (
-
+                  Array.isArray(taxes) &&
+                  taxes?.map((tax) => (
                     <div key={tax.id} className="mb-1 flex">
                       <input
                         className="form-checkbox h-5 w-5 text-indigo-600 transition duration-150 ease-in-out cursor-pointer"

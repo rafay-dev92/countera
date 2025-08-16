@@ -8,7 +8,7 @@ import {
     Spinner,
 } from "@material-tailwind/react";
 import { StatisticsCard } from "@/widgets/cards";
-import { StatisticsChart, RemindersList } from "@/widgets/charts";
+import { StatisticsChart, RemindersList, AppointmentsList } from "@/widgets/charts";
 import {
     statisticsCardsData,
     statisticsChartsData,
@@ -21,6 +21,7 @@ import { fetchProducts } from '@/services/fetchProducts';
 import moment from 'moment-timezone';
 import { fetchMonthlySales } from '@/services/fetchMontlySales';
 import { fetchDailyReminders } from '@/services/fetchDailyRemiders';
+import { fetchDailyAppointments } from '@/services/fetchDailyAppointments';
 
 export function Home() {
     const { state } = State();
@@ -30,6 +31,7 @@ export function Home() {
     const [cardsData, setCardsData] = useState(statisticsCardsData);
     const [chartsData, setChartsData] = useState(statisticsChartsData);
     const [dailyReminders, setDailyReminders] = useState([]);
+    const [dailyAppointments, setDailyAppointments] = useState([]);
 
     useEffect(() => {
         setLoading(true);
@@ -86,10 +88,24 @@ export function Home() {
         }
     }
 
+    const getTodaysAppointments = async () => {
+        try {
+            const res = await fetchDailyAppointments(state.userToken);
+            const appointments = await res.json();
+            if (res.status === 200) {
+                setDailyAppointments(appointments.data || []);
+            }
+        } catch (error) {
+            console.log(error);
+            toast.error("Failed to load daily appointments")
+        }
+    }
+
     useEffect(() => {
         setChartLoading(true);
         dailySalesData();
         getTodaysReminders();
+        getTodaysAppointments()
         setTimeout(() => {
             setChartLoading(false);
         }, 2000);
@@ -113,7 +129,7 @@ export function Home() {
             const startDate = moment.tz(currentDate, timezone).startOf('day').utc().toDate();
             const endDate = moment.tz(currentDate, timezone).endOf('day').utc().toDate();
 
-            const fetchedInvoices = await fetchInvoices(state.userToken, null, null, { paymentStatus: ['PAID', 'PARTIALLY_PAID', 'UNPAID'], startDate, endDate, isReport: true });
+            const fetchedInvoices = await fetchInvoices(state.userToken, null, null, { paymentStatus: ['PAID', 'PARTIALLY_PAID'], startDate, endDate, isReport: true });
             let totalInvoices = await fetchedInvoices.json();
             // if (state.Settings.General.invoice === 'all') {
             // }
@@ -122,12 +138,12 @@ export function Home() {
             // }
 
             if (fetchedInvoices.status === 200) {
-                const invoicesWithCurrentDate = totalInvoices.length > 0 ? totalInvoices?.data?.filter(obj => {
+                const invoicesWithCurrentDate = totalInvoices.data.length > 0 ? totalInvoices?.data?.filter(obj => {
                     const invoiceDate = moment(obj.createdAt).tz(timezone).format('YYYY-MM-DD');
                     return invoiceDate === currentDate;
                 }) : [];
                 const money = invoicesWithCurrentDate.reduce((sum, invoice) => {
-                    return sum + Number(invoice.totalAmount || 0);
+                    return sum + Number(invoice.paidAmount || 0);
                 }, 0);
                 const newArray = [...cardsData];
 
@@ -240,13 +256,19 @@ export function Home() {
                                 title="Today's Reminders"
                                 reminders={dailyReminders}
                             />
-                            
-                            {chartsData.slice(1).map((props) => (
+
+                            {chartsData.slice(1, 2).map((props) => (
                                 <StatisticsChart
                                     key={props.title}
                                     {...props}
                                 />
                             ))}
+
+                            <AppointmentsList
+                                color='white'
+                                title="Today's Appointments"
+                                appointments={dailyAppointments}
+                            />
                         </div>
                     }
                 </div>

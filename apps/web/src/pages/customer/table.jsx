@@ -22,6 +22,7 @@ import { delCustomer } from "@/services/delCustomer";
 import { toast } from "react-toastify";
 import { State } from "@/state/Context";
 import { useConfirm } from "@/context/confirmContext";
+import { updateCustomer } from "@/services/updateCustomer";
 
 const TABLE_HEAD = ["Customer Name", "Email", "Phone", "Address", "Taxable", "Actions"];
 
@@ -43,14 +44,9 @@ export function Customers() {
   // Modify handleRowSelect to update the selected item's data
   const handleEditCustomer = (index) => {
     // Assuming currentItems holds the filtered rows for display
-    if (state.userInfo.Permission.some(obj => obj.name === "CAN_EDIT_CUSTOMER" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
-      const selected = currentItems[index];
-      setSelectedItem(selected);
-      openPopup();
-    }
-    else {
-      toast.error("You are not allowed to edit a customer");
-    }
+    const selected = currentItems[index];
+    setSelectedItem(selected);
+    openPopup();
   };
 
   const showToastMessage = (type, message) => {
@@ -159,27 +155,35 @@ export function Customers() {
     // setSelectAll(false);
     const confirmed = await confirm("Do you really want to delete this customer?");
     if (!confirmed) return;
-    if (state.userInfo.Permission.some(obj => obj.name === "CAN_DELETE_CUSTOMER" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
-      try {
-        const res = await delCustomer(id, state.userToken);
-        const customer = await res.json();
-        if (res.status === 200) {
-          showToastMessage('success', customer.message)
-        }
-        else if (res.status === 404) {
-          showToastMessage('info', customer.message)
-        }
-        else if (res.status === 500) {
-          showToastMessage('error', "You must delete its foreign key relations first");
-        }
-        setRefresh(!refresh);
-      } catch (error) {
-        console.log(error)
-        showToastMessage('error', "Something went wrong");
+    try {
+      const res = await delCustomer(id, state.userToken);
+      const customer = await res.json();
+      if (res.status === 200) {
+        showToastMessage('success', customer.message)
       }
-    }
-    else {
-      toast.error("You are not allowed to delete a customer");
+      else if (res.status === 404) {
+        showToastMessage('info', customer.message)
+      }
+      else if (res.status === 500) {
+        const askInactive = await confirm("This customer has some data. Do you want to make this customer inactive?");
+        if (askInactive) {
+          const res = await updateCustomer(id, { isActive: false }, state.userToken);
+          const user = await res.json();
+          if (res.status === 200) {
+            showToastMessage('success', user.message)
+          }
+          else if (res.status === 400) {
+            showToastMessage('error', user.message)
+          }
+          else if (res.status === 409) {
+            showToastMessage('error', user.message)
+          }
+        }
+      }
+      setRefresh(!refresh);
+    } catch (error) {
+      console.log(error)
+      showToastMessage('error', "Something went wrong");
     }
   };
 
@@ -192,12 +196,7 @@ export function Customers() {
   const [isOpen, setIsOpen] = useState(false);
 
   const openPopup = () => {
-    if (state.userInfo.Permission.some(obj => obj.name === "IS_CASHIER" || obj.name === "IS_ADMIN" || obj.name === "IS_SUPER_ADMIN")) {
-      setIsOpen(true);
-    }
-    else {
-      toast.error("You are not allowed to add a customer")
-    }
+    setIsOpen(true);
   };
 
   const closePopup = () => {
@@ -339,7 +338,7 @@ export function Customers() {
                           Address.city,
                           Address.state,
                           Address.zipcode
-                        ].filter(Boolean).join(', ')}                      
+                        ].filter(Boolean).join(', ')}
                       </Typography>
                     </td>
                     <td className={classes}>

@@ -80,7 +80,7 @@ const NotesForm = ({ open, close, workOrderId, setWorkOrderData, currentValue })
                 {open && (
                     <form onSubmit={handleSubmit} autoComplete="new" >
                         <div className="flex justify-center w-full">
-                            <div className="bg-white rounded shadow-xl">
+                            <div className="bg-white rounded shadow-xl w-[90vw] md:w-[80vw] lg:w-[70vw] xl:w-[60vw] 2xl:w-[50vw]">
                                 <div className="flex items-center justify-between sticky bg-gradient-to-br from-gray-800 to-gray-700">
                                     <div></div>
                                     <div className="text-white text-center text-lg">
@@ -108,7 +108,7 @@ const NotesForm = ({ open, close, workOrderId, setWorkOrderData, currentValue })
                                     </button>
                                 </div>
 
-                                <div className="w-[30vw] p-6 space-y-4">                                    
+                                <div className="p-6 space-y-4">                                    
                                     <div className="w-full">
                                         <label className="font-bold">Notes</label> <br />
                                         <input

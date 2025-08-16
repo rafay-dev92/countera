@@ -27,14 +27,14 @@
 
 /* X-axis (horizontal) scrollbar */
 ::-webkit-scrollbar:horizontal {
-    height: 4px;
+    height: 14px;
     /* Thinnest possible height for horizontal scrollbar */
 }
 
 ::-webkit-scrollbar-thumb:horizontal {
     background-color: #888;
     /* Thumb color */
-    border-radius: 10px;
+    /* border-radius: 10px; */
     /* Rounded ends */
 }
 
@@ -46,7 +46,7 @@
 ::-webkit-scrollbar-track:horizontal {
     background: #f1f1f1;
     /* Track color */
-    border-radius: 10px;
+    /* border-radius: 10px; */
     /* Rounded ends for track */
 }
 

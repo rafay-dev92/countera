@@ -18,6 +18,7 @@ import Businesses from "./components/businesses";
 import Users from "./components/users";
 import Permissions from "./components/permissions";
 import Vehicles from "./components/vehicles";
+import { UserRole } from "@/utils/enums/userRoles";
 
 function AdminPanel() {
   const { dispatch } = State();
@@ -83,7 +84,7 @@ function AdminPanel() {
         }
 
         const user = await getUserInfo(token);
-        if (user?.role !== "SUPER_ADMIN") {
+        if (user?.role !== UserRole.SUPER_ADMIN) {
           navigate("/dashboard/home");
         }
       } catch (error) {

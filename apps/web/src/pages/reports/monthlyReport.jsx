@@ -11,7 +11,7 @@ const MonthlyReportPreview = React.forwardRef(({ filterValue, invoices, products
         if (customerType === 'business') return {};
         const productTaxes = {};
 
-        products.forEach((product) => {
+        products?.forEach((product) => {
             product.Tax?.forEach((productTax) => {
                 const key = `${productTax.name}_${productTax.rate}_${productTax.type}`;
 
@@ -31,7 +31,7 @@ const MonthlyReportPreview = React.forwardRef(({ filterValue, invoices, products
 
     const productTotals = productsCategories.map(category =>
         invoices.reduce((sum, invoice) => {
-            const matchedProduct = invoice.Product ? invoice.Product.find(p => p.Category?.name === category) : {};
+            const matchedProduct = invoice.Products ? invoice.Products.find(p => p.Category?.name === category) : {};
             const quantity = matchedProduct?.invoice_product?.quantity || 0;
             const price = matchedProduct?.price || 0;
             return sum + (price * quantity);
@@ -40,7 +40,7 @@ const MonthlyReportPreview = React.forwardRef(({ filterValue, invoices, products
 
     const taxTotals = taxes.map(tax => {
         const value = invoices.reduce((sum, invoice) => {
-            const productTaxes = calculateTaxes(invoice.Product, invoice.Customer?.customerType);
+            const productTaxes = calculateTaxes(invoice.Products, invoice.Customer?.customerType);
             const matchingKey = Object.keys(productTaxes)?.find(key => key.split('_')[0] === tax);
             return sum + (matchingKey ? productTaxes[matchingKey] || 0 : 0);
         }, 0);
@@ -50,7 +50,7 @@ const MonthlyReportPreview = React.forwardRef(({ filterValue, invoices, products
     const taxablePartsTotal = invoices.reduce((sum, invoice) => {
         const isCustomerTaxExempt = invoice.Customer?.customerType === 'business';
         if (isCustomerTaxExempt) return sum;
-        const matchedProducts = invoice.Product?.filter(p => p.taxable) || [];
+        const matchedProducts = invoice.Products?.filter(p => p.taxable) || [];
         matchedProducts.forEach(matchedProduct => {
             const quantity = matchedProduct?.invoice_product?.quantity || 0;
             const price = matchedProduct?.price || 0;
@@ -62,7 +62,7 @@ const MonthlyReportPreview = React.forwardRef(({ filterValue, invoices, products
     const nonTaxableWholeSaleTotal = invoices.reduce((sum, invoice) => {
         const isCustomerTaxExempt = invoice.Customer?.customerType === 'business';
         if (!isCustomerTaxExempt) return sum;
-        const matchedProducts = invoice.Product?.filter(p => p.taxable) || [];
+        const matchedProducts = invoice.Products?.filter(p => p.taxable) || [];
         matchedProducts.forEach(matchedProduct => {
             const quantity = matchedProduct?.invoice_product?.quantity || 0;
             const price = matchedProduct?.price || 0;
@@ -72,7 +72,7 @@ const MonthlyReportPreview = React.forwardRef(({ filterValue, invoices, products
     }, 0);
 
     const nonTaxableLabourTotal = invoices.reduce((sum, invoice) => {
-        const matchedProducts = invoice.Product?.filter(p => !p.taxable);
+        const matchedProducts = invoice.Products?.filter(p => !p.taxable);
         matchedProducts.forEach(matchedProduct => {
             const quantity = matchedProduct?.invoice_product?.quantity || 0;
             const price = matchedProduct?.price || 0;
@@ -120,7 +120,7 @@ const MonthlyReportPreview = React.forwardRef(({ filterValue, invoices, products
                     </thead>
                     <tbody>
                         {invoices?.map((item, index) => {
-                            const productTaxes = calculateTaxes(item.Product, item.Customer?.customerType);
+                            const productTaxes = calculateTaxes(item.Products, item.Customer?.customerType);
                             const formattedDate = new Date(item.createdAt).toLocaleDateString("en-US", {
                                 timeZone: state.business.timezone ? state.business.timezone : '',
                                 year: "numeric",
@@ -182,8 +182,8 @@ const MonthlyReportPreview = React.forwardRef(({ filterValue, invoices, products
                                         </Typography>
                                     </td>
                                     {productsCategories.map((category, idx) => {
-                                        const price = item.Product?.find(item => item.Category.name === category)?.price || 0;
-                                        const quantity = item.Product?.find(item => item.Category.name === category)?.invoice_product?.quantity || 0;
+                                        const price = item.Products?.find(item => item.Category.name === category)?.price || 0;
+                                        const quantity = item.Products?.find(item => item.Category.name === category)?.invoice_product?.quantity || 0;
                                         return (
                                             <td key={idx} className="p-4 border-b border-blue-gray-50">
                                                 <Typography

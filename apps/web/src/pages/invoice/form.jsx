@@ -542,6 +542,8 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
   // Handle removing a product
   const handleRemoveProduct = (index) => {
     const updatedItems = [...selectedProducts];
+    const removedProduct = updatedItems[index];
+
     updatedItems.splice(index, 1);
 
     if (printInvoice.paymentStatus === "PAID") {
@@ -553,14 +555,84 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
     }
 
     // Recalculate taxes if there are remaining items
+    let updatedInvoiceTaxes = { ...invoiceTaxes };
+    if (removedProduct) {
+      removedProduct.Tax?.forEach((productTax) => {
+        delete updatedInvoiceTaxes[`${removedProduct.id}_${productTax.id}`];
+      });
+    }
+
+    // Recalculate taxes with updated quoteTaxes
     if (updatedItems.length > 0) {
-      recalculateTaxes(updatedItems);
+      recalculateTaxesWithUpdatedState(updatedItems, updatedInvoiceTaxes);
     } else {
+      setInvoiceTaxes({});
       setAppliedTaxes({});
     }
 
     setSelectedProducts(updatedItems);
   };
+
+
+    // Recalculate taxes with updated state
+    const recalculateTaxesWithUpdatedState = (products, updatedInvoiceTaxes) => {
+      const tempInvoiceTaxes = updatedInvoiceTaxes || {};
+  
+      products.forEach((product) => {
+        product.Tax?.forEach((productTax) => {
+  
+          if (productTax.name === 'Sales Tax' && !selectedCustomer?.taxable) {
+            return; // Skip Sales Tax calculation for non-taxable customers
+          }
+  
+          const key2 = `${product.id}_${productTax.id}`;
+          if (!tempInvoiceTaxes[key2]) {
+            tempInvoiceTaxes[key2] = {
+              TaxId: productTax.id,
+              ProductId: product.id,
+              tax_name: productTax.name,
+              tax_rate: productTax.rate,
+              tax_type: productTax.type,
+              tax_amount: 0,
+            };
+          }
+  
+          if (productTax.type === "%") {
+            tempInvoiceTaxes[key2].tax_amount = (product.price * product.quantity * (tempInvoiceTaxes[key2].tax_rate / 100));
+          } else {
+            tempInvoiceTaxes[key2].tax_amount = (product.quantity * tempInvoiceTaxes[key2].tax_rate);
+          }
+        });
+      });
+  
+      // setQuoteTaxes(tempQuoteTaxes);
+      // setAppliedTaxes(productTaxes);
+  
+      setAppliedTaxes(Object.values(tempInvoiceTaxes).reduce((acc, tax) => {
+        const key = `${tax.TaxId}_${tax.tax_rate}_${tax.tax_type}`;
+  
+        if (!acc[key]) {
+          acc[key] = {
+            tax_name: tax.tax_name,
+            tax_rate: tax.tax_rate,
+            tax_type: tax.tax_type,
+            tax_amount: 0,
+          };
+        }
+  
+        acc[key].tax_amount = Number(
+          (acc[key].tax_amount + Number(tax.tax_amount)).toFixed(2)
+        );
+  
+        return acc;
+      }, {}));
+  
+      Object.values(tempInvoiceTaxes).forEach((tax) => {
+        tax.tax_amount = (Number(tax.tax_amount)).toFixed(2);
+      });
+      setInvoiceTaxes(tempInvoiceTaxes);
+    };
+  
 
   // Recalculate taxes
   const recalculateTaxes = (products) => {
@@ -599,6 +671,7 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
         }
       });
     });
+
     setAppliedTaxes(Object.values(invoiceTaxes).reduce((acc, tax) => {
       const key = `${tax.TaxId}_${tax.tax_rate}_${tax.tax_type}`;
 
@@ -619,7 +692,7 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
     }, {}));
 
     Object.values(tempInvoiceTaxes).forEach((tax) => {
-      tax.tax_amount = tax.tax_amount.toFixed(2);
+      tax.tax_amount = (Number(tax.tax_amount)).toFixed(2);
     });
     setInvoiceTaxes(tempInvoiceTaxes);
     return productTaxes;

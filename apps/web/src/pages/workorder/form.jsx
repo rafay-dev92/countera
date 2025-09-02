@@ -98,6 +98,10 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedWorkOrder, setS
   const [packagePreview, setPackagePreview] = useState(null);
   const [modalQuantity, setModalQuantity] = useState(1);
 
+
+  // workorder taxes
+  const [workorderTaxes, setWorkorderTaxes] = useState({});
+
   const closeCustomerVehicleForm = () => {
     setIsCustomerVehicleFormOpen(false);
   };
@@ -133,6 +137,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedWorkOrder, setS
       taxable: false
     }]);
     setAppliedTaxes({});
+    setWorkorderTaxes({});
     clearForm(formikProps);
     setEdit(false)
     setRefresh(!refresh);
@@ -209,7 +214,28 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedWorkOrder, setS
           }
         });
       });
-      setAppliedTaxes(productTaxes);
+      // setAppliedTaxes(productTaxes);
+
+      const parsedTaxes = JSON.parse(selectedWorkOrder.appliedTaxes) || {};
+      setWorkorderTaxes(parsedTaxes);
+      setAppliedTaxes(Object.values(parsedTaxes).reduce((acc, tax) => {
+        const key = `${tax.TaxId}_${tax.tax_rate}_${tax.tax_type}`;
+
+        if (!acc[key]) {
+          acc[key] = {
+            tax_name: tax.tax_name,
+            tax_rate: tax.tax_rate,
+            tax_type: tax.tax_type,
+            tax_amount: 0,
+          };
+        }
+
+        acc[key].tax_amount = Number(
+          (acc[key].tax_amount + Number(tax.tax_amount)).toFixed(2)
+        );
+
+        return acc;
+      }, {}));
 
       setSelectedProducts(selectedProd);
       // setSelectedQuotation(null)
@@ -245,6 +271,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedWorkOrder, setS
         CustomerVehicleId: selectedVehicle.id,
         BusinessId: null,
         comments: values.comments,
+        appliedTaxes: JSON.stringify(workorderTaxes),
       },
       "products": selectedProductIds,
     };
@@ -411,11 +438,20 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedWorkOrder, setS
   // Handle removing a product
   const handleRemoveProduct = (index) => {
     const updatedItems = [...selectedProducts];
+    const removedProduct = updatedItems[index];
+
     updatedItems.splice(index, 1);
 
     // Recalculate taxes if there are remaining items
+    let updatedWorkorderTaxes = { ...workorderTaxes };
+    if (removedProduct) {
+      removedProduct.Tax?.forEach((productTax) => {
+        delete updatedWorkorderTaxes[`${removedProduct.id}_${productTax.id}`];
+      });
+    }
+
     if (updatedItems.length > 0) {
-      recalculateTaxes(updatedItems);
+      recalculateTaxesWithUpdatedState(updatedItems, updatedWorkorderTaxes);
     } else {
       setAppliedTaxes({});
     }
@@ -423,9 +459,66 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedWorkOrder, setS
     setSelectedProducts(updatedItems);
   };
 
+  // Recalculate taxes with updated state
+  const recalculateTaxesWithUpdatedState = (products, updatedWorkorderTaxes) => {
+    const tempWorkorderTaxes = updatedWorkorderTaxes || {};
+
+    products.forEach((product) => {
+      product.Tax?.forEach((productTax) => {
+
+        if (productTax.name === 'Sales Tax' && !selectedCustomer?.taxable) {
+          return; // Skip Sales Tax calculation for non-taxable customers
+        }
+
+        const key2 = `${product.id}_${productTax.id}`;
+        if (!tempWorkorderTaxes[key2]) {
+          tempWorkorderTaxes[key2] = {
+            TaxId: productTax.id,
+            ProductId: product.id,
+            tax_name: productTax.name,
+            tax_rate: productTax.rate,
+            tax_type: productTax.type,
+            tax_amount: 0,
+          };
+        }
+
+        if (productTax.type === "%") {
+          tempWorkorderTaxes[key2].tax_amount = (product.price * product.quantity * (tempWorkorderTaxes[key2].tax_rate / 100));
+        } else {
+          tempWorkorderTaxes[key2].tax_amount = (product.quantity * tempWorkorderTaxes[key2].tax_rate);
+        }
+      });
+    });
+
+    setAppliedTaxes(Object.values(tempWorkorderTaxes).reduce((acc, tax) => {
+      const key = `${tax.TaxId}_${tax.tax_rate}_${tax.tax_type}`;
+
+      if (!acc[key]) {
+        acc[key] = {
+          tax_name: tax.tax_name,
+          tax_rate: tax.tax_rate,
+          tax_type: tax.tax_type,
+          tax_amount: 0,
+        };
+      }
+
+      acc[key].tax_amount = Number(
+        (acc[key].tax_amount + Number(tax.tax_amount)).toFixed(2)
+      );
+
+      return acc;
+    }, {}));
+
+    Object.values(tempWorkorderTaxes).forEach((tax) => {
+      tax.tax_amount = (Number(tax.tax_amount)).toFixed(2);
+    });
+    setWorkorderTaxes(tempWorkorderTaxes);
+  };
+
   // Recalculate taxes
   const recalculateTaxes = (products) => {
     const productTaxes = {};
+    const tempWorkorderTaxes = workorderTaxes || {};
 
     products.forEach((product) => {
       product.Tax?.forEach((productTax) => {
@@ -439,16 +532,53 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedWorkOrder, setS
           productTaxes[key] = 0;
         }
 
+        const key2 = `${product.id}_${productTax.id}`;
+        if (!tempWorkorderTaxes[key2]) {
+          tempWorkorderTaxes[key2] = {
+            TaxId: productTax.id,
+            ProductId: product.id,
+            tax_name: productTax.name,
+            tax_rate: productTax.rate,
+            tax_type: productTax.type,
+            tax_amount: 0,
+          };
+        }
+
 
         if (productTax.type === "%") {
           productTaxes[key] += product.price * product.quantity * (productTax.rate / 100);
+          tempWorkorderTaxes[key2].tax_amount = (product.price * product.quantity * (tempWorkorderTaxes[key2].tax_rate / 100));
         } else {
           productTaxes[key] += product.quantity * productTax.rate;
+          tempWorkorderTaxes[key2].tax_amount = (product.quantity * tempWorkorderTaxes[key2].tax_rate);
         }
       });
     });
 
-    setAppliedTaxes(productTaxes);
+    // setAppliedTaxes(productTaxes);
+    setAppliedTaxes(Object.values(workorderTaxes).reduce((acc, tax) => {
+      const key = `${tax.TaxId}_${tax.tax_rate}_${tax.tax_type}`;
+
+      if (!acc[key]) {
+        acc[key] = {
+          tax_name: tax.tax_name,
+          tax_rate: tax.tax_rate,
+          tax_type: tax.tax_type,
+          tax_amount: 0,
+        };
+      }
+
+      acc[key].tax_amount = Number(
+        (acc[key].tax_amount + Number(tax.tax_amount)).toFixed(2)
+      );
+
+      return acc;
+    }, {}));
+
+     Object.values(tempWorkorderTaxes).forEach((tax) => {
+      tax.tax_amount = (Number(tax.tax_amount)).toFixed(2);
+    });
+    setWorkorderTaxes(tempWorkorderTaxes);
   };
 
   // calculate amount
@@ -517,9 +647,15 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedWorkOrder, setS
   // calculate tax amount
   const calculateTotalTaxAmount = () => {
     let totalTaxAmount = 0;
-    if (Object.keys(appliedTaxes).length > 0) {
-      Object.keys(appliedTaxes).forEach((tax) => {
-        totalTaxAmount += parseFloat(appliedTaxes[tax].toFixed(2));
+    // if (Object.keys(appliedTaxes).length > 0) {
+    //   Object.keys(appliedTaxes).forEach((tax) => {
+    //     totalTaxAmount += parseFloat(appliedTaxes[tax].toFixed(2));
+    //   });
+    //   return totalTaxAmount;
+    // }
+    if (Object.values(workorderTaxes).length > 0) {
+      Object.keys(workorderTaxes).forEach((tax) => {
+        totalTaxAmount += parseFloat(workorderTaxes[tax].tax_amount);
       });
       return totalTaxAmount;
     }
@@ -593,6 +729,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedWorkOrder, setS
       taxable: false
     }])
     setAppliedTaxes({});
+    setWorkorderTaxes({});
     setDiscount(0);
     setLumSum(0);
   };
@@ -1207,10 +1344,10 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedWorkOrder, setS
                         </div>
 
                         <div className="flex flex-col divide-y border-y">
-                          {Object.keys(appliedTaxes).map((tax, ind) => (
+                          {Object.values(appliedTaxes).map((tax, ind) => (
                             <div key={ind} className="flex justify-between">
-                              <span className="rounded w-min p-2 whitespace-nowrap basis-[50%]" >{`${tax.split('_')[0]} (${tax.split('_')[1]}${tax.split('_')[2]})`}</span>
-                              <span className="text-1xl p-2 w-fit text-right basis-[50%]">{tax.split('_')[2] === '%' ? `$${appliedTaxes[tax].toFixed(2)}` : `$${appliedTaxes[tax]}`}</span>
+                              <span className="rounded w-min p-2 whitespace-nowrap basis-[50%]" >{`${tax.tax_name ?? ""} (${String(tax.tax_rate ?? "")}${String(tax.tax_type ?? "")})`}</span>
+                              <span className="text-1xl p-2 w-fit text-right basis-[50%]">{tax?.tax_amount}</span>
                             </div>
                           ))}
                         </div>

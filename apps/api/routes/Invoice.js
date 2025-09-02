@@ -359,13 +359,26 @@ router.post(
           {
             model: Invoice_Tax,
             as: "Taxes",
-            attributes: ["tax_name", "tax_amount"],
+            attributes: [
+              "TaxId",
+              "ProductId",
+              "tax_name",
+              "tax_amount",
+              "tax_rate",
+              "tax_type",
+            ],
           },
         ],
       });
+
+      const formattedCurrentInvoice = {
+        ...currentInvoice.toJSON(),
+        appliedTaxes: currentInvoice.Taxes.map(tax => tax.toJSON()),
+      };
+
       return res.status(200).json({
         message: "Invoice created successfully",
-        data: currentInvoice,
+        data: formattedCurrentInvoice,
       });
     } catch (error) {
       console.error(error);
@@ -495,14 +508,26 @@ router.put(
           {
             model: Invoice_Tax,
             as: "Taxes",
-            attributes: ["tax_name", "tax_amount"],
+            attributes: [
+              "TaxId",
+              "ProductId",
+              "tax_name",
+              "tax_amount",
+              "tax_rate",
+              "tax_type",
+            ],
           },
         ],
       });
 
+      const formattedCurrentInvoice = {
+        ...currentInvoice.toJSON(),
+        appliedTaxes: currentInvoice.Taxes.map(tax => tax.toJSON()),
+      };
+
       return res.status(200).json({
         message: "Invoice updated successfully",
-        data: currentInvoice,
+        data: formattedCurrentInvoice,
       });
     } catch (error) {
       console.error(error);

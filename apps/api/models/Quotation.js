@@ -37,6 +37,10 @@ module.exports = (sequelize) => {
         type: DataTypes.STRING,
         allowNull: true,
       },
+      appliedTaxes: {
+        type: DataTypes.JSON,
+        allowNull: true,
+      },
       CustomerId: {
         type: DataTypes.UUID,
         allowNull: false,

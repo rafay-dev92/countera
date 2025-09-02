@@ -56,7 +56,8 @@ const ViewWorkOrder = ({ workOrderData, setWorkOrderData, componentRef, appliedT
     }
 
     const setWorkOrderFinished = async () => {
-        const confirmed = await confirm("Are you sure you want to finish this work order? You won't be able to edit it after this.");
+        // const confirmed = await confirm("Are you sure you want to finish this work order? You won't be able to edit it after this.");
+        const confirmed = await confirm("Are you sure you want to finish this work order?");
         if (!confirmed) return;
         setIsLoading({ ...isLoading, finish: true });
         try {

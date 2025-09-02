@@ -55,7 +55,8 @@ const ViewQuotation = ({ quotationData, setQuotationData, componentRef, appliedT
     }
 
     const setQuotationApproved = async () => {
-        const confirmed = await confirm("Do you really want to approve this quotation? You won't be able to edit it after this.");
+        // const confirmed = await confirm("Do you really want to approve this quotation? You won't be able to edit it after this.");
+        const confirmed = await confirm("Do you really want to approve this quotation?");
         if (!confirmed) return;
         setIsLoading({ ...isLoading, approve: true });
 

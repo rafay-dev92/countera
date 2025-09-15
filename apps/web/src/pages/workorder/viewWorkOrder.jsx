@@ -138,6 +138,7 @@ const ViewWorkOrder = ({ workOrderData, setWorkOrderData, componentRef, appliedT
                 CustomerId: workOrderData.CustomerId,
                 CustomerVehicleId: workOrderData.CustomerVehicleId,
                 BusinessId: state.business.id,
+                appliedTaxes: workOrderData.appliedTaxes
             },
             "products": selectedProductIds,
         };

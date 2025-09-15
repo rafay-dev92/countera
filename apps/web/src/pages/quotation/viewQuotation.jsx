@@ -94,7 +94,8 @@ const ViewQuotation = ({ quotationData, setQuotationData, componentRef, appliedT
                 comments: quotationData.comments,
                 notes: quotationData.notes,
                 discount: quotationData.discount,
-                BusinessId: state.business.id
+                BusinessId: state.business.id,
+                appliedTaxes: quotationData.appliedTaxes
             },
             "products": selectedProductIds,
             "taxes": taxes

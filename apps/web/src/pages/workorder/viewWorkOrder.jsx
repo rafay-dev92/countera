@@ -56,7 +56,8 @@ const ViewWorkOrder = ({ workOrderData, setWorkOrderData, componentRef, appliedT
     }
 
     const setWorkOrderFinished = async () => {
-        const confirmed = await confirm("Are you sure you want to finish this work order? You won't be able to edit it after this.");
+        // const confirmed = await confirm("Are you sure you want to finish this work order? You won't be able to edit it after this.");
+        const confirmed = await confirm("Are you sure you want to finish this work order?");
         if (!confirmed) return;
         setIsLoading({ ...isLoading, finish: true });
         try {
@@ -83,6 +84,8 @@ const ViewWorkOrder = ({ workOrderData, setWorkOrderData, componentRef, appliedT
             price: product.workorder_product.price
         })).filter(product => product.id);
 
+        const taxes = Object.values(JSON.parse(workOrderData.appliedTaxes)).map(tax => tax);
+        console.log("taxes: ", taxes)
         const data = {
             invoiceData: {
                 totalAmount: workOrderData.totalAmount,
@@ -94,6 +97,7 @@ const ViewWorkOrder = ({ workOrderData, setWorkOrderData, componentRef, appliedT
                 BusinessId: state.business.id
             },
             "products": selectedProductIds,
+            "taxes": taxes
         };
 
         try {
@@ -229,7 +233,7 @@ const ViewWorkOrder = ({ workOrderData, setWorkOrderData, componentRef, appliedT
                     }
 
                     {!isLoading.createInvoice ?
-                        <button onClick={createInvoice} disabled={!state.userInfo?.Permission.includes("invoice:create")} className={`flex items-center gap-2 w-full p-3 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 ${state.userInfo?.Permission.includes("invoice:create") ? "cursor-pointer" : "cursor-not-allowed opacity-50"}`}>
+                        <button type="button" onClick={createInvoice} disabled={!state.userInfo?.Permission.includes("invoice:create")} className={`flex items-center gap-2 w-full p-3 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 ${state.userInfo?.Permission.includes("invoice:create") ? "cursor-pointer" : "cursor-not-allowed opacity-50"}`}>
                             <BookCopy className="h-5 w-5 inline-block mr-2" />Create Invoice
                         </button>
                         :

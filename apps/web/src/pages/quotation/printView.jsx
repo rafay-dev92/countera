@@ -29,7 +29,7 @@ const printView = React.forwardRef(({ view, quotationData, appliedTaxes }, ref) 
                     </div>
                     <div className="col-span-1 flex flex-col items-end gap-1 p-2">
                         <span className="text-[12px] font-semibold">Date: {quotationDate.toLocaleDateString("en-US")}</span>
-                        <span className="text-[12px]">Quote No: INV{`${quotationData?.quotationNumber}`.padStart(4, '0')}</span>
+                        <span className="text-[12px]">Quote No: QUT{`${quotationData?.quotationNumber}`.padStart(4, '0')}</span>
                         <span className="text-[12px]">License No: {quotationData?.Business.licenseNumber ? quotationData?.Business.licenseNumber : "N/A"}</span>
                         <span className="text-[12px]">Permit No: {quotationData?.Business.permitNumber ? quotationData?.Business.permitNumber : "N/A"}</span>
                     </div>
@@ -191,14 +191,14 @@ const printView = React.forwardRef(({ view, quotationData, appliedTaxes }, ref) 
                         </div>
 
                         <div className="flex flex-col text-xs">
-                            {Object.keys(appliedTaxes).map((tax, ind) => (
+                            {Object.values(appliedTaxes).map((tax, ind) => (
                                 <div key={ind} className="border-t border-x divide-y">
                                     <div className="flex justify-between px-2 py-1">
                                         <span className="">
-                                            {`${tax.split('_')[0]} (${tax.split('_')[1]}${tax.split('_')[2]})`}
+                                            {`${tax.tax_name} (${tax.tax_rate}${tax.tax_type})`}
                                         </span>
                                         <span className="">
-                                            ${tax.split('_')[2] === '%' ? appliedTaxes[tax].toFixed(2) : appliedTaxes[tax]}
+                                            {tax?.tax_amount}
                                         </span>
                                     </div>
                                 </div>

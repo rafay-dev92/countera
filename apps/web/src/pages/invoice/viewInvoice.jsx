@@ -149,6 +149,10 @@ const ViewInvoice = ({ printInvoice, setPrintInvoice, componentRef, appliedTaxes
         setIsLoading({ ...isLoading, sendMail: false });
     }
 
+    useEffect(() => {
+        console.log("appliedTaxes in print: ", appliedTaxes)
+    }, [appliedTaxes])
+
     // useEffect(() => {
     //     if (Object.keys(printInvoice).length > 0 && printInvoice?.Payments.length > 0) {
     //         const paidAmount = printInvoice?.Payments.reduce((acc, payment) => acc + payment.paidAmount, 0);

@@ -192,10 +192,10 @@ const printView = React.forwardRef(({ view, printInvoice, appliedTaxes }, ref) =
 
                         </div>
 
-                        <div className="flex flex-col text-xs">
+                        {/* <div className="flex flex-col text-xs">
                             {Object.keys(appliedTaxes).map((tax, ind) => (
                                 <div key={ind} className="border-t border-x divide-y">
-                                    <div className="flex justify-between px-2 py-1">
+                                    <div className="flex justify-between px-2 py-1">                                        
                                         <span className="">
                                             {`${tax.split('_')[0]} (${tax.split('_')[1]}${tax.split('_')[2]})`}
                                         </span>
@@ -205,7 +205,38 @@ const printView = React.forwardRef(({ view, printInvoice, appliedTaxes }, ref) =
                                     </div>
                                 </div>
                             ))}
+                        </div> */}
+
+                        {/* <div className="flex flex-col text-xs">
+                            {Array.isArray(appliedTaxes) && appliedTaxes.length > 0 && appliedTaxes.map((tax, ind) => (
+                                <div key={ind} className="border-t border-x divide-y">
+                                    <div className="flex justify-between px-2 py-1">
+                                        <span className="">
+                                            {`${tax.tax_name ?? ""} (${String(tax.tax_rate ?? "")}${String(tax.tax_type ?? "")})`}
+                                        </span>
+                                        <span className="">
+                                            {typeof tax.total_amount === "object" ? JSON.stringify(tax.total_amount) : tax.total_amount}
+                                        </span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div> */}
+
+                        <div className="flex flex-col text-xs">
+                            {appliedTaxes && Object.values(appliedTaxes).map((tax, ind) => (
+                                <div key={ind} className="border-t border-x divide-y">
+                                    <div className="flex justify-between px-2 py-1">
+                                        <span className="">
+                                            {`${tax.tax_name ?? ""} (${String(tax.tax_rate ?? "")}${String(tax.tax_type ?? "")})`}
+                                        </span>
+                                        <span className="">
+                                            {tax?.tax_amount}
+                                        </span>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
+
 
                         <div className="border-t border-x divide-y text-xs">
                             <div className="flex justify-between px-2 py-1">

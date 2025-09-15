@@ -55,7 +55,8 @@ const ViewQuotation = ({ quotationData, setQuotationData, componentRef, appliedT
     }
 
     const setQuotationApproved = async () => {
-        const confirmed = await confirm("Do you really want to approve this quotation? You won't be able to edit it after this.");
+        // const confirmed = await confirm("Do you really want to approve this quotation? You won't be able to edit it after this.");
+        const confirmed = await confirm("Do you really want to approve this quotation?");
         if (!confirmed) return;
         setIsLoading({ ...isLoading, approve: true });
 
@@ -83,6 +84,8 @@ const ViewQuotation = ({ quotationData, setQuotationData, componentRef, appliedT
             price: product.quotation_product.price
         })).filter(product => product.id);
 
+        const taxes = Object.values(JSON.parse(quotationData.appliedTaxes)).map(tax => tax);
+        console.log("taxes: ", taxes)
         const data = {
             invoiceData: {
                 totalAmount: quotationData.totalAmount,
@@ -94,6 +97,7 @@ const ViewQuotation = ({ quotationData, setQuotationData, componentRef, appliedT
                 BusinessId: state.business.id
             },
             "products": selectedProductIds,
+            "taxes": taxes
         };
 
         try {

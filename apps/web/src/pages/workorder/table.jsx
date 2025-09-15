@@ -156,6 +156,8 @@ export function WorkOrder() {
             price: product.workorder_product.price
         })).filter(product => product.id);
 
+        const taxes = Object.values(JSON.parse(workOrderData.appliedTaxes)).map(tax => tax);
+        console.log("taxes: ", taxes)
         const data = {
             invoiceData: {
                 totalAmount: workOrderData.totalAmount,
@@ -167,6 +169,7 @@ export function WorkOrder() {
                 BusinessId: state.business.id
             },
             "products": selectedProductIds,
+            "taxes": taxes
         };
 
         try {

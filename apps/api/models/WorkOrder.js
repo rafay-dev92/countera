@@ -25,10 +25,7 @@ module.exports = (sequelize) => {
         defaultValue: 0,
       },
       status: {
-        type: DataTypes.ENUM(
-          'PENDING',
-          'FINISHED',
-        ),
+        type: DataTypes.ENUM("PENDING", "FINISHED"),
         defaultValue: "PENDING",
         allowNull: false,
       },
@@ -38,6 +35,10 @@ module.exports = (sequelize) => {
       },
       comments: {
         type: DataTypes.STRING,
+        allowNull: true,
+      },
+      appliedTaxes: {
+        type: DataTypes.JSON,
         allowNull: true,
       },
       CustomerId: {

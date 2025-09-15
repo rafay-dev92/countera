@@ -144,6 +144,11 @@ module.exports = (sequelize) => {
     Invoice.belongsTo(models.Business, {
       as: "Business",
     });
+
+    Invoice.hasMany(models.Invoice_Tax, {
+      foreignKey: "InvoiceId",
+      as: "Taxes",
+    });
   };
 
   // Define a hook to set the invoiceNumber before creating a new invoice

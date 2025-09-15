@@ -211,59 +211,28 @@ router.put(
 
       if (req.body?.products && req.body?.products.length > 0) {
         try {
-          req.body.products.forEach(async (newProduct) => {
-            const productId = newProduct.id;
-            const newQuantity = newProduct.quantity;
-            const newDescription = newProduct.description;
-            const newPrice = newProduct.price;
-
-            // Check if the product exists in the current products
-            const existingProduct = workorder.Product.find(
-              (currentProduct) => currentProduct.dataValues.id === productId
-            );
-
-            if (existingProduct) {
-              // If the product exists, update the quantity in the junction table
-              const res = await workorder_product.update(
-                {
-                  quantity: newQuantity,
-                  description: newDescription,
-                  price: newPrice,
-                },
-                {
-                  where: {
-                    WorkOrderId: workorder.id,
-                    ProductId: productId,
-                  },
-                }
-              );
-            } else {
-              // If the product doesn't exist, add a new entry to the junction table
-              const res = await workorder_product.create({
-                WorkOrderId: workorder.id,
-                ProductId: productId,
-                quantity: newQuantity,
-                description: newDescription,
-                price: newPrice,
-              });
-            }
-          });
-        } catch (error) {
-          return res.status(500).json({ message: "Internel Server Error" });
-        }
-
-        const deletedItems = workorder.Product.filter(
-          (orgProd) =>
-            !req.body.products.some((item) => item.id === orgProd.dataValues.id)
-        ).map((changeItem) => changeItem.dataValues.id);
-
-        if (deletedItems.length !== 0) {
           await Promise.all(
-            deletedItems.map(async (item) => {
-              const product = await Product.findByPk(item.id);
+            workorder.Product.map(async (product) => {
               await workorder.removeProduct(product);
             })
           );
+
+          await Promise.all(
+            req.body.products.map(async (product) => {
+              const productRecord = await Product.findByPk(product.id);
+              if (productRecord) {
+                await workorder.addProduct(productRecord, {
+                  through: {
+                    quantity: product.quantity,
+                    description: product.description,
+                    price: product.price,
+                  },
+                });
+              }
+            })
+          );         
+        } catch (error) {
+          return res.status(500).json({ message: "Internel Server Error" });
         }
       }
 

@@ -11,6 +11,8 @@ const {
   Payment,
   InvoiceAudit,
   ArchivedInvoice,
+  Invoice_Tax,
+  sequelize,
 } = require("../models");
 const fetchUser = require("../middlewares/fetchUser");
 const { Op, fn, where, col } = require("sequelize");
@@ -125,6 +127,11 @@ router.get(
               model: Payment,
               as: "Payments",
             },
+            {
+              model: Invoice_Tax,
+              as: "Taxes",
+              attributes: ["tax_name", "tax_amount"],
+            },
           ],
         });
 
@@ -166,12 +173,43 @@ router.get(
             model: Payment,
             as: "Payments",
           },
+          {
+            model: Invoice_Tax,
+            as: "Taxes",
+            attributes: [
+              "TaxId",
+              "ProductId",
+              "tax_name",
+              "tax_amount",
+              "tax_rate",
+              "tax_type",
+            ],
+          },
         ],
+      });
+
+      const formattedInvoices = rows.map((inv) => {
+        const appliedTaxes = {};
+
+        inv.Taxes?.forEach((t) => {
+          const key = `${t.ProductId}_${t.TaxId}`;
+
+          if (!appliedTaxes[key]) {
+            appliedTaxes[key] = t.toJSON();
+          }
+
+          // appliedTaxes[key].total_amount += parseFloat(t.tax_amount || 0);
+        });
+
+        return {
+          ...inv.toJSON(),
+          appliedTaxes: appliedTaxes,
+        };
       });
 
       return res.json({
         message: "Invoices fetched successfully",
-        data: rows,
+        data: formattedInvoices,
         total: count,
         page: Number(page),
         limit: Number(limit),
@@ -215,6 +253,11 @@ router.get(
             model: Payment,
             as: "Payments",
           },
+          {
+            model: Invoice_Tax,
+            as: "Taxes",
+            attributes: ["tax_name", "tax_amount"],
+          },
         ],
       });
 
@@ -244,26 +287,49 @@ router.post(
         return res.status(409).json({ message: "Customer Id is mandatory" });
       }
 
-      const newInvoice = await Invoice.create(invoiceData);
+      const transaction = await sequelize.transaction();
+
+      const newInvoice = await Invoice.create(invoiceData, { transaction });
+
+      // Handle products
       if (req.body.products && req.body.products.length !== 0) {
         await Promise.all(
           req.body.products.map(async (product) => {
-            const productRecord = await Product.findByPk(product.id);
+            const productRecord = await Product.findByPk(product.id, {
+              transaction,
+            });
             if (productRecord) {
               await newInvoice.addProduct(productRecord, {
                 through: {
                   quantity: product.quantity,
                   description: product.description,
                   price: product.price,
-                  replacement_reminder_date: product.replacement_reminder_date
-                    ? product.replacement_reminder_date
-                    : null,
+                  replacement_reminder_date:
+                    product.replacement_reminder_date || null,
                 },
+                transaction,
               });
             }
           })
         );
       }
+
+      // Handle taxes
+      if (req.body.taxes && req.body.taxes.length > 0) {
+        await Promise.all(
+          req.body.taxes.map(async (invoiceTax) => {
+            await Invoice_Tax.create(
+              {
+                InvoiceId: newInvoice.id,
+                ...invoiceTax,
+              },
+              { transaction }
+            );
+          })
+        );
+      }
+
+      await transaction.commit();
 
       const currentInvoice = await Invoice.findByPk(newInvoice.id, {
         include: [
@@ -290,11 +356,29 @@ router.post(
             model: Payment,
             as: "Payments",
           },
+          {
+            model: Invoice_Tax,
+            as: "Taxes",
+            attributes: [
+              "TaxId",
+              "ProductId",
+              "tax_name",
+              "tax_amount",
+              "tax_rate",
+              "tax_type",
+            ],
+          },
         ],
       });
+
+      const formattedCurrentInvoice = {
+        ...currentInvoice.toJSON(),
+        appliedTaxes: currentInvoice.Taxes.map(tax => tax.toJSON()),
+      };
+
       return res.status(200).json({
         message: "Invoice created successfully",
-        data: currentInvoice,
+        data: formattedCurrentInvoice,
       });
     } catch (error) {
       console.error(error);
@@ -375,6 +459,27 @@ router.put(
         }
       }
 
+      // for invoice taxes
+      if (req.body?.taxes && req.body?.taxes.length > 0) {
+        try {
+          // Remove all existing invoice taxes
+          await Invoice_Tax.destroy({ where: { InvoiceId: invoice.id } });
+
+          // Add updated invoice taxes
+          await Promise.all(
+            req.body.taxes.map(async (invoiceTax) => {
+              await Invoice_Tax.create({
+                InvoiceId: invoice.id,
+                ...invoiceTax,
+              });
+            })
+          );
+        } catch (error) {
+          console.error("Error updating products:", error);
+          return res.status(500).json({ message: "Internal Server Error" });
+        }
+      }
+
       const currentInvoice = await Invoice.findByPk(invoice.id, {
         include: [
           {
@@ -400,12 +505,29 @@ router.put(
             model: Payment,
             as: "Payments",
           },
+          {
+            model: Invoice_Tax,
+            as: "Taxes",
+            attributes: [
+              "TaxId",
+              "ProductId",
+              "tax_name",
+              "tax_amount",
+              "tax_rate",
+              "tax_type",
+            ],
+          },
         ],
       });
 
+      const formattedCurrentInvoice = {
+        ...currentInvoice.toJSON(),
+        appliedTaxes: currentInvoice.Taxes.map(tax => tax.toJSON()),
+      };
+
       return res.status(200).json({
         message: "Invoice updated successfully",
-        data: currentInvoice,
+        data: formattedCurrentInvoice,
       });
     } catch (error) {
       console.error(error);
@@ -447,6 +569,10 @@ router.put(
           {
             model: Payment,
             as: "Payments",
+          },
+          {
+            model: Invoice_Tax,
+            as: "Taxes",
           },
         ],
       });

@@ -18,7 +18,6 @@ import { format } from 'date-fns';
 import { fetchInvoiceAudits } from "@/services/fetchInvoiceAudit";
 import { ArrowLongRightIcon, XCircleIcon, Bars3Icon, XMarkIcon } from '@heroicons/react/24/solid'
 import { Printer, Send, Edit, FileText, Trash2, CreditCard, History } from "lucide-react"
-import { PaymentStatus } from "@/utils/enums/paymentStatuses";
 
 const ViewInvoice = ({ printInvoice, setPrintInvoice, componentRef, appliedTaxes, setEdit, close }) => {
     const confirm = useConfirm();
@@ -26,7 +25,6 @@ const ViewInvoice = ({ printInvoice, setPrintInvoice, componentRef, appliedTaxes
     const { state, dispatch } = State();
     const [isPaymentFormOpen, setIsPaymentFormOpen] = useState(false);
     const [isNotesFormOpen, setIsNotesFormOpen] = useState(false);
-    const [totalAmountPaid, setTotalAmountPaid] = useState(0);
     const [isLoading, setIsLoading] = React.useState({
         delete: false,
         sendMail: false,
@@ -148,25 +146,6 @@ const ViewInvoice = ({ printInvoice, setPrintInvoice, componentRef, appliedTaxes
         }
         setIsLoading({ ...isLoading, sendMail: false });
     }
-
-    useEffect(() => {
-        console.log("appliedTaxes in print: ", appliedTaxes)
-    }, [appliedTaxes])
-
-    // useEffect(() => {
-    //     if (Object.keys(printInvoice).length > 0 && printInvoice?.Payments.length > 0) {
-    //         const paidAmount = printInvoice?.Payments.reduce((acc, payment) => acc + payment.paidAmount, 0);
-    //         if (paidAmount !== totalAmountPaid) {
-    //             setTotalAmountPaid(paidAmount);
-    //             if (paidAmount === printInvoice?.totalAmount && printInvoice?.paymentStatus !== PaymentStatus.PAID) {
-    //                 setInvoiceStatus(printInvoice?.id, PaymentStatus.PAID);
-    //             }
-    //             else if (paidAmount > 0 && paidAmount < printInvoice?.totalAmount && printInvoice?.paymentStatus !== PaymentStatus.PARTIALLY_PAID) {
-    //                 setInvoiceStatus(printInvoice?.id, PaymentStatus.PARTIALLY_PAID);
-    //             }
-    //         }
-    //     }
-    // }, [printInvoice])
 
     const fetchAuditTrail = async () => {
         try {

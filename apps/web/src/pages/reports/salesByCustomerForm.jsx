@@ -9,6 +9,7 @@ import { fetchCustomers } from "@/services/fetchCustomers";
 import moment from 'moment-timezone';
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import { PaymentStatus } from "@/utils/enums/paymentStatuses";
 
 const schema = Yup.object().shape({
     customer: Yup.string().required("Customer is required"),
@@ -65,8 +66,10 @@ function SalesByCustomerForm({ open, close, setReportData, onReportGenerated }) 
                 endDate = null;
             }
             const filters = {
-                paymentStatus: ['Paid', 'Partially Paid'],
-                CustomerId: values.customer,
+                paymentStatus: [PaymentStatus.PAID, PaymentStatus.PARTIALLY_PAID],
+                CustomerDetails: {
+                    id: values.customer,
+                },
                 startDate,
                 endDate,
                 isReport: true,

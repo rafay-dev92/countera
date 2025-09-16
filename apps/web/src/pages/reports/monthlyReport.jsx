@@ -7,25 +7,22 @@ const MonthlyReportPreview = React.forwardRef(({ filterValue, invoices, products
     // const productsCategoriesPrices = productsCategories.map(category => { return `${category} Price` });
     const INVOICE_TABLE_HEAD = ["Date", "Invoice", "Paid By", "Total", "Paid", ...productsCategories, ...taxes];
     const { state } = State();
-    const calculateTaxes = (products, customerType) => {
-        if (customerType === 'business') return {};
+    const calculateTaxes = (invoice, customerType) => {
         const productTaxes = {};
+        
+        invoice?.Taxes?.forEach(invoiceTax => {
+            if (customerType === 'business' && invoiceTax.tax_name==='Sales Tax') return;
+            const key = `${invoiceTax.tax_name}_${invoiceTax.tax_rate}_${invoiceTax.tax_type}`;
+            if (!productTaxes[key]) {
+                productTaxes[key] = 0;
+            }
+            if (invoiceTax.tax_type === "%") {
+                productTaxes[key] += invoiceTax.tax_amount;
 
-        products?.forEach((product) => {
-            product.Tax?.forEach((productTax) => {
-                const key = `${productTax.name}_${productTax.rate}_${productTax.type}`;
-
-                if (!productTaxes[key]) {
-                    productTaxes[key] = 0;
-                }
-
-                if (productTax.type === "%") {
-                    productTaxes[key] += product.price * product.invoice_product.quantity * (productTax.rate / 100);
-                } else {
-                    productTaxes[key] += product.invoice_product.quantity * productTax.rate;
-                }
-            });
-        });
+            } else {
+                productTaxes[key] += invoiceTax.tax_amount;
+            }
+        });        
         return productTaxes;
     };
 
@@ -40,7 +37,7 @@ const MonthlyReportPreview = React.forwardRef(({ filterValue, invoices, products
 
     const taxTotals = taxes.map(tax => {
         const value = invoices.reduce((sum, invoice) => {
-            const productTaxes = calculateTaxes(invoice.Products, invoice.Customer?.customerType);
+            const productTaxes = calculateTaxes(invoice, invoice.Customer?.customerType);
             const matchingKey = Object.keys(productTaxes)?.find(key => key.split('_')[0] === tax);
             return sum + (matchingKey ? productTaxes[matchingKey] || 0 : 0);
         }, 0);
@@ -120,7 +117,7 @@ const MonthlyReportPreview = React.forwardRef(({ filterValue, invoices, products
                     </thead>
                     <tbody>
                         {invoices?.map((item, index) => {
-                            const productTaxes = calculateTaxes(item.Products, item.Customer?.customerType);
+                            const productTaxes = calculateTaxes(item, item.Customer?.customerType);
                             const formattedDate = new Date(item.createdAt).toLocaleDateString("en-US", {
                                 timeZone: state.business.timezone ? state.business.timezone : '',
                                 year: "numeric",
@@ -196,29 +193,10 @@ const MonthlyReportPreview = React.forwardRef(({ filterValue, invoices, products
                                                         <div><span className="font-medium">Quantity:</span> {quantity}</div>
                                                         <div><span className="font-medium">Total:</span> {price * quantity}</div>
                                                     </div>
-                                                    {/* {`P:${price} Q:${quantity} T:${price * quantity}`} */}
-                                                    {/* {item.Product?.find(item => item.Category.name === category)?.invoice_product?.quantity || 0} */}
                                                 </Typography>
                                             </td>
                                         )
-                                    })}
-                                    {/* {productsCategoriesPrices.map((category, idx) => {
-                                        // console.log(category.split(' ').slice(0, -1).join(' '))
-                                        const price = item.Product?.find(item => item.Category.name === category.split(' ').slice(0, -1).join(' '))?.price || 0;
-                                        const quantity = item.Product?.find(item => item.Category.name === category.split(' ').slice(0, -1).join(' '))?.invoice_product?.quantity || 0;
-                                        // console.log("PRICE", price, "QUANTITY", quantity);
-                                        return (
-                                            <td key={idx} className="p-4 border-b border-blue-gray-50">
-                                                <Typography
-                                                    variant="small"
-                                                    color="blue-gray"
-                                                    className="font-normal leading-none"
-                                                >
-                                                    {price * quantity}
-                                                </Typography>
-                                            </td>
-                                        )
-                                    })} */}
+                                    })}                                    
                                     {taxes.map((tax, idx) => {
                                         const matchingKey = Object.keys(productTaxes)?.find(key => key.split('_')[0] === tax);
                                         const value = matchingKey ? productTaxes[matchingKey] || 0 : 0;
@@ -301,7 +279,6 @@ const MonthlyReportPreview = React.forwardRef(({ filterValue, invoices, products
                     </div>
                     <div className="border-t mt-3 pt-2 font-bold text-md flex justify-between">
                         <span>Gross Monthly Sales:</span>
-                        {/* <span>{taxTotals.reduce((sum, tax) => sum + tax.value, 0).toFixed(2)}</span> */}
                         {invoices.reduce((sum, item) => sum + item.totalAmount, 0).toFixed(2)}
                     </div>
                 </div>

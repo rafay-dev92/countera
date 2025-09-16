@@ -2,35 +2,33 @@ import React, { useEffect, useState } from 'react';
 import { Typography } from "@material-tailwind/react";
 import { State } from '@/state/Context';
 import { CheckBadgeIcon, StarIcon } from '@heroicons/react/24/solid';
+import { PaymentStatus } from '@/utils/enums/paymentStatuses';
 
 const CustomerReportPreview = React.forwardRef(({ invoices, productsCategories, taxes }, ref) => {
     const INVOICE_TABLE_HEAD = ["Customer", "Invoice Number", "Invoice Date", "Subtotal", "Tax Total", "Total", "Balance", "Paid"];
     const { state } = State();
-    const calculateTaxes = (products, customerType) => {
-        if (customerType === 'business') return {};
+    const calculateTaxes = (invoice, customerType) => {
         const productTaxes = {};
+        
+        invoice?.Taxes?.forEach(invoiceTax => {
+            if (customerType === 'business' && invoiceTax.tax_name==='Sales Tax') return;
+            const key = `${invoiceTax.tax_name}_${invoiceTax.tax_rate}_${invoiceTax.tax_type}`;
+            if (!productTaxes[key]) {
+                productTaxes[key] = 0;
+            }
+            if (invoiceTax.tax_type === "%") {
+                productTaxes[key] += invoiceTax.tax_amount;
 
-        products?.forEach((product) => {
-            product.Tax?.forEach((productTax) => {
-                const key = `${productTax.name}_${productTax.rate}_${productTax.type}`;
-
-                if (!productTaxes[key]) {
-                    productTaxes[key] = 0;
-                }
-
-                if (productTax.type === "%") {
-                    productTaxes[key] += product.invoice_product.price * product.invoice_product.quantity * (productTax.rate / 100);
-                } else {
-                    productTaxes[key] += product.invoice_product.quantity * productTax.rate;
-                }
-            });
-        });
+            } else {
+                productTaxes[key] += invoiceTax.tax_amount;
+            }
+        });        
         return productTaxes;
     };
 
     const taxTotals = taxes.map(tax => {
         const value = invoices.reduce((sum, invoice) => {
-            const productTaxes = calculateTaxes(invoice.Products, invoice.Customer?.customerType);
+            const productTaxes = calculateTaxes(invoice, invoice.Customer?.customerType);
             const matchingKey = Object.keys(productTaxes)?.find(key => key.split('_')[0] === tax);
             const taxValue = matchingKey ? (productTaxes[matchingKey]) : 0;
             return sum + taxValue;
@@ -39,7 +37,7 @@ const CustomerReportPreview = React.forwardRef(({ invoices, productsCategories, 
     });
 
     const totalInvoiceTaxAmount = (invoice) => {
-        const productTaxes = calculateTaxes(invoice.Products, invoice.Customer?.customerType);
+        const productTaxes = calculateTaxes(invoice, invoice.Customer?.customerType);
         const taxValue = Object.values(productTaxes).reduce((sum, tax) => sum + tax, 0);
         return taxValue;
     }
@@ -117,7 +115,7 @@ const CustomerReportPreview = React.forwardRef(({ invoices, productsCategories, 
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
                         {invoices?.map((item, index) => {
-                            const productTaxes = calculateTaxes(item.Products, item.Customer?.customerType);
+                            // const productTaxes = calculateTaxes(item, item.Customer?.customerType);
                             const formattedDate = new Date(item.createdAt).toLocaleDateString("en-US", {
                                 timeZone: state.business.timezone ? state.business.timezone : '',
                                 year: "numeric",
@@ -168,7 +166,6 @@ const CustomerReportPreview = React.forwardRef(({ invoices, productsCategories, 
                                             color="blue-gray"
                                             className="font-normal leading-none"
                                         >
-                                            {/* {(taxTotals.reduce((sum, tax) => sum + tax, 0)).toFixed(2)} */}
                                             {totalInvoiceTaxAmount(item).toFixed(2)}
                                         </Typography>
                                     </td>
@@ -196,7 +193,7 @@ const CustomerReportPreview = React.forwardRef(({ invoices, productsCategories, 
                                             color="blue-gray"
                                             className="font-normal leading-none"
                                         >
-                                            {item.paymentStatus === 'Paid' ? <CheckBadgeIcon className='w-6 h-6 mb-1 text-green-600 inline' /> : null}
+                                            {item.paymentStatus === PaymentStatus.PAID ? <CheckBadgeIcon className='w-6 h-6 mb-1 text-green-600 inline' /> : null}
                                         </Typography>
                                     </td>
                                 </tr>

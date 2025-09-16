@@ -52,13 +52,14 @@ router.get(
 
       let customers = null;
       if (
-        CustomerDetails?.name &&
-        typeof CustomerDetails.name === "string" &&
-        CustomerDetails.name.trim() !== ""
+        (CustomerDetails?.name &&
+          typeof CustomerDetails?.name === "string" &&
+          CustomerDetails?.name?.trim() !== "") ||
+        CustomerDetails?.id
       ) {
         customers = await Customer.findAll({
           where: where(fn("CONCAT", col("firstName"), " ", col("lastName")), {
-            [Op.like]: `%${CustomerDetails.name.trim()}%`,
+            [Op.like]: `%${CustomerDetails?.name?.trim()}%`,
           }),
           attributes: ["id"],
         });
@@ -67,9 +68,12 @@ router.get(
       if (customers && customers.length > 0) {
         const customerIds = customers.map((customer) => customer.id);
         selectedFilters.CustomerId = { [Op.in]: customerIds };
-      } else if (CustomerDetails?.name?.trim()) {
-        // Name was entered but no customers found — force empty result
-        selectedFilters.CustomerId = { [Op.in]: [null] };
+      } else if (CustomerDetails?.id) {
+        const customerId = CustomerDetails.id;
+        selectedFilters.CustomerId = { [Op.in]: [customerId] };
+      }
+      else if (CustomerDetails?.name?.trim()) {
+        selectedFilters.CustomerId = { [Op.in]: [null] };        
       }
 
       if (startDate && endDate) {
@@ -130,7 +134,14 @@ router.get(
             {
               model: Invoice_Tax,
               as: "Taxes",
-              attributes: ["tax_name", "tax_amount"],
+              attributes: [
+                "TaxId",
+                "ProductId",
+                "tax_name",
+                "tax_amount",
+                "tax_rate",
+                "tax_type",
+              ],
             },
           ],
         });
@@ -373,7 +384,7 @@ router.post(
 
       const formattedCurrentInvoice = {
         ...currentInvoice.toJSON(),
-        appliedTaxes: currentInvoice.Taxes.map(tax => tax.toJSON()),
+        appliedTaxes: currentInvoice.Taxes.map((tax) => tax.toJSON()),
       };
 
       return res.status(200).json({
@@ -522,7 +533,7 @@ router.put(
 
       const formattedCurrentInvoice = {
         ...currentInvoice.toJSON(),
-        appliedTaxes: currentInvoice.Taxes.map(tax => tax.toJSON()),
+        appliedTaxes: currentInvoice.Taxes.map((tax) => tax.toJSON()),
       };
 
       return res.status(200).json({

@@ -226,6 +226,26 @@ const printView = React.forwardRef(({ view, quotationData, appliedTaxes }, ref) 
                         </div>
                     </div>
                 </div>
+                <div className="flex flex-col justify-center border-t border-gray-300 p-2 gap-8">
+                    <div className="flex flex-col justify-end items-start h-full w-full gap-2 mt-6">
+                        <div className="flex flex-col">
+
+                            <div className="text-xs flex w-full mb-2">
+                                <span className="whitespace-nowrap">SignX</span>
+                                <div className=" border-t border-gray-500 mt-3 ms-2 w-48 mr-2"></div>
+                                <span>Date</span>
+                                <div className=" border-t border-gray-500 mt-3 ms-2 w-48"></div>
+                            </div>
+                            <h2 className="font-medium text-xs italic mb-2">Thanks For Your Business!</h2>
+                            <div className="quill-content"
+                                dangerouslySetInnerHTML={{
+                                    __html: quotationData?.Business.termsAndConditions || "",
+                                }}
+                            >
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         );
     }

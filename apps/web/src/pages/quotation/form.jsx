@@ -1363,7 +1363,8 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
                           </div>
                           <div className="text-md">
                             <input
-                              type="float"
+                              type="number"
+                              step="any"
                               min={0}
                               className="w-fit no-spinner text-right"
                               value={discount === 0 ? '' : discount}

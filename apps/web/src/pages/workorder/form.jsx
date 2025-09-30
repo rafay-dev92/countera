@@ -575,7 +575,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedWorkOrder, setS
       return acc;
     }, {}));
 
-     Object.values(tempWorkorderTaxes).forEach((tax) => {
+    Object.values(tempWorkorderTaxes).forEach((tax) => {
       tax.tax_amount = (Number(tax.tax_amount)).toFixed(2);
     });
     setWorkorderTaxes(tempWorkorderTaxes);
@@ -1357,7 +1357,8 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedWorkOrder, setS
                           </div>
                           <div className="text-md">
                             <input
-                              type="float"
+                              type="number"
+                              step="any"
                               min={0}
                               className="w-fit no-spinner text-right"
                               value={discount === 0 ? '' : discount}

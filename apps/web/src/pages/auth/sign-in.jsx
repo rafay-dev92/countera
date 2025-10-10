@@ -78,7 +78,7 @@ export function SignIn() {
     setSelectedBusiness(null);
     try {
       if (!captchaValue) {
-        toast.error("Please complete the CAPTCHA.");
+        showToastMessage("error", "Please complete the CAPTCHA.");
         return;
       }
       const res = await fetchBusinessesForEmail(email, captchaValue);
@@ -93,7 +93,7 @@ export function SignIn() {
         } else if (data.businesses.length > 1) {
           setStep(2);
         } else {
-          showToastMessage('info', 'No businesses found for this email');
+          showToastMessage('info', data.message || 'No businesses found for this email');
         }
       } else {
         showToastMessage('info', data.message || 'No businesses found for this email');

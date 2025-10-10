@@ -177,9 +177,26 @@ router.post("/login", async (req, res) => {
 
 router.post("/businesses-for-email", async (req, res) => {
   try {
-    const { email } = req.body;
+    const { email, captcha } = req.body;
+
     if (!email) {
       return res.status(400).json({ message: "Email is required" });
+    }
+
+    if (!captcha) {
+      return res.status(400).json({ success: false, message: "Captcha is required" });
+    }
+
+    // Verify captcha
+    const verifyUrl = `https://www.google.com/recaptcha/api/siteverify?secret=${process.env.RECAPTCHA_SECRET_KEY}&response=${captcha}`;
+    const response = await fetch(verifyUrl, { method: "POST" });
+    const captchaData = await response.json();
+
+    if (!captchaData.success) {
+      return res.status(400).json({
+        success: false,
+        message: "Captcha verification failed",
+      });
     }
 
     const users = await User.findAll({

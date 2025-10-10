@@ -84,6 +84,8 @@ const corsOptions = {
     "http://31.97.138.15",
     "http://31.97.138.15:5173",
     "http://localhost:3000",
+    "http://easywebdeals.com",
+    "https://easywebdeals.com"
   ],
 };
 app.use(cors(corsOptions));

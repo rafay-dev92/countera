@@ -73,14 +73,18 @@ export function SignIn() {
   }
 
   async function handleCheckEmail() {
+    if (!email) {
+      showToastMessage("info", "Email is required.");
+      return;
+    }
+    if (!captchaValue) {
+      showToastMessage("info", "Please complete the CAPTCHA.");
+      return;
+    }
     setLoading(true);
     setBusinesses([]);
     setSelectedBusiness(null);
     try {
-      if (!captchaValue) {
-        showToastMessage("error", "Please complete the CAPTCHA.");
-        return;
-      }
       const res = await fetchBusinessesForEmail(email, captchaValue);
       const data = await res.json();
       setLoading(false);
@@ -200,7 +204,7 @@ export function SignIn() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
-              <div className="flex justify-center mt-4">
+              <div className="mt-2">
                 <ReCAPTCHA
                   sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY} // put your site key in .env
                   onChange={(value) => setCaptchaValue(value)}

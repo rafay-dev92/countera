@@ -179,8 +179,12 @@ router.post("/businesses-for-email", async (req, res) => {
   try {
     const { email, captcha } = req.body;
 
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
+    }
+
     if (!captcha) {
-      return res.json({ success: false, message: "Captcha is required" });
+      return res.status(400).json({ success: false, message: "Captcha is required" });
     }
 
     // Verify captcha
@@ -189,14 +193,10 @@ router.post("/businesses-for-email", async (req, res) => {
     const captchaData = await response.json();
 
     if (!captchaData.success) {
-      return res.json({
+      return res.status(400).json({
         success: false,
         message: "Captcha verification failed",
       });
-    }
-
-    if (!email) {
-      return res.status(400).json({ message: "Email is required" });
     }
 
     const users = await User.findAll({

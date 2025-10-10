@@ -12,6 +12,7 @@ import { toast } from 'react-toastify';
 import { getUserDetails } from "@/services/getUserDetails";
 import { fetchBusinessesForEmail } from "@/services/fetchBusinessesForEmail";
 import { UserRole } from "@/utils/enums/userRoles";
+import ReCAPTCHA from "react-google-recaptcha";
 
 export function SignIn() {
   const navigate = useNavigate();
@@ -23,6 +24,7 @@ export function SignIn() {
   const [selectedBusiness, setSelectedBusiness] = useState(null);
   const [step, setStep] = useState(1);
   const [isSuperAdmin, setIsSuperAdmin] = useState(null);
+  const [captchaValue, setCaptchaValue] = useState(null);
 
   const passwordInputRef = useRef(null);
 
@@ -75,7 +77,11 @@ export function SignIn() {
     setBusinesses([]);
     setSelectedBusiness(null);
     try {
-      const res = await fetchBusinessesForEmail(email)
+      if (!captchaValue) {
+        toast.error("Please complete the CAPTCHA.");
+        return;
+      }
+      const res = await fetchBusinessesForEmail(email, captchaValue);
       const data = await res.json();
       setLoading(false);
 
@@ -126,6 +132,7 @@ export function SignIn() {
       password: password,
       businessId: selectedBusiness
     }
+
     try {
       const res = await signIn(data);
       const user = await res.json();
@@ -193,6 +200,12 @@ export function SignIn() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
+              <div className="flex justify-center mt-4">
+                <ReCAPTCHA
+                  sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY} // put your site key in .env
+                  onChange={(value) => setCaptchaValue(value)}
+                />
+              </div>
               <Button onClick={handleCheckEmail} className="mt-2" fullWidth>
                 Next
               </Button>
@@ -251,7 +264,7 @@ export function SignIn() {
                 >
                   {showPassword ? "hide" : "show"}
                 </span>
-              </div>
+              </div>              
               <div className="flex gap-2 mt-6">
                 <Button onClick={handleBack} variant="outlined" fullWidth>
                   Back

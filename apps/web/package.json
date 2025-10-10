@@ -25,6 +25,7 @@
     "react-apexcharts": "1.4.1",
     "react-datepicker": "^8.3.0",
     "react-dom": "18.2.0",
+    "react-google-recaptcha": "^3.1.0",
     "react-quill": "^2.0.0",
     "react-router-dom": "6.17.0",
     "react-to-print": "^2.14.15",

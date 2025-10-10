@@ -33,7 +33,7 @@ const upload = multer({ storage: storage });
 
 router.get("/", fetchUser, async (req, res) => {
   try {
-    const business = await Business.findAll({ include: ["User", "Customer"] });
+    const business = await Business.findAll({ include: ["User"] });
     res.json(business);
   } catch (error) {
     res.status(500).json({ message: error.message });

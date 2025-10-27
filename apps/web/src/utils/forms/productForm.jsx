@@ -391,7 +391,7 @@ const ProductForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
                       name="margin"
                       type="number"
                       value={values.margin}
-                      onChange={(e) => setValues({ ...values, margin: parseFloat(e.target.value) || 0, price: values.cost + ((values.cost * parseFloat(e.target.value) || 0) / 100) })}
+                      onChange={(e) => setValues({ ...values, margin: parseFloat(e.target.value) || 0, price: (values.cost + ((values.cost * parseFloat(e.target.value) || 0) / 100)).toFixed(2) })}
                       onBlur={handleBlur}
                     />
                     {(touched.margin && errors.margin) ? (

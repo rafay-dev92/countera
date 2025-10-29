@@ -49,6 +49,10 @@ const ProductForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
     setEdit(false);
     setSelectedItem && setSelectedItem(null);
     setSelectedTaxes([]);
+    // Cleanup object URL to prevent memory leaks
+    if (productPreviewPic && productPreviewPic.startsWith('blob:')) {
+      URL.revokeObjectURL(productPreviewPic);
+    }
     setProductPreviewPic(null);
     close();
   };
@@ -258,8 +262,14 @@ const ProductForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
                       type="file"
                       accept="image/*"
                       onChange={(e) => {
-                        setProductPreviewPic(URL.createObjectURL(e.target.files[0]))
-                        setFieldValue('image', e.target.files[0]);
+                        if (e.target.files[0]) {
+                          // Revoke previous object URL to prevent memory leaks
+                          if (productPreviewPic && productPreviewPic.startsWith('blob:')) {
+                            URL.revokeObjectURL(productPreviewPic);
+                          }
+                          setProductPreviewPic(URL.createObjectURL(e.target.files[0]));
+                          setFieldValue('image', e.target.files[0]);
+                        }
                       }}
                     />
                     {touched.image && errors.image ? (
@@ -466,7 +476,7 @@ const ProductForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
                         checked={selectedTaxes.includes(tax.id)}
                         onChange={(e) => handleTax(tax.id, e)}
                       />
-                      <span className="ml-2 font-medium text-base" htmlFor={`permission-${tax.id}`}>{tax.name}</span>
+                      <label className="ml-2 font-medium text-base cursor-pointer" htmlFor={`permission-${tax.id}`}>{tax.name}</label>
                     </div>
                   ))
                 }

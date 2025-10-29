@@ -30,7 +30,9 @@ export function Quotation() {
     const router = useNavigate();
     const { state, dispatch } = State();
     const [searchQuery, setSearchQuery] = useState("");
+    const [debouncedTerm, setDebouncedTerm] = useState("");
     const [quotations, setQuotations] = useState([]);
+    const [totalCount, setTotalCount] = useState(0);
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(5);
     const [refresh, setRefresh] = useState(false);
@@ -51,27 +53,44 @@ export function Quotation() {
         else {
             toast.error(message)
         }
-    };
-
-    useEffect(() => {
-        getQuotations();
-    }, [refresh]);
+    };    
 
     const getQuotations = async () => {
         try {
-            const fetchedQuotations = await fetchQuotations(state.userToken);
-            const totalQuotations = await fetchedQuotations.json();
-            setQuotations(totalQuotations);
-            setLoading(false);
+            const filters = {
+                status: ["APPROVED", "PENDING"]
+            };
+
+            if (debouncedTerm && debouncedTerm.trim()) {
+                filters.CustomerDetails = { name: debouncedTerm };
+            }
+
+            const response = await fetchQuotations(state.userToken, currentPage, itemsPerPage, filters);
+            const totalQuotations = await response.json();
+            setQuotations(totalQuotations?.data || []);
+            setTotalCount(totalQuotations.total || 0);
         } catch (error) {
-            console.log(error.message);
+            console.error(error.message);
             showToastMessage('error', 'Something went wrong')
+        } finally {
+            setLoading(false);
         }
     };
 
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedTerm(searchQuery);
+        }, 500);
+
+        return () => clearTimeout(timer);
+    }, [searchQuery]);
+
+    useEffect(() => {
+        getQuotations();
+    }, [refresh, currentPage, itemsPerPage, debouncedTerm]);
+
     const handleEditQuotation = (index) => {
-        // Assuming currentItems holds the filtered rows for display
-        const selected = currentItems[index];
+        const selected = quotations[index];
         setSelectedQuotation(selected);
         openPopup();
     };
@@ -79,9 +98,7 @@ export function Quotation() {
     const handleDeleteQuotation = async (index) => {
         const confirmed = await confirm("Do you really want to delete this quotation?");
         if (!confirmed) return;
-        const updatedQuotations = quotations.filter((_, rowIndex) => rowIndex !== index);
-        const deletedQuotationId = quotations.find((_, rowIndex) => rowIndex === index);
-        setQuotations(updatedQuotations);
+        const deletedQuotationId = quotations[index];
         try {
             const res = await delQuotation(deletedQuotationId['id'], state.userToken);
             const quotation = await res.json();
@@ -97,13 +114,13 @@ export function Quotation() {
             setRefresh(!refresh);
 
         } catch (error) {
-            console.log(error);
+            console.error(error);
             showToastMessage('error', "Something went wrong");
         }
     };
 
     const showCustomer = (index) => {
-        const selected = currentItems[index];
+        const selected = quotations[index];
         setIsCustomerFormOpen(true);
         setSelectedCustomer(selected.Customer);
     }
@@ -112,21 +129,6 @@ export function Quotation() {
         const date = new Date(createdAt);
         return date.toLocaleString();
     };
-
-    const indexOfFirstItem = (currentPage - 1) * itemsPerPage;
-    const indexOfLastItem = indexOfFirstItem + itemsPerPage;
-
-    let currentItems = [];
-    let filteredRows = [];
-    if (quotations.length > 0) {
-        filteredRows = quotations?.filter(
-            ({ Customer }) =>
-                Customer['firstName'].toLowerCase().includes(searchQuery.toLowerCase()) ||
-                Customer['lastName'].toLowerCase().includes(searchQuery.toLowerCase())
-        )
-
-        currentItems = filteredRows.slice(indexOfFirstItem, indexOfLastItem);
-    }
 
     const handleItemsPerPageChange = (event) => {
         const selectedItemsPerPage = parseInt(event.target.value, 10);
@@ -137,6 +139,10 @@ export function Quotation() {
     const paginate = (pageNumber) => {
         setCurrentPage(pageNumber);
     };
+
+    const totalPages = Math.ceil(totalCount / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage + 1;
+    const endIndex = Math.min(currentPage * itemsPerPage, totalCount);
 
     const openPopup = () => {
         setIsOpen(true);
@@ -157,7 +163,7 @@ export function Quotation() {
             price: product.price
         })).filter(product => product.id);
 
-        const taxes = Object.values(JSON.parse(quotationData.appliedTaxes)).map(tax => tax);
+        const taxes = Object.values(JSON.parse(quotationData.appliedTaxes || '{}')).map(tax => tax);
         console.log("taxes: ", taxes)
         const data = {
             invoiceData: {
@@ -192,7 +198,7 @@ export function Quotation() {
             setLoading(false)
         } catch (error) {
             setLoading(false)
-            console.log(error);
+            console.error(error);
         }
     };
 
@@ -277,8 +283,8 @@ export function Quotation() {
                             </tr>
                         </thead>
                         <tbody>
-                            {currentItems.map(({ id, quotationNumber, Customer, totalAmount, approved, createdAt, CustomerVehicle }, index) => {
-                                const isLast = index === currentItems.length - 1;
+                            {quotations.map(({ id, quotationNumber, Customer, totalAmount, approved, createdAt, CustomerVehicle, Business }, index) => {
+                                const isLast = index === quotations.length - 1;
                                 const classes = isLast
                                     ? "p-4"
                                     : "p-4 border-b border-blue-gray-50";
@@ -355,9 +361,9 @@ export function Quotation() {
                                                     <TrashIcon className="h-6 w-6 text-red-500" />
                                                 </IconButton>
                                             </Tooltip>
-                                            <Tooltip content="Craete Invoice">
+                                            <Tooltip content="Create Invoice">
                                                 <IconButton variant="text" onClick={() => {
-                                                    createInvoice(currentItems[index])
+                                                    createInvoice(quotations[index])
                                                 }}>
                                                     <DocumentPlusIcon className="h-6 w-6 text-blue-500" />
                                                 </IconButton>
@@ -370,23 +376,22 @@ export function Quotation() {
                                                     color="blue-gray"
                                                     className="font-normal opacity-70"
                                                 >
-                                                    {Business.name}
+                                                    {Business?.name}
                                                 </Typography>
                                             </td>
                                         )}
                                     </tr>
                                 );
-                            },
-                            )}
+                            })}
                         </tbody>
                     </table>
                 </CardBody>
                 <CardFooter className="flex items-center justify-between border-t border-blue-gray-50 p-4">
                     <Typography variant="small" color="blue-gray" className="font-normal">
-                        Showing {indexOfFirstItem + 1} - {Math.min(indexOfLastItem, filteredRows.length)} of {filteredRows.length}
+                        Showing {startIndex} - {endIndex} of {totalCount}
                     </Typography>
                     <Typography variant="small" color="blue-gray" className="font-normal">
-                        Page {currentPage} of {Math.ceil(filteredRows.length / itemsPerPage)}
+                        Page {currentPage} of {totalPages}
                     </Typography>
                     <div className="flex gap-2">
                         <Button
@@ -400,7 +405,7 @@ export function Quotation() {
                         <Button
                             variant="outlined"
                             size="sm"
-                            disabled={indexOfLastItem >= filteredRows.length}
+                            disabled={currentPage >= totalPages}
                             onClick={() => paginate(currentPage + 1)}
                         >
                             Next

@@ -21,10 +21,12 @@ import { toast } from 'react-toastify';
 import { State } from "@/state/Context";
 import { fetchBusinesses } from "@/services/fetchBusinesses";
 import { delBusiness } from "@/services/delBusiness";
+import { useConfirm } from "@/context/confirmContext";
 
 const TABLE_HEAD = ["Name", "Email", "Address", "Tel", "License", "Actions"];
 
 export default function Businesses() {
+    const confirm = useConfirm();
     const {state} = State();
     const [selectAll, setSelectAll] = useState(false);
     const [selectedRows, setSelectedRows] = useState([]);
@@ -57,12 +59,7 @@ export default function Businesses() {
             toast.error(message)
         }
     };
-
-
-    useEffect(() => {
-        getBusinesses();
-    }, [refresh]);
-
+    
     const getBusinesses = async () => {
         try {
             const businesses = await (await fetchBusinesses(state.userToken)).json();
@@ -73,6 +70,10 @@ export default function Businesses() {
             showToastMessage('error', "Something went wrong");
         }
     }
+    
+    useEffect(() => {
+        getBusinesses();
+    }, [refresh]);
 
     // Function to handle header checkbox change
     const handleSelectAll = (event) => {
@@ -127,6 +128,8 @@ export default function Businesses() {
 
     // Function to handle deletion of selected items
     const handleDelete = async (id) => {        
+        const confirmed = await confirm("Do you really want to delete this business?");
+        if (!confirmed) return;
         try {
             const res = await delBusiness(id, state.userToken);
             const business = await res.json();

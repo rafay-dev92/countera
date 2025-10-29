@@ -11,6 +11,7 @@ export async function signIn(data){
         return user;
 
     } catch (error) {
-        console.log(error);
+        console.error('Error signing in:', error);
+        throw error;
     }
 }

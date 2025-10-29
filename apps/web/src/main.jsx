@@ -21,19 +21,19 @@ import { ConfirmProvider } from "./context/confirmContext";
 import { DeleteInvoiceConfirmProvider } from "./context/deleteInvoiceConfirmContext";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
-  // <React.StrictMode>
-  <Context>
-    <BrowserRouter>
-      <ThemeProvider>
-        <MaterialTailwindControllerProvider>
-          <ConfirmProvider>
-            <DeleteInvoiceConfirmProvider>
-              <App />
-            </DeleteInvoiceConfirmProvider>
-          </ConfirmProvider>
-        </MaterialTailwindControllerProvider>
-      </ThemeProvider>
-    </BrowserRouter>
-  </Context>
-  // </React.StrictMode>
+  <React.StrictMode>
+    <Context>
+      <BrowserRouter>
+        <ThemeProvider>
+          <MaterialTailwindControllerProvider>
+            <ConfirmProvider>
+              <DeleteInvoiceConfirmProvider>
+                <App />
+              </DeleteInvoiceConfirmProvider>
+            </ConfirmProvider>
+          </MaterialTailwindControllerProvider>
+        </ThemeProvider>
+      </BrowserRouter>
+    </Context>
+  </React.StrictMode>
 );

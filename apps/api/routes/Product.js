@@ -4,7 +4,8 @@ const { Product, Tax, User, Product_Category } = require("../models");
 const fetchUser = require("../middlewares/fetchUser");
 require("dotenv").config();
 const multer = require("multer");
-const { Op } = require("sequelize");
+const { Op, fn, col, where } = require("sequelize");
+const moment = require("moment");
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -20,18 +21,75 @@ const upload = multer({ storage: storage });
 // routes below
 router.get("/", fetchUser, async (req, res) => {
   try {
+    const { page = 1, limit = 10, filters } = req.query;
+
+    const parsedFilters = JSON.parse(filters || '{}');
+    const {
+      name,
+      category,
+      type,
+      startDate,
+      endDate,
+      isReport,
+      order,
+    } = parsedFilters;
+    const selectedFilters = {};
+
+    if (name && typeof name === "string" && name.trim() !== "") {
+      selectedFilters.name = {
+        [Op.like]: `%${name.trim()}%`,
+      };
+    }
+
+    if (category && category.trim() !== "") {
+      selectedFilters.CategoryId = category;
+    }
+
+    if (Array.isArray(type) && type.length > 0) {
+      selectedFilters.type = {
+        [Op.in]: type,
+      };
+    }
+
+    if (startDate && endDate) {
+      const parsedStartDate = moment.utc(startDate).toDate();
+      const parsedEndDate = moment.utc(endDate).toDate();
+
+      if (!isNaN(parsedStartDate) && !isNaN(parsedEndDate)) {
+        selectedFilters.createdAt = {
+          [Op.gte]: parsedStartDate,
+          [Op.lte]: parsedEndDate,
+        };
+      }
+    }
+
+    const userId = req.user.id;
     const user = await User.findOne({
       where: {
-        id: req.user.id,
+        id: userId,
         role: { [Op.ne]: "super-admin" },
         BusinessId: { [Op.ne]: null },
       },
     });
 
-    if (user) {
+    if (!user) {
+      return res.status(404).json({ message: "User not found", data: [] });
+    }
+
+    const whereCondition = {
+      ...selectedFilters,
+      BusinessId: user.BusinessId,
+    };
+
+    const sortOrder = order
+      ? [["createdAt", order]]
+      : [["createdAt", "DESC"]];
+    const parsedIsReport = isReport ? true : false;
+
+    if (parsedIsReport) {
       const products = await Product.findAll({
-        where: { BusinessId: user.dataValues.BusinessId },
-        order: [["createdAt", "DESC"]],
+        where: whereCondition,
+        order: sortOrder,
         include: [
           {
             model: Tax,
@@ -44,20 +102,42 @@ router.get("/", fetchUser, async (req, res) => {
           },
         ],
       });
-      return res.status(200).json(products);
+
+      return res.json({
+        message: "Products fetched successfully (report)",
+        data: products,
+      });
     }
 
-    const products = await Product.findAll({
-      order: [["createdAt", "DESC"]],
+    const offset = (page - 1) * limit;
+
+    const { count, rows } = await Product.findAndCountAll({
+      where: whereCondition,
+      distinct: true,
+      order: sortOrder,
+      limit: Number(limit),
+      offset: Number(offset),
       include: [
         {
           model: Tax,
           as: "Tax",
           through: "product_tax",
         },
+        {
+          model: Product_Category,
+          as: "Category",
+        },
       ],
     });
-    res.status(200).json(products);
+
+    return res.json({
+      message: "Products fetched successfully",
+      data: rows,
+      total: count,
+      page: Number(page),
+      limit: Number(limit),
+      totalPages: Math.ceil(count / limit),
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

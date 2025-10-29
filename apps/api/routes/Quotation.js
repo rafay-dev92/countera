@@ -10,8 +10,9 @@ const {
   Business,
 } = require("../models");
 const fetchUser = require("../middlewares/fetchUser");
-const { Op } = require("sequelize");
+const { Op, fn, col, where } = require("sequelize");
 const authorizePermission = require("../middlewares/authorizePermissions");
+const moment = require("moment");
 require("dotenv").config();
 
 router.get(
@@ -20,6 +21,63 @@ router.get(
   authorizePermission("quote:read"),
   async (req, res) => {
     try {
+      const { page = 1, limit = 10, filters } = req.query;
+
+      const parsedFilters = JSON.parse(filters || '{}');
+      const {
+        CustomerDetails,
+        status,
+        startDate,
+        endDate,
+        isReport,
+        order,
+      } = parsedFilters;
+      const selectedFilters = {};
+
+      if (Array.isArray(status) && status.length > 0) {
+        selectedFilters.approved = {
+          [Op.in]: status.map(s => s === 'APPROVED'),
+        };
+      }
+
+      let customers = null;
+      if (
+        (CustomerDetails?.name &&
+          typeof CustomerDetails?.name === "string" &&
+          CustomerDetails?.name?.trim() !== "") ||
+        CustomerDetails?.id
+      ) {
+        customers = await Customer.findAll({
+          where: where(fn("CONCAT", col("firstName"), " ", col("lastName")), {
+            [Op.like]: `%${CustomerDetails?.name?.trim()}%`,
+          }),
+          attributes: ["id"],
+        });
+      }
+
+      if (customers && customers.length > 0) {
+        const customerIds = customers.map((customer) => customer.id);
+        selectedFilters.CustomerId = { [Op.in]: customerIds };
+      } else if (CustomerDetails?.id) {
+        const customerId = CustomerDetails.id;
+        selectedFilters.CustomerId = { [Op.in]: [customerId] };
+      }
+      else if (CustomerDetails?.name?.trim()) {
+        selectedFilters.CustomerId = { [Op.in]: [null] };        
+      }
+
+      if (startDate && endDate) {
+        const parsedStartDate = moment.utc(startDate).toDate();
+        const parsedEndDate = moment.utc(endDate).toDate();
+
+        if (!isNaN(parsedStartDate) && !isNaN(parsedEndDate)) {
+          selectedFilters.createdAt = {
+            [Op.gte]: parsedStartDate,
+            [Op.lte]: parsedEndDate,
+          };
+        }
+      }
+
       const userId = req.user.id;
       const user = await User.findOne({
         where: {
@@ -29,10 +87,24 @@ router.get(
         },
       });
 
-      if (user) {
-        const quotataions = await Quotation.findAll({
-          where: { BusinessId: user.dataValues.BusinessId },
-          order: [["createdAt", "DESC"]],
+      if (!user) {
+        return res.status(404).json({ message: "User not found", data: [] });
+      }
+
+      const whereCondition = {
+        ...selectedFilters,
+        BusinessId: user.BusinessId,
+      };
+
+      const sortOrder = order
+        ? [["createdAt", order]]
+        : [["createdAt", "DESC"]];
+      const parsedIsReport = isReport ? true : false;
+
+      if (parsedIsReport) {
+        const quotations = await Quotation.findAll({
+          where: whereCondition,
+          order: sortOrder,
           include: [
             {
               model: Customer,
@@ -46,8 +118,8 @@ router.get(
             {
               model: Product,
               as: "Product",
-              through: "invoice_product",
-              include: ["Tax"],
+              through: "quotation_product",
+              include: ["Tax", "Category"],
             },
             {
               model: Business,
@@ -55,11 +127,21 @@ router.get(
             },
           ],
         });
-        return res.json(quotataions);
+
+        return res.json({
+          message: "Quotations fetched successfully (report)",
+          data: quotations,
+        });
       }
 
-      const quotataions = await Quotation.findAll({
-        order: [["createdAt", "DESC"]],
+      const offset = (page - 1) * limit;
+
+      const { count, rows } = await Quotation.findAndCountAll({
+        where: whereCondition,
+        distinct: true,
+        order: sortOrder,
+        limit: Number(limit),
+        offset: Number(offset),
         include: [
           {
             model: Customer,
@@ -73,8 +155,8 @@ router.get(
           {
             model: Product,
             as: "Product",
-            through: "invoice_product",
-            include: ["Tax"],
+            through: "quotation_product",
+            include: ["Tax", "Category"],
           },
           {
             model: Business,
@@ -82,7 +164,15 @@ router.get(
           },
         ],
       });
-      return res.json(quotataions);
+
+      return res.json({
+        message: "Quotations fetched successfully",
+        data: rows,
+        total: count,
+        page: Number(page),
+        limit: Number(limit),
+        totalPages: Math.ceil(count / limit),
+      });
     } catch (error) {
       res.status(500).json({ message: error.message });
     }

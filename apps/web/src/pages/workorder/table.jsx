@@ -30,7 +30,9 @@ export function WorkOrder() {
     const router = useNavigate();
     const { state, dispatch } = State();
     const [searchQuery, setSearchQuery] = useState("");
+    const [debouncedTerm, setDebouncedTerm] = useState("");
     const [workOrders, setWorkOrders] = useState([]);
+    const [totalCount, setTotalCount] = useState(0);
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(5);
     const [refresh, setRefresh] = useState(false);
@@ -52,26 +54,43 @@ export function WorkOrder() {
             toast.error(message)
         }
     };
-
-    useEffect(() => {
-        getWorkOrders();
-    }, [refresh]);
-
+    
     const getWorkOrders = async () => {
         try {
-            const fetchedWorkOrders = await fetchWorkOrders(state.userToken);
-            const totalWorkOrders = await fetchedWorkOrders.json();
-            setWorkOrders(totalWorkOrders);
-            setLoading(false);
+            const filters = {
+                status: ["PENDING", "FINISHED"]
+            };
+
+            if (debouncedTerm && debouncedTerm.trim()) {
+                filters.CustomerDetails = { name: debouncedTerm };
+            }
+
+            const response = await fetchWorkOrders(state.userToken, currentPage, itemsPerPage, filters);
+            const totalWorkOrders = await response.json();
+            setWorkOrders(totalWorkOrders?.data || []);
+            setTotalCount(totalWorkOrders.total || 0);
         } catch (error) {
-            console.log(error.message);
+            console.error(error.message);
             showToastMessage('error', 'Something went wrong')
+        } finally {
+            setLoading(false);
         }
     };
 
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedTerm(searchQuery);
+        }, 500);
+
+        return () => clearTimeout(timer);
+    }, [searchQuery]);
+    
+    useEffect(() => {
+        getWorkOrders();
+    }, [refresh, currentPage, itemsPerPage, debouncedTerm]);
+
     const handleEditWorkOrder = (index) => {
-        // Assuming currentItems holds the filtered rows for display
-        const selected = currentItems[index];
+        const selected = workOrders[index];
         setSelectetWorkOrder(selected);
         openPopup();
     };
@@ -79,9 +98,7 @@ export function WorkOrder() {
     const handleDeleteWorkOrder = async (index) => {
         const confirmed = await confirm("Do you really want to delete this workorder?");
         if (!confirmed) return;
-        const updatedWorkOrders = workOrders.filter((_, rowIndex) => rowIndex !== index);
-        const deletedWorkOrderId = workOrders.find((_, rowIndex) => rowIndex === index);
-        setWorkOrders(updatedWorkOrders);
+        const deletedWorkOrderId = workOrders[index];
         try {
             const res = await delWorkOrder(deletedWorkOrderId['id'], state.userToken);
             const workorder = await res.json();
@@ -97,13 +114,13 @@ export function WorkOrder() {
             setRefresh(!refresh);
 
         } catch (error) {
-            console.log(error);
+            console.error(error);
             showToastMessage('error', "Something went wrong");
         }
     };
 
     const showCustomer = (index) => {
-        const selected = currentItems[index];
+        const selected = workOrders[index];
         setIsCustomerFormOpen(true);
         setSelectedCustomer(selected.Customer);
     }
@@ -111,21 +128,6 @@ export function WorkOrder() {
         const date = new Date(createdAt);
         return date.toLocaleString();
     };
-
-    const indexOfFirstItem = (currentPage - 1) * itemsPerPage;
-    const indexOfLastItem = indexOfFirstItem + itemsPerPage;
-
-    let currentItems = [];
-    let filteredRows = [];
-    if (workOrders.length > 0) {
-        filteredRows = workOrders?.filter(
-            ({ Customer }) =>
-                Customer['firstName'].toLowerCase().includes(searchQuery.toLowerCase()) ||
-                Customer['lastName'].toLowerCase().includes(searchQuery.toLowerCase())
-        )
-
-        currentItems = filteredRows.slice(indexOfFirstItem, indexOfLastItem);
-    }
 
     const handleItemsPerPageChange = (event) => {
         const selectedItemsPerPage = parseInt(event.target.value, 10);
@@ -136,6 +138,10 @@ export function WorkOrder() {
     const paginate = (pageNumber) => {
         setCurrentPage(pageNumber);
     };
+
+    const totalPages = Math.ceil(totalCount / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage + 1;
+    const endIndex = Math.min(currentPage * itemsPerPage, totalCount);
 
     const openPopup = () => {
         setIsOpen(true);
@@ -156,7 +162,7 @@ export function WorkOrder() {
             price: product.workorder_product.price
         })).filter(product => product.id);
 
-        const taxes = Object.values(JSON.parse(workOrderData.appliedTaxes)).map(tax => tax);
+        const taxes = Object.values(JSON.parse(workOrderData.appliedTaxes || '{}')).map(tax => tax);
         console.log("taxes: ", taxes)
         const data = {
             invoiceData: {
@@ -191,7 +197,7 @@ export function WorkOrder() {
             setLoading(false);
         } catch (error) {
             setLoading(false);
-            console.log(error);
+            console.error(error);
         }
     };
 
@@ -276,8 +282,8 @@ export function WorkOrder() {
                             </tr>
                         </thead>
                         <tbody>
-                            {currentItems.map(({ id, workOrderNumber, Customer, totalAmount, status, createdAt, CustomerVehicle }, index) => {
-                                const isLast = index === currentItems.length - 1;
+                            {workOrders.map(({ id, workOrderNumber, Customer, totalAmount, status, createdAt, CustomerVehicle, Business }, index) => {
+                                const isLast = index === workOrders.length - 1;
                                 const classes = isLast
                                     ? "p-4"
                                     : "p-4 border-b border-blue-gray-50";
@@ -352,9 +358,9 @@ export function WorkOrder() {
                                                     <TrashIcon className="h-6 w-6 text-red-500" />
                                                 </IconButton>
                                             </Tooltip>
-                                            <Tooltip content="Craete Invoice">
+                                            <Tooltip content="Create Invoice">
                                                 <IconButton variant="text" onClick={() => {
-                                                    createInvoice(currentItems[index])
+                                                    createInvoice(workOrders[index])
                                                 }}>
                                                     <DocumentPlusIcon className="h-6 w-6 text-blue-500" />
                                                 </IconButton>
@@ -367,23 +373,22 @@ export function WorkOrder() {
                                                     color="blue-gray"
                                                     className="font-normal opacity-70"
                                                 >
-                                                    {Business.name}
+                                                    {Business?.name}
                                                 </Typography>
                                             </td>
                                         )}
                                     </tr>
                                 );
-                            },
-                            )}
+                            })}
                         </tbody>
                     </table>
                 </CardBody>
                 <CardFooter className="flex items-center justify-between border-t border-blue-gray-50 p-4">
                     <Typography variant="small" color="blue-gray" className="font-normal">
-                        Showing {indexOfFirstItem + 1} - {Math.min(indexOfLastItem, filteredRows.length)} of {filteredRows.length}
+                        Showing {startIndex} - {endIndex} of {totalCount}
                     </Typography>
                     <Typography variant="small" color="blue-gray" className="font-normal">
-                        Page {currentPage} of {Math.ceil(filteredRows.length / itemsPerPage)}
+                        Page {currentPage} of {totalPages}
                     </Typography>
                     <div className="flex gap-2">
                         <Button
@@ -397,7 +402,7 @@ export function WorkOrder() {
                         <Button
                             variant="outlined"
                             size="sm"
-                            disabled={indexOfLastItem >= filteredRows.length}
+                            disabled={currentPage >= totalPages}
                             onClick={() => paginate(currentPage + 1)}
                         >
                             Next

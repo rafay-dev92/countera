@@ -11,6 +11,7 @@ export async function fetchInvoices(token, page = 1, limit = 10, filters = {}) {
         return invoices;
 
     } catch (error) {
-        console.log(error);
+        console.error('Error fetching invoices:', error);
+        throw error;
     }
 }

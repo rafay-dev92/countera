@@ -12,6 +12,7 @@ export async function addAppointment(data, token){
         return tax;
 
     } catch (error) {
-        console.log(error);
+        console.error('Error adding appointment:', error);
+        throw error;
     }
 }

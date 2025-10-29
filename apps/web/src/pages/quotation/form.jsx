@@ -768,13 +768,9 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
 
   useEffect(() => {
     if (printQuotation && Object.keys(printQuotation).length > 0) {
-      dispatch({ type: 'SET_QUOTATION_VIEW', payload: true });
-      // if (printRef.current) {
-      //   printRef.current.handlePrint();
-      //   handleClose();
-      // }
+      dispatch({ type: 'SET_QUOTATION_VIEW', payload: true });      
     }
-  }, [printQuotation])
+  }, [printQuotation, dispatch])
 
   const handleLumSum = () => {
     const total = parseFloat(calculateTotalAmountWithTax());

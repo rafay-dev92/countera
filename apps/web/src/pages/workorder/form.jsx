@@ -758,7 +758,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedWorkOrder, setS
     if (printWorkOrder && Object.keys(printWorkOrder).length > 0) {
       dispatch({ type: 'SET_WORKORDER_VIEW', payload: true });
     }
-  }, [printWorkOrder])
+  }, [printWorkOrder, dispatch])
 
   const handleLumSum = () => {
     const total = parseFloat(calculateTotalAmountWithTax());

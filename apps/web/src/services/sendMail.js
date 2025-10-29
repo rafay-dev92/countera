@@ -7,6 +7,7 @@ export const sendMail = async (formData, docType) => {
 
         return res;
     } catch (error) {
-        console.log(error);
+        console.error('Error sending mail:', error);
+        throw error;
     }
 };

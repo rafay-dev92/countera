@@ -894,7 +894,7 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
     if (printInvoice && Object.keys(printInvoice).length > 0) {
       dispatch({ type: 'SET_INVOICE_VIEW', payload: true });
     }
-  }, [printInvoice])
+  }, [printInvoice, dispatch])
 
 
   const handleLumSum = () => {

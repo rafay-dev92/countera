@@ -101,11 +101,7 @@ export function Invoice() {
 
   useEffect(() => {
     getInvoices();
-  }, [refresh, currentPage, itemsPerPage]);
-
-  useEffect(() => {
-    getInvoices();
-  }, [debouncedTerm]);
+  }, [refresh, currentPage, itemsPerPage, debouncedTerm]);
 
   const handleEditInvoice = (index) => {
     const selected = invoices[index];

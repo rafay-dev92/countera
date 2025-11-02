@@ -63,23 +63,12 @@ export function Product() {
     
     const getProducts = async () => {
         try {
-            const filters = {
-                type: ["Product", "Service"]
-            };
-
-            if (debouncedTerm && debouncedTerm.trim()) {
-                filters.name = debouncedTerm;
-            }
-
-            const response = await fetchProducts(state.userToken, currentPage, itemsPerPage, filters);
-            const totalProducts = await response.json();
-            setFinalItems(totalProducts?.data || []);
-            setTotalCount(totalProducts.total || 0);
-        } catch (error) {
-            console.error(error.message);
-            showToastMessage('error', "Something went wrong");
-        } finally {
+            const products = await (await fetchProducts(state.userToken)).json();
+            setFinalItems(products);
             setLoading(false);
+        } catch (error) {
+            console.log(error.message);
+            showToastMessage('error', "Something went wrong");
         }
     }
 

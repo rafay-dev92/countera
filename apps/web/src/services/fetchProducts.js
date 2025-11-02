@@ -1,7 +1,6 @@
-export async function fetchProducts(token, page = 1, limit = 10, filters = {}) {
-    const queryParams = new URLSearchParams({ page, limit, filters: JSON.stringify(filters) }).toString();
+export async function fetchProducts(token) {
     try {
-        const products = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/product?${queryParams}`, {
+        const products = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/product`, {
             method: "GET",
             headers: {
                 "auth-token": token

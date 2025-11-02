@@ -176,13 +176,6 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
   }
 
   useEffect(() => {
-    getProducts();
-    getProductsPackages();
-    getCustomers();
-    getTaxes();
-  }, [refresh]);
-
-  useEffect(() => {
     if (state?.invoice?.viewData) {
       const selectedInvoice = state.invoice.viewData;
       setPrintInvoice(selectedInvoice);
@@ -800,7 +793,6 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
     }
   };
 
-
   // handle customer suggestions
   useEffect(() => {
     function handleClickOutside(event) {
@@ -818,6 +810,14 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
+  // fetch data
+  useEffect(() => {
+    getProducts();
+    getProductsPackages();
+    getCustomers();
+    getTaxes();
+  }, [refresh]);
 
   const clearForm = (formikProps) => {
     formikProps.resetForm({

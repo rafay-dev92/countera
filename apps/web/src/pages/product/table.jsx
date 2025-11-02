@@ -31,9 +31,7 @@ export function Product() {
     const [selectAll, setSelectAll] = useState(false);
     const [selectedRows, setSelectedRows] = useState([]);
     const [searchQuery, setSearchQuery] = useState("");
-    const [debouncedTerm, setDebouncedTerm] = useState("");
     const [finalItems, setFinalItems] = useState([]);
-    const [totalCount, setTotalCount] = useState(0);
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(5);
     const [refresh, setRefresh] = useState(false);
@@ -44,7 +42,8 @@ export function Product() {
 
     // Modify handleRowSelect to update the selected item's data
     const handleEditProduct = (index) => {
-        const selected = finalItems[index];
+        // Assuming currentItems holds the filtered rows for display
+        const selected = currentItems[index];
         setSelectedItem(selected);
         openPopup();
     };
@@ -60,7 +59,12 @@ export function Product() {
             toast.error(message)
         }
     };
-    
+
+
+    useEffect(() => {
+        getProducts();
+    }, [refresh]);
+
     const getProducts = async () => {
         try {
             const products = await (await fetchProducts(state.userToken)).json();
@@ -72,25 +76,13 @@ export function Product() {
         }
     }
 
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            setDebouncedTerm(searchQuery);
-        }, 500);
-
-        return () => clearTimeout(timer);
-    }, [searchQuery]);
-    
-    useEffect(() => {
-        getProducts();
-    }, [refresh, currentPage, itemsPerPage, debouncedTerm]);
-
     // Function to handle header checkbox change
     const handleSelectAll = (event) => {
         const checked = event.target.checked;
         setSelectAll(checked);
 
         if (checked) {
-            const allRowsIndexes = finalItems.map((_, index) => index);
+            const allRowsIndexes = currentItems.map((_, index) => indexOfFirstItem + index);
             setSelectedRows(allRowsIndexes);
         } else {
             setSelectedRows([]);
@@ -117,6 +109,17 @@ export function Product() {
         setSelectedRows(newSelectedRows);
     };
 
+    const filteredRows = finalItems.length > 0 ? finalItems?.filter(
+        ({ name, itemCode }) =>
+            name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            itemCode.toLowerCase().includes(searchQuery.toLowerCase())
+    ) : [];
+
+    // Calculate the indexes of the items to display based on pagination
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentItems = filteredRows.slice(indexOfFirstItem, indexOfLastItem);
+
     // Function to handle items per page change
     const handleItemsPerPageChange = (event) => {
         const selectedItemsPerPage = parseInt(event.target.value, 10);
@@ -124,12 +127,21 @@ export function Product() {
         setCurrentPage(1);
     };
 
-    const totalPages = Math.ceil(totalCount / itemsPerPage);
-    const startIndex = (currentPage - 1) * itemsPerPage + 1;
-    const endIndex = Math.min(currentPage * itemsPerPage, totalCount);
-
     // Function to handle deletion of selected items
     const handleDelete = async (id) => {
+        // Calculate the indexes of the selected rows within the full data set
+        // const selectedIndexes = selectedRows.map((index) => {
+        //     const startIndex = (currentPage - 1) * itemsPerPage;
+        //     return startIndex + index;
+        // });
+
+        // Create a new array containing the rows that are not selected
+        // const updatedItems = finalItems.filter((_, index) => !selectedIndexes.includes(index));
+
+        // Update finalItems and clear selectedRows
+        // setFinalItems(updatedItems);
+        // setSelectedRows([]);
+        // setSelectAll(false);
         const confirmed = await confirm("Do you really want to delete this product?");
         if (!confirmed) return;
         try {
@@ -146,7 +158,7 @@ export function Product() {
             }
             setRefresh(!refresh);
         } catch (error) {
-            console.error(error)
+            console.log(error)
             showToastMessage('error', "You must delete its foreign key relations first");
         }
     };
@@ -255,8 +267,8 @@ export function Product() {
                             </tr>
                         </thead>
                         <tbody>
-                            {finalItems.map(({ id, name, price, cost, itemCode, type, taxable }, index) => {
-                                const isLast = index === finalItems.length - 1;
+                            {currentItems.map(({ id, name, price, cost, itemCode, type, taxable }, index) => {
+                                const isLast = index === currentItems.length - 1;
                                 const classes = isLast
                                     ? "p-4"
                                     : "p-4 border-b border-blue-gray-50";
@@ -329,16 +341,17 @@ export function Product() {
                                         </td>
                                     </tr>
                                 );
-                            })}
+                            },
+                            )}
                         </tbody>
                     </table>
                 </CardBody>
                 <CardFooter className="flex items-center justify-between border-t border-blue-gray-50 p-4">
                     <Typography variant="small" color="blue-gray" className="font-normal">
-                        Showing {startIndex} - {endIndex} of {totalCount}
+                        Showing {indexOfFirstItem + 1} - {Math.min(indexOfLastItem, filteredRows.length)} of {filteredRows.length}
                     </Typography>
                     <Typography variant="small" color="blue-gray" className="font-normal">
-                        Page {currentPage} of {totalPages}
+                        Page {currentPage} of {Math.ceil(filteredRows.length / itemsPerPage)}
                     </Typography>
                     <div className="flex gap-2">
                         <Button
@@ -352,7 +365,7 @@ export function Product() {
                         <Button
                             variant="outlined"
                             size="sm"
-                            disabled={currentPage >= totalPages}
+                            disabled={indexOfLastItem >= filteredRows.length}
                             onClick={() => paginate(currentPage + 1)}
                         >
                             Next

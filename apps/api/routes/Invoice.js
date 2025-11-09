@@ -254,7 +254,7 @@ router.get(
             model: Product,
             as: "Products",
             through: "invoice_product",
-            include: ["Tax"],
+            include: ["Tax", "Category"],
           },
           {
             model: Business,
@@ -357,7 +357,7 @@ router.post(
             model: Product,
             as: "Products",
             through: "invoice_product",
-            include: ["Tax"],
+            include: ["Tax", "Category"],
           },
           {
             model: Business,
@@ -506,7 +506,7 @@ router.put(
             model: Product,
             as: "Products",
             through: "invoice_product",
-            include: ["Tax"],
+            include: ["Tax", "Category"],
           },
           {
             model: Business,

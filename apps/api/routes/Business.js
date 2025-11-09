@@ -65,17 +65,16 @@ router.post("/create", upload.single("logo"), async (req, res) => {
     const existingBusiness = await Business.findOne({
       where: {
         [Op.or]: [
-          { name },
-          { email },
-          // { licenseNumber },
-          // { permitNumber },
+          { licenseNumber },
+          { permitNumber },
         ],
       },
     });
 
     if (existingBusiness) {
-      return res.status(409).json({ message: "Business already exists" });
+      return res.status(409).json({ message: "Business already exists with this license or permit number" });
     }
+    
     if (req.file) {
       const imageUrl = `${process.env.STATIC_FILE_BASE_URL}/business/${req.file.filename}`;
       businessData.logo = imageUrl;

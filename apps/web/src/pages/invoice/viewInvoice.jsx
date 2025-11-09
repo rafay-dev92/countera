@@ -19,7 +19,7 @@ import { fetchInvoiceAudits } from "@/services/fetchInvoiceAudit";
 import { ArrowLongRightIcon, XCircleIcon, Bars3Icon, XMarkIcon } from '@heroicons/react/24/solid'
 import { Printer, Send, Edit, FileText, Trash2, CreditCard, History } from "lucide-react"
 
-const ViewInvoice = ({ printInvoice, setPrintInvoice, componentRef, appliedTaxes, setEdit, close }) => {
+const ViewInvoice = ({ printInvoice, setPrintInvoice, componentRef, appliedTaxes, setEdit, close, labour }) => {
     const confirm = useConfirm();
     const confirmDeleteInvoice = useDeleteInvoiceConfirm();
     const { state, dispatch } = State();
@@ -362,7 +362,7 @@ const ViewInvoice = ({ printInvoice, setPrintInvoice, componentRef, appliedTaxes
                     <div className="flex-1 overflow-x-auto overflow-y-auto p-2">
                         <div className="max-h-[68vh] lg:max-h-[88vh] mx-auto">
                             {printInvoice && Object.keys(printInvoice).length > 0 ? (
-                                <PrintView view={true} printInvoice={printInvoice} ref={componentRef} appliedTaxes={appliedTaxes} />
+                                <PrintView view={true} printInvoice={printInvoice} ref={componentRef} appliedTaxes={appliedTaxes} labour={labour} />
                             ) : null}
                         </div>
                     </div>
@@ -398,7 +398,7 @@ const ViewInvoice = ({ printInvoice, setPrintInvoice, componentRef, appliedTaxes
                         >
                             <div className="min-w-[794px]">
                                 {printInvoice && Object.keys(printInvoice).length > 0 ? (
-                                    <PrintView view={true} printInvoice={printInvoice} ref={componentRef} appliedTaxes={appliedTaxes} />
+                                    <PrintView view={true} printInvoice={printInvoice} ref={componentRef} appliedTaxes={appliedTaxes} labour={labour} />
                                 ) : null}
                             </div>
                         </div>

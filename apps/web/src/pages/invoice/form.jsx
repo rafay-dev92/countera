@@ -89,7 +89,10 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
   }]);
   const [totalAmount, setTotalAmount] = useState(0);
   const [discount, setDiscount] = useState(0);
-  const [lumSum, setLumSum] = useState(0);
+const [lumSum, setLumSum] = useState(0);
+const [isLumSumApplied, setIsLumSumApplied] = useState(false);
+const [labour, setLabour] = useState(0);
+const [labourBaseline, setLabourBaseline] = useState(null);
   const [edit, setEdit] = useState(false);
   const [printInvoice, setPrintInvoice] = useState({});
   const [appliedTaxes, setAppliedTaxes] = useState({});
@@ -137,6 +140,7 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
   // close popup
   const handleClose = () => {
     setDiscount(0);
+    setLabour(0);
     setProductSearchText("");
     setSelectedCustomer(null)
     setSelectedVehicle(null)
@@ -156,6 +160,7 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
     setRefresh(!refresh);
     dispatch({ type: 'SET_INVOICE_VIEW', payload: false });
     setPrintInvoice({});
+    setLabourBaseline(null);
     close();
   };
 
@@ -179,7 +184,7 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
     if (state?.invoice?.viewData) {
       const selectedInvoice = state.invoice.viewData;
       setPrintInvoice(selectedInvoice);
-      setDiscount(selectedInvoice.discount)
+      setDiscount(selectedInvoice.discount || 0)
       setSelectedCustomer(selectedInvoice.Customer)
       setSelectedVehicle(selectedInvoice.CustomerVehicle)
       setVehicleOdometer(selectedInvoice.CustomerVehicle?.odometer)
@@ -195,6 +200,7 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
           quantity: prod.invoice_product.quantity,
           taxable: prod.taxable,
           Tax: prod.Tax,
+          Category: prod.Category,
           description: prod.invoice_product.description,
           replacement_reminder_date: prod.invoice_product.replacement_reminder_date ? new Date(prod.invoice_product.replacement_reminder_date) : null
         }
@@ -242,6 +248,10 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
       }, {}));
       setInvoiceTaxes(selectedInvoice.appliedTaxes);
       setSelectedProducts(selectedProd);
+      
+      // Calculate labour from products
+      const calculatedLabour = calculateLabour(selectedProd.filter(p => p.id));
+      setLabour(calculatedLabour);
     }
   }, [state?.invoice?.viewData, resetForm]);
 
@@ -273,8 +283,9 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
     const data = {
       invoiceData: {
         ...values,
-        totalAmount: (calculateTotalAmountWithTax() - discount).toFixed(2),
+        totalAmount: calculateTotalAmountWithTax(),
         discount: discount,
+        labour: labour,
         CustomerId: selectedCustomer.id,
         CustomerVehicleId: selectedVehicle.id,
         comments: values.comments,
@@ -384,6 +395,139 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
     }
   };
 
+// Helper to identify labour products
+const isLabourProduct = (product) => {
+  const categoryName = product?.Category?.name;
+  if (!categoryName || typeof categoryName !== "string") {
+    return false;
+  }
+  const normalized = categoryName.toLowerCase();
+  return normalized === "labor" || normalized === "labour";
+};
+
+// Calculate labour from selected products
+const calculateLabour = (products) => {
+  let totalLabour = 0;
+  products.forEach((product) => {
+    if (isLabourProduct(product)) {
+      const productPrice = parseFloat(product.price) || 0;
+      const productQuantity = parseFloat(product.quantity) || 0;
+      totalLabour += productPrice * productQuantity;
+    }
+  });
+  return totalLabour;
+};
+
+// Distribute additional labour amount across labour products
+const distributeExcessToLabourProducts = (excessAmount) => {
+  if (excessAmount <= 0) return;
+
+  setSelectedProducts((prevProducts) => {
+    const labourIndexes = [];
+    prevProducts.forEach((product, index) => {
+      if (isLabourProduct(product) && product.id) {
+        labourIndexes.push(index);
+      }
+    });
+
+    const baselineLabourValue = calculateLabour(
+      prevProducts.filter((product) => product.id)
+    );
+
+    setLabourBaseline((prevBaseline) => {
+      if (prevBaseline) {
+        return prevBaseline;
+      }
+
+      if (labourIndexes.length === 0) {
+        return {
+          labourValue: baselineLabourValue,
+          productPrices: null,
+        };
+      }
+
+      const productPrices = {};
+      labourIndexes.forEach((index) => {
+        const product = prevProducts[index];
+        if (product) {
+          productPrices[index] = {
+            price: parseFloat(product.price) || 0,
+            quantity: parseFloat(product.quantity) || 0,
+          };
+        }
+      });
+
+      return {
+        labourValue: baselineLabourValue,
+        productPrices,
+      };
+    });
+
+    if (labourIndexes.length === 0) {
+      setLabour((prevLabour) => parseFloat(prevLabour) + excessAmount);
+      return prevProducts;
+    }
+
+    const labourIndexSet = new Set(labourIndexes);
+    const labourMeta = labourIndexes.map((index) => {
+      const product = prevProducts[index];
+      const price = parseFloat(product.price) || 0;
+      const quantity = parseFloat(product.quantity) || 0;
+      const safeQuantity = quantity > 0 ? quantity : 1;
+      const currentTotal = price * safeQuantity;
+      return {
+        index,
+        safeQuantity,
+        currentTotal,
+      };
+    });
+
+    const totalCurrentLabour = labourMeta.reduce(
+      (sum, item) => sum + item.currentTotal,
+      0
+    );
+    const equalShare =
+      labourIndexes.length > 0 ? excessAmount / labourIndexes.length : 0;
+
+    const labourMetaMap = new Map(
+      labourMeta.map((item) => [item.index, item])
+    );
+
+    const updatedProducts = prevProducts.map((product, index) => {
+      if (!labourIndexSet.has(index)) {
+        return product;
+      }
+
+      const meta = labourMetaMap.get(index);
+      if (!meta) {
+        return product;
+      }
+
+      const price = parseFloat(product.price) || 0;
+      const safeQuantity = meta.safeQuantity;
+      const currentTotal = meta.currentTotal;
+      const allocatedAmount =
+        totalCurrentLabour > 0
+          ? (currentTotal / totalCurrentLabour) * excessAmount
+          : equalShare;
+      const newTotal = currentTotal + allocatedAmount;
+      const newPrice = Number((newTotal / safeQuantity).toFixed(2));
+
+      return {
+        ...product,
+        price: newPrice,
+      };
+    });
+
+    const recalculatedLabour = calculateLabour(
+      updatedProducts.filter((product) => product.id)
+    );
+    setLabour(recalculatedLabour);
+    recalculateTaxes(updatedProducts);
+    return updatedProducts;
+  });
+};
+
   // calculate changable amount
   const getCashAmount = (invoice) => {
     const cashAmount = invoice.Payments.reduce((acc, payment) => payment.paymentMethod === 'Cash' ? acc + payment.paidAmount : acc, 0);
@@ -418,6 +562,7 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
         price: selectedProductDetails.price,
         taxable: selectedProductDetails.taxable,
         Tax: selectedProductDetails.Tax,
+        Category: selectedProductDetails.Category,
         description: "",
         replacement_reminder_date: null
       };
@@ -438,6 +583,10 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
 
     // Recalculate taxes
     recalculateTaxes(updatedItems);
+
+    // Recalculate labour
+    const calculatedLabour = calculateLabour(updatedItems.filter(p => p.id));
+    setLabour(calculatedLabour);
 
     // Add a new empty row if it's the last row and a product is selected
     const isLastRow = index === selectedProducts.length - 1;
@@ -487,6 +636,10 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
     // Recalculate taxes
     recalculateTaxes(updatedItems);
 
+    // Recalculate labour
+    const calculatedLabour = calculateLabour(updatedItems.filter(p => p.id));
+    setLabour(calculatedLabour);
+
     setSelectedProducts(updatedItems);
   };
 
@@ -518,6 +671,11 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
 
     // Recalculate taxes
     recalculateTaxes(updatedItems);
+    
+    // Recalculate labour
+    const calculatedLabour = calculateLabour(updatedItems.filter(p => p.id));
+    setLabour(calculatedLabour);
+    
     setSelectedProducts(updatedItems);
   };
 
@@ -562,6 +720,10 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
       setInvoiceTaxes({});
       setAppliedTaxes({});
     }
+
+    // Recalculate labour
+    const calculatedLabour = calculateLabour(updatedItems.filter(p => p.id));
+    setLabour(calculatedLabour);
 
     setSelectedProducts(updatedItems);
   };
@@ -744,7 +906,9 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
   // calculate total amount
   const calculateTotalAmount = () => {
     let total = 0;
-    selectedProducts.forEach((item) => {
+  selectedProducts
+    .filter((item) => !isLabourProduct(item))
+    .forEach((item) => {
       total += parseFloat(calculateAmount(item.price, item.quantity));
     });
     return total.toFixed(2);
@@ -773,7 +937,8 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
   const calculateTotalAmountWithTax = () => {
     const amount = parseFloat(calculateTotalAmount()) || 0;
     const tax = parseFloat(calculateTotalTaxAmount()) || 0;
-    return (amount + tax).toFixed(2);
+    const labourAmount = parseFloat(labour) || 0;
+    return (amount + tax + labourAmount - parseFloat(discount)).toFixed(2);
   };
 
   useEffect(() => {
@@ -859,7 +1024,10 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
     setInvoiceTaxes({});
     setSelectedPackage("");
     setDiscount(0);
+    setLabour(0);
     setLumSum(0);
+    setIsLumSumApplied(false);
+  setLabourBaseline(null);
   };
 
   const formikProps = useFormik({
@@ -898,19 +1066,72 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
 
 
   const handleLumSum = () => {
-    const total = parseFloat(calculateTotalAmountWithTax());
+    const subtotal = parseFloat(calculateTotalAmount());
+    const taxes = parseFloat(calculateTotalTaxAmount());
+    const currentLabour = parseFloat(labour) || 0;
+    const currentTotal = subtotal + taxes + currentLabour;
     const lump = parseFloat(lumSum) || 0;
-    const appliedDiscount = (total - lump).toFixed(2);
-    if (appliedDiscount > calculateTotalAmountWithTax() * 0.25) {
-      toast.error("Lumsum couldn't be less than 75% of total amount");
+    
+  if (lump > currentTotal) {
+    const excessAmount = (lump - currentTotal).toFixed(2);
+    distributeExcessToLabourProducts(excessAmount);
+    setDiscount(0);
+  } else if (lump < currentTotal) {
+    const difference = (currentTotal - lump).toFixed(2);
+    const maxDiscount = currentTotal * 0.25;
+
+    if (difference > maxDiscount) {
+      toast.error("Discount cannot exceed 25% of total amount");
       return;
     }
-    else if (lump > calculateTotalAmountWithTax()) {
-      toast.error("Lumsum couldn't be greater than total amount");
-      return;
-    }
-    setDiscount(appliedDiscount);
+
+    setDiscount(difference);
+  } else {
+    setDiscount(0);
   }
+
+  setIsLumSumApplied(true);
+  }
+
+const handleResetLumSum = () => {
+  const baselineSnapshot = labourBaseline;
+
+  setLumSum(0);
+  setIsLumSumApplied(false);
+  setDiscount(0);
+
+  setSelectedProducts((prevProducts) => {
+    let updatedProducts = prevProducts;
+
+    if (baselineSnapshot?.productPrices) {
+      updatedProducts = prevProducts.map((product, index) => {
+        const baseline = baselineSnapshot.productPrices[index];
+        if (!baseline) {
+          return product;
+        }
+
+        return {
+          ...product,
+          price: baseline.price,
+          quantity:
+            baseline.quantity !== undefined ? baseline.quantity : product.quantity,
+        };
+      });
+    } else {
+      updatedProducts = [...prevProducts];
+    }
+
+    const recalculatedLabour = baselineSnapshot
+      ? baselineSnapshot.labourValue
+      : calculateLabour(updatedProducts.filter((product) => product.id));
+
+    setLabour(recalculatedLabour);
+    recalculateTaxes(updatedProducts);
+    return updatedProducts;
+  });
+
+  setLabourBaseline(null);
+};
 
   useEffect(() => {
     if (showProductSuggestions && productInputRef.current) {
@@ -958,7 +1179,7 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
                 </div>
 
                 {state?.invoice?.isViewOpen ? (
-                  <ViewInvoice printInvoice={printInvoice} setPrintInvoice={setPrintInvoice} componentRef={componentRef} appliedTaxes={appliedTaxes} setEdit={setEdit} close={handleClose} />
+                  <ViewInvoice printInvoice={printInvoice} setPrintInvoice={setPrintInvoice} componentRef={componentRef} appliedTaxes={appliedTaxes} setEdit={setEdit} close={handleClose} labour={labour} />
                 ) : (
                   <div className="overflow-y-auto h-[65vh] lg:h-[85vh] overflow-x-hidden p-4 md:p-6 w-[95vw] md:w-[95vw] lg:w-[95vw] xl:w-[80vw] 2xl:w-[65vw]">
                     <div className="flex flex-col lg:flex-row gap-4">
@@ -1491,13 +1712,29 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
                                 className="w-fit no-spinner text-left border-none focus:border-none focus:ring-0"
                                 placeholder="Lumsum"
                                 value={lumSum === 0 ? '' : lumSum}
-                                onChange={(e) => setLumSum(parseFloat(e.target.value) || 0)}
+                                readOnly={isLumSumApplied}
+                                onFocus={() => {
+                                  if (isLumSumApplied) {
+                                    toast.info("Reset lumsum before updating value");
+                                  }
+                                }}
+                                onChange={(e) => {
+                                  if (isLumSumApplied) {
+                                    toast.info("Reset lumsum before updating value");
+                                    return;
+                                  }
+                                  setLumSum(parseFloat(e.target.value) || 0);
+                                }}
                                 labelProps={{
                                   className: "before:content-none after:content-none",
                                 }}
                               />
                             </div>
-                            <Button className="" disabled={lumSum === 0 || lumSum > calculateTotalAmountWithTax()} size="sm" color="blue" onClick={handleLumSum}>Apply</Button>
+                            {!isLumSumApplied ? (
+                              <Button className="" disabled={lumSum === 0} size="sm" color="blue" onClick={handleLumSum}>Apply</Button>
+                            ) : (
+                              <Button className="" size="sm" color="red" onClick={handleResetLumSum}>Reset</Button>
+                            )}
                           </div>
                         )}
                         <div className="flex justify-between p-2">
@@ -1507,21 +1744,7 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
                           <div className="text-md">
                             <h1>${parseFloat(totalAmount).toFixed(2)}</h1>
                           </div>
-                        </div>
-
-                        {/* <div className="flex flex-col divide-y border-y">
-                          {Array.isArray(appliedTaxes) && appliedTaxes.length > 0 && appliedTaxes.map((tax, ind) => (
-                            <div key={ind} className="flex justify-between">
-                              <span className="rounded w-min p-2 whitespace-nowrap basis-[50%]">
-                                {`${tax.tax_name ?? ""} (${String(tax.tax_rate ?? "")}${String(tax.tax_type ?? "")})`}
-                              </span>
-                              <span className="w-fit p-2 rounded-md basis-[33.33%]">{""}</span>
-                              <span className="text-1xl p-2 w-fit text-right basis-[50%]">
-                                {typeof tax.total_amount === "object" ? JSON.stringify(tax.total_amount) : tax.total_amount}
-                              </span>
-                            </div>
-                          ))}
-                        </div> */}
+                        </div>                        
 
                         <div className="flex flex-col divide-y border-y">
                           {Object.values(appliedTaxes).map((tax, ind) => (
@@ -1532,16 +1755,15 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
                             </div>
                           ))}
                         </div>
-
-                        {/* <div className="flex flex-col divide-y border-y">
-                          {Object.keys(appliedTaxes).map((tax, ind) => (
-                            <div key={ind} className="flex justify-between">
-                              <span className="rounded w-min p-2 whitespace-nowrap basis-[50%]" >{`${tax.split('_')[0]} (${tax.split('_')[1]}${tax.split('_')[2]})`}</span>
-                              <span className="w-fit p-2 rounded-md basis-[33.33%]" >{ }</span>
-                              <span className="text-1xl p-2 w-fit text-right basis-[50%]">{tax.split('_')[2] === '%' ? `$${appliedTaxes[tax].toFixed(2)}` : `$${appliedTaxes[tax]}`}</span>
-                            </div>
-                          ))}
-                        </div> */}
+                       
+                        <div className="flex justify-between border-b">
+                          <span className="rounded w-min p-2 whitespace-nowrap basis-[50%]">
+                            Labour
+                          </span>
+                          <span className="w-fit p-2 rounded-md basis-[33.33%]" >{ }</span>
+                          <span className="text-1xl p-2 w-fit text-right basis-[50%]">{labour.toFixed(2)}</span>
+                        </div>
+                       
                         <div className="flex justify-between p-2">
                           <div className="text-md">
                             <h1>Discount</h1>
@@ -1555,12 +1777,11 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
                               value={discount === 0 ? '' : discount}
                               onChange={(e) => {
                                 const enteredValue = Number(e.target.value);
-                                const maxDiscount = totalAmount * 0.25;
-
-                                if (enteredValue <= maxDiscount) {
+                                const currentTotal = parseFloat(calculateTotalAmountWithTax());
+                                if (enteredValue <= currentTotal * 0.25) {
                                   setDiscount(enteredValue);
                                 } else {
-                                  setDiscount(maxDiscount);
+                                  setDiscount(currentTotal * 0.25);
                                 }
                               }}
 
@@ -1572,7 +1793,7 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
                             <h1>Total</h1>
                           </div>
                           <div className="text-md">
-                            <h1>${(calculateTotalAmountWithTax() - discount).toFixed(2)}</h1>
+                            <h1>${calculateTotalAmountWithTax()}</h1>
                           </div>
                         </div>
                       </div>
@@ -1713,6 +1934,7 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
                         price: product.price,
                         taxable: product.taxable,
                         Tax: product.Tax,
+                        Category: product.Category,
                         description: "",
                         replacement_reminder_date: null
                       });
@@ -1734,6 +1956,11 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
 
                   setSelectedProducts(updatedItems);
                   recalculateTaxes(updatedItems);
+                  
+                  // Recalculate labour
+                  const calculatedLabour = calculateLabour(updatedItems.filter(p => p.id));
+                  setLabour(calculatedLabour);
+                  
                   setProductSearchText("");
                   setSelectedPackage("");
                   setShowPackageModal(false);

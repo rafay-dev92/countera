@@ -251,7 +251,30 @@ const [labourBaseline, setLabourBaseline] = useState(null);
       
       // Calculate labour from products
       const calculatedLabour = calculateLabour(selectedProd.filter(p => p.id));
-      setLabour(calculatedLabour);
+      if (calculatedLabour > 0) {
+        setLabour(calculatedLabour);
+      } else {
+        const subtotalWithoutLabour = selectedProd
+          .filter((product) => product.id && !isLabourProduct(product))
+          .reduce((sum, product) => {
+            const price = parseFloat(product.price) || 0;
+            const quantity = parseFloat(product.quantity) || 0;
+            return sum + price * quantity;
+          }, 0);
+
+        const totalTaxAmount = Object.values(selectedInvoice?.appliedTaxes || {}).reduce(
+          (sum, tax) => sum + (parseFloat(tax?.tax_amount) || 0),
+          0
+        );
+
+        const invoiceTotal = parseFloat(selectedInvoice?.totalAmount) || 0;
+        const invoiceDiscount = parseFloat(selectedInvoice?.discount) || 0;
+
+        const remainingLabour = Number(
+          (invoiceTotal + invoiceDiscount - subtotalWithoutLabour - totalTaxAmount).toFixed(2)
+        );        
+        setLabour(remainingLabour > 0 ? remainingLabour : 0);
+      }
     }
   }, [state?.invoice?.viewData, resetForm]);
 
@@ -1074,7 +1097,12 @@ const distributeExcessToLabourProducts = (excessAmount) => {
     
   if (lump > currentTotal) {
     const excessAmount = (lump - currentTotal).toFixed(2);
-    distributeExcessToLabourProducts(excessAmount);
+    if (currentLabour > 0) {
+      distributeExcessToLabourProducts(excessAmount);
+    } else {
+      // console.log({excessAmount: parseFloat(excessAmount)});
+      setLabour(parseFloat(excessAmount));
+    }
     setDiscount(0);
   } else if (lump < currentTotal) {
     const difference = (currentTotal - lump).toFixed(2);
@@ -1761,7 +1789,7 @@ const handleResetLumSum = () => {
                             Labour
                           </span>
                           <span className="w-fit p-2 rounded-md basis-[33.33%]" >{ }</span>
-                          <span className="text-1xl p-2 w-fit text-right basis-[50%]">{labour.toFixed(2)}</span>
+                          <span className="text-1xl p-2 w-fit text-right basis-[50%]">{labour?.toFixed(2)}</span>
                         </div>
                        
                         <div className="flex justify-between p-2">

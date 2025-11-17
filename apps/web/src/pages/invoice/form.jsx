@@ -249,32 +249,35 @@ const [labourBaseline, setLabourBaseline] = useState(null);
       setInvoiceTaxes(selectedInvoice.appliedTaxes);
       setSelectedProducts(selectedProd);
       
+      setLabour(selectedInvoice.labour);
+      
       // Calculate labour from products
-      const calculatedLabour = calculateLabour(selectedProd.filter(p => p.id));
-      if (calculatedLabour > 0) {
-        setLabour(calculatedLabour);
-      } else {
-        const subtotalWithoutLabour = selectedProd
-          .filter((product) => product.id && !isLabourProduct(product))
-          .reduce((sum, product) => {
-            const price = parseFloat(product.price) || 0;
-            const quantity = parseFloat(product.quantity) || 0;
-            return sum + price * quantity;
-          }, 0);
 
-        const totalTaxAmount = Object.values(selectedInvoice?.appliedTaxes || {}).reduce(
-          (sum, tax) => sum + (parseFloat(tax?.tax_amount) || 0),
-          0
-        );
+      // const calculatedLabour = calculateLabour(selectedProd.filter(p => p.id));
+      // if (calculatedLabour > 0) {
+      //   setLabour(calculatedLabour);
+      // } else {
+      //   const subtotalWithoutLabour = selectedProd
+      //     .filter((product) => product.id && !isLabourProduct(product))
+      //     .reduce((sum, product) => {
+      //       const price = parseFloat(product.price) || 0;
+      //       const quantity = parseFloat(product.quantity) || 0;
+      //       return sum + price * quantity;
+      //     }, 0);
 
-        const invoiceTotal = parseFloat(selectedInvoice?.totalAmount) || 0;
-        const invoiceDiscount = parseFloat(selectedInvoice?.discount) || 0;
+      //   const totalTaxAmount = Object.values(selectedInvoice?.appliedTaxes || {}).reduce(
+      //     (sum, tax) => sum + (parseFloat(tax?.tax_amount) || 0),
+      //     0
+      //   );
 
-        const remainingLabour = Number(
-          (invoiceTotal + invoiceDiscount - subtotalWithoutLabour - totalTaxAmount).toFixed(2)
-        );        
-        setLabour(remainingLabour > 0 ? remainingLabour : 0);
-      }
+      //   const invoiceTotal = parseFloat(selectedInvoice?.totalAmount) || 0;
+      //   const invoiceDiscount = parseFloat(selectedInvoice?.discount) || 0;
+        
+      //   const remainingLabour = Number(
+      //     (invoiceTotal + invoiceDiscount - subtotalWithoutLabour - totalTaxAmount).toFixed(2)
+      //   );        
+      //   setLabour(remainingLabour > 0 ? remainingLabour : 0);
+      // }
     }
   }, [state?.invoice?.viewData, resetForm]);
 

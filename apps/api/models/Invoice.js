@@ -25,6 +25,11 @@ module.exports = (sequelize) => {
         allowNull: false,
         defaultValue: 0,
       },
+      labour: {
+        type: DataTypes.FLOAT,
+        allowNull: false,
+        defaultValue: 0,
+      },
       paymentStatus: {
         type: DataTypes.ENUM(
           InvoicePaymentStatus.PAID,

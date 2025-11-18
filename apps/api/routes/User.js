@@ -168,10 +168,72 @@ router.post("/login", async (req, res) => {
       expiresIn: 0.5 * 60 * 60,
     });
 
-    res.send({ token: token, sessionExpire: Date.now() + 0.5 * 60 * 60 * 1000 });
+    const refreshToken = jwt.sign(data, process.env.JWT_SECRET, {
+      expiresIn: 7 * 24 * 60 * 60, // 7 days
+    });
+
+    res.send({
+      token: token,
+      refreshToken: refreshToken,
+      sessionExpire: Date.now() + 0.5 * 60 * 60 * 1000
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Error login user" });
+  }
+});
+
+router.post("/refresh", async (req, res) => {
+  try {
+    const refreshToken = req.header("refresh-token");
+    const token = req.header("auth-token");
+
+    if (!refreshToken) {
+      return res.status(401).json({ message: "Refresh token is required" });
+    }
+
+    if (!token) {
+      return res.status(401).json({ message: "Auth token is required" });
+    }
+
+    // Verify refresh token
+    let refreshTokenData;
+    try {
+      refreshTokenData = jwt.verify(refreshToken, process.env.JWT_SECRET);
+    } catch (error) {
+      return res.status(401).json({ message: "Invalid or expired refresh token" });
+    }
+
+    // Optionally verify the old token (it might be expired, which is fine)
+    let oldTokenData;
+    try {
+      oldTokenData = jwt.verify(token, process.env.JWT_SECRET);
+      if (oldTokenData.user.id !== refreshTokenData.user.id) {
+        return res.status(401).json({ message: "Token mismatch" });
+      }
+    } catch (error) {
+      return res.status(401).json({ message: "Invalid or expired token" });
+    }
+
+    // Generate new access token
+    const data = {
+      user: {
+        id: refreshTokenData.user.id,
+      },
+    };
+
+    const newToken = jwt.sign(data, process.env.JWT_SECRET, {
+      expiresIn: 0.5 * 60 * 60,
+    });
+
+    res.send({
+      token: newToken,
+      refreshToken: refreshToken,
+      sessionExpire: Date.now() + 0.5 * 60 * 60 * 1000
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error refreshing token" });
   }
 });
 

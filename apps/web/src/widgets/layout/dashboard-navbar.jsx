@@ -32,6 +32,7 @@ export function DashboardNavbar() {
     if (!confirmLogout) return;
     dispatch({ type: 'RESET' })
     localStorage.removeItem('Token');
+    localStorage.removeItem('RefreshToken');
     localStorage.removeItem('sessionExp');
     navigate('/auth/sign-in');
   }

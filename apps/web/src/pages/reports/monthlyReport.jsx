@@ -28,10 +28,32 @@ const MonthlyReportPreview = React.forwardRef(({ filterValue, invoices, products
 
     const productTotals = productsCategories.map(category =>
         invoices.reduce((sum, invoice) => {
-            const matchedProduct = invoice.Products ? invoice.Products.find(p => p.Category?.name === category) : {};
-            const quantity = matchedProduct?.invoice_product?.quantity || 0;
-            const price = matchedProduct?.price || 0;
-            return sum + (price * quantity);
+            const matchedProduct = invoice.Products ? invoice.Products.filter(p => p.Category?.name === category) : {};
+            const isLaborCategory = category?.toLowerCase() === 'labor' || category?.toLowerCase() === 'labour';
+
+            if (isLaborCategory && matchedProduct.length === 0) {
+                return sum + (invoice?.labour || 0);
+            }
+            let totalPrice = 0;
+            matchedProduct.forEach(product => {
+                totalPrice += product.invoice_product.price * product.invoice_product.quantity;
+            });
+            return sum + totalPrice;
+        }, 0)
+    );
+
+    const productQuantities = productsCategories.map(category =>
+        invoices.reduce((sum, invoice) => {
+            const matchedProduct = invoice.Products ? invoice.Products.filter(p => p.Category?.name === category) : {};
+            const isLaborCategory = category?.toLowerCase() === 'labor' || category?.toLowerCase() === 'labour';
+            if (isLaborCategory && matchedProduct.length === 0) {
+                return sum + 1;
+            }
+            let quantity = 0;
+            matchedProduct.forEach(product => {
+                quantity += product.invoice_product.quantity;
+            });
+            return sum + quantity;
         }, 0)
     );
 
@@ -179,8 +201,20 @@ const MonthlyReportPreview = React.forwardRef(({ filterValue, invoices, products
                                         </Typography>
                                     </td>
                                     {productsCategories.map((category, idx) => {
-                                        const price = item.Products?.find(item => item.Category.name === category)?.price || 0;
-                                        const quantity = item.Products?.find(item => item.Category.name === category)?.invoice_product?.quantity || 0;
+                                        const isLaborCategory = category?.toLowerCase() === 'labor' || category?.toLowerCase() === 'labour';
+                                        const matchedProduct = item.Products?.filter(item => item.Category?.name === category);
+
+                                        let totalPrice = 0, quantity = 0;
+                                        if (isLaborCategory && matchedProduct.length === 0) {
+                                            totalPrice = item.labour || 0;
+                                            quantity = 1;
+                                        } else if (matchedProduct.length > 0) {
+                                            matchedProduct.forEach(product => {
+                                                totalPrice += product.invoice_product.price * product.invoice_product.quantity;
+                                                quantity += product.invoice_product.quantity;
+                                            });
+                                        }
+                                        
                                         return (
                                             <td key={idx} className="p-4 border-b border-blue-gray-50">
                                                 <Typography
@@ -189,9 +223,8 @@ const MonthlyReportPreview = React.forwardRef(({ filterValue, invoices, products
                                                     className="font-normal leading-none"
                                                 >
                                                     <div className="text-sm leading-5 text-blue-gray-700 whitespace-nowrap">
-                                                        <div><span className="font-medium">Price:</span> {price}</div>
                                                         <div><span className="font-medium">Quantity:</span> {quantity}</div>
-                                                        <div><span className="font-medium">Total:</span> {price * quantity}</div>
+                                                        <div><span className="font-medium">Total:</span> {totalPrice.toFixed(2)}</div>
                                                     </div>
                                                 </Typography>
                                             </td>
@@ -236,18 +269,55 @@ const MonthlyReportPreview = React.forwardRef(({ filterValue, invoices, products
                             </td>
 
                             <td className="p-4 border-t font-semibold text-blue-gray-700">
-                                {invoices.reduce((sum, item) => sum + item.paidAmount, 0).toFixed(2)}
+                                Paid: {invoices.reduce((sum, item) => sum + item.paidAmount, 0).toFixed(2)}
                             </td>
 
                             {productTotals.map((total, idx) => (
                                 <td key={idx} className="p-4 border-t font-semibold text-blue-gray-700">
-                                    {total.toFixed(2)}
+                                    ${total.toFixed(2)}
                                 </td>
                             ))}
 
                             {taxTotals.map((total, idx) => (
                                 <td key={idx} className="p-4 border-t font-semibold text-blue-gray-700">
-                                    {total.value.toFixed(2)}
+                                    ${total.value.toFixed(2)}
+                                </td>
+                            ))}
+                        </tr>
+
+                        {/* Second row for further details */}
+                        <tr className="bg-gray-100">
+                            <td></td>
+                            <td></td>
+                            <td className="p-4 border-t font-semibold text-blue-gray-700">
+                                {/* {!filterValue || filterValue === "" ?
+                                    invoices.reduce((sum, invoice) =>
+                                        sum + invoice.Payments.reduce((acc, payment) => acc + payment.paidAmount, 0)
+                                        , 0).toFixed(2)
+                                    :
+                                    invoices.reduce((sum, invoice) =>
+                                        sum + invoice.Payments.reduce((acc, payment) => acc + (payment.paymentMethod === filterValue ? payment.paidAmount : 0), 0)
+                                        , 0).toFixed(2)
+                                } */}
+                                --
+                            </td>
+
+                            <td className="p-4 border-t font-semibold text-blue-gray-700">
+                                --
+                            </td>
+                            <td className="p-4 border-t font-semibold text-blue-gray-700">
+                                Balance: {invoices.reduce((sum, item) => sum + item.totalAmount - item.paidAmount, 0).toFixed(2)}
+                            </td>
+
+                            {productQuantities.map((total, idx) => (
+                                <td key={idx} className="p-4 border-t font-semibold text-blue-gray-700">
+                                    {`${total} units`}
+                                </td>
+                            ))}
+
+                            {taxTotals.map((_, idx) => (
+                                <td key={idx} className="p-4 border-t font-semibold text-blue-gray-700">
+                                    --
                                 </td>
                             ))}
                         </tr>

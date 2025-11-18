@@ -249,9 +249,9 @@ const [labourBaseline, setLabourBaseline] = useState(null);
       setInvoiceTaxes(selectedInvoice.appliedTaxes);
       setSelectedProducts(selectedProd);
       
-      setLabour(selectedInvoice.labour);
-      
       // Calculate labour from products
+      const calculatedLabour = calculateLabour(selectedProd.filter(p => p.id));
+      setLabour(calculatedLabour > 0 ? calculatedLabour : selectedInvoice.labour);
 
       // const calculatedLabour = calculateLabour(selectedProd.filter(p => p.id));
       // if (calculatedLabour > 0) {
@@ -612,7 +612,7 @@ const distributeExcessToLabourProducts = (excessAmount) => {
 
     // Recalculate labour
     const calculatedLabour = calculateLabour(updatedItems.filter(p => p.id));
-    setLabour(calculatedLabour);
+    calculatedLabour > 0 ? setLabour(calculatedLabour) : setLabour(labour);
 
     // Add a new empty row if it's the last row and a product is selected
     const isLastRow = index === selectedProducts.length - 1;
@@ -700,7 +700,7 @@ const distributeExcessToLabourProducts = (excessAmount) => {
     
     // Recalculate labour
     const calculatedLabour = calculateLabour(updatedItems.filter(p => p.id));
-    setLabour(calculatedLabour);
+    calculatedLabour > 0 ? setLabour(calculatedLabour) : setLabour(labour);
     
     setSelectedProducts(updatedItems);
   };
@@ -932,12 +932,12 @@ const distributeExcessToLabourProducts = (excessAmount) => {
   // calculate total amount
   const calculateTotalAmount = () => {
     let total = 0;
-  selectedProducts
-    .filter((item) => !isLabourProduct(item))
-    .forEach((item) => {
-      total += parseFloat(calculateAmount(item.price, item.quantity));
-    });
-    return total.toFixed(2);
+    selectedProducts
+      .filter((item) => !isLabourProduct(item))
+      .forEach((item) => {
+        total += parseFloat(calculateAmount(item.price, item.quantity));
+      });
+      return total.toFixed(2);
   };
 
   // calculate tax amount

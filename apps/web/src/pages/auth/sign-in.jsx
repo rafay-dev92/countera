@@ -142,6 +142,9 @@ export function SignIn() {
       const user = await res.json();
       if (res.ok) {
         localStorage.setItem('Token', JSON.stringify(user.token));
+        if (user.refreshToken) {
+          localStorage.setItem('RefreshToken', JSON.stringify(user.refreshToken));
+        }
         localStorage.setItem('sessionExp', JSON.stringify(user.sessionExpire));
         try {
           const UserInfo = await getUserInfo(user.token);

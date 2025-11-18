@@ -8,6 +8,7 @@ import { fetchInvoices } from "@/services/fetchInvoices";
 import moment from 'moment-timezone';
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import { PaymentStatus } from "@/utils/enums/paymentStatuses";
 
 const schema = Yup.object().shape({
     month: Yup.string().required("Month is required"),
@@ -51,7 +52,7 @@ function MonthlyReportForm({ open, close, setReportData, onReportGenerated }) {
                 month: selectedMonth.getMonth(),
                 day: moment(selectedMonth).daysInMonth()
             }, timezone).endOf('day').utc().toDate();
-            const filters = { paymentStatus: ['Paid', 'Partially Paid'], startDate, endDate, isReport: true, order: 'ASC' }
+            const filters = { paymentStatus: [PaymentStatus.PAID, PaymentStatus.PARTIALLY_PAID], startDate, endDate, isReport: true, order: 'ASC' }
 
             // fetch invoices
             const fetchedInvoices = await fetchInvoices(state.userToken, null, null, filters);

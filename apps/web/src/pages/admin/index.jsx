@@ -19,6 +19,7 @@ import Users from "./components/users";
 import Permissions from "./components/permissions";
 import Vehicles from "./components/vehicles";
 import { UserRole } from "@/utils/enums/userRoles";
+import { refreshToken } from "@/services/refreshToken";
 
 function AdminPanel() {
   const { dispatch } = State();
@@ -136,17 +137,72 @@ function AdminPanel() {
   }, [])
 
   useEffect(() => {
-    setInterval(() => {
-      const sessionExp = JSON.parse(localStorage.getItem('sessionExp'));
-      if (Date.now() > sessionExp) {
+    // setInterval(() => {
+    //   const sessionExp = JSON.parse(localStorage.getItem('sessionExp'));
+    //   if (sessionExp && Date.now() > sessionExp) {
+    //     localStorage.removeItem('Token');
+    //     localStorage.removeItem('RefreshToken');
+    //     localStorage.removeItem('sessionExp');
+    //     localStorage.removeItem('User');
+    //     localStorage.removeItem('Business');
+    //     dispatch({ type: 'RESET' });
+    //     navigate('/auth/sign-in');
+    //   }
+    // }, 1000)
+
+    const refreshTokenInterval = setInterval(async () => {
+      try {
+        const token = JSON.parse(localStorage.getItem('Token'));
+        const refreshTokenValue = JSON.parse(localStorage.getItem('RefreshToken'));
+        
+        if (!token || !refreshTokenValue) {
+          return;
+        }
+
+        const response = await refreshToken(token, refreshTokenValue);
+        
+        if (response.ok) {
+          const data = await response.json();
+          
+          // Update token and refreshToken in localStorage
+          localStorage.setItem('Token', JSON.stringify(data.token));
+          if (data.refreshToken) {
+            localStorage.setItem('RefreshToken', JSON.stringify(data.refreshToken));
+          }
+          localStorage.setItem('sessionExp', JSON.stringify(data.sessionExpire));
+          
+          // Update token in state
+          dispatch({ type: 'SET_TOKEN', payload: data.token });
+        } else {
+          // If refresh fails, log out
+          const errorData = await response.json();
+          console.error('Token refresh failed:', errorData.message);
+          localStorage.removeItem('Token');
+          localStorage.removeItem('RefreshToken');
+          localStorage.removeItem('sessionExp');
+          localStorage.removeItem('User');
+          localStorage.removeItem('Business');
+          dispatch({ type: 'RESET' });
+          navigate('/auth/sign-in');
+        }
+      } catch (error) {
+        console.error('Error refreshing token:', error);
+        // On error, log out
         localStorage.removeItem('Token');
+        localStorage.removeItem('RefreshToken');
         localStorage.removeItem('sessionExp');
         localStorage.removeItem('User');
         localStorage.removeItem('Business');
         dispatch({ type: 'RESET' });
         navigate('/auth/sign-in');
       }
-    }, 1000)
+    }, 5 * 60 * 1000); // 5 minutes
+
+    // Cleanup intervals on unmount
+    return () => {
+      // clearInterval(sessionCheckInterval);
+      clearInterval(refreshTokenInterval);
+    };
   }, [])
 
   if (loading) {

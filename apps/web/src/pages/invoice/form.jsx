@@ -39,6 +39,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { updateInvoiceShadow } from "@/services/updateInvoiceShadow";
 import { useConfirm } from "@/context/confirmContext";
+import { PaymentStatus } from "@/utils/enums/paymentStatuses";
 
 const TABLE_HEAD = [
   "Product",
@@ -89,10 +90,10 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
   }]);
   const [totalAmount, setTotalAmount] = useState(0);
   const [discount, setDiscount] = useState(0);
-const [lumSum, setLumSum] = useState(0);
-const [isLumSumApplied, setIsLumSumApplied] = useState(false);
-const [labour, setLabour] = useState(0);
-const [labourBaseline, setLabourBaseline] = useState(null);
+  const [lumSum, setLumSum] = useState(0);
+  const [isLumSumApplied, setIsLumSumApplied] = useState(false);
+  const [labour, setLabour] = useState(0);
+  const [labourBaseline, setLabourBaseline] = useState(null);
   const [edit, setEdit] = useState(false);
   const [printInvoice, setPrintInvoice] = useState({});
   const [appliedTaxes, setAppliedTaxes] = useState({});
@@ -188,7 +189,7 @@ const [labourBaseline, setLabourBaseline] = useState(null);
       setSelectedCustomer(selectedInvoice.Customer)
       setSelectedVehicle(selectedInvoice.CustomerVehicle)
       setVehicleOdometer(selectedInvoice.CustomerVehicle?.odometer)
-
+      
       setValues({ ...selectedInvoice, ['customer']: selectedInvoice.CustomerId, ['vehicle']: selectedInvoice.CustomerVehicleId })
       let selectedProd = [...selectedProducts]
       selectedInvoice?.Products?.forEach((prod) => {
@@ -612,7 +613,7 @@ const distributeExcessToLabourProducts = (excessAmount) => {
 
     // Recalculate labour
     const calculatedLabour = calculateLabour(updatedItems.filter(p => p.id));
-    calculatedLabour > 0 ? setLabour(calculatedLabour) : setLabour(labour);
+    setLabour(calculatedLabour);
 
     // Add a new empty row if it's the last row and a product is selected
     const isLastRow = index === selectedProducts.length - 1;
@@ -685,7 +686,7 @@ const distributeExcessToLabourProducts = (excessAmount) => {
     const updatedItems = [...selectedProducts];
     updatedItems[index].price = Number(price);
 
-    if (printInvoice.paymentStatus === "PAID") {
+    if (printInvoice.paymentStatus === PaymentStatus.PAID) {
       // Check if the updated price exceeds the cash amount
       const isAccepted = isPriceUpdateAccepted(updatedItems);
       if (!isAccepted) {
@@ -700,8 +701,8 @@ const distributeExcessToLabourProducts = (excessAmount) => {
     
     // Recalculate labour
     const calculatedLabour = calculateLabour(updatedItems.filter(p => p.id));
-    calculatedLabour > 0 ? setLabour(calculatedLabour) : setLabour(labour);
-    
+    setLabour(calculatedLabour);
+
     setSelectedProducts(updatedItems);
   };
 
@@ -723,7 +724,7 @@ const distributeExcessToLabourProducts = (excessAmount) => {
 
     updatedItems.splice(index, 1);
 
-    if (printInvoice.paymentStatus === "PAID") {
+    if (printInvoice.paymentStatus === PaymentStatus.PAID) {
       const isAccepted = isProductRemovedAccepted(updatedItems);
       if (!isAccepted) {
         toast.error("update amount must be less than or equal to cash amount");

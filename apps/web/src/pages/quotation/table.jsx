@@ -164,7 +164,6 @@ export function Quotation() {
         })).filter(product => product.id);
 
         const taxes = Object.values(JSON.parse(quotationData.appliedTaxes || '{}')).map(tax => tax);
-        console.log("taxes: ", taxes)
         const data = {
             invoiceData: {
                 totalAmount: quotationData.totalAmount,
@@ -173,6 +172,7 @@ export function Quotation() {
                 comments: quotationData.comments,
                 notes: quotationData.notes,
                 discount: quotationData.discount,
+                labour: quotationData.labour,
                 BusinessId: state.business.id
             },
             "products": selectedProductIds,

@@ -19,6 +19,10 @@ import "/public/css/tailwind.css";
 import Context from "./state/Context";
 import { ConfirmProvider } from "./context/confirmContext";
 import { DeleteInvoiceConfirmProvider } from "./context/deleteInvoiceConfirmContext";
+import { setupFetchInterceptor } from "./utils/apiInterceptor";
+
+// Setup fetch interceptor to handle 401 responses globally
+setupFetchInterceptor();
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>

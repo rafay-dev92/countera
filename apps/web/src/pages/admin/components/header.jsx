@@ -4,6 +4,7 @@ import { State } from "@/state/Context";
 import { useNavigate } from "react-router-dom";
 import { UserCircleIcon } from "@heroicons/react/24/solid";
 import { useConfirm } from "@/context/confirmContext";
+import { logout as logoutUtil } from "@/utils/logout";
 
 const Header = () => {
     const confirm = useConfirm();
@@ -13,11 +14,7 @@ const Header = () => {
     const logout = async () => {
         const confirmLogout = await confirm("Are you sure you want to logout?");
         if (!confirmLogout) return;
-        dispatch({ type: 'RESET' })
-        localStorage.removeItem('Token');
-        localStorage.removeItem('RefreshToken');
-        localStorage.removeItem('sessionExp');
-        navigate('/auth/sign-in')
+        logoutUtil(dispatch, navigate);
     }
 
     return (

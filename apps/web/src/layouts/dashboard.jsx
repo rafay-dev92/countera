@@ -13,6 +13,7 @@ import { State } from "@/state/Context";
 import { getUserDetails } from "@/services/getUserDetails";
 import { refreshToken } from "@/services/refreshToken";
 import { toast } from "react-toastify";
+import { logout as logoutUtil } from "@/utils/logout";
 
 export function Dashboard() {
   const { dispatch } = State();
@@ -123,24 +124,12 @@ export function Dashboard() {
           // If refresh fails, log out
           const errorData = await response.json();
           console.error('Token refresh failed:', errorData.message);
-          localStorage.removeItem('Token');
-          localStorage.removeItem('RefreshToken');
-          localStorage.removeItem('sessionExp');
-          localStorage.removeItem('User');
-          localStorage.removeItem('Business');
-          dispatch({ type: 'RESET' });
-          navigate('/auth/sign-in');
+          logoutUtil(dispatch, navigate);
         }
       } catch (error) {
         console.error('Error refreshing token:', error);
         // On error, log out
-        localStorage.removeItem('Token');
-        localStorage.removeItem('RefreshToken');
-        localStorage.removeItem('sessionExp');
-        localStorage.removeItem('User');
-        localStorage.removeItem('Business');
-        dispatch({ type: 'RESET' });
-        navigate('/auth/sign-in');
+        logoutUtil(dispatch, navigate);
       }
     }, 5 * 60 * 1000); // 5 minutes
 

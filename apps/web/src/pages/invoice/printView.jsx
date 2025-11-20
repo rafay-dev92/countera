@@ -4,7 +4,7 @@ import PaidImg from "@/assets/paid.png";
 import "react-quill/dist/quill.snow.css";
 
 
-const printView = React.forwardRef(({ view, printInvoice, appliedTaxes, labour }, ref) => {
+const printView = React.forwardRef(({ view, printInvoice, appliedTaxes }, ref) => {
 
     const invoiceDate = new Date(printInvoice?.createdAt);
 
@@ -210,7 +210,7 @@ const printView = React.forwardRef(({ view, printInvoice, appliedTaxes, labour }
                         <div className="border-t border-x divide-y text-xs">
                             <div className="flex justify-between px-2 py-1">
                                 <span className="">Labour</span>
-                                <span className="">${labour}</span>
+                                <span className="">${printInvoice?.labour}</span>
                             </div>
                         </div>
 

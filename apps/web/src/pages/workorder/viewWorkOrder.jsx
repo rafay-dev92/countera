@@ -85,7 +85,6 @@ const ViewWorkOrder = ({ workOrderData, setWorkOrderData, componentRef, appliedT
         })).filter(product => product.id);
 
         const taxes = Object.values(JSON.parse(workOrderData.appliedTaxes)).map(tax => tax);
-        console.log("taxes: ", taxes)
         const data = {
             invoiceData: {
                 totalAmount: workOrderData.totalAmount,
@@ -94,6 +93,7 @@ const ViewWorkOrder = ({ workOrderData, setWorkOrderData, componentRef, appliedT
                 comments: workOrderData.comments,
                 notes: workOrderData.notes,
                 discount: workOrderData.discount,
+                labour: workOrderData.labour,
                 BusinessId: state.business.id
             },
             "products": selectedProductIds,
@@ -135,6 +135,7 @@ const ViewWorkOrder = ({ workOrderData, setWorkOrderData, componentRef, appliedT
                 comments: workOrderData.comments,
                 notes: workOrderData.notes,
                 discount: workOrderData.discount,
+                labour: workOrderData.labour,
                 CustomerId: workOrderData.CustomerId,
                 CustomerVehicleId: workOrderData.CustomerVehicleId,
                 BusinessId: state.business.id,

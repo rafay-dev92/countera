@@ -14,7 +14,7 @@ const printView = React.forwardRef(({ view, quotationData, appliedTaxes }, ref) 
 
     const calculateTotalAmount = (products) => {
         let total = 0;
-        products.forEach((item) => {
+        products.filter(item => item.Category?.name.toLowerCase() !== 'labor' && item.Category?.name.toLowerCase() !== 'labour')?.forEach((item) => {
             total += parseFloat(calculateAmount(item.quotation_product.price, item.quotation_product.quantity));
         });
         return total.toFixed(2);
@@ -107,7 +107,7 @@ const printView = React.forwardRef(({ view, quotationData, appliedTaxes }, ref) 
                                 <th className="border-y border-blue-gray-100 bg-blue-gray-50/50 p-2 w-[15%] text-center font-normal leading-none text-[13px]">Total Price</th>
                             </tr>
                         </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
+                        <tbody className="bg-white divide-y divide-gray-200 text-xs">
                             {quotationData.Product.map((item, index) => (
                                 <tr key={index}>
                                     <td className="p-2 border-b border-blue-gray-50 w-[5%] text-center">
@@ -204,6 +204,14 @@ const printView = React.forwardRef(({ view, quotationData, appliedTaxes }, ref) 
                                 </div>
                             ))}
                         </div>
+
+                        <div className="border-t border-x divide-y text-xs">
+                            <div className="flex justify-between px-2 py-1">
+                                <span className="">Labour</span>
+                                <span className="">${quotationData?.labour}</span>
+                            </div>
+                        </div>
+
                         <div className="border-t border-x divide-y text-xs">
                             <div className="flex justify-between px-2 py-1">
                                 <span className="">Total</span>

@@ -17,6 +17,7 @@ import {
 } from "@/context";
 import { State } from "@/state/Context";
 import { useConfirm } from "@/context/confirmContext";
+import { logout as logoutUtil } from "@/utils/logout";
 
 export function DashboardNavbar() {
   const confirm = useConfirm();
@@ -30,11 +31,7 @@ export function DashboardNavbar() {
   const logout = async () => {
     const confirmLogout = await confirm("Are you sure you want to logout?");
     if (!confirmLogout) return;
-    dispatch({ type: 'RESET' })
-    localStorage.removeItem('Token');
-    localStorage.removeItem('RefreshToken');
-    localStorage.removeItem('sessionExp');
-    navigate('/auth/sign-in');
+    logoutUtil(dispatch, navigate);
   }
 
   return (

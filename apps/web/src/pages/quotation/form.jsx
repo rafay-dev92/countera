@@ -250,9 +250,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
       // Calculate labour from products
       const calculatedLabour = calculateLabour(selectedProd.filter(p => p.id));
       setLabour(calculatedLabour > 0 ? calculatedLabour : (selectedQuotation.labour || 0));
-      // setSelectedQuotation(null)
     }
-
   }, [selectedQuotation])
 
   // Helper to identify labour products
@@ -292,7 +290,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
 
       const baselineLabourValue = calculateLabour(
         prevProducts.filter((product) => product.id)
-      );
+      ) || state.quotationViewData?.labour || 0;
 
       setLabourBaseline((prevBaseline) => {
         if (prevBaseline) {
@@ -953,7 +951,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
     const lump = parseFloat(lumSum) || 0;
     
     if (lump > currentTotal) {
-      const excessAmount = (lump - currentTotal).toFixed(2);
+      const excessAmount = parseFloat((lump - currentTotal).toFixed(2));
       if (currentLabour > 0) {
         distributeExcessToLabourProducts(excessAmount);
       } else {
@@ -1549,7 +1547,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
                       </div>
 
                       <div className="lg:basis-[50%] lg:max-w-[50%] border my-4 font-normal">
-                        {!edit && (
+                        {/* {!edit && ( */}
                           <div className="flex items-center justify-between px-2 lg:p-2 border-b-2 bg-yellow-300">
                             <div className="text-md">
                               <Input
@@ -1583,7 +1581,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
                               <Button className="" size="sm" color="red" onClick={handleResetLumSum}>Reset</Button>
                             )}
                           </div>
-                        )}
+                        {/* )} */}
                         <div className="flex justify-between p-2">
                           <div className="text-md">
                             <h1>Subtotal</h1>

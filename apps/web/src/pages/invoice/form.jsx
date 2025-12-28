@@ -253,32 +253,6 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
       // Calculate labour from products
       const calculatedLabour = calculateLabour(selectedProd.filter(p => p.id));
       setLabour(calculatedLabour > 0 ? calculatedLabour : selectedInvoice.labour);
-
-      // const calculatedLabour = calculateLabour(selectedProd.filter(p => p.id));
-      // if (calculatedLabour > 0) {
-      //   setLabour(calculatedLabour);
-      // } else {
-      //   const subtotalWithoutLabour = selectedProd
-      //     .filter((product) => product.id && !isLabourProduct(product))
-      //     .reduce((sum, product) => {
-      //       const price = parseFloat(product.price) || 0;
-      //       const quantity = parseFloat(product.quantity) || 0;
-      //       return sum + price * quantity;
-      //     }, 0);
-
-      //   const totalTaxAmount = Object.values(selectedInvoice?.appliedTaxes || {}).reduce(
-      //     (sum, tax) => sum + (parseFloat(tax?.tax_amount) || 0),
-      //     0
-      //   );
-
-      //   const invoiceTotal = parseFloat(selectedInvoice?.totalAmount) || 0;
-      //   const invoiceDiscount = parseFloat(selectedInvoice?.discount) || 0;
-        
-      //   const remainingLabour = Number(
-      //     (invoiceTotal + invoiceDiscount - subtotalWithoutLabour - totalTaxAmount).toFixed(2)
-      //   );        
-      //   setLabour(remainingLabour > 0 ? remainingLabour : 0);
-      // }
     }
   }, [state?.invoice?.viewData, resetForm]);
 
@@ -306,7 +280,6 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
       }
     }
 
-    // const taxes = 
     const data = {
       invoiceData: {
         ...values,
@@ -320,15 +293,6 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
       },
       products: selectedProductIds,
       taxes: Object.values(invoiceTaxes).map(invoiceTax => invoiceTax)
-      // taxes: Object.keys(appliedTaxes).map((key) => {
-      //   const [name, rate, type] = key.split("_");
-      //   return {
-      //     name,
-      //     rate: parseFloat(rate),
-      //     type,
-      //     amount: parseFloat(appliedTaxes[key].toFixed(2))
-      //   };
-      // })
     };
 
     try {
@@ -416,7 +380,6 @@ const MyPopUpForm = ({ refresh, setRefresh, close }) => {
       if (selected) {
         setPackagePreview(selected);
         setModalQuantity(1);
-        // setModalQuantity(selected.Product[0].package_product.quantity);
         setShowPackageModal(true);
       }
     }
@@ -459,7 +422,7 @@ const distributeExcessToLabourProducts = (excessAmount) => {
 
     const baselineLabourValue = calculateLabour(
       prevProducts.filter((product) => product.id)
-    );
+    ) || state.invoice.viewData?.labour || 0;
 
     setLabourBaseline((prevBaseline) => {
       if (prevBaseline) {
@@ -530,7 +493,6 @@ const distributeExcessToLabourProducts = (excessAmount) => {
         return product;
       }
 
-      const price = parseFloat(product.price) || 0;
       const safeQuantity = meta.safeQuantity;
       const currentTotal = meta.currentTotal;
       const allocatedAmount =
@@ -787,9 +749,6 @@ const distributeExcessToLabourProducts = (excessAmount) => {
         });
       });
   
-      // setQuoteTaxes(tempQuoteTaxes);
-      // setAppliedTaxes(productTaxes);
-  
       setAppliedTaxes(Object.values(tempInvoiceTaxes).reduce((acc, tax) => {
         const key = `${tax.TaxId}_${tax.tax_rate}_${tax.tax_type}`;
   
@@ -908,14 +867,6 @@ const distributeExcessToLabourProducts = (excessAmount) => {
       setVehicleOdometer(customer.Vehicle[0]?.odometer);
       setValues({ ...values, ['customer']: `${customer.firstName} ${customer.lastName}`, ['vehicle']: customer.Vehicle[0].id })
     };
-    // setSelectedProducts([{
-    //   product: "",
-    //   description: "",
-    //   quantity: 1,
-    //   price: 0,
-    //   taxable: false
-    // }]);
-    // setAppliedTaxes({});
     setShowCustomerSuggestions(false);
   };
 
@@ -944,12 +895,6 @@ const distributeExcessToLabourProducts = (excessAmount) => {
   // calculate tax amount
   const calculateTotalTaxAmount = () => {
     let totalTaxAmount = 0;
-    // if (Object.keys(appliedTaxes).length > 0) {
-    //   Object.keys(appliedTaxes).forEach((tax) => {
-    //     totalTaxAmount += parseFloat(appliedTaxes[tax].toFixed(2));
-    //   });
-    //   return totalTaxAmount;
-    // }
 
     if (Object.values(invoiceTaxes).length > 0) {
       Object.keys(invoiceTaxes).forEach((tax) => {
@@ -1100,7 +1045,7 @@ const distributeExcessToLabourProducts = (excessAmount) => {
     const lump = parseFloat(lumSum) || 0;
     
   if (lump > currentTotal) {
-    const excessAmount = (lump - currentTotal).toFixed(2);
+    const excessAmount = parseFloat((lump - currentTotal).toFixed(2));
     if (currentLabour > 0) {
       distributeExcessToLabourProducts(excessAmount);
     } else {
@@ -1109,7 +1054,7 @@ const distributeExcessToLabourProducts = (excessAmount) => {
     }
     setDiscount(0);
   } else if (lump < currentTotal) {
-    const difference = (currentTotal - lump).toFixed(2);
+    const difference = parseFloat((currentTotal - lump).toFixed(2));
     const maxDiscount = currentTotal * 0.25;
 
     if (difference > maxDiscount) {
@@ -1734,7 +1679,7 @@ const handleResetLumSum = () => {
 
 
                       <div className="lg:basis-[50%] lg:max-w-[50%] border my-1 font-normal">
-                        {!edit && (
+                        {/* {!edit && ( */}
                           <div className="flex items-center justify-between px-2 lg:p-2 border-b-2 bg-yellow-300">
                             <div className="text-md">
                               <Input
@@ -1768,7 +1713,7 @@ const handleResetLumSum = () => {
                               <Button className="" size="sm" color="red" onClick={handleResetLumSum}>Reset</Button>
                             )}
                           </div>
-                        )}
+                        {/* )} */}
                         <div className="flex justify-between p-2">
                           <div className="text-md">
                             <h1>Subtotal</h1>

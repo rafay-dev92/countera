@@ -256,7 +256,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedWorkOrder, setS
       // setSelectedQuotation(null)
     }
 
-  }, [selectedWorkOrder])
+  }, [selectedWorkOrder]);
 
   // Helper to identify labour products
   const isLabourProduct = (product) => {
@@ -295,7 +295,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedWorkOrder, setS
 
       const baselineLabourValue = calculateLabour(
         prevProducts.filter((product) => product.id)
-      );
+      ) || state.workorderViewData?.labour || 0;
 
       setLabourBaseline((prevBaseline) => {
         if (prevBaseline) {
@@ -932,7 +932,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedWorkOrder, setS
     const lump = parseFloat(lumSum) || 0;
     
     if (lump > currentTotal) {
-      const excessAmount = (lump - currentTotal).toFixed(2);
+      const excessAmount = parseFloat((lump - currentTotal).toFixed(2));
       if (currentLabour > 0) {
         distributeExcessToLabourProducts(excessAmount);
       } else {
@@ -1537,7 +1537,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedWorkOrder, setS
                       </div>
 
                       <div className="lg:basis-[50%] lg:max-w-[50%] border my-4 font-normal">
-                        {!edit && (
+                        {/* {!edit && ( */}
                           <div className="flex items-center justify-between px-2 lg:p-2 border-b-2 bg-yellow-300">
                             <div className="text-md">
                               <Input
@@ -1571,7 +1571,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedWorkOrder, setS
                               <Button className="" size="sm" color="red" onClick={handleResetLumSum}>Reset</Button>
                             )}
                           </div>
-                        )}
+                        {/* )} */}
 
                         <div className="flex justify-between p-2">
                           <div className="text-1xl">

@@ -20,7 +20,7 @@ import { State } from "@/state/Context";
 import { fetchUsers } from "@/services/fetchUsers";
 import { delUser } from "@/services/delUser";
 import { useConfirm } from "@/context/confirmContext";
-import { UserRole } from "@/utils/enums/userRoles";
+import { UserRole } from "@invoicify/shared";
 
 const TABLE_HEAD = ["Name", "Role", "Email", "Business", "Actions"];
 

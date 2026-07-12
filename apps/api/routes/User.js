@@ -6,7 +6,7 @@ const bcryptjs = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const fetchUser = require("../middlewares/fetchUser");
 const { Op } = require("sequelize");
-const UserRole = require("../utils/enums/userRoles");
+const { UserRole } = require("@invoicify/shared");
 require("dotenv").config();
 
 router.get("/", fetchUser, async (req, res) => {

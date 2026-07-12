@@ -2,7 +2,7 @@
 
 const { v4: uuidv4 } = require("uuid");
 const bcrypt = require("bcryptjs");
-const UserRole = require("../utils/enums/userRoles");
+const { UserRole } = require("@invoicify/shared");
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {

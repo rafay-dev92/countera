@@ -16,7 +16,7 @@ import { addWorkOrder } from "@/services/addWorkOrder";
 import { Printer, Edit, FileText, Trash2, CheckCheck, BookCopy, Copy } from "lucide-react"
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/solid';
 import { Spinner } from "@material-tailwind/react";
-import { WorkOrderStatus } from "@/utils/enums/workorderStatuses";
+import { WorkOrderStatus } from "@invoicify/shared";
 
 const ViewWorkOrder = ({ workOrderData, setWorkOrderData, componentRef, appliedTaxes, setEdit, close }) => {
     const confirm = useConfirm();

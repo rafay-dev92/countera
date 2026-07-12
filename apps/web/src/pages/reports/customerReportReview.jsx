@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Typography } from "@material-tailwind/react";
 import { State } from '@/state/Context';
 import { CheckBadgeIcon, StarIcon } from '@heroicons/react/24/solid';
-import { PaymentStatus } from '@/utils/enums/paymentStatuses';
+import { PaymentStatus } from "@invoicify/shared";
 
 const CustomerReportPreview = React.forwardRef(({ invoices, productsCategories, taxes }, ref) => {
     const INVOICE_TABLE_HEAD = ["Customer", "Invoice Number", "Invoice Date", "Subtotal", "Tax Total", "Total", "Balance", "Paid"];

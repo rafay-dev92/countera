@@ -8,7 +8,7 @@ import { fetchInvoices } from "@/services/fetchInvoices";
 import moment from 'moment-timezone';
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { PaymentStatus } from "@/utils/enums/paymentStatuses";
+import { PaymentStatus } from "@invoicify/shared";
 
 const schema = Yup.object().shape({
     month: Yup.string().required("Month is required"),

@@ -39,7 +39,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { updateInvoiceShadow } from "@/services/updateInvoiceShadow";
 import { useConfirm } from "@/context/confirmContext";
-import { PaymentStatus } from "@/utils/enums/paymentStatuses";
+import { PaymentStatus } from "@invoicify/shared";
 
 const TABLE_HEAD = [
   "Product",

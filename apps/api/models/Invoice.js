@@ -1,5 +1,5 @@
 const { DataTypes } = require("sequelize");
-const InvoicePaymentStatus = require("../utils/enums/invoiceStatuses");
+const { InvoicePaymentStatus } = require("@invoicify/shared");
 
 module.exports = (sequelize) => {
   const Invoice = sequelize.define(

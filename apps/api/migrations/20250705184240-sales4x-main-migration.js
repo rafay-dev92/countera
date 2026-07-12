@@ -1,7 +1,7 @@
 "use strict";
 
-const InvoicePaymentStatus = require("../utils/enums/invoiceStatuses");
-const UserRole = require("../utils/enums/userRoles");
+const { InvoicePaymentStatus } = require("@invoicify/shared");
+const { UserRole } = require("@invoicify/shared");
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {

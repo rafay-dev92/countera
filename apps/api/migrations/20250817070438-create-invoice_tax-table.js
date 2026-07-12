@@ -1,6 +1,6 @@
 "use strict";
 
-const InvoiceTaxType = require("../utils/enums/invoiceTaxType");
+const { InvoiceTaxType } = require("@invoicify/shared");
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {

@@ -8,7 +8,7 @@ import { State } from "@/state/Context";
 import { addUser } from "@/services/addUser";
 import { updateUser } from "@/services/updateUser";
 import { fetchPermissions } from "@/services/fetchPermissions";
-import { UserRole, userRolesForSelect } from "@/utils/enums/userRoles";
+import { UserRole, userRolesForSelect } from "@invoicify/shared";
 import { TimerReset } from "lucide-react";
 
 const schema = Yup.object().shape({

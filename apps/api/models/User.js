@@ -1,5 +1,5 @@
 const { DataTypes } = require("sequelize");
-const UserRole = require("../utils/enums/userRoles");
+const { UserRole } = require("@invoicify/shared");
 
 module.exports = (sequelize) => {
   const User = sequelize.define(

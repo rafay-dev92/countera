@@ -121,10 +121,11 @@ app.use("/api/payment", require("./routes/Payment"));
 app.use("/api/mail", require("./routes/Mail"));
 app.use("/api/sales", require("./routes/Sales"));
 
-app.listen(3000, (error) => {
+const port = process.env.PORT || 3000;
+app.listen(port, (error) => {
   if (!error)
     console.log(
-      `Server is Successfully Running, and App is listening on http://localhost:${3000}`
+      `Server is Successfully Running, and App is listening on http://localhost:${port}`
     );
   else console.log("Error occurred, server can't start", error);
 });

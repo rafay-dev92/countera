@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.turbo/
+.env
+.env.*
+*.log
+apps/api/uploads/
+apps/api/backups/
+apps/api/logs/
+apps/api/mysql_backup.cnf
+.DS_Store

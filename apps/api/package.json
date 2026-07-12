@@ -1,27 +1,28 @@
 {
-  "name": "sales4x-be",
+  "name": "@invoicify/api",
   "version": "1.0.0",
-  "description": "",
+  "description": "Invoicify REST API",
   "main": "app.js",
   "scripts": {
     "dev": "nodemon app.js",
     "start": "node app.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "db:generate": "npx sequelize-cli migration:generate --name $npm_config_name",
-    "db:migrate": "npx sequelize-cli db:migrate",
-    "db:seed": "npx sequelize-cli db:seed:all",
-    "db:undo-seed": "npx sequelize-cli db:seed:undo:all",
+    "typecheck": "tsc --noEmit",
+    "db:generate": "sequelize-cli migration:generate --name",
+    "db:migrate": "sequelize-cli db:migrate",
+    "db:seed": "sequelize-cli db:seed:all",
+    "db:undo-seed": "sequelize-cli db:seed:undo:all",
     "db:makemigrations": "node ./node_modules/sequelize-auto-migrations/bin/makemigration.js"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@invoicify/shared": "workspace:*",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "express-validator": "^7.0.1",
-    "fs": "^0.0.1-security",
     "jsonwebtoken": "^9.0.2",
     "moment": "^2.29.4",
     "moment-timezone": "^0.6.0",
@@ -34,6 +35,7 @@
     "sequelize-cli": "^6.6.2"
   },
   "devDependencies": {
-    "nodemon": "^3.0.1"
+    "nodemon": "^3.0.1",
+    "typescript": "^5"
   }
 }

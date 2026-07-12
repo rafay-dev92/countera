@@ -1,0 +1,192 @@
+import React, { useEffect, useState, useRef } from "react";
+import { useFormik } from "formik";
+import * as Yup from "yup";
+import { State } from "@/state/Context";
+import { toast } from "react-toastify";
+import { Dialog } from "@material-tailwind/react";
+import { fetchInvoices } from "@/services/fetchInvoices";
+import moment from 'moment-timezone';
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import { PaymentStatus } from "@/utils/enums/paymentStatuses";
+
+const schema = Yup.object().shape({
+    month: Yup.string().required("Month is required"),
+});
+
+function MonthlyReportForm({ open, close, setReportData, onReportGenerated }) {
+    const { state } = State();
+    const [isLoading, setIsLoading] = useState(false);
+    const handleClose = () => {
+        clearForm(formikProps);
+        close();
+    };
+
+    const showToastMessage = (type, message) => {
+
+        if (type === 'success') {
+            toast.success(message)
+        }
+        else if (type === 'info') {
+            toast.info(message)
+        }
+        else {
+            toast.error(message)
+        }
+    };
+
+    const onSubmit = async (values) => {
+        setIsLoading(true);
+        try {
+            const timezone = state.business.timezone;
+            const selectedMonth = new Date(values.month);
+
+            const startDate = moment.tz({
+                year: selectedMonth.getFullYear(),
+                month: selectedMonth.getMonth(),
+                day: 1
+            }, timezone).startOf('day').utc().toDate();
+
+            const endDate = moment.tz({
+                year: selectedMonth.getFullYear(),
+                month: selectedMonth.getMonth(),
+                day: moment(selectedMonth).daysInMonth()
+            }, timezone).endOf('day').utc().toDate();
+            const filters = { paymentStatus: [PaymentStatus.PAID, PaymentStatus.PARTIALLY_PAID], startDate, endDate, isReport: true, order: 'ASC' }
+
+            // fetch invoices
+            const fetchedInvoices = await fetchInvoices(state.userToken, null, null, filters);
+            const totalInvoices = await fetchedInvoices.json();
+
+            if (totalInvoices?.data.length === 0) {
+                showToastMessage('info', 'No invoices found for this month');
+                setIsLoading(false);
+                return;
+            }
+            setReportData(totalInvoices?.data);
+            if (onReportGenerated) onReportGenerated();
+            setIsLoading(false);
+            handleClose();
+        } catch (error) {
+            console.log(error)
+            setIsLoading(false);
+            showToastMessage('error', 'Something went wrong');
+            handleClose();
+        }
+    };
+
+    const clearForm = (formikProps) => {
+        formikProps.resetForm({
+            values: {
+                month: '',
+            },
+            errors: {
+                month: '',
+            },
+        });
+    };
+
+    const formikProps = useFormik({
+        initialValues: {
+            month: '',
+        },
+        validationSchema: schema,
+        onSubmit,
+    });
+
+    const {
+        values,
+        errors,
+        touched,
+        handleBlur,
+        handleChange,
+        handleSubmit,
+        setFieldValue,
+    } = formikProps;
+
+    return (
+        <>
+            <Dialog open={open} size="xs">
+                {open && (
+                    <form onSubmit={handleSubmit} autoComplete="new" >
+                        <div className="">
+                            <div className="bg-white rounded shadow-xl">
+                                <div className="flex items-center justify-between sticky bg-gradient-to-br from-gray-800 to-gray-700">
+                                    <div></div>
+                                    <div className="text-lg text-white font-medium" >
+                                        Monthly Report
+                                    </div>
+                                    <button
+                                        className="bg-transparent hover:bg-gray-800 text-white font-bold py-2 px-4 rounded"
+                                        onClick={handleClose}
+                                        type="button"
+                                    >
+                                        <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                            strokeWidth="1.5"
+                                            stroke="currentColor"
+                                            className="w-6 h-6"
+                                        >
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                d="M6 18L18 6M6 6l12 12"
+                                            />
+                                        </svg>
+                                    </button>
+                                </div>
+
+                                <div className="p-6 space-y-4">
+                                    <div className="flex flex-col gap-1">
+                                        <label className="font-bold">Month</label>
+                                        <DatePicker
+                                            id="month"
+                                            name="month"
+                                            selected={values.month}
+                                            onChange={(date) => setFieldValue("month", date)}
+                                            onBlur={handleBlur}
+                                            dateFormat="yyyy-MM"
+                                            showMonthYearPicker
+                                            className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
+                                        />
+                                        {(touched.month && errors.month) ? (
+                                            <div className="text-red-500">
+                                                {errors.month}
+                                            </div>
+                                        ) : (<div></div>)}
+                                    </div>
+                                </div>
+                                <div className="flex items-center justify-end space-x-2 sticky bg-gradient-to-br from-gray-800 to-gray-700">
+                                    <button
+                                        className=" w-32 bg-gray-600 hover:bg-gray-900 text-white font-bold py-2 px-4"
+                                        onClick={() => clearForm(formikProps)}
+                                        type="button"
+                                    >
+                                        Clear
+                                    </button>
+                                    <button
+                                        disabled={isLoading}
+                                        className="w-32 bg-gray-600 hover:bg-gray-900 text-white font-bold py-2 px-4"
+                                        type="submit"
+                                    >
+                                        {!isLoading ?
+                                            <span>Generate</span>
+                                            :
+                                            <div className="flex items-center justify-center h-fit">
+                                                <div className="w-6 h-6 border-4 border-gray-500 border-t-transparent rounded-full animate-spin"></div>
+                                            </div>
+                                        }
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                )}
+            </Dialog>
+        </>
+    );
+}
+
+export default MonthlyReportForm;

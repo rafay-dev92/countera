@@ -1,0 +1,173 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* global.css or index.css */
+::-webkit-scrollbar {
+    width: 6px;
+    /* Width of the scrollbar */
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: #888;
+    /* Thumb color */
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background-color: #555;
+    /* Thumb color on hover */
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    /* Track color */
+}
+
+/* global.css or index.css */
+
+/* X-axis (horizontal) scrollbar */
+::-webkit-scrollbar:horizontal {
+    height: 14px;
+    /* Thinnest possible height for horizontal scrollbar */
+}
+
+::-webkit-scrollbar-thumb:horizontal {
+    background-color: #888;
+    /* Thumb color */
+    /* border-radius: 10px; */
+    /* Rounded ends */
+}
+
+::-webkit-scrollbar-thumb:horizontal:hover {
+    background-color: #555;
+    /* Thumb color on hover */
+}
+
+::-webkit-scrollbar-track:horizontal {
+    background: #f1f1f1;
+    /* Track color */
+    /* border-radius: 10px; */
+    /* Rounded ends for track */
+}
+
+/* React Quill */
+
+.ql-editor p {
+    margin: 0;
+    @apply text-xs leading-3;
+}
+
+.quill-content p {
+    margin: 0;
+    @apply text-xs leading-3;
+}
+
+.ql-size-small {
+    @apply text-[9px];
+}
+
+.ql-size-large {
+    @apply text-base;
+}
+
+.ql-size-huge {
+    @apply text-lg;
+}
+
+
+/* .ql-line-height-1 {
+    @apply leading-none;
+}
+
+.ql-line-height-1\.5 {
+    line-height: 1.5;
+}
+
+.ql-line-height-2 {
+    line-height: 2;
+}
+
+.ql-line-height-2\.5 {
+    line-height: 2.5;
+}
+
+.ql-line-height-3 {
+    line-height: 3;
+} */
+
+
+
+/* .ql-lineheight-1 {
+    @apply leading-3;
+}
+
+.ql-lineheight-1\.5 {
+    line-height: 1.5;
+}
+
+.ql-lineheight-2 {
+    line-height: 2;
+}
+
+.ql-lineheight-2\.5 {
+    line-height: 2.5;
+}
+
+.ql-lineheight-3 {
+    line-height: 3;
+} 
+
+
+
+
+.ql-lineHeight {
+    width: 20px;
+}
+.ql-lineHeight .ql-picker-label > svg {
+    display: none;
+}
+.ql-lineHeight .ql-picker-item::before {
+    content: attr(data-label);
+}
+
+
+
+
+
+.line-height-normal {
+    line-height: normal;
+}
+.line-height-tight {
+    line-height: 1;
+}
+.line-height-comfortable {
+    line-height: 2;
+}
+.line-height-spacious {
+    line-height: 2.5;
+} */
+
+
+@media print {
+    html,
+    body {
+        width: 210mm;
+        margin: 0;
+        padding: 0;
+    }
+
+    .print-page {
+        page-break-after: always;
+        break-after: page;
+    }
+
+    .avoid-break {
+        page-break-inside: avoid;
+        break-inside: avoid;
+    }
+
+    @page {
+        size: A4;
+        margin: 0;
+    }
+}

@@ -1,0 +1,7 @@
+export const PaymentStatus = {
+  UNPAID: 'UNPAID',
+  PARTIALLY_PAID: 'PARTIALLY_PAID',
+  PAID: 'PAID',
+  REFUNDED: 'REFUNDED',
+  VOIDED: 'VOIDED',
+};

@@ -1,0 +1,17 @@
+export async function updateCustomerVehicle(id, data, token){
+    try {
+        const customerVehicle = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/customervehicle/update/${id}`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "auth-token": token
+            },
+            body: JSON.stringify(data)
+        })
+       
+        return customerVehicle;
+
+    } catch (error) {
+        console.log(error);
+    }
+}

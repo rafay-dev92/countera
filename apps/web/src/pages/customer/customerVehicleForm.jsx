@@ -1,0 +1,506 @@
+import React, { useState, useRef } from "react";
+import { useEffect } from "react";
+import { useFormik } from "formik";
+import * as Yup from "yup";
+import { Dialog, Spinner } from "@material-tailwind/react";
+import { toast } from 'react-toastify';
+import { State } from "@/state/Context";
+import { fetchVehicles } from "@/services/fetchVehicles";
+import { addCustomerVehicle } from "@/services/addCustomerVehicle";
+import { updateCustomerVehicle } from "@/services/updateCustomerVehicle";
+
+const schema = Yup.object().shape({
+    year: Yup.number().required("Year is required"),
+    make: Yup.string().required("Make is required"),
+    model: Yup.string().required("Model is required"),
+    odometer: Yup.number().required("Odometer is required"),
+    licenseNo: Yup.string(),
+    vinNo: Yup.string(),
+    engineSize: Yup.number(),
+    color: Yup.string(),
+    notes: Yup.string(),
+});
+
+const CustomerVehicleForm = ({ open, close, refresh, setRefresh, CustomerId, getCustomerDetails, selectedVehicle }) => {
+    const makeInputRef = useRef(null);
+    const modelInputRef = useRef(null);
+    const { state } = State();
+    const [isLoading, setIsLoading] = useState(false);
+    const [edit, setEdit] = useState(false);
+    const [vehicles, setVehicles] = useState([]);
+    const [showMakeSuggestions, setShowMakeSuggestions] = useState(false);
+    const [showModelSuggestions, setShowModelSuggestions] = useState(false);
+
+    // set the years to be displayed in the year select input
+    const startYear = import.meta.env.VITE_START_YEAR;
+    const endYear = new Date().getFullYear() + 1;
+    const years = [];
+    for (let year = endYear; year >= startYear; year--) {
+        years.push(year);
+    }
+
+    const showToastMessage = (type, message) => {
+        if (type === 'success') {
+            toast.success(message)
+        }
+        else if (type === 'info') {
+            toast.info(message)
+        }
+        else {
+            toast.error(message)
+        }
+    };
+
+    const handleClose = () => {
+        clearForm(formikProps);
+        setEdit(false);
+        close();
+    };
+
+    useEffect(() => {
+        if (selectedVehicle) {
+            setValues({
+                year: selectedVehicle.year,
+                make: selectedVehicle.make,
+                model: selectedVehicle.model,
+                odometer: selectedVehicle.odometer,
+                licenseNo: selectedVehicle.licenseNo,
+                vinNo: selectedVehicle.vinNo,
+                engineSize: selectedVehicle.engineSize,
+                color: selectedVehicle.color,
+                notes: selectedVehicle.notes,
+            });
+            setEdit(true);
+        } else {
+            setValues({
+                year: "",
+                make: "",
+                model: "",
+                odometer: "",
+                licenseNo: "",
+                vinNo: "",
+                engineSize: "",
+                color: "",
+                notes: "",
+            });
+            setEdit(false);
+        }
+    }, [selectedVehicle, open]);
+
+    const onSubmit = async (values) => {
+        setIsLoading(true);
+        try {
+            if (!edit) {
+                values = { ...values, CustomerId }
+                const res = await addCustomerVehicle(values, state.userToken)
+                const vehicle = await res.json();
+                if (res.status === 200) {
+                    showToastMessage('success', vehicle.message)
+                }
+                else if (res.status === 409) {
+                    showToastMessage('error', vehicle.message)
+                }
+            }
+            else {
+                const res = await updateCustomerVehicle(selectedVehicle.id, values, state.userToken)
+                const vehicle = await res.json();
+                if (res.status === 200) {
+                    showToastMessage('success', vehicle.message)
+                }
+                else if (res.status === 404) {
+                    showToastMessage('info', vehicle.message)
+                }
+                else if (res.status === 409) {
+                    showToastMessage('error', vehicle.message)
+                }
+            }
+
+            setRefresh(!refresh);
+            setIsLoading(false);
+            handleClose();
+        } catch (error) {
+            setIsLoading(false);
+            console.log(error)
+        }
+    };
+
+    // Fetch data from API when the component mounts
+    useEffect(() => {
+        getCustomerDetails();
+        getVehicles();
+    }, [refresh]);
+
+    const getVehicles = async () => {
+        try {
+            const vehicles = await fetchVehicles(state.userToken);
+            setVehicles(await vehicles.json());
+        } catch (error) {
+            console.log(error);
+            toast.error("Something went wrong")
+        }
+    }
+
+    const handleInputChange = (inputName, event) => {
+        const inputValue = event.target.value;
+        setValues({ ...values, [inputName]: inputValue });
+    };
+
+    const clearForm = (formikProps) => {
+        formikProps.resetForm({
+            values: {
+                year: "",
+                make: "",
+                model: "",
+                odometer: "",
+                licenseNo: "",
+                vinNo: "",
+                engineSize: "",
+                color: "",
+                notes: "",
+            },
+            errors: {
+                year: "",
+                make: "",
+                model: "",
+                odometer: "",
+                licenseNo: "",
+                vinNo: "",
+                engineSize: "",
+                color: "",
+                notes: "",
+            },
+        });
+        setEdit(false);
+    };
+
+    const formikProps = useFormik({
+        initialValues: {
+            year: "",
+            make: "",
+            model: "",
+            odometer: "",
+            licenseNo: "",
+            vinNo: "",
+            engineSize: "",
+            color: "",
+            notes: "",
+        },
+        validationSchema: schema,
+        onSubmit,
+    });
+
+    const {
+        values,
+        errors,
+        touched,
+        handleBlur,
+        handleChange,
+        handleSubmit,
+        setValues,
+    } = formikProps;
+
+    useEffect(() => {
+        function handleClickOutside(event) {
+            if (makeInputRef.current && !makeInputRef.current.contains(event.target)) {
+                setShowMakeSuggestions(false);
+            }
+            if (modelInputRef.current && !modelInputRef.current.contains(event.target)) {
+                setShowModelSuggestions(false);
+            }
+        }
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
+
+    return (
+        <Dialog className="bg-transparent p-0" open={open} size="lg">
+            {open && (
+                <form onSubmit={handleSubmit} autoComplete="new" >
+                    <div className="fixed -top-16 lg:top-0 left-0 w-full h-full flex justify-center items-center">
+                        <div className="bg-white rounded shadow-xl">
+                            <div className="flex items-center justify-between sticky bg-gradient-to-br from-gray-800 to-gray-700">
+                                <div></div>
+                                <div className="text-white text-center text-lg">
+                                    {edit ? "EDIT VEHICLE" : "NEW VEHICLE"}
+                                </div>
+                                <button
+                                    className="bg-transparent hover:bg-gray-800 text-white font-bold py-2 px-4 rounded"
+                                    onClick={handleClose}
+                                    type="button"
+                                >
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        strokeWidth="1.5"
+                                        stroke="currentColor"
+                                        className="w-6 h-6"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            d="M6 18L18 6M6 6l12 12"
+                                        />
+                                    </svg>
+                                </button>
+                            </div>
+
+                            <div className="p-6 2xl:w-[40vw] xl:w-[60vw] lg:w-[80vw] w-[80vw] max-h-[70vh] lg:max-h-[80vh] overflow-y-auto">
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                    <div className="col-span-1">
+                                        <label className="font-bold">Year</label> <br />
+                                        <select
+                                            className="w-full p-2 border border-gray-300 rounded-md text-black font-small"
+                                            id="year"
+                                            name="year"
+                                            type="number"
+                                            value={values.year}
+                                            onChange={handleChange}
+                                        >
+                                            <option value="">Select a year</option>
+                                            {years.map((year) => (
+                                                <option key={year} value={year}>{year}</option>
+                                            ))}
+                                        </select>
+
+                                        {(touched.year && errors.year) ? (
+                                            <div className="text-red-500">
+                                                {errors.year}
+                                            </div>
+                                        ) : (<div></div>)}
+                                    </div>
+
+                                    {/* <div className="col-span-full md:col-span-2 lg:col-span-2">
+                                        <div className="flex flex-col md:flex-row gap-4"> */}
+                                    <div ref={makeInputRef} className="relative flex-1">
+                                        <label className="font-bold">Make</label>
+                                        <input
+                                            className="w-full p-2 border border-gray-300 rounded-md text-black font-small"
+                                            id="make"
+                                            name="make"
+                                            type="text"
+                                            value={values.make}
+                                            onClick={() => setShowMakeSuggestions(true)}
+                                            onChange={handleChange}
+                                            onBlur={handleBlur}
+                                            autoComplete="off"
+                                        />
+                                        {showMakeSuggestions && (
+                                            <ul className="absolute left-0 right-0 z-50 bg-white border border-slate-700 w-full mt-1 overflow-y-auto min-h-24 max-h-48">
+                                                {vehicles.length > 0 ?
+                                                    [...new Set(vehicles.map(v => v.make))]
+                                                        .filter(make => make.toLowerCase().includes(values.make.toLowerCase()))
+                                                        .sort((a, b) => a.localeCompare(b))
+                                                        .map((make) => (
+                                                            <li
+                                                                key={make}
+                                                                className="cursor-pointer px-2 py-1 rounded-sm hover:bg-gray-200"
+                                                                onClick={() => {
+                                                                    setValues({ ...values, make: make, model: '' });
+                                                                    setShowMakeSuggestions(false);
+                                                                    setShowModelSuggestions(true);
+                                                                }}
+                                                            >
+                                                                {make}
+                                                            </li>
+                                                        ))
+                                                    :
+                                                    <Spinner className="mx-auto my-auto h-6 w-6 text-blue-900/50" />
+                                                }
+                                            </ul>
+                                        )}
+                                    </div>
+
+                                    <div ref={modelInputRef} className="relative col-span-1">
+                                        <label className="font-bold">Model</label>
+                                        <input
+                                            className="w-full p-2 border border-gray-300 rounded-md text-black font-small disabled:bg-gray-100"
+                                            id="model"
+                                            name="model"
+                                            type="text"
+                                            value={values.model}
+                                            onClick={() => values.make && setShowModelSuggestions(true)}
+                                            onChange={handleChange}
+                                            onBlur={handleBlur}
+                                            autoComplete="off"
+                                            disabled={!values.make}
+                                            placeholder={!values.make ? "Select make first" : "Select model"}
+                                        />
+                                        {showModelSuggestions && values.make && (
+                                            <ul className="absolute left-0 right-0 z-50 bg-white border border-slate-700 w-full mt-1 overflow-y-auto min-h-24 max-h-48">
+                                                {vehicles.length > 0 ?
+                                                    vehicles
+                                                        .filter(vehicle => (vehicle.make === values.make) && vehicle.model.toLowerCase().includes(values.model.toLowerCase()))
+                                                        .sort((a, b) => a.model.localeCompare(b.model))
+                                                        .map((vehicle) => (
+                                                            <li
+                                                                key={vehicle.id}
+                                                                className="cursor-pointer px-2 py-1 rounded-sm hover:bg-gray-200"
+                                                                onClick={() => {
+                                                                    setValues({ ...values, model: vehicle.model });
+                                                                    setShowModelSuggestions(false);
+                                                                }}
+                                                            >
+                                                                {vehicle.model}
+                                                            </li>
+                                                        ))
+                                                    :
+                                                    <Spinner className="mx-auto my-auto h-6 w-6 text-blue-900/50" />
+                                                }
+                                            </ul>
+                                        )}
+                                    </div>
+                                    {/* </div> */}
+
+                                    {/* {(touched.make && errors.make) ? (
+                                            <div className="text-red-500">
+                                                {errors.make}
+                                            </div>
+                                        ) : (<div></div>)} */}
+                                    {/* </div> */}
+                                    <div className="col-span-1">
+                                        <label className="font-bold">Odometer</label> <br />
+                                        <input
+                                            className="w-full p-2 border border-gray-300 rounded-md text-black font-small"
+                                            id="odometer"
+                                            name="odometer"
+                                            type="number"
+                                            value={values.odometer}
+                                            onChange={(e) => handleInputChange('odometer', e)}
+                                            onBlur={handleBlur}
+                                            autoComplete="off"
+                                        />
+                                        {touched.odometer && errors.odometer ? (
+                                            <div className="text-red-500 text-xs mt-1">
+                                                {errors.odometer}
+                                            </div>
+                                        ) : (<div></div>)}
+                                    </div>
+                                </div>
+
+                                {/* <div className="flex items-center justify-start space-x-4 mt-4"> */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+
+                                    <div className="col-span-1">
+                                        <label className="font-bold">License No.</label> <br />
+                                        <input
+                                            className="w-full p-2 border border-gray-300 rounded-md text-black font-small"
+                                            id="licenseNo"
+                                            name="licenseNo"
+                                            type="text"
+                                            value={values.licenseNo}
+                                            onChange={(e) => handleInputChange('licenseNo', e)}
+                                            onBlur={handleBlur}
+                                            autoComplete="off"
+                                        />
+                                        {touched.licenseNo && errors.licenseNo ? (
+                                            <div className="text-red-500">
+                                                {errors.licenseNo}
+                                            </div>
+                                        ) : (<div></div>)}
+                                    </div>
+                                    <div className="col-span-1">
+                                        <label className="font-bold">Vin No.</label> <br />
+                                        <input
+                                            className="w-full p-2 border border-gray-300 rounded-md text-black font-small"
+                                            id="vinNo"
+                                            name="vinNo"
+                                            type="text"
+                                            value={values.vinNo}
+                                            onChange={(e) => handleInputChange('vinNo', e)}
+                                            onBlur={handleBlur}
+                                            autoComplete="off"
+                                        />
+                                        {touched.vinNo && errors.vinNo ? (
+                                            <div className="text-red-500">
+                                                {errors.vinNo}
+                                            </div>
+                                        ) : (<div></div>)}
+                                    </div>
+                                    <div>
+                                        <label className="font-bold">Engine Size</label> <br />
+                                        <input
+                                            className="w-full p-2 border border-gray-300 rounded-md text-black font-small"
+                                            id="engineSize"
+                                            name="engineSize"
+                                            type="number"
+                                            value={values.engineSize}
+                                            onChange={(e) => handleInputChange('engineSize', e)}
+                                            onBlur={handleBlur}
+                                            autoComplete="off"
+                                        />
+                                        {touched.engineSize && errors.engineSize ? (
+                                            <div className="text-red-500">
+                                                {errors.engineSize}
+                                            </div>
+                                        ) : (<div></div>)}
+                                    </div>
+                                    <div>
+                                        <label className="font-bold">Color</label> <br />
+                                        <input
+                                            className="w-full p-2 border border-gray-300 rounded-md text-black font-small"
+                                            id="color"
+                                            name="color"
+                                            type="text"
+                                            value={values.color}
+                                            onChange={(e) => handleInputChange('color', e)}
+                                            onBlur={handleBlur}
+                                            autoComplete="off"
+                                        />
+                                        {touched.color && errors.color ? (
+                                            <div className="text-red-500">
+                                                {errors.color}
+                                            </div>
+                                        ) : (<div></div>)}
+                                    </div>
+                                </div>
+                                {/* </div> */}
+                                <div className="mt-4">
+                                    <label className="font-bold">Notes</label> <br />
+                                    <textarea
+                                        className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
+                                        id="notes"
+                                        name="notes"
+                                        value={values.notes}
+                                        onChange={handleChange}
+                                        onBlur={handleBlur}
+                                    />
+                                    {touched.notes && errors.notes && (
+                                        <div className="text-red-500">
+                                            {errors.notes}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                            <div className="flex items-center justify-end space-x-2 sticky bg-gradient-to-br from-gray-800 to-gray-700">
+                                <button
+                                    className=" w-32 bg-gray-600 hover:bg-gray-900 text-white font-bold py-2 px-4"
+                                    onClick={() => clearForm(formikProps)}
+                                    type="button"
+                                >
+                                    Clear
+                                </button>
+                                <button
+                                    disabled={isLoading}
+                                    className="w-32 bg-gray-600 hover:bg-gray-900 text-white font-bold py-2 px-4"
+                                    type="submit"
+                                >
+                                    {!isLoading ?
+                                        <span>{edit ? 'Update' : 'Save'}</span> :
+                                        <div className="flex items-center justify-center h-fit">
+                                            <div className="w-6 h-6 border-4 border-gray-500 border-t-transparent rounded-full animate-spin"></div>
+                                        </div>
+                                    }
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form >
+            )}
+        </Dialog >
+    );
+};
+export default CustomerVehicleForm;

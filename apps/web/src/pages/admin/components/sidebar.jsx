@@ -16,7 +16,7 @@ const Sidebar = ({ routes }) => {
         className="w-full py-6 px-2 text-2xl text-orange-500 italic font-bold text-center"
       // color={sidenavType === "dark" ? "white" : "blue-gray"}
       >
-        Sales4x Admin Panel
+        Invoicify Admin Panel
       </Typography>
       <div className="m-4">
         {routes.map(({ layout, title, pages }, key) => (

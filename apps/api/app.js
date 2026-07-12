@@ -48,9 +48,9 @@ cron.schedule("0 0 * * *", () => {
 
       // Send email on failure
       const mailOptions = {
-        from: `"Sales4x Backup" <${process.env.GMAIL_SMTP_EMAIL}>`,
+        from: `"Invoicify Backup" <${process.env.GMAIL_SMTP_EMAIL}>`,
         to: process.env.BACKUP_ALERT_EMAIL || process.env.GMAIL_SMTP_EMAIL,
-        subject: 'Sales4x Backup Failed',
+        subject: 'Invoicify Backup Failed',
         text: errorMsg,
         html: `<p>${errorMsg}</p>`
       };
@@ -77,22 +77,20 @@ cron.schedule('0 9 * * *', () => {
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+// Production origins come from CORS_ORIGINS (comma-separated) in .env;
+// localhost defaults keep local dev working without configuration.
 const corsOptions = {
   origin: [
     "http://localhost:5173",
-    "https://sales4x-fe.vercel.app",
-    "http://31.97.138.15",
-    "http://31.97.138.15:5173",
     "http://localhost:3000",
-    "http://easywebdeals.com",
-    "https://easywebdeals.com"
+    ...(process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(",").map((o) => o.trim()) : []),
   ],
 };
 app.use(cors(corsOptions));
 
 app.get("/", (req, res) => {
   res.status(200);
-  res.send("Hello from Sales4X API");
+  res.send("Hello from Invoicify API");
 });
 app.use(
   "/uploads/business",

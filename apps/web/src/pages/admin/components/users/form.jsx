@@ -11,7 +11,7 @@ import { addUser } from "@/services/addUser";
 import { updateUser } from "@/services/updateUser";
 import { fetchPermissions } from "@/services/fetchPermissions";
 import PermissionForm from "../permissions/form";
-import { UserRole, userRolesForSelect } from "@invoicify/shared";
+import { UserRole, userRolesForSelect } from "@countera/shared";
 import { TimerReset } from "lucide-react";
 
 const schema = Yup.object().shape({

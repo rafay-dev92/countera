@@ -1,3 +1,3 @@
-# @invoicify/web
+# @countera/web
 
-Invoicify web app (React + Vite). Part of the Invoicify monorepo — see the root README.
+Countera web app (React + Vite). Part of the Countera monorepo — see the root README.

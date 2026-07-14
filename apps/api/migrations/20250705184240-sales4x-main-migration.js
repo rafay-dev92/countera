@@ -1,7 +1,7 @@
 "use strict";
 
-const { InvoicePaymentStatus } = require("@invoicify/shared");
-const { UserRole } = require("@invoicify/shared");
+const { InvoicePaymentStatus } = require("@countera/shared");
+const { UserRole } = require("@countera/shared");
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {

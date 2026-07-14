@@ -18,7 +18,7 @@ import Businesses from "./components/businesses";
 import Users from "./components/users";
 import Permissions from "./components/permissions";
 import Vehicles from "./components/vehicles";
-import { UserRole } from "@invoicify/shared";
+import { UserRole } from "@countera/shared";
 import { refreshToken } from "@/services/refreshToken";
 import { logout as logoutUtil } from "@/utils/logout";
 

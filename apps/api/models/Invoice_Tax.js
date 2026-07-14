@@ -1,5 +1,5 @@
 const { DataTypes } = require("sequelize");
-const { InvoiceTaxType } = require("@invoicify/shared");
+const { InvoiceTaxType } = require("@countera/shared");
 
 module.exports = (sequelize) => {
   const Invoice_Tax = sequelize.define(

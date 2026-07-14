@@ -48,9 +48,9 @@ cron.schedule("0 0 * * *", () => {
 
       // Send email on failure
       const mailOptions = {
-        from: `"Invoicify Backup" <${process.env.GMAIL_SMTP_EMAIL}>`,
+        from: `"Countera Backup" <${process.env.GMAIL_SMTP_EMAIL}>`,
         to: process.env.BACKUP_ALERT_EMAIL || process.env.GMAIL_SMTP_EMAIL,
-        subject: 'Invoicify Backup Failed',
+        subject: 'Countera Backup Failed',
         text: errorMsg,
         html: `<p>${errorMsg}</p>`
       };
@@ -90,7 +90,7 @@ app.use(cors(corsOptions));
 
 app.get("/", (req, res) => {
   res.status(200);
-  res.send("Hello from Invoicify API");
+  res.send("Hello from Countera API");
 });
 app.use(
   "/uploads/business",

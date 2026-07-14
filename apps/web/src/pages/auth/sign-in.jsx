@@ -11,7 +11,7 @@ import { signIn } from "@/services/signIn";
 import { toast } from 'react-toastify';
 import { getUserDetails } from "@/services/getUserDetails";
 import { fetchBusinessesForEmail } from "@/services/fetchBusinessesForEmail";
-import { UserRole } from "@invoicify/shared";
+import { UserRole } from "@countera/shared";
 import ReCAPTCHA from "react-google-recaptcha";
 
 export function SignIn() {

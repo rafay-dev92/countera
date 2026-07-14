@@ -1,7 +1,7 @@
 {
-  "name": "@invoicify/api",
+  "name": "@countera/api",
   "version": "1.0.0",
-  "description": "Invoicify REST API",
+  "description": "Countera REST API",
   "main": "app.js",
   "scripts": {
     "dev": "nodemon app.js",
@@ -17,7 +17,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@invoicify/shared": "workspace:*",
+    "@countera/shared": "workspace:*",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",

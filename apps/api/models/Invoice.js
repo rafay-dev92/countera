@@ -1,5 +1,5 @@
 const { DataTypes } = require("sequelize");
-const { InvoicePaymentStatus } = require("@invoicify/shared");
+const { InvoicePaymentStatus } = require("@countera/shared");
 
 module.exports = (sequelize) => {
   const Invoice = sequelize.define(

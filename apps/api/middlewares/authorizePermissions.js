@@ -1,5 +1,5 @@
 const { User } = require("../models");
-const { UserRole } = require("@invoicify/shared");
+const { UserRole } = require("@countera/shared");
 
 function authorizePermission(requiredPermission) {
   return async (req, res, next) => {

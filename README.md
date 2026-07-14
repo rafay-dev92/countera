@@ -1,6 +1,8 @@
-# Invoicify
+# Countera
 
-Auto-shop invoicing and work-order management: invoices, quotations, work orders, inspections, vehicles, appointments, payments, and multi-business role-based access.
+Open-source business operations platform — do more with less clicks. Invoicing, quoting, customers, products and inventory, payments, and multi-user role-based access, with domain plugins that extend the core for specific industries (e.g. the vehicle pack: work orders, inspections, vehicles, appointments).
+
+Roadmap: AI document parsing (feed in supplier invoices, inventory updates itself) and a first-class plugin API.
 
 ## Structure
 
@@ -8,27 +10,27 @@ pnpm workspaces + Turborepo monorepo:
 
 | Package | Path | What it is |
 |---|---|---|
-| `@invoicify/api` | `apps/api` | Express 4 + Sequelize (MySQL) REST API |
-| `@invoicify/web` | `apps/web` | React 18 + Vite SPA (Material Tailwind) |
-| `@invoicify/shared` | `packages/shared` | Shared TypeScript package (domain enums), built with tsup to dual CJS/ESM |
+| `@countera/api` | `apps/api` | Express 4 + Sequelize (MySQL) REST API |
+| `@countera/web` | `apps/web` | React 18 + Vite SPA (Material Tailwind) |
+| `@countera/shared` | `packages/shared` | Shared TypeScript package (domain enums), built with tsup to dual CJS/ESM |
 
 ## Getting started
 
 ```bash
 pnpm install
-pnpm build          # builds @invoicify/shared (and the web bundle)
+pnpm build          # builds @countera/shared (and the web bundle)
 pnpm dev            # runs shared (watch) + api (nodemon) + web (vite) via turbo
 ```
 
-Each app reads its own `.env` (`apps/api/.env`, `apps/web/.env`) — see the app code for the variables used. The API needs `@invoicify/shared` built at least once before `node`/`sequelize-cli` commands work (`pnpm dev`/`pnpm build` handle this).
+Each app reads its own `.env` (`apps/api/.env`, `apps/web/.env`) — see the app code for the variables used. The API needs `@countera/shared` built at least once before `node`/`sequelize-cli` commands work (`pnpm dev`/`pnpm build` handle this).
 
 ## Database
 
 ```bash
 pnpm db:migrate                                   # run migrations
-pnpm --filter @invoicify/api db:seed              # seed
-pnpm --filter @invoicify/api db:generate -- <name>  # new empty migration
-pnpm --filter @invoicify/api db:makemigrations    # auto-generate from model changes
+pnpm --filter @countera/api db:seed              # seed
+pnpm --filter @countera/api db:generate -- <name>  # new empty migration
+pnpm --filter @countera/api db:makemigrations    # auto-generate from model changes
 ```
 
 Never rename existing migration files — production `SequelizeMeta` tracks them by filename (this is why `20250705184240-sales4x-main-migration.js` keeps its historical name).

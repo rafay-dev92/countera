@@ -17,7 +17,7 @@ importers:
 
   apps/api:
     dependencies:
-      '@invoicify/shared':
+      '@countera/shared':
         specifier: workspace:*
         version: link:../../packages/shared
       bcryptjs:
@@ -75,12 +75,12 @@ importers:
 
   apps/web:
     dependencies:
+      '@countera/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
       '@heroicons/react':
         specifier: 2.0.18
         version: 2.0.18(react@18.2.0)
-      '@invoicify/shared':
-        specifier: workspace:*
-        version: link:../../packages/shared
       '@material-tailwind/react':
         specifier: 2.1.4
         version: 2.1.4(react-dom@18.2.0(react@18.2.0))(react@18.2.0)

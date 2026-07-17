@@ -177,113 +177,154 @@ export function SignIn() {
   };
 
   if (loading) {
-    return <Spinner className="mx-auto mt-[40vh] h-10 w-10 text-gray-900/50" />
+    return <Spinner className="mx-auto mt-[40vh] h-10 w-10 text-slate-400" />
   }
 
   return (
-    <section className="w-full pt-24 h-screen">
-      <div className="text-center">
-        <Typography variant="h2" className="font-bold mb-4">Sign In</Typography>
-        <Typography variant="paragraph" color="blue-gray" className="text-lg font-normal">
+    <section className="flex min-h-screen flex-col items-center justify-center px-4 py-12">
+      <div className="mb-2 flex items-center gap-2.5">
+        <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-teal-700 text-lg font-bold text-white">
+          C
+        </span>
+        <span className="text-xl font-semibold tracking-tight text-slate-900">Countera</span>
+      </div>
+      <p className="mb-7 text-sm text-slate-500">Business finances, in one place.</p>
+
+      <div className="w-full max-w-[400px] rounded-xl border border-slate-200 bg-white p-7 shadow-sm">
+        <h1 className="mb-1 text-base font-semibold text-slate-900">Sign in to your business</h1>
+        <p className="mb-6 text-[13px] text-slate-500">
           {step === 1 && "Enter your email to continue."}
           {step === 2 && "Select your business."}
           {step === 3 && "Enter your password."}
-        </Typography>
-      </div>
-      <form className="mt-8 mb-2 mx-auto w-80 max-w-screen-lg lg:w-1/4" onKeyDown={handleKeyDown}>
-        <div className="mb-1 flex flex-col gap-6">
-          {step === 1 && (
-            <>
-              <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
-                Your email
-              </Typography>
-              <Input
-                size="lg"
-                placeholder="name@mail.com"
-                className=" !border-t-blue-gray-200 focus:!border-t-gray-900"
-                labelProps={{
-                  className: "before:content-none after:content-none",
-                }}
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-              <div className="mt-2">
+        </p>
+
+        <form onKeyDown={handleKeyDown} onSubmit={(e) => e.preventDefault()}>
+          <div className="flex flex-col gap-5">
+            {step === 1 && (
+              <>
+                <div>
+                  <label className="mb-1.5 block text-[13px] font-medium text-slate-700">
+                    Email
+                  </label>
+                  <Input
+                    size="lg"
+                    color="teal"
+                    label="name@mail.com"
+                    labelProps={{ className: "peer-focus:hidden peer-placeholder-shown:hidden hidden" }}
+                    className="!border !border-slate-300 bg-white placeholder:text-slate-400 focus:!border-teal-600 focus:!border-t-teal-600 !border-t-slate-300"
+                    placeholder="name@mail.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                </div>
                 <ReCAPTCHA
-                  sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY} // put your site key in .env
+                  sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
                   onChange={(value) => setCaptchaValue(value)}
                 />
-              </div>
-              <Button onClick={handleCheckEmail} className="mt-2" fullWidth>
-                Next
-              </Button>
-            </>
-          )}
-          {step === 2 && (
-            <>
-              <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
-                Select a business
-              </Typography>
-              <div className="flex flex-col gap-2">
-                {businesses.map((b) => (
-                  <label key={b.id} className="flex items-center gap-2 cursor-pointer">
-                    <Radio
-                      name="business"
-                      color="blue"
-                      checked={selectedBusiness === b.id}
-                      onChange={() => handleBusinessSelect(b.id)}
-                    />
-                    <span className="font-bold">{b.name}</span>
-                    <span className="text-xs text-gray-500">{b.email}</span>
-                  </label>
-                ))}
-              </div>
-              <div className="flex gap-2 mt-2">
-                <Button onClick={handleBack} variant="outlined" fullWidth>
-                  Back
-                </Button>
-                <Button onClick={handleNextAfterBusiness} fullWidth>
-                  Next
-                </Button>
-              </div>
-            </>
-          )}
-          {step === 3 && (
-            <>
-              <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
-                Password
-              </Typography>
-              <div className="relative w-full">
-                <Input
-                  type={showPassword ? "text" : "password"}
-                  size="lg"
-                  placeholder="********"
-                  className="!border-t-blue-gray-200 focus:!border-t-gray-900 pr-10"
-                  labelProps={{
-                    className: "before:content-none after:content-none",
-                  }}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  inputRef={passwordInputRef}
-                />
-                <span
-                  className="absolute top-1/2 right-3 transform -translate-y-1/2 cursor-pointer text-gray-600"
-                  onClick={() => setShowPassword(!showPassword)}
+                <Button
+                  onClick={handleCheckEmail}
+                  fullWidth
+                  className="bg-teal-700 py-2.5 text-sm font-medium normal-case shadow-none hover:bg-teal-800 hover:shadow-none"
                 >
-                  {showPassword ? "hide" : "show"}
-                </span>
-              </div>              
-              <div className="flex gap-2 mt-6">
-                <Button onClick={handleBack} variant="outlined" fullWidth>
-                  Back
+                  Continue
                 </Button>
-                <Button onClick={handleSignIn} fullWidth disabled={!password}>
-                  Sign In
-                </Button>
-              </div>
-            </>
-          )}
-        </div>
-      </form>
+              </>
+            )}
+            {step === 2 && (
+              <>
+                <div className="flex flex-col gap-2">
+                  {businesses.map((b) => (
+                    <label
+                      key={b.id}
+                      className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 transition-colors ${
+                        selectedBusiness === b.id
+                          ? "border-teal-600 bg-teal-50/60"
+                          : "border-slate-200 hover:border-slate-300"
+                      }`}
+                    >
+                      <Radio
+                        name="business"
+                        color="teal"
+                        checked={selectedBusiness === b.id}
+                        onChange={() => handleBusinessSelect(b.id)}
+                      />
+                      <span className="text-sm font-medium text-slate-900">{b.name}</span>
+                      <span className="text-xs text-slate-500">{b.email}</span>
+                    </label>
+                  ))}
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={handleBack}
+                    variant="outlined"
+                    fullWidth
+                    className="border-slate-300 py-2.5 text-sm font-medium normal-case text-slate-700"
+                  >
+                    Back
+                  </Button>
+                  <Button
+                    onClick={handleNextAfterBusiness}
+                    fullWidth
+                    className="bg-teal-700 py-2.5 text-sm font-medium normal-case shadow-none hover:bg-teal-800 hover:shadow-none"
+                  >
+                    Continue
+                  </Button>
+                </div>
+              </>
+            )}
+            {step === 3 && (
+              <>
+                <div>
+                  <div className="mb-1.5 flex items-center justify-between">
+                    <label className="block text-[13px] font-medium text-slate-700">
+                      Password
+                    </label>
+                    <button
+                      type="button"
+                      className="text-xs font-medium text-teal-700 hover:underline"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? "Hide" : "Show"}
+                    </button>
+                  </div>
+                  <Input
+                    type={showPassword ? "text" : "password"}
+                    size="lg"
+                    color="teal"
+                    label="Password"
+                    labelProps={{ className: "peer-focus:hidden peer-placeholder-shown:hidden hidden" }}
+                    className="!border !border-slate-300 bg-white placeholder:text-slate-400 focus:!border-teal-600 focus:!border-t-teal-600 !border-t-slate-300"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    inputRef={passwordInputRef}
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={handleBack}
+                    variant="outlined"
+                    fullWidth
+                    className="border-slate-300 py-2.5 text-sm font-medium normal-case text-slate-700"
+                  >
+                    Back
+                  </Button>
+                  <Button
+                    onClick={handleSignIn}
+                    fullWidth
+                    disabled={!password}
+                    className="bg-teal-700 py-2.5 text-sm font-medium normal-case shadow-none hover:bg-teal-800 hover:shadow-none"
+                  >
+                    Sign in
+                  </Button>
+                </div>
+              </>
+            )}
+          </div>
+        </form>
+      </div>
+
+      <p className="mt-7 text-xs text-slate-400">© {new Date().getFullYear()} Countera</p>
     </section>
   );
 }

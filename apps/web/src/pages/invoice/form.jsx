@@ -1165,7 +1165,7 @@ const handleResetLumSum = () => {
                           <div className="flex items-center pl-2">
                             <label className="font-bold">Customer</label>
                             <IconButton variant="text" onClick={() => setIsCustomerFormOpen(true)}>
-                              <PlusCircleIcon className="h-5 w-5 text-blue-600 cursor-pointer" />
+                              <PlusCircleIcon className="h-5 w-5 text-teal-700 cursor-pointer" />
                             </IconButton>
                           </div>
                           <div className="px-2 relative">
@@ -1270,7 +1270,7 @@ const handleResetLumSum = () => {
                               <div className="flex items-center pl-2">
                                 <label className="font-bold">Vehicle</label>
                                 <IconButton variant="text" onClick={() => selectedCustomer && setIsCustomerVehicleFormOpen(true)}>
-                                  <PlusCircleIcon className="h-5 w-5 text-blue-600 cursor-pointer" />
+                                  <PlusCircleIcon className="h-5 w-5 text-teal-700 cursor-pointer" />
                                 </IconButton>
                               </div>
                               <div className="px-2">
@@ -1380,7 +1380,7 @@ const handleResetLumSum = () => {
                                       onClick={() => setVehicleOdometer(selectedVehicle?.odometer)}
                                       disabled={String(vehicleOdometer) === String(selectedVehicle?.odometer)}
                                     >
-                                      <ArrowUturnLeftIcon className="h-5 w-5 text-blue-600 cursor-pointer" />
+                                      <ArrowUturnLeftIcon className="h-5 w-5 text-teal-700 cursor-pointer" />
                                     </IconButton>
                                   </Tooltip>
                                 </div>
@@ -1537,7 +1537,7 @@ const handleResetLumSum = () => {
                                                     <Button
                                                       className="rounded"
                                                       size="sm"
-                                                      color="blue"
+                                                      color="teal"
                                                       onClick={() => {
                                                         setShowProductSuggestions(false);
                                                         dispatch({
@@ -1559,7 +1559,7 @@ const handleResetLumSum = () => {
                                             <Button
                                               className="rounded"
                                               size="sm"
-                                              color="blue"
+                                              color="teal"
                                               onClick={() => {
                                                 setShowProductSuggestions(false);
                                                 dispatch({
@@ -1708,7 +1708,7 @@ const handleResetLumSum = () => {
                               />
                             </div>
                             {!isLumSumApplied ? (
-                              <Button className="" disabled={lumSum === 0} size="sm" color="blue" onClick={handleLumSum}>Apply</Button>
+                              <Button className="" disabled={lumSum === 0} size="sm" color="teal" onClick={handleLumSum}>Apply</Button>
                             ) : (
                               <Button className="" size="sm" color="red" onClick={handleResetLumSum}>Reset</Button>
                             )}
@@ -1943,7 +1943,7 @@ const handleResetLumSum = () => {
                   setShowPackageModal(false);
                   setPackagePreview(null);
                 }}
-                className={`px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 ${modalQuantity < 1 ? "opacity-50 cursor-not-allowed" : ""}`}
+                className={`px-4 py-2 bg-teal-700 text-white rounded hover:bg-teal-800 ${modalQuantity < 1 ? "opacity-50 cursor-not-allowed" : ""}`}
               >
                 Add to Invoice
               </button>

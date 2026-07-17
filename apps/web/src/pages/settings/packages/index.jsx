@@ -106,7 +106,7 @@ function Packages() {
   };
 
   if (loading) {
-    return <Spinner className="mx-auto mt-[30vh] h-10 w-10 text-gray-900/50" />
+    return <Spinner className="mx-auto mt-[30vh] h-10 w-10 text-slate-400" />
   }
   return (
     <>
@@ -118,7 +118,7 @@ function Packages() {
                 Packages
               </Typography>
               <Tooltip content="Add new Package">
-                <PlusCircleIcon onClick={openPopup} className="ml-2 mr-1 h-7 w-7 text-blue-600 cursor-pointer" />
+                <PlusCircleIcon onClick={openPopup} className="ml-2 mr-1 h-7 w-7 text-teal-700 cursor-pointer" />
 
               </Tooltip>
             </div>

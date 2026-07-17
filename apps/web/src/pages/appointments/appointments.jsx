@@ -154,7 +154,7 @@ export function Appointments() {
         );
 
         return filteredAppointments?.map((appointment, index) => (
-            <div key={index} className="mt-1 flex justify-center bg-blue-600 rounded-md w-[98%] h-max">
+            <div key={index} className="mt-1 flex justify-center bg-teal-700 rounded-md w-[98%] h-max">
                 <div className='text-white text-sm cursor-pointer px-1 py-2 w-full' onClick={() => handleEdit(appointment)}>
                     <div className='mb-1 w-min text-orange-500 font-semibold'>{format(parseISO(appointment.startDateTime), 'HH:mm')}</div>
                     <span className='p-1 my-2 rounded-sm bg-orange-400'>Customer: {appointment.customerName.split(' ')[0]}</span>
@@ -167,7 +167,7 @@ export function Appointments() {
     const isCurrentMonth = ((parseInt(monthList.indexOf(selected.split(' ')[0])) + 1 > (new Date()).getMonth() + 1) || (parseInt(selected.split(' ')[1]) > (new Date()).getFullYear()))
 
     if (loading) {
-        return <Spinner className="mx-auto mt-[30vh] h-10 w-10 text-gray-900/50" />
+        return <Spinner className="mx-auto mt-[30vh] h-10 w-10 text-slate-400" />
     }
     return (
         <Card className="h-full w-full ">
@@ -181,7 +181,7 @@ export function Appointments() {
                 <div className="flex flex-col lg:flex-row items-center w-full mt-5">
                     <div className="w-full lg:w-2/5 flex items-center justify-start gap-2">
                         <div className="flex gap-2 lg:gap-4">
-                            <Button disabled={!state.userInfo?.Permission.includes("appointment:create")} className="w-full bg-blue-900 lg:w-auto" size="md" onClick={handleOpen} >
+                            <Button disabled={!state.userInfo?.Permission?.includes("appointment:create")} className="w-full bg-teal-700 hover:bg-teal-800 lg:w-auto" size="md" onClick={handleOpen} >
                                 New
                             </Button>
                         </div>

@@ -211,7 +211,7 @@ const ViewWorkOrder = ({ workOrderData, setWorkOrderData, componentRef, appliedT
             <div className="flex flex-col items-center justify-start h-full w-full">
                 <div className="text-white w-full text-left font-medium">
                     {!isLoading.finish ?
-                        <button type="button" disabled={!state.userInfo.Permission.includes("workorder:update")} onClick={() => workOrderData?.status === WorkOrderStatus.PENDING && setWorkOrderFinished()} className={`flex items-center gap-2 w-full p-3 mx-auto ${workOrderData?.status === WorkOrderStatus.PENDING ? "hover:bg-gradient-to-br from-gray-700 to-gray-600" : "text-green-500 font-bold"} ${state.userInfo?.Permission.includes("workorder:update") ? "cursor-pointer" : "cursor-not-allowed opacity-50"}`}><CheckCheck className="h-5 w-5 inline-block mr-2" />{workOrderData?.status === WorkOrderStatus.PENDING ? 'Finish' : 'Finished'}</button>
+                        <button type="button" disabled={!state.userInfo.Permission?.includes("workorder:update")} onClick={() => workOrderData?.status === WorkOrderStatus.PENDING && setWorkOrderFinished()} className={`flex items-center gap-2 w-full p-3 mx-auto ${workOrderData?.status === WorkOrderStatus.PENDING ? "hover:bg-gradient-to-br from-gray-700 to-gray-600" : "text-green-500 font-bold"} ${state.userInfo?.Permission?.includes("workorder:update") ? "cursor-pointer" : "cursor-not-allowed opacity-50"}`}><CheckCheck className="h-5 w-5 inline-block mr-2" />{workOrderData?.status === WorkOrderStatus.PENDING ? 'Finish' : 'Finished'}</button>
                         :
                         <div className="flex items-center p-3">
                             <Spinner className="h-6 w-6 text-gray-400/50" />
@@ -219,15 +219,15 @@ const ViewWorkOrder = ({ workOrderData, setWorkOrderData, componentRef, appliedT
                     }
                     {/* {workOrderData?.status === WorkOrderStatus.PENDING && ( */}
                     <button type="button"
-                        disabled={!state.userInfo.Permission.includes("workorder:update")}
+                        disabled={!state.userInfo.Permission?.includes("workorder:update")}
                         onClick={() => { dispatch({ type: 'SET_WORKORDER_VIEW', payload: false }); setEdit(true) }}
-                        className={`flex items-center gap-2 w-full p-3 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 ${state.userInfo?.Permission.includes("workorder:update") ? "cursor-pointer" : "cursor-not-allowed opacity-50"}`}>
+                        className={`flex items-center gap-2 w-full p-3 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 ${state.userInfo?.Permission?.includes("workorder:update") ? "cursor-pointer" : "cursor-not-allowed opacity-50"}`}>
                         <Edit className="h-5 w-5 inline-block mr-2" />{"Edit"}
                     </button>
                     {/* )} */}
-                    <button type="button" disabled={!state.userInfo.Permission.includes("workorder:update")} onClick={() => setIsNotesFormOpen(true)} className={`flex items-center gap-2 w-full p-3 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 ${state.userInfo?.Permission.includes("workorder:update") ? "cursor-pointer" : "cursor-not-allowed opacity-50"}`}><FileText className="h-5 w-5 inline-block mr-2" />Notes</button>
+                    <button type="button" disabled={!state.userInfo.Permission?.includes("workorder:update")} onClick={() => setIsNotesFormOpen(true)} className={`flex items-center gap-2 w-full p-3 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 ${state.userInfo?.Permission?.includes("workorder:update") ? "cursor-pointer" : "cursor-not-allowed opacity-50"}`}><FileText className="h-5 w-5 inline-block mr-2" />Notes</button>
                     {!isLoading.delete ?
-                        <button type="button" disabled={!state.userInfo.Permission.includes("workorder:delete")} onClick={handleDel} className={`flex items-center gap-2 w-full p-3 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 ${state.userInfo?.Permission.includes("workorder:delete") ? "cursor-pointer" : "cursor-not-allowed opacity-50"}`}><Trash2 className="h-5 w-5 inline-block mr-2" />Delete</button>
+                        <button type="button" disabled={!state.userInfo.Permission?.includes("workorder:delete")} onClick={handleDel} className={`flex items-center gap-2 w-full p-3 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 ${state.userInfo?.Permission?.includes("workorder:delete") ? "cursor-pointer" : "cursor-not-allowed opacity-50"}`}><Trash2 className="h-5 w-5 inline-block mr-2" />Delete</button>
                         :
                         <div className="flex items-center p-3">
                             <Spinner className="h-6 w-6 text-gray-400/50" />
@@ -235,7 +235,7 @@ const ViewWorkOrder = ({ workOrderData, setWorkOrderData, componentRef, appliedT
                     }
 
                     {!isLoading.createInvoice ?
-                        <button type="button" onClick={createInvoice} disabled={!state.userInfo?.Permission.includes("invoice:create")} className={`flex items-center gap-2 w-full p-3 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 ${state.userInfo?.Permission.includes("invoice:create") ? "cursor-pointer" : "cursor-not-allowed opacity-50"}`}>
+                        <button type="button" onClick={createInvoice} disabled={!state.userInfo?.Permission?.includes("invoice:create")} className={`flex items-center gap-2 w-full p-3 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 ${state.userInfo?.Permission?.includes("invoice:create") ? "cursor-pointer" : "cursor-not-allowed opacity-50"}`}>
                             <BookCopy className="h-5 w-5 inline-block mr-2" />Create Invoice
                         </button>
                         :
@@ -245,7 +245,7 @@ const ViewWorkOrder = ({ workOrderData, setWorkOrderData, componentRef, appliedT
                     }
 
                     {!isLoading.createCopy ?
-                        <button type="button" disabled={!state.userInfo?.Permission.includes("workorder:create")} onClick={createCopy} className={`flex items-center gap-2 w-full p-3 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 ${state.userInfo?.Permission.includes("workorder:create") ? "cursor-pointer" : "cursor-not-allowed opacity-50"}`}>
+                        <button type="button" disabled={!state.userInfo?.Permission?.includes("workorder:create")} onClick={createCopy} className={`flex items-center gap-2 w-full p-3 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 ${state.userInfo?.Permission?.includes("workorder:create") ? "cursor-pointer" : "cursor-not-allowed opacity-50"}`}>
                             <Copy className="h-5 w-5 inline-block mr-2" />Create Duplicate
                         </button>
                         :

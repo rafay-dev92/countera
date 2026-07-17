@@ -1,20 +1,9 @@
-import { useLocation, useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
-  Navbar,
-  Button,
-  IconButton,
-  Breadcrumbs,
-  Typography,
-  Spinner,
-} from "@material-tailwind/react";
-import {
-  UserCircleIcon,
   Bars3Icon,
-} from "@heroicons/react/24/solid";
-import {
-  useMaterialTailwindController,
-  setOpenSidenav,
-} from "@/context";
+  ArrowRightOnRectangleIcon,
+} from "@heroicons/react/24/outline";
+import { useMaterialTailwindController, setOpenSidenav } from "@/context";
 import { State } from "@/state/Context";
 import { useConfirm } from "@/context/confirmContext";
 import { logout as logoutUtil } from "@/utils/logout";
@@ -22,65 +11,73 @@ import { logout as logoutUtil } from "@/utils/logout";
 export function DashboardNavbar() {
   const confirm = useConfirm();
   const { state, dispatch } = State();
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   const [controller, dispatcher] = useMaterialTailwindController();
-  const { fixedNavbar, openSidenav } = controller;
-  const { pathname } = useLocation();
-  const [layout, page] = pathname.split("/").filter((el) => el !== "");
+  const { openSidenav } = controller;
 
   const logout = async () => {
     const confirmLogout = await confirm("Are you sure you want to logout?");
     if (!confirmLogout) return;
     logoutUtil(dispatch, navigate);
-  }
+  };
+
+  const { userInfo, business } = state ?? {};
+  const initials =
+    userInfo?.first_name && userInfo?.last_name
+      ? `${userInfo.first_name[0]}${userInfo.last_name[0]}`.toUpperCase()
+      : null;
 
   return (
-    <Navbar
-      color="white"
-      className="mb-5 sticky top-0 z-40 border-blue-gray-900 "
-      fullWidth
-      blurred={fixedNavbar}
-    >
-      <div className="flex flex-row">
-        <IconButton
-          variant="text"
-          color="blue-gray"
-          className="grid xl:hidden"
-          onClick={() => setOpenSidenav(dispatcher, !openSidenav)}
-        >
-          <Bars3Icon strokeWidth={3} className="h-6 w-6 text-blue-gray-500" />
-        </IconButton>
+    <header className="sticky top-0 z-40 flex h-14 items-center gap-3 border-b border-slate-200 bg-white px-4 md:px-6">
+      <button
+        type="button"
+        className="rounded-md p-1.5 text-slate-500 hover:bg-slate-100 xl:hidden"
+        onClick={() => setOpenSidenav(dispatcher, !openSidenav)}
+      >
+        <Bars3Icon className="h-5 w-5" />
+      </button>
 
-        <div className="flex w-full flex-row justify-end items-center">
-          <div>
-            <h3 className="font-semibold text-sm text-gray-600 uppercase">
-              {state?.userInfo && state.userInfo.first_name && state.userInfo.last_name ? (
-                `${state.userInfo.first_name} ${state.userInfo.last_name} (${state.userInfo.role})`
-              ) : (
-                <Spinner className="mxl-auto h-5 w-5 text-gray-900/50" />
-              )}
-            </h3>
-          </div>
-          <Button
-            variant="text"
-            color="blue-gray"
-            className=" items-center gap-1 px-4 xl:flex hidden normal-case"
-            onClick={logout}
-          >
-            <UserCircleIcon className="h-7 w-7 text-blue-gray-500" />
-            Sign Out
-          </Button>
-          <IconButton
-            variant="text"
-            color="blue-gray"
-            className="grid xl:hidden"
-            onClick={logout}
-          >
-            <UserCircleIcon className="h-7 w-7 text-blue-gray-500" />
-          </IconButton>
+      {business?.name && (
+        <div className="flex min-w-0 items-center gap-2.5">
+          {business?.logo && (
+            <img
+              src={business.logo}
+              alt={`${business.name} logo`}
+              className="h-7 w-7 rounded-md border border-slate-200 object-cover"
+            />
+          )}
+          <span className="truncate text-sm font-medium text-slate-900">
+            {business.name}
+          </span>
         </div>
+      )}
+
+      <div className="ml-auto flex items-center gap-3">
+        {userInfo?.first_name && (
+          <div className="hidden text-right sm:block">
+            <p className="text-[13px] font-medium leading-tight text-slate-900">
+              {userInfo.first_name} {userInfo.last_name}
+            </p>
+            <p className="text-xs leading-tight text-slate-500 capitalize">
+              {userInfo.role?.toLowerCase().replace(/_/g, " ")}
+            </p>
+          </div>
+        )}
+        {initials && (
+          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-teal-700 text-xs font-semibold text-white">
+            {initials}
+          </span>
+        )}
+        <button
+          type="button"
+          onClick={logout}
+          className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+        >
+          <ArrowRightOnRectangleIcon className="h-[18px] w-[18px]" />
+          <span className="hidden md:inline">Sign out</span>
+        </button>
       </div>
-    </Navbar>
+    </header>
   );
 }
 

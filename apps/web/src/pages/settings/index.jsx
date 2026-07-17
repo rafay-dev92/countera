@@ -62,7 +62,7 @@ export function Settings() {
           Settings
         </Typography>
       </div>
-      {Object.keys(state.userInfo).length !== 0 && (state.userInfo.Permission.includes("setting:view") ? (
+      {Object.keys(state.userInfo).length !== 0 && (state.userInfo.Permission?.includes("setting:view") ? (
         <div className="mt-5">
           {/* Mobile Dropdown - visible on small screens */}
           <div className="block lg:hidden mb-4">

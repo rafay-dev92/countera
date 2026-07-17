@@ -230,7 +230,7 @@ const printView = React.forwardRef(({ view, printInvoice, appliedTaxes }, ref) =
 
                         <div className=" border divide-y text-xs">
                             <div className="flex justify-between px-2 py-1 font-medium">
-                                <span className={` ${printInvoice?.isArchived ? 'text-blue-400' : ''}`}>Grand Total</span>
+                                <span className={` ${printInvoice?.isArchived ? 'text-teal-700' : ''}`}>Grand Total</span>
                                 <span className="">${printInvoice?.totalAmount.toFixed(2)}</span>
                             </div>
                         </div>

@@ -1,88 +1,84 @@
 import PropTypes from "prop-types";
-import { Link, NavLink, useLinkClickHandler } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 import { XMarkIcon } from "@heroicons/react/24/outline";
-import {
-  Button,
-  IconButton,
-  Typography,
-} from "@material-tailwind/react";
 import { useMaterialTailwindController, setOpenSidenav } from "@/context";
-import { State } from '../../state/Context'
 
 export function Sidenav({ routes }) {
   const [controller, dispatch] = useMaterialTailwindController();
-  const { sidenavColor, sidenavType, openSidenav } = controller;
-  const { state } = State();
+  const { openSidenav } = controller;
+
+  const dashboardPages =
+    routes.find((route) => route.layout === "dashboard")?.pages ?? [];
+  const sections = [];
+  dashboardPages.forEach((page) => {
+    const name = page.section ?? "General";
+    let section = sections.find((s) => s.name === name);
+    if (!section) {
+      section = { name, pages: [] };
+      sections.push(section);
+    }
+    section.pages.push(page);
+  });
 
   return (
     <aside
-      className={`bg-gradient-to-br from-gray-800 to-gray-800 ${openSidenav ? "translate-x-0" : "-translate-x-80"
-        } fixed inset-0 z-50  h-[calc(100vh-0px)] w-72 transition-transform duration-300 xl:translate-x-0 `}
+      className={`${
+        openSidenav ? "translate-x-0" : "-translate-x-80"
+      } fixed inset-y-0 left-0 z-50 flex w-72 flex-col border-r border-slate-200 bg-white transition-transform duration-300 xl:translate-x-0`}
     >
-      <div
-        className={`relative`}
-      >
-        <div className="flex items-center space-x-2 py-2 px-1">
-          <img className="rounded-xl h-[60px] w-[60px]" src={state.business?.logo} alt="Business logo" width={60} height={60} />
-          <Link to="/" className="w-full text-center">
-            <Typography
-              variant="h6"
-              color="white"
-              className="flex flex-col items-start justify-center"
-            // color={sidenavType === "dark" ? "white" : "blue-gray"}
-            >
-              <span className="text-xs font-medium">{state.business?.name}</span>
-            </Typography>
-          </Link>
-        </div>
-        <IconButton
-          variant="text"
-          color="white"
-          size="sm"
-          ripple={false}
-          className="absolute right-0 top-0 grid rounded-br-none rounded-tl-none xl:hidden"
+      <div className="relative flex h-14 shrink-0 items-center border-b border-slate-200 px-4">
+        <Link to="/dashboard/home" className="flex items-center gap-2.5">
+          <span className="flex h-7 w-7 items-center justify-center rounded-md bg-teal-700 text-sm font-bold text-white">
+            C
+          </span>
+          <span className="text-[15px] font-semibold tracking-tight text-slate-900">
+            Countera
+          </span>
+        </Link>
+        <button
+          type="button"
+          className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-slate-500 hover:bg-slate-100 xl:hidden"
           onClick={() => setOpenSidenav(dispatch, false)}
         >
-          <XMarkIcon strokeWidth={2.5} className="h-5 w-5 text-white" />
-        </IconButton>
+          <XMarkIcon className="h-5 w-5" />
+        </button>
       </div>
-      <div className="m-4 overflow-y-auto h-[calc(100vh-100px)]">
-        {routes.map(({ layout, title, pages }, key) => (
 
-          <ul key={key} className="mb-4 flex flex-col gap-1">
-            {layout === 'dashboard' &&
-              pages.map(({ icon, name, path }) => (
-                <li key={name}
-                  onClick={() => setOpenSidenav(dispatch, !openSidenav)}>
-                  <NavLink to={`/${layout}${path}`}>
+      <nav className="flex-1 overflow-y-auto px-3 pb-4 pt-1">
+        {sections.map(({ name, pages }) => (
+          <div key={name}>
+            <p className="px-2.5 pb-1.5 pt-4 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+              {name}
+            </p>
+            <ul className="flex flex-col gap-0.5">
+              {pages.map(({ icon, name: label, path }) => (
+                <li key={label} onClick={() => setOpenSidenav(dispatch, false)}>
+                  <NavLink
+                    to={`/dashboard${path}`}
+                    className={({ isActive }) =>
+                      `relative flex h-9 items-center gap-2.5 rounded-md px-2.5 text-sm transition-colors ${
+                        isActive
+                          ? "bg-teal-50 font-semibold text-teal-700"
+                          : "font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                      }`
+                    }
+                  >
                     {({ isActive }) => (
-                      <Button
-                        variant={isActive ? "gradient" : "text"}
-                        color={
-                          isActive
-                            ? sidenavColor
-                            : sidenavType === "dark"
-                              ? "white"
-                              : "blue-gray"
-                        }
-                        className="flex items-center gap-4 px-4 capitalize"
-                        fullWidth
-                      >
+                      <>
+                        {isActive && (
+                          <span className="absolute -left-3 bottom-2 top-2 w-0.5 rounded bg-teal-700" />
+                        )}
                         {icon}
-                        <Typography
-                          color="inherit"
-                          className="font-medium capitalize"
-                        >
-                          {name}
-                        </Typography>
-                      </Button>
+                        {label}
+                      </>
                     )}
                   </NavLink>
                 </li>
               ))}
-          </ul>
+            </ul>
+          </div>
         ))}
-      </div>
+      </nav>
     </aside>
   );
 }
@@ -90,6 +86,5 @@ export function Sidenav({ routes }) {
 Sidenav.propTypes = {
   routes: PropTypes.arrayOf(PropTypes.object).isRequired,
 };
-
 
 export default Sidenav;

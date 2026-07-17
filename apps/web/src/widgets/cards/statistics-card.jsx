@@ -1,72 +1,28 @@
-import {
-  Card,
-  CardHeader,
-  CardBody,
-  CardFooter,
-  Typography,
-} from "@material-tailwind/react";
 import PropTypes from "prop-types";
 
-export function StatisticsCard({ color, icon, title, value, footer }) {
+export function StatisticsCard({ title, value, hint, footer }) {
   return (
-    <Card className="border border-blue-gray-100 shadow-sm">
-      <CardHeader
-        variant="gradient"
-        color={color}
-        floated={false}
-        shadow={false}
-        className="absolute grid h-12 w-12 place-items-center"
-      >
-        {icon}
-      </CardHeader>
-      <CardBody className="p-4 text-right">
-        <Typography variant="small" className="font-normal text-blue-gray-600">
-          {title}
-        </Typography>
-        <Typography variant="h4" color="blue-gray">
-          {value}
-        </Typography>
-      </CardBody>
-      {footer && (
-        <CardFooter className="border-t border-blue-gray-50 p-4">
-          {footer}
-        </CardFooter>
+    <div className="rounded-lg border border-slate-200 bg-white px-4 py-3.5">
+      <p className="text-[13px] font-medium text-slate-600">{title}</p>
+      <p className="mt-1.5 text-2xl font-semibold tracking-tight text-slate-900 tabular-nums">
+        {value}
+      </p>
+      {(hint || footer) && (
+        <div className="mt-1 text-xs text-slate-500">{hint || footer}</div>
       )}
-    </Card>
+    </div>
   );
 }
 
 StatisticsCard.defaultProps = {
-  color: "blue",
+  hint: null,
   footer: null,
 };
 
 StatisticsCard.propTypes = {
-  color: PropTypes.oneOf([
-    "white",
-    "blue-gray",
-    "gray",
-    "brown",
-    "deep-orange",
-    "orange",
-    "amber",
-    "yellow",
-    "lime",
-    "light-green",
-    "green",
-    "teal",
-    "cyan",
-    "light-blue",
-    "blue",
-    "indigo",
-    "deep-purple",
-    "purple",
-    "pink",
-    "red",
-  ]),
-  icon: PropTypes.node.isRequired,
   title: PropTypes.node.isRequired,
   value: PropTypes.node.isRequired,
+  hint: PropTypes.node,
   footer: PropTypes.node,
 };
 

@@ -3,6 +3,7 @@ export const chartsConfig = {
     toolbar: {
       show: false,
     },
+    fontFamily: "Inter, system-ui, sans-serif",
   },
   title: {
     show: "",
@@ -19,30 +20,30 @@ export const chartsConfig = {
     },
     labels: {
       style: {
-        colors: "#37474f",
-        fontSize: "13px",
+        colors: "#64748B",
+        fontSize: "12px",
         fontFamily: "inherit",
-        fontWeight: 300,
+        fontWeight: 400,
       },
     },
   },
   yaxis: {
     labels: {
       style: {
-        colors: "#37474f",
-        fontSize: "13px",
+        colors: "#64748B",
+        fontSize: "12px",
         fontFamily: "inherit",
-        fontWeight: 300,
+        fontWeight: 400,
       },
     },
   },
   grid: {
     show: true,
-    borderColor: "#dddddd",
-    strokeDashArray: 5,
+    borderColor: "#E9EEF5",
+    strokeDashArray: 0,
     xaxis: {
       lines: {
-        show: true,
+        show: false,
       },
     },
     padding: {
@@ -51,7 +52,7 @@ export const chartsConfig = {
     },
   },
   fill: {
-    opacity: 0.8,
+    opacity: 1,
   },
   tooltip: {
     theme: "dark",

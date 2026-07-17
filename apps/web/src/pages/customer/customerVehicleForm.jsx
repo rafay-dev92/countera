@@ -308,7 +308,7 @@ const CustomerVehicleForm = ({ open, close, refresh, setRefresh, CustomerId, get
                                                             </li>
                                                         ))
                                                     :
-                                                    <Spinner className="mx-auto my-auto h-6 w-6 text-blue-900/50" />
+                                                    <Spinner className="mx-auto my-auto h-6 w-6 text-slate-400" />
                                                 }
                                             </ul>
                                         )}
@@ -348,7 +348,7 @@ const CustomerVehicleForm = ({ open, close, refresh, setRefresh, CustomerId, get
                                                             </li>
                                                         ))
                                                     :
-                                                    <Spinner className="mx-auto my-auto h-6 w-6 text-blue-900/50" />
+                                                    <Spinner className="mx-auto my-auto h-6 w-6 text-slate-400" />
                                                 }
                                             </ul>
                                         )}

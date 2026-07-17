@@ -53,7 +53,7 @@ export function Reports() {
     }
 
     useEffect(() => {
-        if (Object.keys(state.userInfo).length !== 0 && (state.userInfo.Permission.includes("report:read"))) {
+        if (Object.keys(state.userInfo).length !== 0 && (state.userInfo.Permission?.includes("report:read"))) {
             getTaxes();
             getProductCategories();
         }
@@ -95,7 +95,7 @@ export function Reports() {
                         </Typography>
                     </div>
                 </CardHeader>
-                {Object.keys(state.userInfo).length !== 0 && (state.userInfo.Permission.includes("report:read") ? (
+                {Object.keys(state.userInfo).length !== 0 && (state.userInfo.Permission?.includes("report:read") ? (
                     <div className='grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-4 gap-3 sm:gap-4 p-2 sm:p-4 mt-4'>
                         <CardBody className="border-2 border-gray-300 rounded-lg flex flex-col items-center justify-center p-3 sm:p-4 lg:p-6">
                             <h2 className="text-sm md:text-base 2xl:text-[16px] font-semibold text-gray-800 text-center">Monthly Reports</h2>
@@ -172,7 +172,7 @@ export function Reports() {
                             </Button>
                             <ReactToPrint
                                 trigger={() => (
-                                    <Button className="bg-blue-800 hover:bg-blue-900 text-white font-bold py-2 px-4 rounded">
+                                    <Button className="bg-teal-700 hover:bg-teal-800 text-white font-bold py-2 px-4 rounded">
                                         Print
                                     </Button>
                                 )}

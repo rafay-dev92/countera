@@ -315,7 +315,7 @@ export function Inspection() {
                                             })}
                                         </select>
                                         {/* {selectedInspection && (
-                                            <Button onClick={openInspection} className='bg-blue-600 w-fit ms-auto'>Open</Button>
+                                            <Button onClick={openInspection} className='bg-teal-700 w-fit ms-auto'>Open</Button>
                                         )} */}
                                     </div>
                                 </div>
@@ -405,12 +405,12 @@ export function Inspection() {
                         </div>
                         <div className="flex lg:justify-end justify-start gap-3 m-4">
                             {!state.inspection?.selected && (
-                                <Button onClick={() => onSubmit(values)} type='submit' className="bg-blue-800 hover:bg-blue-900 text-white font-bold py-2 px-4 rounded">
+                                <Button onClick={() => onSubmit(values)} type='submit' className="bg-teal-700 hover:bg-teal-800 text-white font-bold py-2 px-4 rounded">
                                     Submit & Print
                                 </Button>
                             )}
                             <ReactToPrint
-                                trigger={() => <Button ref={printBtnRef} className="bg-blue-800 hover:bg-blue-900 text-white font-bold py-2 px-4 rounded">Print</Button>}
+                                trigger={() => <Button ref={printBtnRef} className="bg-teal-700 hover:bg-teal-800 text-white font-bold py-2 px-4 rounded">Print</Button>}
                                 content={() => componentRef.current}
                             />
                         </div>

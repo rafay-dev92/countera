@@ -1,60 +1,30 @@
-import {
-  Card,
-  CardHeader,
-  CardBody,
-  CardFooter,
-  Typography,
-} from "@material-tailwind/react";
 import PropTypes from "prop-types";
 import Chart from "react-apexcharts";
 
-export function StatisticsChart({ color, chart, title, description, footer }) {
+export function StatisticsChart({ chart, title, description }) {
   return (
-    <Card className="border border-blue-gray-100 shadow-sm" >
-      <CardHeader variant="gradient" color={color} floated={false} shadow={false}>
-        <Typography variant="h6" color="blue-gray">
-          {title}
-        </Typography>
-      </CardHeader>
-      <CardBody className="px-6 pt-0 ">
-        <Chart {...chart} />        
-      </CardBody>
-    </Card>
+    <div className="flex h-full flex-col rounded-lg border border-slate-200 bg-white">
+      <div className="border-b border-slate-100 px-4 py-3">
+        <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
+        {description && (
+          <p className="mt-0.5 text-xs text-slate-500">{description}</p>
+        )}
+      </div>
+      <div className="flex-1 px-2 pt-3">
+        <Chart {...chart} />
+      </div>
+    </div>
   );
 }
 
 StatisticsChart.defaultProps = {
-  color: "blue",
-  footer: null,
+  description: null,
 };
 
 StatisticsChart.propTypes = {
-  color: PropTypes.oneOf([
-    "white",
-    "blue-gray",
-    "gray",
-    "brown",
-    "deep-orange",
-    "orange",
-    "amber",
-    "yellow",
-    "lime",
-    "light-green",
-    "green",
-    "teal",
-    "cyan",
-    "light-blue",
-    "blue",
-    "indigo",
-    "deep-purple",
-    "purple",
-    "pink",
-    "red",
-  ]),
   chart: PropTypes.object.isRequired,
   title: PropTypes.node.isRequired,
-  description: PropTypes.node.isRequired,
-  footer: PropTypes.node,
+  description: PropTypes.node,
 };
 
 StatisticsChart.displayName = "/src/widgets/charts/statistics-chart.jsx";

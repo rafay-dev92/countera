@@ -202,7 +202,7 @@ export function WorkOrder() {
     };
 
     if (loading) {
-        return <Spinner className="mx-auto mt-[30vh] h-10 w-10 text-gray-900/50" />
+        return <Spinner className="mx-auto mt-[30vh] h-10 w-10 text-slate-400" />
     }
     return (
         <>
@@ -225,7 +225,7 @@ export function WorkOrder() {
                                 />
                             </div>
                             <div className="flex gap-2 lg:gap-4">
-                                <Button disabled={!state.userInfo?.Permission.includes("workorder:create")} className={`w-full bg-blue-900 lg:w-auto`} size="md" onClick={openPopup} >
+                                <Button disabled={!state.userInfo?.Permission?.includes("workorder:create")} className={`w-full bg-teal-700 hover:bg-teal-800 lg:w-auto`} size="md" onClick={openPopup} >
                                     New
                                 </Button>
                             </div>
@@ -362,7 +362,7 @@ export function WorkOrder() {
                                                 <IconButton variant="text" onClick={() => {
                                                     createInvoice(workOrders[index])
                                                 }}>
-                                                    <DocumentPlusIcon className="h-6 w-6 text-blue-500" />
+                                                    <DocumentPlusIcon className="h-6 w-6 text-teal-700" />
                                                 </IconButton>
                                             </Tooltip>
                                         </td>

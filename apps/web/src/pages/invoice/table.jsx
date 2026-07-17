@@ -10,10 +10,10 @@ import {
   IconButton,
   Tooltip,
   Spinner,
-  Checkbox,
 } from "@material-tailwind/react";
-import { DocumentTextIcon, TrashIcon } from "@heroicons/react/24/solid";
-import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
+import { TrashIcon } from "@heroicons/react/24/outline";
+import { MagnifyingGlassIcon, PlusIcon } from "@heroicons/react/24/outline";
+import { StatusChip } from "@/widgets/status-chip";
 import MyPopUpForm from "./form";
 import { fetchInvoices } from "@/services/fetchInvoices";
 import { delInvoice } from "@/services/delInvoice";
@@ -24,7 +24,7 @@ import { softDelInvoice } from "@/services/softDelInvoice";
 import { useDeleteInvoiceConfirm } from "@/context/deleteInvoiceConfirmContext";
 import CustomerForm from "./customerForm";
 
-const TABLE_HEAD = ["Invoice", "Customer", "Total", "Status", "Invoice Date", "Vehicle", "isArchived", "Actions"];
+const TABLE_HEAD = ["Invoice", "Customer", "Total", "Status", "Invoice Date", "Vehicle", "Archived", ""];
 
 export function Invoice() {
   const confirmDeleteInvoice = useDeleteInvoiceConfirm();
@@ -181,51 +181,41 @@ export function Invoice() {
     setIsFormOpen(true);
   };
 
-  const invoiceStatusColors = {
-    "PAID": "green",
-    "PARTIALLY_PAID": "orange",
-    "UNPAID": "red",
-    "VOIDED": "purple",
-    "REFUNDED": "blue",
-  };
-
   if (loading) {
-    return <Spinner className="mx-auto mt-[30vh] h-10 w-10 text-gray-900/50" />
+    return <Spinner className="mx-auto mt-[30vh] h-10 w-10 text-slate-400" />
   }
   return (
     <>
-      <Card className="h-full w-full">
-        <CardHeader floated={false} shadow={false} className="rounded-none">
-          <div className="mb-4 sm:mb-0 flex items-center">
-            <Typography variant="h5" color="blue-gray" className="flex items-center">
-              <DocumentTextIcon className="h-12 w-12 text-blueGray-500 ml-2" />
-              Invoices
-            </Typography>
-          </div>
-          <div className="flex flex-col lg:flex-row items-center w-full mt-5">
-            <div className="w-full lg:w-2/5 flex items-center justify-center lg:justify-start gap-2">
-              <div className="w-full lg:flex-1 lg:mr-4">
-                <Input
-                  label="Search"
-                  value={searchQuery}
-                  onChange={handleSearchChange}
-                  icon={<MagnifyingGlassIcon className="h-5 w-5" />}
-                />
-              </div>
-              <div className="flex gap-2 lg:gap-4">
-                <Button disabled={!state.userInfo?.Permission.includes("invoice:create")} className={`w-full bg-blue-900 lg:w-auto`} size="md" onClick={openPopup}>
-                  New
-                </Button>
-              </div>
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <h1 className="text-lg font-semibold tracking-tight text-slate-900">Invoices</h1>
+        <Button
+          disabled={!state.userInfo?.Permission?.includes("invoice:create")}
+          className="flex items-center gap-1.5 bg-teal-700 px-3.5 py-2 text-[13px] font-medium normal-case shadow-none hover:bg-teal-800 hover:shadow-none"
+          onClick={openPopup}
+        >
+          <PlusIcon className="h-4 w-4" />
+          New invoice
+        </Button>
+      </div>
+      <Card className="h-full w-full rounded-lg border border-slate-200 shadow-none">
+        <CardHeader floated={false} shadow={false} className="m-0 rounded-none rounded-t-lg px-4 py-3">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+            <div className="w-full lg:w-80">
+              <Input
+                label="Search by customer"
+                value={searchQuery}
+                onChange={handleSearchChange}
+                icon={<MagnifyingGlassIcon className="h-4 w-4" />}
+              />
             </div>
-            <div className="flex items-center mt-4 lg:mt-0 lg:ml-auto">
-              <Typography variant="small" color="blue-gray" className="mr-2">
-                Items per page:
+            <div className="flex items-center lg:ml-auto">
+              <Typography variant="small" color="blue-gray" className="mr-2 text-[13px]">
+                Rows per page
               </Typography>
               <select
                 value={itemsPerPage}
                 onChange={handleItemsPerPageChange}
-                className="px-2 py-1 border border-blue-gray-300 rounded bg-white text-blue-gray-700"
+                className="rounded-md border border-slate-300 bg-white px-2 py-1 text-[13px] text-slate-700"
               >
                 <option value={5}>5</option>
                 <option value={10}>10</option>
@@ -235,29 +225,29 @@ export function Invoice() {
           </div>
         </CardHeader>
 
-        <CardBody className="p-2 overflow-scroll px-0">
+        <CardBody className="overflow-x-auto p-0">
           <table className="w-full min-w-max table-auto text-left">
             <thead>
               <tr>
-                {TABLE_HEAD.map((head) => (
-                  <th key={head} className="border-y border-blue-gray-100 bg-blue-gray-50/50 p-4">
-                    <Typography variant="small" color="blue-gray" className="font-normal leading-none opacity-70">
-                      {head}
-                    </Typography>
+                {TABLE_HEAD.map((head, headIndex) => (
+                  <th
+                    key={headIndex}
+                    className={`border-y border-slate-200 bg-slate-50/70 px-4 py-2.5 text-xs font-semibold text-slate-500 ${head === "Total" ? "text-right" : ""}`}
+                  >
+                    {head}
                   </th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {invoices?.map(({ id, invoiceNumber, Customer, paymentStatus, totalAmount, createdAt, CustomerVehicle, isArchived }, index) => {
-                const isLast = index === invoices.length - 1;
-                const classes = isLast ? "p-4" : "p-4 border-b border-blue-gray-50";
+                const classes = "px-4 py-3 border-b border-slate-100 text-[13.5px]";
                 return (
-                  <tr key={id}>
+                  <tr key={id} className="hover:bg-slate-50/60">
                     <td className={classes}>
                       <Link
                         to="javascript:void(0)"
-                        className="text-blue-gray font-normal hover:underline"
+                        className="font-medium text-teal-700 tabular-nums hover:underline"
                         onClick={() => handleEditInvoice(index)}
                       >
                         INV{`${invoiceNumber}`.padStart(4, '0')}
@@ -266,43 +256,33 @@ export function Invoice() {
                     <td className={classes}>
                       <Link
                         to="#"
-                        className="text-blue-gray font-normal hover:underline"
+                        className="text-slate-700 hover:underline"
                         onClick={() => showCustomer(index)}
                       >
                         {Customer['firstName']} {Customer['lastName']}
                       </Link>
                     </td>
-                    <td className={classes}>
-                      <Typography variant="small" color="blue-gray" className="font-normal">
-                        {totalAmount}
-                      </Typography>
+                    <td className={`${classes} text-right tabular-nums text-slate-900`}>
+                      {totalAmount != null && totalAmount !== "" && !Number.isNaN(Number(totalAmount))
+                        ? `$${Number(totalAmount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                        : totalAmount}
                     </td>
                     <td className={classes}>
-                      <Typography
-                        variant="small"
-                        color={invoiceStatusColors[paymentStatus] || "gray"}
-                        className="font-medium"
-                      >
-                        {paymentStatus}
-                      </Typography>
+                      <StatusChip status={paymentStatus} />
+                    </td>
+                    <td className={`${classes} text-slate-500`}>
+                      {formatCreatedAt(createdAt)}
+                    </td>
+                    <td className={`${classes} text-slate-500`}>
+                      {`${CustomerVehicle['make']} ${CustomerVehicle['model']} ${CustomerVehicle['year']}`}
+                    </td>
+                    <td className={`${classes} text-slate-500`}>
+                      {isArchived ? "Yes" : "—"}
                     </td>
                     <td className={classes}>
-                      <Typography variant="small" color="blue-gray" className="font-normal">
-                        {formatCreatedAt(createdAt)}
-                      </Typography>
-                    </td>
-                    <td className={classes}>
-                      <Typography variant="small" color="blue-gray" className="font-normal">
-                        {`${CustomerVehicle['make']} ${CustomerVehicle['model']} ${CustomerVehicle['year']}`}
-                      </Typography>
-                    </td>
-                    <td className={classes}>
-                      <Checkbox color="green" checked={isArchived ? 'checked' : ''} readOnly />
-                    </td>
-                    <td className={classes}>
-                      <Tooltip content="Delete Invoice">
-                        <IconButton variant="text" onClick={() => handleDeleteInvoice(index)}>
-                          <TrashIcon className="h-6 w-6 text-red-500" />
+                      <Tooltip content="Delete invoice">
+                        <IconButton variant="text" size="sm" onClick={() => handleDeleteInvoice(index)}>
+                          <TrashIcon className="h-[18px] w-[18px] text-slate-400 hover:text-red-600" />
                         </IconButton>
                       </Tooltip>
                     </td>
@@ -313,25 +293,28 @@ export function Invoice() {
           </table>
         </CardBody>
 
-        <CardFooter className="flex items-center justify-between border-t border-blue-gray-50 p-4">
-          <Typography variant="small" color="blue-gray" className="font-normal">
-            Showing {(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, totalCount)} of {totalCount}
+        <CardFooter className="flex items-center justify-between border-t border-slate-200 px-4 py-3">
+          <Typography variant="small" color="blue-gray" className="text-[13px] tabular-nums">
+            Showing {(currentPage - 1) * itemsPerPage + 1}–{Math.min(currentPage * itemsPerPage, totalCount)} of {totalCount}
           </Typography>
-          <Typography variant="small" color="blue-gray" className="font-normal">
-            Page {currentPage} of {Math.ceil(totalCount / itemsPerPage)}
-          </Typography>
-          <div className="flex gap-2">
-            <Button variant="outlined" size="sm" disabled={currentPage === 1} onClick={() => paginate(currentPage - 1)}>
-              Previous
-            </Button>
-            <Button
-              variant="outlined"
-              size="sm"
-              disabled={currentPage >= Math.ceil(totalCount / itemsPerPage)}
-              onClick={() => paginate(currentPage + 1)}
-            >
-              Next
-            </Button>
+          <div className="flex items-center gap-3">
+            <Typography variant="small" color="blue-gray" className="text-[13px] tabular-nums">
+              Page {currentPage} of {Math.max(1, Math.ceil(totalCount / itemsPerPage))}
+            </Typography>
+            <div className="flex gap-2">
+              <Button variant="outlined" size="sm" className="border-slate-300 text-slate-700 normal-case" disabled={currentPage === 1} onClick={() => paginate(currentPage - 1)}>
+                Previous
+              </Button>
+              <Button
+                variant="outlined"
+                size="sm"
+                className="border-slate-300 text-slate-700 normal-case"
+                disabled={currentPage >= Math.ceil(totalCount / itemsPerPage)}
+                onClick={() => paginate(currentPage + 1)}
+              >
+                Next
+              </Button>
+            </div>
           </div>
         </CardFooter>
       </Card>

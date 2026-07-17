@@ -154,7 +154,7 @@ const MonthlyReportPreview = React.forwardRef(({ filterValue, invoices, products
                                             color="blue-gray"
                                             className="font-normal leading-none"
                                         >
-                                            {item.Customer?.customerType === 'business' ? <StarIcon className='w-3.5 h-3.5 mb-1 text-blue-600 inline' /> : null} {formattedDate}
+                                            {item.Customer?.customerType === 'business' ? <StarIcon className='w-3.5 h-3.5 mb-1 text-teal-700 inline' /> : null} {formattedDate}
                                         </Typography>
                                     </td>
                                     <td className="p-4 border-b border-blue-gray-50">

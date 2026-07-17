@@ -3,9 +3,7 @@ import { Routes, Route, useNavigate } from "react-router-dom";
 import {
   Sidenav,
   DashboardNavbar,
-  Footer,
 } from "@/widgets/layout";
-import { StatisticsChart } from "@/widgets/charts";
 import { Spinner } from "@material-tailwind/react";
 import routes from "@/routes";
 import { useMaterialTailwindController } from "@/context";
@@ -150,17 +148,11 @@ export function Dashboard() {
     return <Spinner className="mx-auto mt-[40vh] h-10 w-10 text-gray-900/50" />
   }
   return (
-    <>
-      <DashboardNavbar />
-      <div className="min-h-screen">
-        <Sidenav
-          routes={routes}
-        />
-        {/* brandImg={
-          sidenavType === "dark" ? "/img/logo-ct.png" : "/img/logo-ct-dark.png"
-        } */}
-
-        <div className="p-4 xl:ml-72 ">
+    <div className="min-h-screen bg-slate-50">
+      <Sidenav routes={routes} />
+      <div className="xl:ml-72">
+        <DashboardNavbar />
+        <main className="mx-auto max-w-[1440px] p-4 md:p-6">
           <Routes>
             {routes.map(
               ({ layout, pages }) =>
@@ -170,12 +162,9 @@ export function Dashboard() {
                 ))
             )}
           </Routes>
-        </div>
+        </main>
       </div>
-      {/* <div className="bg-blue-gray-50/50"> */}
-      {/* <Footer /> */}
-      {/* </div> */}
-    </>
+    </div>
   );
 }
 

@@ -234,7 +234,7 @@ const ViewInvoice = ({ printInvoice, setPrintInvoice, componentRef, appliedTaxes
                             <span className="px-2 py-0.5 bg-gray-700 rounded-full text-[10px]">{userRole}</span>
                         </div>
                         <div className="flex items-center gap-2">
-                            <span className="font-semibold text-blue-400">{formatFieldName(audit.fieldName)}</span>
+                            <span className="font-semibold text-teal-400">{formatFieldName(audit.fieldName)}</span>
                             <span className="text-gray-400">•</span>
                             {!oldValue[audit.fieldName]?.[field] && newValue[audit.fieldName]?.[field] && (
                                 <span className="text-green-400">{newValue[audit.fieldName]?.[field] !== '' ? formatValue(newValue[audit.fieldName][field]) : <span className="flex items-center gap-1"><XCircleIcon className="w-4 h-4" /> Empty</span>}</span>
@@ -262,7 +262,7 @@ const ViewInvoice = ({ printInvoice, setPrintInvoice, componentRef, appliedTaxes
 
                 return (
                     <div key={field} className="flex items-center gap-2 ml-4">
-                        <span className="font-semibold text-blue-400">{formatFieldName(field)}</span>
+                        <span className="font-semibold text-teal-400">{formatFieldName(field)}</span>
                         <span className="text-gray-400">•</span>
                         {oldVal && newVal ? (
                             <div className="flex items-center gap-2">
@@ -296,7 +296,7 @@ const ViewInvoice = ({ printInvoice, setPrintInvoice, componentRef, appliedTaxes
                     <span className="px-2 py-0.5 bg-gray-700 rounded-full text-[10px]">{userRole}</span>
                 </div>
                 <div className="flex flex-col gap-1">
-                    <span className="font-semibold text-blue-400">{formatFieldName(audit.fieldName)}</span>
+                    <span className="font-semibold text-teal-400">{formatFieldName(audit.fieldName)}</span>
                     {renderObjectChanges(oldValue, newValue)}
                 </div>
             </div>
@@ -322,11 +322,11 @@ const ViewInvoice = ({ printInvoice, setPrintInvoice, componentRef, appliedTaxes
                     }
                     {printInvoice?.paymentStatus !== 'VOIDED' && printInvoice?.paymentStatus !== 'REFUNDED' && (
                         <div>
-                            <button type="button" disabled={!state.userInfo.Permission.includes("invoice:update")} onClick={() => printInvoice?.paymentStatus !== 'PAID' && setIsPaymentFormOpen(true)} className={`flex items-center gap-2 w-full p-3 mx-auto ${printInvoice?.paymentStatus !== 'PAID' ? "hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer" : "text-green-500 font-bold cursor-not-allowed"} ${state.userInfo?.Permission.includes("quote:update") ? "" : "cursor-not-allowed opacity-50"}`}><CreditCard className="w-5 h-5 inline-block mr-1" />{printInvoice?.paymentStatus !== 'PAID' ? 'PAY' : 'PAID'}</button>
-                            <button type="button" onClick={handleUpdate} disabled={!state.userInfo?.Permission.includes("invoice:update")} className={`flex items-center gap-2 w-full p-3 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 ${state.userInfo?.Permission.includes("invoice:update") ? "" : "cursor-not-allowed opacity-50"}`}><Edit className="w-5 h-5 inline-block mr-1" />Edit</button>
-                            <button type="button" onClick={() => setIsNotesFormOpen(true)} disabled={!state.userInfo?.Permission.includes("invoice:update")} className={`flex items-center gap-2 w-full p-3 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 ${state.userInfo?.Permission.includes("invoice:update") ? "" : "cursor-not-allowed opacity-50"}`}><FileText className="w-5 h-5 inline-block mr-1" />Notes</button>
+                            <button type="button" disabled={!state.userInfo.Permission?.includes("invoice:update")} onClick={() => printInvoice?.paymentStatus !== 'PAID' && setIsPaymentFormOpen(true)} className={`flex items-center gap-2 w-full p-3 mx-auto ${printInvoice?.paymentStatus !== 'PAID' ? "hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer" : "text-green-500 font-bold cursor-not-allowed"} ${state.userInfo?.Permission?.includes("quote:update") ? "" : "cursor-not-allowed opacity-50"}`}><CreditCard className="w-5 h-5 inline-block mr-1" />{printInvoice?.paymentStatus !== 'PAID' ? 'PAY' : 'PAID'}</button>
+                            <button type="button" onClick={handleUpdate} disabled={!state.userInfo?.Permission?.includes("invoice:update")} className={`flex items-center gap-2 w-full p-3 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 ${state.userInfo?.Permission?.includes("invoice:update") ? "" : "cursor-not-allowed opacity-50"}`}><Edit className="w-5 h-5 inline-block mr-1" />Edit</button>
+                            <button type="button" onClick={() => setIsNotesFormOpen(true)} disabled={!state.userInfo?.Permission?.includes("invoice:update")} className={`flex items-center gap-2 w-full p-3 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 ${state.userInfo?.Permission?.includes("invoice:update") ? "" : "cursor-not-allowed opacity-50"}`}><FileText className="w-5 h-5 inline-block mr-1" />Notes</button>
                             {!isLoading.delete ?
-                                <button type="button" onClick={handleDel} disabled={!state.userInfo?.Permission.includes("invoice:delete")} className={`flex items-center gap-2 w-full p-3 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 ${state.userInfo?.Permission.includes("invoice:delete") ? "" : "cursor-not-allowed opacity-50"}`}><Trash2 className="w-5 h-5 inline-block mr-1" />Delete</button>
+                                <button type="button" onClick={handleDel} disabled={!state.userInfo?.Permission?.includes("invoice:delete")} className={`flex items-center gap-2 w-full p-3 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 ${state.userInfo?.Permission?.includes("invoice:delete") ? "" : "cursor-not-allowed opacity-50"}`}><Trash2 className="w-5 h-5 inline-block mr-1" />Delete</button>
                                 :
                                 <div className="flex items-center p-3">
                                     <Spinner className="h-6 w-6 text-gray-400/50" />
@@ -344,7 +344,7 @@ const ViewInvoice = ({ printInvoice, setPrintInvoice, componentRef, appliedTaxes
                         </button>}
                         content={() => componentRef.current}
                     />
-                    <button type="button" disabled={!state.userInfo?.Permission.includes("invoice:update")} className={`flex items-center gap-2 w-full p-3 text-blue-300 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 ${state.userInfo?.Permission.includes("invoice:update") ? "" : "cursor-not-allowed opacity-50"}`} onClick={handleVersionsClick}>
+                    <button type="button" disabled={!state.userInfo?.Permission?.includes("invoice:update")} className={`flex items-center gap-2 w-full p-3 text-teal-300 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 ${state.userInfo?.Permission?.includes("invoice:update") ? "" : "cursor-not-allowed opacity-50"}`} onClick={handleVersionsClick}>
                         <History className="w-5 h-5 inline-block mr-1" />
                         Versions
                     </button>

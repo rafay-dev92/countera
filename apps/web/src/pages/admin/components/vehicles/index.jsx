@@ -220,7 +220,7 @@ export default function Vehicles() {
     };
 
     // if (loading) {
-    //     return <Spinner className="mx-auto mt-[30vh] h-10 w-10 text-gray-900/50" />
+    //     return <Spinner className="mx-auto mt-[30vh] h-10 w-10 text-slate-400" />
     // }
     return (
         <>
@@ -238,7 +238,7 @@ export default function Vehicles() {
                                 Vehicles
                             </Typography>
                             <Tooltip content="Add new vehicle">
-                            <PlusCircleIcon onClick={openPopup} className="ml-2 mr-1 h-7 w-7 text-blue-600 cursor-pointer" />
+                            <PlusCircleIcon onClick={openPopup} className="ml-2 mr-1 h-7 w-7 text-teal-700 cursor-pointer" />
                             </Tooltip>
                         </div> */}
                     <div className="flex flex-col lg:flex-row items-center w-full mt-5">
@@ -252,7 +252,7 @@ export default function Vehicles() {
                                 />
                             </div>
                             <div className="flex gap-2 lg:gap-4">
-                                <Button className="w-full bg-blue-900 lg:w-auto" size="md" onClick={openPopup} >
+                                <Button className="w-full bg-teal-700 hover:bg-teal-800 lg:w-auto" size="md" onClick={openPopup} >
                                     New
                                 </Button>
                             </div>
@@ -288,7 +288,7 @@ export default function Vehicles() {
                 </CardHeader>
                 {loading ? (
                     <div className="flex justify-center items-center h-64">
-                        <Spinner className="h-10 w-10 text-gray-900/50" />
+                        <Spinner className="h-10 w-10 text-slate-400" />
                     </div>
                 ) : (
                     <CardBody className="p-2 overflow-auto px-0">
@@ -299,7 +299,7 @@ export default function Vehicles() {
                                         <label className="inline-flex items-center">
                                             <input
                                                 type="checkbox"
-                                                className="form-checkbox text-blue-500 rounded border-gray-400 shadow-sm ml-1"
+                                                className="form-checkbox text-teal-700 rounded border-gray-400 shadow-sm ml-1"
                                                 checked={selectAll}
                                                 onChange={handleSelectAll}
                                             />

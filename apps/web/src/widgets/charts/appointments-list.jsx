@@ -1,126 +1,70 @@
 import React from 'react';
-import {
-    Card,
-    CardHeader,
-    CardBody,
-    Typography,
-} from "@material-tailwind/react";
 import PropTypes from "prop-types";
-import { ExclamationTriangleIcon, ClockIcon } from '@heroicons/react/24/solid';
+import { CalendarDaysIcon, ClockIcon } from '@heroicons/react/24/outline';
 
-export function AppointmentsList({ color, title, appointments }) {
-    if (!appointments || appointments.length === 0) {
-        return (
-            <Card className="border border-blue-gray-100 shadow-sm">
-                <CardHeader variant="gradient" color={color} floated={false} shadow={false} className="h-12">
-                    <div className="flex items-center justify-between">
-                        <Typography variant="h6" color="black" className="flex items-center gap-2">
-                            {title}
-                            <span className="rounded-full w-6 h-6 flex items-center justify-center text-xs font-semibold ml-2 bg-red-600 text-white">
-                                {appointments.length}
-                            </span>
-                        </Typography>
-                    </div>
-                </CardHeader>
-                <CardBody className="px-6 pt-4">
-                    <div className="text-center py-8">
-                        <ExclamationTriangleIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                        <Typography variant="h6" color="gray" className="mb-2">
-                            No Appointments Today
-                        </Typography>
-                        <Typography variant="small" color="gray" className="font-normal">
-                            You're all caught up! No appointments for today.
-                        </Typography>
-                    </div>
-                </CardBody>
-            </Card>
-        );
-    }
-
-    const getRandomHexColor = () => {
-        const colors = ['#e63946', '#457b9d', '#2a9d8f', '#ffb703', '#8e44ad'];
-        return colors[Math.floor(Math.random() * colors.length)];
+export function AppointmentsList({ title, appointments }) {
+    const formatTime = (isoString) => {
+        const date = new Date(isoString);
+        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     };
 
     return (
-        <Card className="border border-blue-gray-100 shadow-sm ">
-            <CardHeader variant="gradient" color={color} floated={false} shadow={false} className="h-12">
-                <div className="flex items-center justify-between">
-                    <Typography variant="h6" color="black" className="flex items-center gap-2">
-                        {title}
-                        <span className="rounded-full w-6 h-6 flex items-center justify-center text-xs font-semibold ml-2 bg-red-600 text-white">
-                            {appointments.length}
-                        </span>
-                    </Typography>
+        <div className="flex h-full flex-col rounded-lg border border-slate-200 bg-white">
+            <div className="flex items-center gap-2 border-b border-slate-100 px-4 py-3">
+                <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
+                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium tabular-nums text-slate-600">
+                    {appointments?.length ?? 0}
+                </span>
+            </div>
+
+            {!appointments || appointments.length === 0 ? (
+                <div className="flex flex-1 flex-col items-center justify-center px-6 py-10 text-center">
+                    <CalendarDaysIcon className="mb-3 h-8 w-8 text-slate-300" />
+                    <p className="text-sm font-medium text-slate-700">No appointments today</p>
+                    <p className="mt-1 text-[13px] text-slate-500">
+                        Nothing is scheduled for today.
+                    </p>
                 </div>
-            </CardHeader>
-            <CardBody className="px-6 pt-4 h-48 overflow-y-auto">
-                <div className="space-y-3">
-                    {appointments.map((appointment, index) => {
-                        const formatTime = (isoString) => {
-                            const date = new Date(isoString);
-                            return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
-                        };
-                        return (
-                            <div key={index} className="flex flex-col space-y-3 p-3 bg-gray-100 rounded-lg">
-                                <div className='flex items-center justify-between w-full'>
-                                    <div className="flex items-center gap-3">
-                                        <div style={{ backgroundColor: getRandomHexColor() }} className="w-9 h-9 rounded-full text-white flex items-center justify-center font-bold uppercase">
-                                            {appointment.customerName?.charAt(0)}
-                                        </div>
-                                        <Typography variant="medium" color="blue-gray" className="font-semibold uppercase">
-                                            {appointment.customerName}
-                                        </Typography>
-                                    </div>
-                                    <div className='flex items-center gap-2 bg-blue-50 text-blue-700 text-sm px-3 py-1 rounded-full'>
-                                        <ClockIcon className='h-5 w-5' />
-                                        <Typography variant="small" className="font-semibold">
-                                            {formatTime(appointment.startDateTime)} - {formatTime(appointment.endDateTime)}
-                                        </Typography>
-                                    </div>
+            ) : (
+                <div className="max-h-72 flex-1 divide-y divide-slate-100 overflow-y-auto">
+                    {appointments.map((appointment, index) => (
+                        <div key={index} className="px-4 py-3">
+                            <div className="flex items-center justify-between gap-3">
+                                <div className="flex min-w-0 items-center gap-2.5">
+                                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-teal-50 text-xs font-semibold uppercase text-teal-700">
+                                        {appointment.customerName?.charAt(0)}
+                                    </span>
+                                    <p className="truncate text-[13.5px] font-medium text-slate-900">
+                                        {appointment.customerName}
+                                    </p>
                                 </div>
-                                <Typography variant="small" color="gray" className="text-sm font-normal truncate">{appointment.description}</Typography>
+                                <span className="flex shrink-0 items-center gap-1 text-xs font-medium tabular-nums text-slate-600">
+                                    <ClockIcon className="h-3.5 w-3.5 text-slate-400" />
+                                    {formatTime(appointment.startDateTime)} – {formatTime(appointment.endDateTime)}
+                                </span>
                             </div>
-                        );
-                    })}
+                            {appointment.description && (
+                                <p className="mt-1.5 truncate pl-[38px] text-[13px] text-slate-600">
+                                    {appointment.description}
+                                </p>
+                            )}
+                        </div>
+                    ))}
                 </div>
-            </CardBody>
-        </Card >
+            )}
+        </div>
     );
 }
 
 AppointmentsList.defaultProps = {
-    color: "blue",
-    reminders: [],
+    appointments: [],
 };
 
 AppointmentsList.propTypes = {
-    color: PropTypes.oneOf([
-        "white",
-        "blue-gray",
-        "gray",
-        "brown",
-        "deep-orange",
-        "orange",
-        "amber",
-        "yellow",
-        "lime",
-        "light-green",
-        "green",
-        "teal",
-        "cyan",
-        "light-blue",
-        "blue",
-        "indigo",
-        "deep-purple",
-        "purple",
-        "pink",
-        "red",
-    ]),
     title: PropTypes.node.isRequired,
-    reminders: PropTypes.array,
+    appointments: PropTypes.array,
 };
 
 AppointmentsList.displayName = "/src/widgets/charts/appointments-list.jsx";
 
-export default AppointmentsList; 
+export default AppointmentsList;

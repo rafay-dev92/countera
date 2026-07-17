@@ -105,7 +105,7 @@ function Taxes() {
   };
 
   if (loading) {
-    return <Spinner className="mx-auto mt-[30vh] h-10 w-10 text-gray-900/50" />
+    return <Spinner className="mx-auto mt-[30vh] h-10 w-10 text-slate-400" />
   }
   return (
     <>
@@ -117,7 +117,7 @@ function Taxes() {
                 Taxes
               </Typography>
               <Tooltip content="Add new Tax" >
-                <PlusCircleIcon onClick={openPopup} className="ml-2 h-6 w-6 md:h-7 md:w-7 text-blue-600 cursor-pointer" />
+                <PlusCircleIcon onClick={openPopup} className="ml-2 h-6 w-6 md:h-7 md:w-7 text-teal-700 cursor-pointer" />
               </Tooltip>
             </div>
             <div className="flex flex-col sm:flex-row items-start gap-3 w-full md:w-auto md:ml-auto">

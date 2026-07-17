@@ -1,18 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { ClockIcon, HomeIcon } from '@heroicons/react/24/solid';
-import {
-    Typography,
-    Card,
-    CardHeader,
-    CardBody,
-    Spinner,
-} from "@material-tailwind/react";
+import { Spinner } from "@material-tailwind/react";
 import { StatisticsCard } from "@/widgets/cards";
 import { StatisticsChart, RemindersList, AppointmentsList } from "@/widgets/charts";
-import {
-    statisticsCardsData,
-    statisticsChartsData,
-} from "@/data";
+import { chartsConfig } from "@/configs";
 import { toast } from 'react-toastify';
 import { fetchInvoices } from '@/services/fetchInvoices';
 import { State } from '@/state/Context';
@@ -23,55 +13,46 @@ import { fetchMonthlySales } from '@/services/fetchMontlySales';
 import { fetchDailyReminders } from '@/services/fetchDailyRemiders';
 import { fetchDailyAppointments } from '@/services/fetchDailyAppointments';
 
+const money = (value) =>
+    `$${Number(value).toLocaleString(undefined, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    })}`;
+
 export function Home() {
     const { state } = State();
-    const timezone = state.business.timezone;
-    const [loading, setLoading] = useState(true);
+    const timezone = state.business?.timezone;
+
+    const [todaysSales, setTodaysSales] = useState(null);
+    const [todaysInvoices, setTodaysInvoices] = useState(null);
+    const [customerCount, setCustomerCount] = useState(null);
+    const [productCount, setProductCount] = useState(null);
+    const [monthlySales, setMonthlySales] = useState(null);
     const [chartLoading, setChartLoading] = useState(true);
-    const [cardsData, setCardsData] = useState(statisticsCardsData);
-    const [chartsData, setChartsData] = useState(statisticsChartsData);
     const [dailyReminders, setDailyReminders] = useState([]);
     const [dailyAppointments, setDailyAppointments] = useState([]);
 
-    useEffect(() => {
-        setLoading(true);
-        if (timezone) {
-            getInvoices();
-        }
-        getCustomers();
-        getProducts();
+    const showToastMessage = (type, message) => {
+        if (type === 'success') toast.success(message)
+        else if (type === 'info') toast.info(message)
+        else toast.error(message)
+    };
 
-        setLoading(false);
-    }, [timezone]);
-
-    const dailySalesData = async () => {
-        const res = await fetchMonthlySales(state.userToken);
-        const data = await res.json();
-        if (res.status === 200) {
-            setChartsData(prev => {
-                return prev.map((chart, index) => {
-                    if (index === 1) {
-                        return {
-                            ...chart,
-                            chart: {
-                                ...chart.chart,
-                                series: [{
-                                    ...chart.chart.series[0],
-                                    data: data?.values || [],
-                                }],
-                                options: {
-                                    ...chart.chart.options,
-                                    xaxis: {
-                                        ...chart.chart.options.xaxis,
-                                        categories: data?.months || [],
-                                    },
-                                },
-                            },
-                        };
-                    }
-                    return chart;
+    const getMonthlySales = async () => {
+        try {
+            const res = await fetchMonthlySales(state.userToken);
+            const data = await res.json();
+            if (res.status === 200) {
+                setMonthlySales({
+                    months: data?.months || [],
+                    values: (data?.values || []).map(Number),
                 });
-            });
+            }
+        } catch (error) {
+            console.log(error);
+            toast.error("Failed to load monthly sales");
+        } finally {
+            setChartLoading(false);
         }
     };
 
@@ -101,28 +82,6 @@ export function Home() {
         }
     }
 
-    useEffect(() => {
-        setChartLoading(true);
-        dailySalesData();
-        getTodaysReminders();
-        getTodaysAppointments()
-        setTimeout(() => {
-            setChartLoading(false);
-        }, 2000);
-    }, [state.userToken]);
-
-    const showToastMessage = (type, message) => {
-        if (type === 'success') {
-            toast.success(message)
-        }
-        else if (type === 'info') {
-            toast.info(message)
-        }
-        else {
-            toast.error(message)
-        }
-    };
-
     const getInvoices = async () => {
         try {
             const currentDate = moment().tz(timezone).format('YYYY-MM-DD');
@@ -130,31 +89,22 @@ export function Home() {
             const endDate = moment.tz(currentDate, timezone).endOf('day').utc().toDate();
 
             const fetchedInvoices = await fetchInvoices(state.userToken, null, null, { paymentStatus: ['PAID', 'PARTIALLY_PAID'], startDate, endDate, isReport: true });
-            let totalInvoices = await fetchedInvoices.json();
-            // if (state.Settings.General.invoice === 'all') {
-            // }
-            // else if (state.Settings.General.invoice === 'current') {
-            // totalInvoices = totalInvoices?.data.filter(invoice => invoice.current === true);
-            // }
+            const totalInvoices = await fetchedInvoices.json();
 
             if (fetchedInvoices.status === 200) {
                 const invoicesWithCurrentDate = totalInvoices.data.length > 0 ? totalInvoices?.data?.filter(obj => {
                     const invoiceDate = moment(obj.createdAt).tz(timezone).format('YYYY-MM-DD');
                     return invoiceDate === currentDate;
                 }) : [];
-                const money = invoicesWithCurrentDate.reduce((sum, invoice) => {
+                const collected = invoicesWithCurrentDate.reduce((sum, invoice) => {
                     return sum + Number(invoice.paidAmount || 0);
                 }, 0);
-                const newArray = [...cardsData];
-
-                newArray[0].value = `$${money.toFixed(2)}`;
-                newArray[1].value = invoicesWithCurrentDate.length;
-                setCardsData(newArray)
+                setTodaysSales(collected);
+                setTodaysInvoices(invoicesWithCurrentDate.length);
             }
             else {
                 showToastMessage('error', totalInvoices.error)
             }
-
         } catch (error) {
             console.log(error.message);
             toast.error("Something went wrong");
@@ -166,14 +116,11 @@ export function Home() {
             const res = await fetchCustomers(state.userToken);
             const customers = await res.json();
             if (res.status === 200) {
-                const newArray = [...cardsData];
-                newArray[2].value = customers.length
-                setCardsData(newArray)
+                setCustomerCount(customers.length);
             }
             else {
                 showToastMessage('error', customers.error)
             }
-
         } catch (error) {
             console.log(error.message);
             showToastMessage('error', 'Something went wrong')
@@ -185,9 +132,7 @@ export function Home() {
             const res = await fetchProducts(state.userToken);
             const products = await res.json();
             if (res.status === 200) {
-                const newArray = [...cardsData];
-                newArray[3].value = products.length
-                setCardsData(newArray)
+                setProductCount(products.length);
             }
             else {
                 showToastMessage('error', products.error)
@@ -198,79 +143,118 @@ export function Home() {
         }
     }
 
-    // const getAppointments = async () => {
-    //     try {
-    //         const res = await fetchAppointments(state.userToken);
-    //         const appointments = await res.json();
+    useEffect(() => {
+        if (!state.userToken) return;
+        if (timezone) {
+            getInvoices();
+        }
+        getCustomers();
+        getProducts();
+    }, [timezone, state.userToken]);
 
-    //         const appointmentsWithCurrentDate = appointments.filter(obj => obj.startDateTime.split('T')[0] === currentDate);
+    useEffect(() => {
+        if (!state.userToken) return;
+        getMonthlySales();
+        getTodaysReminders();
+        getTodaysAppointments();
+    }, [state.userToken]);
 
-    //         console.log(appointmentsWithCurrentDate);
-    //         const newArray = [...cardsData];
-    //         newArray[2].value = appointmentsWithCurrentDate.length
-    //         setCardsData(newArray)
+    const collectionsChart = monthlySales && {
+        type: "bar",
+        height: 280,
+        series: [
+            {
+                name: "Collected",
+                data: monthlySales.values,
+            },
+        ],
+        options: {
+            ...chartsConfig,
+            colors: ["#0F766E"],
+            plotOptions: {
+                bar: {
+                    columnWidth: "45%",
+                    borderRadius: 3,
+                    borderRadiusApplication: "end",
+                },
+            },
+            xaxis: {
+                ...chartsConfig.xaxis,
+                categories: monthlySales.months,
+            },
+            yaxis: {
+                ...chartsConfig.yaxis,
+                labels: {
+                    ...chartsConfig.yaxis.labels,
+                    formatter: (value) => `$${Number(value).toFixed(0)}k`,
+                },
+            },
+            tooltip: {
+                ...chartsConfig.tooltip,
+                y: {
+                    formatter: (value) => `$${Math.round(Number(value) * 1000).toLocaleString()}`,
+                },
+            },
+        },
+    };
 
-    //     } catch (error) {
-    //         console.log(error);
-    //         toast.error("Something went wrong");
-    //     }
-    // }
+    const todayLabel = timezone
+        ? moment().tz(timezone).format('dddd, MMMM D, YYYY')
+        : moment().format('dddd, MMMM D, YYYY');
 
-    if (loading) {
-        return <Spinner className="mx-auto mt-[30vh] h-10 w-10 text-gray-900/50" />
-    }
     return (
         <div className="h-full w-full">
-            <div floated={false} shadow={false} className="rounded-none">
-                <div className="mb-4 sm:mb-0 flex items-center">
-                    <Typography variant="h5" color="blue-gray" className="flex items-center">
-                        <HomeIcon className="h-10 w-10 text-blueGray-500 ml-2 mb-4" />
-                        Home
-                    </Typography>
-                </div>
+            <div className="mb-5">
+                <h1 className="text-lg font-semibold tracking-tight text-slate-900">Dashboard</h1>
+                <p className="text-[13px] text-slate-500">{todayLabel}</p>
             </div>
-            <div className="p-4 px-0">
-                <div className="mt-2">
-                    <div className="mb-12 grid gap-y-10 gap-x-6 md:grid-cols-2 xl:grid-cols-4">
-                        {cardsData.length !== 0 && (cardsData.map(({ icon, title, footer, ...rest }) => (
-                            <StatisticsCard
-                                key={title}
-                                {...rest}
-                                title={title}
-                                icon={React.createElement(icon, {
-                                    className: "w-6 h-6 text-white",
-                                })}
-                            // footer={
-                            //     <Typography className="font-normal text-blue-gray-600">
-                            //         <strong className={footer.color}>{footer.value}</strong>
-                            //         &nbsp;{footer.label}
-                            //     </Typography>
-                            // }
-                            />
-                        )))}
-                    </div>
-                    {chartLoading ? <Spinner className="mx-auto mt-[30vh] h-10 w-10 text-gray-900/50" /> :
-                        <div className="mb-6 grid grid-cols-1 gap-y-12 gap-x-6 md:grid-cols-2 xl:grid-cols-3">
-                            <RemindersList
-                                color="white"
-                                title="Today's Reminders"
-                                reminders={dailyReminders}
-                            />
 
-                            {chartsData.slice(1, 2).map((props) => (
-                                <StatisticsChart
-                                    key={props.title}
-                                    {...props}
-                                />
-                            ))}
+            <div className="mb-4 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                <StatisticsCard
+                    title="Today's sales"
+                    value={todaysSales === null ? '—' : money(todaysSales)}
+                    hint="Paid on invoices issued today"
+                />
+                <StatisticsCard
+                    title="Today's invoices"
+                    value={todaysInvoices === null ? '—' : todaysInvoices}
+                    hint="Issued today, paid or partially paid"
+                />
+                <StatisticsCard
+                    title="Customers"
+                    value={customerCount === null ? '—' : customerCount}
+                    hint="All customers"
+                />
+                <StatisticsCard
+                    title="Products"
+                    value={productCount === null ? '—' : productCount}
+                    hint="Product catalog"
+                />
+            </div>
 
-                            <AppointmentsList
-                                color='white'
-                                title="Today's Appointments"
-                                appointments={dailyAppointments}
-                            />
+            <div className="grid gap-4 lg:grid-cols-3">
+                <div className="lg:col-span-2">
+                    {chartLoading || !collectionsChart ? (
+                        <div className="flex h-full min-h-[240px] items-center justify-center rounded-lg border border-slate-200 bg-white">
+                            <Spinner className="h-6 w-6 text-slate-400" />
                         </div>
-                    }
+                    ) : (
+                        <StatisticsChart
+                            title="Collections by month"
+                            description={`Amounts paid on invoices, ${new Date().getFullYear()}`}
+                            chart={collectionsChart}
+                        />
+                    )}
+                </div>
+                <AppointmentsList
+                    title="Today's appointments"
+                    appointments={dailyAppointments}
+                />
+                <div className="lg:col-span-3">
+                    <RemindersList
+                        title="Today's reminders"
+                        reminders={dailyReminders}
+                    />
                 </div>
             </div>
         </div>

@@ -426,10 +426,10 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
                                             />
                                             <label className="font-bold">Permissions</label>
                                             <Tooltip content="Reset" placement="top" className="z-[9999]">
-                                                <TimerReset className="w-6 h-6 text-blue-600 cursor-pointer" onClick={resetPermissions} />
+                                                <TimerReset className="w-6 h-6 text-teal-700 cursor-pointer" onClick={resetPermissions} />
                                             </Tooltip>
 
-                                            {/* <PlusCircleIcon className="w-6 h-6 text-blue-600 cursor-pointer" onClick={openPopup} /> */}
+                                            {/* <PlusCircleIcon className="w-6 h-6 text-teal-700 cursor-pointer" onClick={openPopup} /> */}
                                         </div>
 
                                         <div className="space-y-4 h-56 overflow-y-auto">

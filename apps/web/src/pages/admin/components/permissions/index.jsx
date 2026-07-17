@@ -163,7 +163,7 @@ export default function Permissions() {
     };
 
     if (loading) {
-        return <Spinner className="mx-auto mt-[30vh] h-10 w-10 text-gray-900/50" />
+        return <Spinner className="mx-auto mt-[30vh] h-10 w-10 text-slate-400" />
     }
     return (
         <>
@@ -186,7 +186,7 @@ export default function Permissions() {
                                 />
                             </div>
                             <div className="flex gap-2 lg:gap-4">
-                                <Button className="w-full bg-blue-900 lg:w-auto" size="md" onClick={openPopup} >
+                                <Button className="w-full bg-teal-700 hover:bg-teal-800 lg:w-auto" size="md" onClick={openPopup} >
                                     New
                                 </Button>                                
                             </div>
@@ -216,7 +216,7 @@ export default function Permissions() {
                                     <label className="inline-flex items-center">
                                         <input
                                             type="checkbox"
-                                            className="form-checkbox text-blue-500 rounded border-gray-400 shadow-sm ml-1"
+                                            className="form-checkbox text-teal-700 rounded border-gray-400 shadow-sm ml-1"
                                             checked={selectAll}
                                             onChange={handleSelectAll}
                                         />

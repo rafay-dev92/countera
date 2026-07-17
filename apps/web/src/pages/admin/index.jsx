@@ -195,7 +195,7 @@ function AdminPanel() {
   }, [])
 
   if (loading) {
-    return <Spinner className="mx-auto mt-[40vh] h-10 w-10 text-gray-900/50" />
+    return <Spinner className="mx-auto mt-[40vh] h-10 w-10 text-slate-400" />
   }
   return (
     <>

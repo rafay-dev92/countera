@@ -199,14 +199,13 @@ const UserForm = ({ open, close, selectedItem, setSelectedItem, refresh, setRefr
                 {open && (
                     <form onSubmit={handleSubmit} autoComplete="new">
                         <div className="">
-                            <div className="bg-white rounded shadow-xl">
-                                <div className="flex items-center justify-between sticky bg-gradient-to-br from-gray-800 to-gray-700">
-                                    <div></div>
-                                    <div className="text-white text-center text-lg">
-                                        {edit ? "EDIT USER" : "NEW USER"}
+                            <div className="bg-white rounded-xl shadow-xl overflow-hidden">
+                                <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-2">
+                                    <div className="text-[15px] font-semibold text-slate-900">
+                                        {edit ? "Edit user" : "New user"}
                                     </div>
                                     <button
-                                        className=" bg-transparent hover:bg-gray-800 text-white font-bold py-2 px-4 rounded"
+                                        className=" rounded-md p-2 text-slate-400 hover:bg-slate-200/70 hover:text-slate-600"
                                         onClick={handleClose}
                                         type="button"
                                     >
@@ -230,9 +229,9 @@ const UserForm = ({ open, close, selectedItem, setSelectedItem, refresh, setRefr
                                 <div className="min-w-[40vw] p-6">
                                     <div className="flex items-center justify-start space-x-4">
                                         <div className="basis-[33.33%]">
-                                            <label className="font-bold">First Name</label> <br />
+                                            <label className="text-[13px] font-medium text-slate-700">First Name</label> <br />
                                             <input
-                                                className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
+                                                className="w-full h-9 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                                                 id="first_name"
                                                 name="first_name"
                                                 type="text"
@@ -241,15 +240,15 @@ const UserForm = ({ open, close, selectedItem, setSelectedItem, refresh, setRefr
                                                 onBlur={handleBlur}
                                             />
                                             {(touched.first_name && errors.first_name) ? (
-                                                <div className="text-red-500">
+                                                <div className="mt-1 text-xs text-red-600">
                                                     {errors.first_name}
                                                 </div>
                                             ) : (<div></div>)}
                                         </div>
                                         <div className="basis-[33.33%]">
-                                            <label className="font-bold">Last Name</label> <br />
+                                            <label className="text-[13px] font-medium text-slate-700">Last Name</label> <br />
                                             <input
-                                                className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
+                                                className="w-full h-9 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                                                 id="last_name"
                                                 name="last_name"
                                                 type="text"
@@ -258,17 +257,17 @@ const UserForm = ({ open, close, selectedItem, setSelectedItem, refresh, setRefr
                                                 onBlur={handleBlur}
                                             />
                                             {touched.last_name && errors.last_name ? (
-                                                <div className="text-red-500">
+                                                <div className="mt-1 text-xs text-red-600">
                                                     {errors.last_name}
                                                 </div>
                                             ) : (<div></div>)}
                                         </div>
 
                                         <div className="basis-[33.33%]">
-                                            <label className="font-bold">Role</label> <br />
+                                            <label className="text-[13px] font-medium text-slate-700">Role</label> <br />
                                             <select
                                                 id="role"
-                                                className="w-56 p-2 border border-gray-400 bg-inherit rounded-md text-gray-600 text-black font-medium"
+                                                className="w-full h-9 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                                                 label="Select Role"
                                                 animate={{
                                                     mount: { y: 0 },
@@ -295,7 +294,7 @@ const UserForm = ({ open, close, selectedItem, setSelectedItem, refresh, setRefr
                                                 ))}
                                             </select>
                                             {(touched.role && errors.role) ? (
-                                                <div className="text-red-500">
+                                                <div className="mt-1 text-xs text-red-600">
                                                     {errors.role}
                                                 </div>
                                             ) : (<div></div>)}
@@ -304,9 +303,9 @@ const UserForm = ({ open, close, selectedItem, setSelectedItem, refresh, setRefr
 
                                     <div className="flex items-center justify-start space-x-4">
                                         <div className="basis-[33.33%]">
-                                            <label className="font-bold">Email</label> <br />
+                                            <label className="text-[13px] font-medium text-slate-700">Email</label> <br />
                                             <input
-                                                className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
+                                                className="w-full h-9 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                                                 id="email"
                                                 name="email"
                                                 type="email"
@@ -315,15 +314,15 @@ const UserForm = ({ open, close, selectedItem, setSelectedItem, refresh, setRefr
                                                 onBlur={handleBlur}
                                             />
                                             {touched.email && errors.email && (
-                                                <div className="text-red-500">
+                                                <div className="mt-1 text-xs text-red-600">
                                                     {errors.email}
                                                 </div>
                                             )}
                                         </div>
                                         <div className="basis-[33.33%]">
-                                            <label className="font-bold">Password</label> <br />
+                                            <label className="text-[13px] font-medium text-slate-700">Password</label> <br />
                                             <input
-                                                className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
+                                                className="w-full h-9 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                                                 id="password"
                                                 name="password"
                                                 type="text"
@@ -332,16 +331,16 @@ const UserForm = ({ open, close, selectedItem, setSelectedItem, refresh, setRefr
                                                 onBlur={handleBlur}
                                             />
                                             {touched.password && errors.password && (
-                                                <div className="text-red-500">
+                                                <div className="mt-1 text-xs text-red-600">
                                                     {errors.password}
                                                 </div>
                                             )}
                                         </div>
 
                                         <div className="basis-[33.33%]">
-                                            <label className="font-bold">DOB</label> <br />
+                                            <label className="text-[13px] font-medium text-slate-700">DOB</label> <br />
                                             <input
-                                                className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
+                                                className="w-full h-9 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                                                 id="dob"
                                                 name="dob"
                                                 type="date"
@@ -350,7 +349,7 @@ const UserForm = ({ open, close, selectedItem, setSelectedItem, refresh, setRefr
                                                 onBlur={handleBlur}
                                             />
                                             {touched.dob && errors.dob ? (
-                                                <div className="text-red-500">
+                                                <div className="mt-1 text-xs text-red-600">
                                                     {errors.dob}
                                                 </div>
                                             ) : (<div></div>)}
@@ -361,7 +360,7 @@ const UserForm = ({ open, close, selectedItem, setSelectedItem, refresh, setRefr
                                         <div className="flex items-center gap-1 my-2">
                                             <input
                                                 type="checkbox"
-                                                className="form-checkbox text-indigo-600 mr-2"
+                                                className="form-checkbox accent-teal-600 text-teal-600 mr-2"
                                                 value={selectPerms?.length == permissions?.length}
                                                 checked={selectPerms?.length === permissions?.length}
                                                 onChange={(e) => {
@@ -375,7 +374,7 @@ const UserForm = ({ open, close, selectedItem, setSelectedItem, refresh, setRefr
                                                     }
                                                 }}
                                             />
-                                            <label className="font-bold">Permissions</label>
+                                            <label className="text-[13px] font-medium text-slate-700">Permissions</label>
                                             <Tooltip content="Reset" placement="top" className="z-[9999]">
                                                 <TimerReset className="w-6 h-6 text-teal-700 cursor-pointer" onClick={resetPermissions} />
                                             </Tooltip>
@@ -398,31 +397,31 @@ const UserForm = ({ open, close, selectedItem, setSelectedItem, refresh, setRefr
                                                 };
 
                                                 return (
-                                                    <div key={resource} className="border p-2 rounded shadow-sm bg-gray-50">
+                                                    <div key={resource} className="rounded-md border border-slate-200 bg-slate-50 p-2">
                                                         <div className="flex items-center mb-2">
                                                             <input
                                                                 type="checkbox"
-                                                                className="form-checkbox text-indigo-600 mr-2"
+                                                                className="form-checkbox accent-teal-600 text-teal-600 mr-2"
                                                                 checked={allSelected}
                                                                 ref={el => {
                                                                     if (el) el.indeterminate = !allSelected && someSelected;
                                                                 }}
                                                                 onChange={handleGroupToggle}
                                                             />
-                                                            <label className="font-semibold capitalize">{resource}</label>
+                                                            <label className="text-[13px] font-semibold capitalize text-slate-900">{resource}</label>
                                                         </div>
 
                                                         <div className="grid grid-cols-2 gap-x-4 gap-y-1 pl-6">
                                                             {perms.map((permission) => (
                                                                 <div key={permission.id} className="flex items-center">
                                                                     <input
-                                                                        className="form-checkbox text-indigo-600"
+                                                                        className="form-checkbox accent-teal-600 text-teal-600"
                                                                         type="checkbox"
                                                                         id={`permission-${permission.id}`}
                                                                         checked={selectPerms.includes(permission.id)}
                                                                         onChange={(e) => handlePermission(permission.id, e)}
                                                                     />
-                                                                    <label htmlFor={`permission-${permission.id}`} className="ml-2 text-sm capitalize">
+                                                                    <label htmlFor={`permission-${permission.id}`} className="ml-2 text-sm capitalize text-slate-700">
                                                                         {permission.action}
                                                                     </label>
                                                                 </div>
@@ -434,9 +433,9 @@ const UserForm = ({ open, close, selectedItem, setSelectedItem, refresh, setRefr
                                         </div>
                                     </div>
                                 </div>
-                                <div className="flex items-center justify-end space-x-2 sticky bg-gradient-to-br from-gray-800 to-gray-700">
+                                <div className="flex items-center justify-end gap-2 border-t border-slate-200 bg-slate-50 px-4 py-2.5">
                                     <button
-                                        className=" w-32 bg-gray-600 hover:bg-gray-900 text-white font-bold py-2 px-4"
+                                        className="w-auto rounded-md px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-200/60"
                                         onClick={() => clearForm(formikProps)}
                                         type="button"
                                     >
@@ -444,13 +443,13 @@ const UserForm = ({ open, close, selectedItem, setSelectedItem, refresh, setRefr
                                     </button>
                                     <button
                                         disabled={isLoading}
-                                        className="w-32 bg-gray-600 hover:bg-gray-900 text-white font-bold py-2 px-4"
+                                        className="w-28 rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800 disabled:opacity-50"
                                         type="submit"
                                     >
                                         {!isLoading ?
                                             <span>{edit ? "Update" : "Save"}</span> :
                                             <div className="flex items-center justify-center h-fit">
-                                                <div className="w-6 h-6 border-4 border-gray-500 border-t-transparent rounded-full animate-spin"></div>
+                                                <div className="w-6 h-6 rounded-full border-2 border-white/40 border-t-white animate-spin"></div>
                                             </div>
                                         }
                                     </button>

@@ -131,14 +131,14 @@ function ProductSalesForm({ open, close, setReportData }) {
                 {open && (
                     <form onSubmit={handleSubmit} autoComplete="new" >
                         <div className="flex justify-center w-full">
-                            <div className="bg-white rounded shadow-xl">
-                                <div className="flex items-center justify-between sticky bg-gradient-to-br from-gray-800 to-gray-700">
+                            <div className="bg-white rounded-xl shadow-xl overflow-hidden">
+                                <div className="flex items-center justify-between sticky bg-slate-50 px-2 py-1.5">
                                     <div></div>
                                     <div className="text-lg text-white font-medium" >
                                         Product Sales Report
                                     </div>
                                     <button
-                                        className="bg-transparent hover:bg-gray-800 text-white font-bold py-2 px-4 rounded"
+                                        className="rounded-md p-2 text-slate-400 hover:bg-slate-200/70 hover:text-slate-600"
                                         onClick={handleClose}
                                         type="button"
                                     >
@@ -161,7 +161,7 @@ function ProductSalesForm({ open, close, setReportData }) {
 
                                 <div className="w-[25vw] p-6 space-y-4">
                                     <div className="relative flex flex-col" ref={productInputRef}>
-                                        <label className="font-bold">Product</label>
+                                        <label className="text-[13px] font-medium text-slate-700">Product</label>
                                         <input
                                             className="relative h-[97%] mt-1 p-2 border border-gray-300 rounded-md text-gray-600 font-small focus:outline-none focus:ring-2 focus:ring-blue-500"
                                             id="product"
@@ -201,9 +201,9 @@ function ProductSalesForm({ open, close, setReportData }) {
                                         )}
                                     </div>
                                 </div>
-                                <div className="flex items-center justify-end space-x-2 sticky bg-gradient-to-br from-gray-800 to-gray-700">
+                                <div className="flex items-center justify-end space-x-2 sticky bg-slate-50 px-2 py-1.5">
                                     <button
-                                        className=" w-32 bg-gray-600 hover:bg-gray-900 text-white font-bold py-2 px-4"
+                                        className=" w-28 rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800 disabled:opacity-50"
                                         onClick={() => clearForm(formikProps)}
                                         type="button"
                                     >
@@ -211,14 +211,14 @@ function ProductSalesForm({ open, close, setReportData }) {
                                     </button>
                                     <button
                                         disabled={isLoading}
-                                        className="w-32 bg-gray-600 hover:bg-gray-900 text-white font-bold py-2 px-4"
+                                        className="w-28 rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800 disabled:opacity-50"
                                         type="submit"
                                     >
                                         {!isLoading ?
                                             <span>Generate</span>
                                             :
                                             <div className="flex items-center justify-center h-fit">
-                                                <div className="w-6 h-6 border-4 border-gray-500 border-t-transparent rounded-full animate-spin"></div>
+                                                <div className="w-6 h-6 rounded-full border-2 border-white/40 border-t-white animate-spin"></div>
                                             </div>
                                         }
                                     </button>

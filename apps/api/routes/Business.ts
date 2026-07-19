@@ -1,24 +1,14 @@
-const express = require("express");
+import express from "express";
 const router = express.Router();
-const {
-  Business,
-  Tax,
-  Product,
-  Package,
-  Invoice,
-  Quotation,
-  WorkOrder,
-  Customer,
-  Product_Category,
-  sequelize,
-} = require("../models");
-const fetchUser = require("../middlewares/fetchUser");
-require("dotenv").config();
-const multer = require("multer");
-const { Op, Transaction } = require("sequelize");
-const getDefaultPackages = require("../data/default-packages");
-const getDefaultProducts = require("../data/default-products");
-const defaultTandCs = require("../data/defaultT&Cs");
+import { db, businesses, taxes, products, product_categories, product_tax, packages, package_product, invoices, quotations, workorders, customers, } from "../db";
+import { pickColumns } from "../db/helpers";
+import { eq, or } from "drizzle-orm";
+import fetchUser from "../middlewares/fetchUser";
+import "dotenv/config";
+import multer from "multer";
+import getDefaultPackages from "../data/default-packages";
+import getDefaultProducts from "../data/default-products";
+import defaultTandCs from "../data/defaultT&Cs";
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -33,7 +23,9 @@ const upload = multer({ storage: storage });
 
 router.get("/", fetchUser, async (req, res) => {
   try {
-    const business = await Business.findAll({ include: ["User"] });
+    const business = await db.query.businesses.findMany({
+      with: { User: true },
+    });
     res.json(business);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -42,8 +34,9 @@ router.get("/", fetchUser, async (req, res) => {
 
 router.get("/:id", fetchUser, async (req, res) => {
   try {
-    const business = await Business.findByPk(req.params.id, {
-      include: ["User", "Customer"],
+    const business = await db.query.businesses.findFirst({
+      where: eq(businesses.id, req.params.id),
+      with: { User: true, Customer: true },
     });
 
     if (!business) {
@@ -56,25 +49,23 @@ router.get("/:id", fetchUser, async (req, res) => {
   }
 });
 
+// the middleware is runtime-identical, so bridge the type mismatch with a cast.
 router.post("/create", upload.single("logo"), async (req, res) => {
   try {
     const businessData = req.body;
-    const transaction = await sequelize.transaction();
 
     const { name, email, licenseNumber, permitNumber } = businessData;
-    const existingBusiness = await Business.findOne({
-      where: {
-        [Op.or]: [
-          { licenseNumber },
-          { permitNumber },
-        ],
-      },
+    const existingBusiness = await db.query.businesses.findFirst({
+      where: or(
+        eq(businesses.licenseNumber, licenseNumber),
+        eq(businesses.permitNumber, permitNumber)
+      ),
     });
 
     if (existingBusiness) {
       return res.status(409).json({ message: "Business already exists with this license or permit number" });
     }
-    
+
     if (req.file) {
       const imageUrl = `${process.env.STATIC_FILE_BASE_URL}/business/${req.file.filename}`;
       businessData.logo = imageUrl;
@@ -82,147 +73,158 @@ router.post("/create", upload.single("logo"), async (req, res) => {
 
     businessData.termsAndConditions = defaultTandCs();
 
-    const newBusiness = await Business.create(businessData, {
-      transaction,
-    });
+    const newBusiness = await db.transaction(async (tx) => {
+      const [created] = await tx
+        .insert(businesses)
+        .values(pickColumns(businesses, businessData))
+        .returning();
 
-    const defaultTaxes = await Tax.bulkCreate(
-      [
-        {
-          name: "Sales Tax",
-          type: "%",
-          rate: 9.75,
-          default: false,
-          BusinessId: newBusiness.id,
-        },
-        {
-          name: "CA Tire Tax",
-          type: "$",
-          rate: 1.75,
-          default: false,
-          BusinessId: newBusiness.id,
-        },
-        {
-          name: "RECYCLE TIRES",
-          type: "$",
-          rate: 5,
-          default: false,
-          BusinessId: newBusiness.id,
-        },
-      ],
-      { transaction }
-    );
+      const defaultTaxes = await tx
+        .insert(taxes)
+        .values([
+          {
+            name: "Sales Tax",
+            type: "%",
+            rate: 9.75,
+            default: false,
+            BusinessId: created.id,
+          },
+          {
+            name: "CA Tire Tax",
+            type: "$",
+            rate: 1.75,
+            default: false,
+            BusinessId: created.id,
+          },
+          {
+            name: "RECYCLE TIRES",
+            type: "$",
+            rate: 5,
+            default: false,
+            BusinessId: created.id,
+          },
+        ])
+        .returning();
 
-    const defaultCategories = await Product_Category.bulkCreate(
-      [
-        {
-          name: "Recycle Items",
-          description: "Recycle Items",
-          BusinessId: newBusiness.id,
-        },
-        {
-          name: "Labor",
-          description: "All kind of Labor Category",
-          BusinessId: newBusiness.id,
-        },
-        {
-          name: "Wheels",
-          description: "All kind of Wheels Category",
-          BusinessId: newBusiness.id,
-        },
-        {
-          name: "Auto Part",
-          description: "All Auto Part Should be in this category",
-          BusinessId: newBusiness.id,
-        },
-        { name: "Used Tire", description: "", BusinessId: newBusiness.id },
-        { name: "New Tire", description: "", BusinessId: newBusiness.id },
-      ],
-      { transaction }
-    );
+      const defaultCategories = await tx
+        .insert(product_categories)
+        .values([
+          {
+            name: "Recycle Items",
+            description: "Recycle Items",
+            BusinessId: created.id,
+          },
+          {
+            name: "Labor",
+            description: "All kind of Labor Category",
+            BusinessId: created.id,
+          },
+          {
+            name: "Wheels",
+            description: "All kind of Wheels Category",
+            BusinessId: created.id,
+          },
+          {
+            name: "Auto Part",
+            description: "All Auto Part Should be in this category",
+            BusinessId: created.id,
+          },
+          { name: "Used Tire", description: "", BusinessId: created.id },
+          { name: "New Tire", description: "", BusinessId: created.id },
+        ])
+        .returning();
 
-    // 3. Create Default Products
-    const taxMap = {};
-    for (const tax of defaultTaxes) {
-      taxMap[tax.name] = tax.id;
-    }
+      // 3. Create Default Products
+      const taxMap: Record<string, string> = {};
+      for (const tax of defaultTaxes) {
+        taxMap[tax.name] = tax.id;
+      }
 
-    const categoryMap = {};
-    for (const cat of defaultCategories) {
-      categoryMap[cat.name] = cat.id;
-    }
+      const categoryMap: Record<string, string> = {};
+      for (const cat of defaultCategories) {
+        categoryMap[cat.name] = cat.id;
+      }
 
-    const productMap = {};
-    const productTemplates = getDefaultProducts();
+      const productMap: Record<string, typeof products.$inferSelect> = {};
+      const productTemplates = getDefaultProducts();
 
-    for (const template of productTemplates) {
-      const productData = {
-        name: template.name,
-        cost: template.cost,
-        margin: template.margin,
-        price: template.price,
-        itemCode: template.itemCode,
-        type: template.type,
-        description: template.description,
-        taxable: template.taxable,
-        CategoryId: categoryMap[template.categoryName],
-        BusinessId: newBusiness.id,
-      };
+      for (const template of productTemplates) {
+        const productData = {
+          name: template.name,
+          cost: template.cost,
+          margin: template.margin,
+          price: template.price,
+          itemCode: template.itemCode,
+          type: template.type,
+          description: template.description,
+          taxable: template.taxable,
+          CategoryId: categoryMap[template.categoryName],
+          BusinessId: created.id,
+        };
 
-      const newProduct = await Product.create(productData, {
-        transaction,
-      });
-      productMap[template.name] = newProduct;
+        const [newProduct] = await tx
+          .insert(products)
+          .values(productData)
+          .returning();
+        productMap[template.name] = newProduct;
 
-      if (template.taxable && template.taxNames?.length) {
-        const taxIds = template.taxNames
-          .map((name) => taxMap[name])
-          .filter(Boolean);
+        if (template.taxable && template.taxNames?.length) {
+          const taxIds = template.taxNames
+            .map((name) => taxMap[name])
+            .filter(Boolean);
 
-        const taxRecords = await Tax.findAll({
-          where: { id: taxIds },
-          transaction,
-        });
-        for (const tax of taxRecords) {
-          await newProduct.addTax(tax, { transaction });
+          if (taxIds.length) {
+            await tx.insert(product_tax).values(
+              taxIds.map((TaxId) => ({
+                ProductId: newProduct.id,
+                TaxId,
+              }))
+            );
+          }
         }
       }
-    }
 
-    // 4. Create Default Packages
-    const productPackageTemplates = getDefaultPackages();
+      // 4. Create Default Packages
+      const productPackageTemplates = getDefaultPackages();
 
-    for (const template of productPackageTemplates) {
-      const packageData = {
-        name: template.name,
-        description: template.description,
-        price: template.price,
-        BusinessId: newBusiness.id,
-      };
+      for (const template of productPackageTemplates) {
+        const packageData = {
+          name: template.name,
+          description: template.description,
+          price: (template as any).price,
+          BusinessId: created.id,
+        };
 
-      const newPackage = await Package.create(packageData, {
-        transaction,
-      });
+        const [newPackage] = await tx
+          .insert(packages)
+          .values(pickColumns(packages, packageData))
+          .returning();
 
-      if (template.products?.length) {
-        await Promise.all(
-          template.products.map(async (entry) => {
-            const [productName, quantityStr] = entry.split(":");
-            const product = productMap[productName];
-            const quantity = parseInt(quantityStr, 10);
+        if (template.products?.length) {
+          const packageProductRows = template.products
+            .map((entry) => {
+              const [productName, quantityStr] = entry.split(":");
+              const product = productMap[productName];
+              const quantity = parseInt(quantityStr, 10);
 
-            if (!product || isNaN(quantity)) return;
+              if (!product || isNaN(quantity)) return null;
 
-            await newPackage.addProduct(product, {
-              through: { quantity },
-              transaction,
-            });
-          })
-        );
+              return {
+                PackageId: newPackage.id,
+                ProductId: product.id,
+                quantity,
+              };
+            })
+            .filter((row) => row !== null);
+
+          if (packageProductRows.length) {
+            await tx.insert(package_product).values(packageProductRows);
+          }
+        }
       }
-    }
 
-    await transaction.commit();
+      return created;
+    });
 
     res.json(newBusiness);
   } catch (error) {
@@ -233,7 +235,9 @@ router.post("/create", upload.single("logo"), async (req, res) => {
 
 router.put("/update/:id", upload.single("logo"), async (req, res) => {
   try {
-    const business = await Business.findByPk(req.params.id);
+    const business = await db.query.businesses.findFirst({
+      where: eq(businesses.id, req.params.id),
+    });
 
     if (!business) {
       return res.status(404).json({ message: "business not found" });
@@ -242,11 +246,19 @@ router.put("/update/:id", upload.single("logo"), async (req, res) => {
       const imageUrl = `${process.env.STATIC_FILE_BASE_URL}/business/${req.file.filename}`;
       req.body.logo = imageUrl;
     }
-    await business.update(req.body);
+    const updates = pickColumns(businesses, req.body);
+    if (Object.keys(updates).length) {
+      await db
+        .update(businesses)
+        .set(updates)
+        .where(eq(businesses.id, req.params.id));
+    }
 
     res.json({
       message: "Business updated successfully",
-      data: await Business.findByPk(req.params.id),
+      data: await db.query.businesses.findFirst({
+        where: eq(businesses.id, req.params.id),
+      }),
     });
   } catch (error) {
     console.error(error);
@@ -256,31 +268,26 @@ router.put("/update/:id", upload.single("logo"), async (req, res) => {
 
 router.delete("/delete/:id", async (req, res) => {
   try {
-    const business = await Business.findByPk(req.params.id);
+    const business = await db.query.businesses.findFirst({
+      where: eq(businesses.id, req.params.id),
+    });
 
     if (!business) {
       return res.status(404).json({ message: "business not found" });
     }
 
-    const transaction = await sequelize.transaction();
-
-    // Delete associated products, packages, and taxes
-    await Invoice.destroy({ where: { BusinessId: business.id }, transaction });
-    await Quotation.destroy({
-      where: { BusinessId: business.id },
-      transaction,
+    await db.transaction(async (tx) => {
+      // Delete associated products, packages, and taxes
+      await tx.delete(invoices).where(eq(invoices.BusinessId, business.id));
+      await tx.delete(quotations).where(eq(quotations.BusinessId, business.id));
+      await tx.delete(workorders).where(eq(workorders.BusinessId, business.id));
+      await tx.delete(customers).where(eq(customers.BusinessId, business.id));
+      await tx.delete(products).where(eq(products.BusinessId, business.id));
+      await tx.delete(packages).where(eq(packages.BusinessId, business.id));
+      await tx.delete(taxes).where(eq(taxes.BusinessId, business.id));
+      await tx.delete(businesses).where(eq(businesses.id, business.id));
     });
-    await WorkOrder.destroy({
-      where: { BusinessId: business.id },
-      transaction,
-    });
-    await Customer.destroy({ where: { BusinessId: business.id }, transaction });
-    await Product.destroy({ where: { BusinessId: business.id }, transaction });
-    await Package.destroy({ where: { BusinessId: business.id }, transaction });
-    await Tax.destroy({ where: { BusinessId: business.id }, transaction });
-    await business.destroy({ transaction });
 
-    await transaction.commit();
     res.json({ message: "Business deleted successfully" });
   } catch (error) {
     console.error(error);
@@ -288,4 +295,4 @@ router.delete("/delete/:id", async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

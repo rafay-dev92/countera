@@ -1,19 +1,60 @@
-const express = require("express");
+import express from "express";
 const router = express.Router();
-const {
-  WorkOrder,
-  Product,
-  workorder_product,
-  User,
-  Customer,
-  CustomerVehicle,
-  Business,
-} = require("../models");
-const fetchUser = require("../middlewares/fetchUser");
-const { Op, fn, col, where } = require("sequelize");
-const authorizePermission = require("../middlewares/authorizePermissions");
-const moment = require("moment");
-require("dotenv").config();
+import { db, workorders, workorder_product, products, users, customers, } from "../db";
+import { pickColumns, nextDocNumber } from "../db/helpers";
+import { eq, and, ne, gte, lte, inArray, isNotNull, ilike, asc, desc, sql, type SQL, } from "drizzle-orm";
+import { UserRole, WorkOrderStatus } from "@countera/shared";
+import fetchUser from "../middlewares/fetchUser";
+import authorizePermission from "../middlewares/authorizePermissions";
+import moment from "moment";
+import "dotenv/config";
+
+// include trees matching the old Sequelize includes (list routes also pulled
+// the product Category; the detail/create/update re-fetch only pulled Tax)
+const workOrderListIncludes = {
+  Customer: { with: { Address: true, Vehicle: true } },
+  CustomerVehicle: true,
+  WorkOrderProducts: {
+    with: {
+      Product: {
+        with: { ProductTaxes: { with: { Tax: true } }, Category: true },
+      },
+    },
+  },
+  Business: true,
+} as const;
+
+const workOrderIncludes = {
+  Customer: { with: { Address: true, Vehicle: true } },
+  CustomerVehicle: true,
+  WorkOrderProducts: {
+    with: {
+      Product: { with: { ProductTaxes: { with: { Tax: true } } } },
+    },
+  },
+  Business: true,
+} as const;
+
+// Sequelize flattened join tables: workorder.Product = [{...product,
+// Tax: [{...tax, product_tax}], workorder_product: {...}}]. Remap Drizzle's
+// nested rows back to that exact shape.
+const formatWorkOrder = (workorder: any) => {
+  const { WorkOrderProducts, ...rest } = workorder;
+  return {
+    ...rest,
+    Product: WorkOrderProducts.map(({ Product, ...joinRow }: any) => {
+      const { ProductTaxes, ...product } = Product;
+      return {
+        ...product,
+        Tax: ProductTaxes.map(({ Tax, ...productTax }: any) => ({
+          ...Tax,
+          product_tax: productTax,
+        })),
+        workorder_product: joinRow,
+      };
+    }),
+  };
+};
 
 router.get(
   "/",
@@ -23,7 +64,7 @@ router.get(
     try {
       const { page = 1, limit = 10, filters } = req.query;
 
-      const parsedFilters = JSON.parse(filters || '{}');
+      const parsedFilters = JSON.parse((filters as string) || '{}');
       const {
         CustomerDetails,
         status,
@@ -32,146 +73,115 @@ router.get(
         isReport,
         order,
       } = parsedFilters;
-      const selectedFilters = {};
+      const selectedFilters: SQL[] = [];
 
       if (Array.isArray(status) && status.length > 0) {
-        selectedFilters.status = {
-          [Op.in]: status,
-        };
+        // Postgres enums throw on unknown values; MySQL just matched nothing
+        const validStatuses = status.filter((s: any) =>
+          Object.values(WorkOrderStatus).includes(s)
+        ) as WorkOrderStatus[];
+        selectedFilters.push(
+          validStatuses.length > 0
+            ? inArray(workorders.status, validStatuses)
+            : sql`false`
+        );
       }
 
-      let customers = null;
+      let matchingCustomers = null;
       if (
         (CustomerDetails?.name &&
           typeof CustomerDetails?.name === "string" &&
           CustomerDetails?.name?.trim() !== "") ||
         CustomerDetails?.id
       ) {
-        customers = await Customer.findAll({
-          where: where(fn("CONCAT", col("firstName"), " ", col("lastName")), {
-            [Op.like]: `%${CustomerDetails?.name?.trim()}%`,
-          }),
-          attributes: ["id"],
-        });
+        matchingCustomers = await db
+          .select({ id: customers.id })
+          .from(customers)
+          .where(
+            ilike(
+              sql`(${customers.firstName} || ' ' || ${customers.lastName})`,
+              `%${CustomerDetails?.name?.trim()}%`
+            )
+          );
       }
 
-      if (customers && customers.length > 0) {
-        const customerIds = customers.map((customer) => customer.id);
-        selectedFilters.CustomerId = { [Op.in]: customerIds };
+      if (matchingCustomers && matchingCustomers.length > 0) {
+        const customerIds = matchingCustomers.map((customer) => customer.id);
+        selectedFilters.push(inArray(workorders.CustomerId, customerIds));
       } else if (CustomerDetails?.id) {
         const customerId = CustomerDetails.id;
-        selectedFilters.CustomerId = { [Op.in]: [customerId] };
+        selectedFilters.push(inArray(workorders.CustomerId, [customerId]));
       }
       else if (CustomerDetails?.name?.trim()) {
-        selectedFilters.CustomerId = { [Op.in]: [null] };
+        // old code used CustomerId IN (NULL), which matches no rows
+        selectedFilters.push(sql`false`);
       }
 
       if (startDate && endDate) {
         const parsedStartDate = moment.utc(startDate).toDate();
         const parsedEndDate = moment.utc(endDate).toDate();
 
-        if (!isNaN(parsedStartDate) && !isNaN(parsedEndDate)) {
-          selectedFilters.createdAt = {
-            [Op.gte]: parsedStartDate,
-            [Op.lte]: parsedEndDate,
-          };
+        if (!isNaN(parsedStartDate.getTime()) && !isNaN(parsedEndDate.getTime())) {
+          selectedFilters.push(gte(workorders.createdAt, parsedStartDate));
+          selectedFilters.push(lte(workorders.createdAt, parsedEndDate));
         }
       }
 
       const userId = req.user.id;
-      const user = await User.findOne({
-        where: {
-          id: userId,
-          role: { [Op.ne]: "super-admin" },
-          BusinessId: { [Op.ne]: null },
-        },
+      const user = await db.query.users.findFirst({
+        where: and(
+          eq(users.id, userId),
+          ne(users.role, UserRole.SUPER_ADMIN),
+          isNotNull(users.BusinessId)
+        ),
       });
 
       if (!user) {
         return res.status(404).json({ message: "User not found", data: [] });
       }
 
-      const whereCondition = {
+      const whereCondition = and(
         ...selectedFilters,
-        BusinessId: user.BusinessId,
-      };
+        eq(workorders.BusinessId, user.BusinessId!)
+      );
 
-      const sortOrder = order
-        ? [["createdAt", order]]
-        : [["createdAt", "DESC"]];
+      const sortOrder =
+        order && String(order).toUpperCase() === "ASC"
+          ? [asc(workorders.createdAt)]
+          : [desc(workorders.createdAt)];
       const parsedIsReport = isReport ? true : false;
 
       if (parsedIsReport) {
-        const workorders = await WorkOrder.findAll({
+        const rows = await db.query.workorders.findMany({
           where: whereCondition,
-          order: sortOrder,
-          include: [
-            {
-              model: Customer,
-              as: "Customer",
-              include: ["Address", "Vehicle"],
-            },
-            {
-              model: CustomerVehicle,
-              as: "CustomerVehicle",
-            },
-            {
-              model: Product,
-              as: "Product",
-              through: "workorder_product",
-              include: ["Tax", "Category"],
-            },
-            {
-              model: Business,
-              as: "Business",
-            },
-          ],
+          orderBy: sortOrder,
+          with: workOrderListIncludes,
         });
 
         return res.json({
           message: "Work orders fetched successfully (report)",
-          data: workorders,
+          data: rows.map(formatWorkOrder),
         });
       }
 
-      const offset = (page - 1) * limit;
+      const offset = (Number(page) - 1) * Number(limit);
 
-      const { count, rows } = await WorkOrder.findAndCountAll({
+      const count = await db.$count(workorders, whereCondition);
+      const rows = await db.query.workorders.findMany({
         where: whereCondition,
-        distinct: true,
-        order: sortOrder,
+        orderBy: sortOrder,
         limit: Number(limit),
         offset: Number(offset),
-        include: [
-          {
-            model: Customer,
-            as: "Customer",
-            include: ["Address", "Vehicle"],
-          },
-          {
-            model: CustomerVehicle,
-            as: "CustomerVehicle",
-          },
-          {
-            model: Product,
-            as: "Product",
-            through: "workorder_product",
-            include: ["Tax", "Category"],
-          },
-          {
-            model: Business,
-            as: "Business",
-          },
-        ],
+        with: workOrderListIncludes,
       });
 
       return res.json({
         message: "Work orders fetched successfully",
-        data: rows,
+        data: rows.map(formatWorkOrder),
         total: count,
         page: Number(page),
         limit: Number(limit),
-        totalPages: Math.ceil(count / limit),
+        totalPages: Math.ceil(count / Number(limit)),
       });
     } catch (error) {
       res.status(500).json({ message: error.message });
@@ -185,35 +195,16 @@ router.get(
   authorizePermission("workorder:read"),
   async (req, res) => {
     try {
-      const workorder = await WorkOrder.findByPk(req.params.id, {
-        include: [
-          {
-            model: Customer,
-            as: "Customer",
-            include: ["Address", "Vehicle"],
-          },
-          {
-            model: CustomerVehicle,
-            as: "CustomerVehicle",
-          },
-          {
-            model: Product,
-            as: "Product",
-            through: "workorder_product",
-            include: ["Tax"],
-          },
-          {
-            model: Business,
-            as: "Business",
-          },
-        ],
+      const workorder = await db.query.workorders.findFirst({
+        where: eq(workorders.id, req.params.id),
+        with: workOrderIncludes,
       });
 
       if (!workorder) {
         return res.status(404).json({ message: "workorder not found" });
       }
 
-      res.json(workorder);
+      res.json(formatWorkOrder(workorder));
     } catch (error) {
       res.status(500).json({ message: error.message });
     }
@@ -231,51 +222,47 @@ router.post(
         return res.status(409).json({ message: "Customer Id is mandatory" });
       }
 
-      const newWorkOrder = await WorkOrder.create(workOrderData);
-      if (req.body.products && req.body.products.length !== 0) {
-        await Promise.all(
-          req.body.products.map(async (product) => {
-            const productRecord = await Product.findByPk(product.id);
+      const newWorkOrder = await db.transaction(async (tx) => {
+        // the Sequelize beforeCreate hook assigned this; do it explicitly now
+        const workOrderNumber = await nextDocNumber(
+          tx,
+          workorders,
+          workorders.workOrderNumber,
+          workOrderData.BusinessId
+        );
+        const [workorder] = await tx
+          .insert(workorders)
+          .values({ ...pickColumns(workorders, workOrderData), workOrderNumber })
+          .returning();
+
+        if (req.body.products && req.body.products.length !== 0) {
+          for (const product of req.body.products) {
+            const productRecord = await tx.query.products.findFirst({
+              where: eq(products.id, product.id),
+            });
             if (productRecord) {
-              await newWorkOrder.addProduct(productRecord, {
-                through: {
-                  quantity: product.quantity,
-                  description: product.description,
-                  price: product.price,
-                },
+              await tx.insert(workorder_product).values({
+                WorkOrderId: workorder.id,
+                ProductId: productRecord.id,
+                quantity: product.quantity,
+                description: product.description,
+                price: product.price,
               });
             }
-          })
-        );
-      }
+          }
+        }
 
-      const currentWorkOrder = await WorkOrder.findByPk(newWorkOrder.id, {
-        include: [
-          {
-            model: Customer,
-            as: "Customer",
-            include: ["Address", "Vehicle"],
-          },
-          {
-            model: CustomerVehicle,
-            as: "CustomerVehicle",
-          },
-          {
-            model: Product,
-            as: "Product",
-            through: "workorder_product",
-            include: ["Tax"],
-          },
-          {
-            model: Business,
-            as: "Business",
-          },
-        ],
+        return workorder;
+      });
+
+      const currentWorkOrder = await db.query.workorders.findFirst({
+        where: eq(workorders.id, newWorkOrder.id),
+        with: workOrderIncludes,
       });
 
       return res.status(200).json({
         message: "WorkOrder created successfully",
-        data: currentWorkOrder,
+        data: formatWorkOrder(currentWorkOrder),
       });
     } catch (error) {
       console.error(error);
@@ -290,8 +277,8 @@ router.put(
   authorizePermission("workorder:update"),
   async (req, res) => {
     try {
-      const workorder = await WorkOrder.findByPk(req.params.id, {
-        include: ["Product"],
+      const workorder = await db.query.workorders.findFirst({
+        where: eq(workorders.id, req.params.id),
       });
 
       if (!workorder) {
@@ -300,60 +287,47 @@ router.put(
 
       if (req.body?.products && req.body?.products.length > 0) {
         try {
-          await Promise.all(
-            workorder.Product.map(async (product) => {
-              await workorder.removeProduct(product);
-            })
-          );
+          await db.transaction(async (tx) => {
+            await tx
+              .delete(workorder_product)
+              .where(eq(workorder_product.WorkOrderId, workorder.id));
 
-          await Promise.all(
-            req.body.products.map(async (product) => {
-              const productRecord = await Product.findByPk(product.id);
+            for (const product of req.body.products) {
+              const productRecord = await tx.query.products.findFirst({
+                where: eq(products.id, product.id),
+              });
               if (productRecord) {
-                await workorder.addProduct(productRecord, {
-                  through: {
-                    quantity: product.quantity,
-                    description: product.description,
-                    price: product.price,
-                  },
+                await tx.insert(workorder_product).values({
+                  WorkOrderId: workorder.id,
+                  ProductId: productRecord.id,
+                  quantity: product.quantity,
+                  description: product.description,
+                  price: product.price,
                 });
               }
-            })
-          );
+            }
+          });
         } catch (error) {
           return res.status(500).json({ message: "Internel Server Error" });
         }
       }
 
-      await workorder.update(req.body.workOrderData);
+      const updates = pickColumns(workorders, req.body.workOrderData);
+      if (Object.keys(updates).length) {
+        await db
+          .update(workorders)
+          .set(updates)
+          .where(eq(workorders.id, workorder.id));
+      }
 
-      const currentWorkOrder = await WorkOrder.findByPk(workorder.id, {
-        include: [
-          {
-            model: Customer,
-            as: "Customer",
-            include: ["Address", "Vehicle"],
-          },
-          {
-            model: CustomerVehicle,
-            as: "CustomerVehicle",
-          },
-          {
-            model: Product,
-            as: "Product",
-            through: "workorder_product",
-            include: ["Tax"],
-          },
-          {
-            model: Business,
-            as: "Business",
-          },
-        ],
+      const currentWorkOrder = await db.query.workorders.findFirst({
+        where: eq(workorders.id, workorder.id),
+        with: workOrderIncludes,
       });
 
       return res.status(200).json({
         message: "WorkOrder updated successfully",
-        data: currentWorkOrder,
+        data: formatWorkOrder(currentWorkOrder),
       });
     } catch (error) {
       console.error(error);
@@ -368,13 +342,15 @@ router.delete(
   authorizePermission("workorder:delete"),
   async (req, res) => {
     try {
-      const workorder = await WorkOrder.findByPk(req.params.id);
+      const workorder = await db.query.workorders.findFirst({
+        where: eq(workorders.id, req.params.id),
+      });
 
       if (!workorder) {
         return res.status(404).json({ message: "workorder not found" });
       }
 
-      await workorder.destroy();
+      await db.delete(workorders).where(eq(workorders.id, req.params.id));
 
       res.json({ message: "WorkOrder deleted successfully" });
     } catch (error) {
@@ -384,4 +360,4 @@ router.delete(
   }
 );
 
-module.exports = router;
+export default router;

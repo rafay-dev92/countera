@@ -1,31 +1,43 @@
-const express = require("express");
+import express from "express";
 const router = express.Router();
-const { Customer, User } = require("../models");
-const fetchUser = require("../middlewares/fetchUser");
-const { Op } = require("sequelize");
-require("dotenv").config();
+import { db, customers, users } from "../db";
+import { pickColumns } from "../db/helpers";
+import { eq, and, ne, isNotNull, desc } from "drizzle-orm";
+import { UserRole } from "@countera/shared";
+import fetchUser from "../middlewares/fetchUser";
+import "dotenv/config";
+
+const customerIncludes = {
+  Business: true,
+  Address: true,
+  Vehicle: true,
+  Inspection: true,
+} as const;
 
 router.get("/", fetchUser, async (req, res) => {
   try {
     const userId = req.user.id;
-    const user = await User.findOne({
-      where: {
-        id: userId,
-        role: { [Op.ne]: "super-admin" },
-        BusinessId: { [Op.ne]: null },
-      },
+    const user = await db.query.users.findFirst({
+      where: and(
+        eq(users.id, userId),
+        ne(users.role, UserRole.SUPER_ADMIN),
+        isNotNull(users.BusinessId)
+      ),
     });
     if (user) {
-      const customer = await Customer.findAll({
-        where: { BusinessId: user.dataValues.BusinessId, isActive: true },
-        order: [["createdAt", "DESC"]],
-        include: ["Business", "Address", "Vehicle", "Inspection"],
+      const customer = await db.query.customers.findMany({
+        where: and(
+          eq(customers.BusinessId, user.BusinessId!),
+          eq(customers.isActive, true)
+        ),
+        orderBy: [desc(customers.createdAt)],
+        with: customerIncludes,
       });
       return res.json(customer);
     }
-    const customer = await Customer.findAll({
-      order: [["createdAt", "DESC"]],
-      include: ["Business", "Address", "Vehicle", "Inspection"],
+    const customer = await db.query.customers.findMany({
+      orderBy: [desc(customers.createdAt)],
+      with: customerIncludes,
     });
     return res.json(customer);
   } catch (error) {
@@ -35,8 +47,9 @@ router.get("/", fetchUser, async (req, res) => {
 
 router.get("/:id", fetchUser, async (req, res) => {
   try {
-    const customer = await Customer.findByPk(req.params.id, {
-      include: ["Business", "Address", "Vehicle", "Inspection"],
+    const customer = await db.query.customers.findFirst({
+      where: eq(customers.id, req.params.id),
+      with: customerIncludes,
     });
 
     if (!customer) {
@@ -51,13 +64,13 @@ router.get("/:id", fetchUser, async (req, res) => {
 router.post("/create", fetchUser, async (req, res) => {
   try {
     const customerData = req.body;
-    const existingCustomer = await Customer.findOne({
-      where: {
-        firstName: customerData.firstName,
-        lastName: customerData.lastName,
-        email: customerData.email,
-        BusinessId: customerData.BusinessId,
-      },
+    const existingCustomer = await db.query.customers.findFirst({
+      where: and(
+        eq(customers.firstName, customerData.firstName),
+        eq(customers.lastName, customerData.lastName),
+        eq(customers.email, customerData.email),
+        eq(customers.BusinessId, customerData.BusinessId)
+      ),
     });
 
     if (existingCustomer) {
@@ -66,7 +79,10 @@ router.post("/create", fetchUser, async (req, res) => {
         .json({ message: "Customer already exists with this email and name" });
     }
 
-    const customer = await Customer.create(customerData);
+    const [customer] = await db
+      .insert(customers)
+      .values(pickColumns(customers, customerData))
+      .returning();
     return res
       .status(200)
       .json({ message: "Customer added successfully", data: customer });
@@ -78,19 +94,29 @@ router.post("/create", fetchUser, async (req, res) => {
 
 router.put("/update/:id", fetchUser, async (req, res) => {
   try {
-    const customer = await Customer.findByPk(req.params.id, {
-      include: ["Address"],
+    const existing = await db.query.customers.findFirst({
+      where: eq(customers.id, req.params.id),
+      with: { Address: true },
     });
 
-    if (!customer) {
+    if (!existing) {
       return res.status(404).json({ message: "Customer not found" });
     }
 
-    await customer.update(req.body);
+    const updates = pickColumns(customers, req.body);
+    let updated = existing;
+    if (Object.keys(updates).length) {
+      const [row] = await db
+        .update(customers)
+        .set(updates)
+        .where(eq(customers.id, req.params.id))
+        .returning();
+      updated = { ...existing, ...row };
+    }
 
     return res
       .status(200)
-      .json({ message: "Customer updated successfully", data: customer });
+      .json({ message: "Customer updated successfully", data: updated });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Error updating customer" });
@@ -99,13 +125,15 @@ router.put("/update/:id", fetchUser, async (req, res) => {
 
 router.delete("/delete/:id", fetchUser, async (req, res) => {
   try {
-    const customer = await Customer.findByPk(req.params.id);
+    const customer = await db.query.customers.findFirst({
+      where: eq(customers.id, req.params.id),
+    });
 
     if (!customer) {
       return res.status(404).json({ message: "Customer not found" });
     }
 
-    await customer.destroy();
+    await db.delete(customers).where(eq(customers.id, req.params.id));
     return res.status(200).json({ message: "Customer deleted successfully" });
   } catch (error) {
     console.error("Error deleting customer:", error);
@@ -113,4 +141,4 @@ router.delete("/delete/:id", fetchUser, async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

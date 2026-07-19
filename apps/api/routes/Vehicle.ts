@@ -1,13 +1,15 @@
-const express = require("express");
+import express from "express";
 const router = express.Router();
-const { Vehicle } = require("../models");
-const fetchUser = require("../middlewares/fetchUser");
-require("dotenv").config();
+import { db, vehicles } from "../db";
+import { pickColumns } from "../db/helpers";
+import { eq, and } from "drizzle-orm";
+import fetchUser from "../middlewares/fetchUser";
+import "dotenv/config";
 
 router.get("/", fetchUser, async (req, res) => {
   try {
-    const vehicles = await Vehicle.findAll();
-    res.status(200).json(vehicles);
+    const vehicleRows = await db.query.vehicles.findMany();
+    res.status(200).json(vehicleRows);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -15,7 +17,9 @@ router.get("/", fetchUser, async (req, res) => {
 
 router.get("/:id", fetchUser, async (req, res) => {
   try {
-    const vehicle = await Vehicle.findByPk(req.params.id);
+    const vehicle = await db.query.vehicles.findFirst({
+      where: eq(vehicles.id, req.params.id),
+    });
     if (!vehicle) {
       return res.status(404).json({ message: "Vehicle not found" });
     }
@@ -31,14 +35,14 @@ router.post("/create", fetchUser, async (req, res) => {
     let { make, model } = req.body;
     make = make.toUpperCase();
     model = model.toUpperCase();
-    const existingVehicle = await Vehicle.findOne({
-      where: { make: make, model: model },
+    const existingVehicle = await db.query.vehicles.findFirst({
+      where: and(eq(vehicles.make, make), eq(vehicles.model, model)),
     });
 
     if (existingVehicle) {
       return res.status(409).json({ message: "Vehicle already exists" });
     }
-    await Vehicle.create({ make, model });
+    await db.insert(vehicles).values({ make, model });
     return res.status(200).json({ message: "Vehicle added successfully" });
   } catch (error) {
     console.error(error);
@@ -48,13 +52,21 @@ router.post("/create", fetchUser, async (req, res) => {
 
 router.put("/update/:id", fetchUser, async (req, res) => {
   try {
-    const vehicle = await Vehicle.findByPk(req.params.id);
+    const vehicle = await db.query.vehicles.findFirst({
+      where: eq(vehicles.id, req.params.id),
+    });
 
     if (!vehicle) {
       return res.status(404).json({ message: "vehicle not found" });
     }
 
-    await vehicle.update(req.body);
+    const updates = pickColumns(vehicles, req.body);
+    if (Object.keys(updates).length) {
+      await db
+        .update(vehicles)
+        .set(updates)
+        .where(eq(vehicles.id, req.params.id));
+    }
 
     return res.status(200).json({ message: "Vehicle updated successfully" });
   } catch (error) {
@@ -65,13 +77,15 @@ router.put("/update/:id", fetchUser, async (req, res) => {
 
 router.delete("/delete/:id", fetchUser, async (req, res) => {
   try {
-    const vehicle = await Vehicle.findByPk(req.params.id);
+    const vehicle = await db.query.vehicles.findFirst({
+      where: eq(vehicles.id, req.params.id),
+    });
 
     if (!vehicle) {
       return res.status(404).json({ message: "vehicle not found" });
     }
 
-    await vehicle.destroy();
+    await db.delete(vehicles).where(eq(vehicles.id, req.params.id));
     return res.status(200).json({ message: "Vehicle deleted successfully" });
   } catch (error) {
     console.error(error);
@@ -81,15 +95,15 @@ router.delete("/delete/:id", fetchUser, async (req, res) => {
 
 router.post("/import", fetchUser, async (req, res) => {
   try {
-    const vehicles = req.body.vehicles;
-    for (const vehicle of vehicles) {
+    const vehicleList = req.body.vehicles;
+    for (const vehicle of vehicleList) {
       const make = (vehicle.Make || "").toUpperCase();
       const model = (vehicle.Model || "").toUpperCase();
-      const existingVehicle = await Vehicle.findOne({
-        where: { make: make, model: model },
+      const existingVehicle = await db.query.vehicles.findFirst({
+        where: and(eq(vehicles.make, make), eq(vehicles.model, model)),
       });
       if (!existingVehicle) {
-        await Vehicle.create({ make, model });
+        await db.insert(vehicles).values({ make, model });
       }
     }
     return res.status(200).json({ message: "Vehicle uploaded successfully" });
@@ -99,4 +113,4 @@ router.post("/import", fetchUser, async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

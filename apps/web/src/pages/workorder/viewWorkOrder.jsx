@@ -279,12 +279,12 @@ const ViewWorkOrder = ({ workOrderData, setWorkOrderData, componentRef, appliedT
                     </div>
 
                     {/* Desktop Sidebar */}
-                    <div className="w-64 bg-gradient-to-br from-gray-800 to-gray-700">
+                    <div className="w-64 bg-slate-50 px-2 py-1.5">
                         <SidebarContent />
                     </div>
                 </div>
 
-                {/* <div className="basis-[20%] h-full overflow-y-auto flex flex-col items-center gap-6 bg-gradient-to-br from-gray-800 to-gray-700">
+                {/* <div className="basis-[20%] h-full overflow-y-auto flex flex-col items-center gap-6 bg-slate-50 px-2 py-1.5">
                     <div className="text-center py-4">
                         <h2 className="text-lg font-normal text-gray-400">Total Amount</h2>
                         <h5 className="text-4xl text-white font-normal">${(workOrderData?.totalAmount).toFixed(2)}</h5>
@@ -298,7 +298,7 @@ const ViewWorkOrder = ({ workOrderData, setWorkOrderData, componentRef, appliedT
                                 <div onClick={handleDel} className="w-full py-2 mx-auto hover:bg-gradient-to-br from-gray-700 to-gray-600 cursor-pointer">Delete</div>
                                 :
                                 <div className="flex items-center justify-center h-fit py-2.5">
-                                    <div className="w-6 h-6 border-4 border-gray-500 border-t-transparent rounded-full animate-spin"></div>
+                                    <div className="w-6 h-6 rounded-full border-2 border-white/40 border-t-white animate-spin"></div>
                                 </div>
                             }
 
@@ -308,7 +308,7 @@ const ViewWorkOrder = ({ workOrderData, setWorkOrderData, componentRef, appliedT
                                 </div>
                                 :
                                 <div className="flex items-center justify-center h-fit py-2.5">
-                                    <div className="w-6 h-6 border-4 border-gray-500 border-t-transparent rounded-full animate-spin"></div>
+                                    <div className="w-6 h-6 rounded-full border-2 border-white/40 border-t-white animate-spin"></div>
                                 </div>
                             }
 
@@ -318,7 +318,7 @@ const ViewWorkOrder = ({ workOrderData, setWorkOrderData, componentRef, appliedT
                                 </div>
                                 :
                                 <div className="flex items-center justify-center h-fit py-2.5">
-                                    <div className="w-6 h-6 border-4 border-gray-500 border-t-transparent rounded-full animate-spin"></div>
+                                    <div className="w-6 h-6 rounded-full border-2 border-white/40 border-t-white animate-spin"></div>
                                 </div>
                             }
                             <ReactToPrint
@@ -337,7 +337,7 @@ const ViewWorkOrder = ({ workOrderData, setWorkOrderData, componentRef, appliedT
                 {/* Mobile Layout */}
                 <div className="lg:hidden h-full flex flex-col relative overflow-hidden">
                     {/* Mobile Header with Menu */}
-                    <div className="flex items-center justify-between p-4 bg-gradient-to-br from-gray-800 to-gray-700">
+                    <div className="flex items-center justify-between p-4 bg-slate-50 px-2 py-1.5">
                         <div className="text-white">
                             <h2 className="text-sm font-normal text-gray-400">Total Amount</h2>
                             <h5 className="text-xl text-white font-normal">
@@ -366,7 +366,7 @@ const ViewWorkOrder = ({ workOrderData, setWorkOrderData, componentRef, appliedT
 
                         {/* Mobile Sidebar */}
                         <div
-                            className={`absolute top-0 right-0 w-64 h-full bg-gradient-to-br from-gray-800 to-gray-700 border-l border-gray-600 shadow-lg transition-transform duration-300 ease-in-out ${isOpen ? "transform translate-x-0" : "transform translate-x-full"}`}
+                            className={`absolute top-0 right-0 w-64 h-full bg-slate-50 px-2 py-1.5 border-l border-gray-600 shadow-lg transition-transform duration-300 ease-in-out ${isOpen ? "transform translate-x-0" : "transform translate-x-full"}`}
                         >
                             <SidebarContent />
                         </div>

@@ -235,7 +235,7 @@ export function Inspection() {
                                     placeholder="Select Customer"
                                 />
                                 {/* {touched.customer && errors.customer ? (
-                                <div className="text-red-500">
+                                <div className="mt-1 text-xs text-red-600">
                                     {errors.customer}
                                 </div>
                                 ) : (<div></div>)} */}
@@ -358,7 +358,7 @@ export function Inspection() {
                                 </thead>
                                 <tbody>
                                     {values?.data?.map((item, idx) => (
-                                        <tr id='table' key={idx} className={`w-full border-b border-gray-200 px-4 py-1 text-xs ${item.category ? 'bg-gradient-to-br from-gray-800 to-gray-700 text-white py-2' : ''}`}>
+                                        <tr id='table' key={idx} className={`w-full border-b border-gray-200 px-4 py-1 text-xs ${item.category ? 'bg-slate-50 px-2 py-1.5 text-white py-2' : ''}`}>
                                             <td className="border-b border-gray-200 px-4 py-1">{item.name}</td>
                                             {!item.category ?
                                                 <td className="border-b border-gray-200 px-4 py-1">

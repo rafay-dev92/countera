@@ -220,14 +220,13 @@ const CustomerVehicleForm = ({ open, close, refresh, setRefresh, CustomerId, get
             {open && (
                 <form onSubmit={handleSubmit} autoComplete="new" >
                     <div className="fixed -top-16 lg:top-0 left-0 w-full h-full flex justify-center items-center">
-                        <div className="bg-white rounded shadow-xl">
-                            <div className="flex items-center justify-between sticky bg-gradient-to-br from-gray-800 to-gray-700">
-                                <div></div>
-                                <div className="text-white text-center text-lg">
-                                    {edit ? "EDIT VEHICLE" : "NEW VEHICLE"}
+                        <div className="bg-white rounded-xl shadow-xl overflow-hidden">
+                            <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-2">
+                                <div className="text-[15px] font-semibold text-slate-900">
+                                    {edit ? "Edit vehicle" : "New vehicle"}
                                 </div>
                                 <button
-                                    className="bg-transparent hover:bg-gray-800 text-white font-bold py-2 px-4 rounded"
+                                    className="rounded-md p-2 text-slate-400 hover:bg-slate-200/70 hover:text-slate-600"
                                     onClick={handleClose}
                                     type="button"
                                 >
@@ -251,9 +250,9 @@ const CustomerVehicleForm = ({ open, close, refresh, setRefresh, CustomerId, get
                             <div className="p-6 2xl:w-[40vw] xl:w-[60vw] lg:w-[80vw] w-[80vw] max-h-[70vh] lg:max-h-[80vh] overflow-y-auto">
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                                     <div className="col-span-1">
-                                        <label className="font-bold">Year</label> <br />
+                                        <label className="text-[13px] font-medium text-slate-700">Year</label> <br />
                                         <select
-                                            className="w-full p-2 border border-gray-300 rounded-md text-black font-small"
+                                            className="w-full h-9 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                                             id="year"
                                             name="year"
                                             type="number"
@@ -267,7 +266,7 @@ const CustomerVehicleForm = ({ open, close, refresh, setRefresh, CustomerId, get
                                         </select>
 
                                         {(touched.year && errors.year) ? (
-                                            <div className="text-red-500">
+                                            <div className="mt-1 text-xs text-red-600">
                                                 {errors.year}
                                             </div>
                                         ) : (<div></div>)}
@@ -276,9 +275,9 @@ const CustomerVehicleForm = ({ open, close, refresh, setRefresh, CustomerId, get
                                     {/* <div className="col-span-full md:col-span-2 lg:col-span-2">
                                         <div className="flex flex-col md:flex-row gap-4"> */}
                                     <div ref={makeInputRef} className="relative flex-1">
-                                        <label className="font-bold">Make</label>
+                                        <label className="text-[13px] font-medium text-slate-700">Make</label>
                                         <input
-                                            className="w-full p-2 border border-gray-300 rounded-md text-black font-small"
+                                            className="w-full h-9 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                                             id="make"
                                             name="make"
                                             type="text"
@@ -289,7 +288,7 @@ const CustomerVehicleForm = ({ open, close, refresh, setRefresh, CustomerId, get
                                             autoComplete="off"
                                         />
                                         {showMakeSuggestions && (
-                                            <ul className="absolute left-0 right-0 z-50 bg-white border border-slate-700 w-full mt-1 overflow-y-auto min-h-24 max-h-48">
+                                            <ul className="absolute left-0 right-0 z-50 bg-white border border-slate-200 rounded-md shadow-lg w-full mt-1 overflow-y-auto min-h-24 max-h-48">
                                                 {vehicles.length > 0 ?
                                                     [...new Set(vehicles.map(v => v.make))]
                                                         .filter(make => make.toLowerCase().includes(values.make.toLowerCase()))
@@ -297,7 +296,7 @@ const CustomerVehicleForm = ({ open, close, refresh, setRefresh, CustomerId, get
                                                         .map((make) => (
                                                             <li
                                                                 key={make}
-                                                                className="cursor-pointer px-2 py-1 rounded-sm hover:bg-gray-200"
+                                                                className="cursor-pointer px-2 py-1 rounded-sm hover:bg-slate-100"
                                                                 onClick={() => {
                                                                     setValues({ ...values, make: make, model: '' });
                                                                     setShowMakeSuggestions(false);
@@ -315,9 +314,9 @@ const CustomerVehicleForm = ({ open, close, refresh, setRefresh, CustomerId, get
                                     </div>
 
                                     <div ref={modelInputRef} className="relative col-span-1">
-                                        <label className="font-bold">Model</label>
+                                        <label className="text-[13px] font-medium text-slate-700">Model</label>
                                         <input
-                                            className="w-full p-2 border border-gray-300 rounded-md text-black font-small disabled:bg-gray-100"
+                                            className="w-full h-9 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20 disabled:bg-slate-50 disabled:text-slate-500"
                                             id="model"
                                             name="model"
                                             type="text"
@@ -330,7 +329,7 @@ const CustomerVehicleForm = ({ open, close, refresh, setRefresh, CustomerId, get
                                             placeholder={!values.make ? "Select make first" : "Select model"}
                                         />
                                         {showModelSuggestions && values.make && (
-                                            <ul className="absolute left-0 right-0 z-50 bg-white border border-slate-700 w-full mt-1 overflow-y-auto min-h-24 max-h-48">
+                                            <ul className="absolute left-0 right-0 z-50 bg-white border border-slate-200 rounded-md shadow-lg w-full mt-1 overflow-y-auto min-h-24 max-h-48">
                                                 {vehicles.length > 0 ?
                                                     vehicles
                                                         .filter(vehicle => (vehicle.make === values.make) && vehicle.model.toLowerCase().includes(values.model.toLowerCase()))
@@ -338,7 +337,7 @@ const CustomerVehicleForm = ({ open, close, refresh, setRefresh, CustomerId, get
                                                         .map((vehicle) => (
                                                             <li
                                                                 key={vehicle.id}
-                                                                className="cursor-pointer px-2 py-1 rounded-sm hover:bg-gray-200"
+                                                                className="cursor-pointer px-2 py-1 rounded-sm hover:bg-slate-100"
                                                                 onClick={() => {
                                                                     setValues({ ...values, model: vehicle.model });
                                                                     setShowModelSuggestions(false);
@@ -356,15 +355,15 @@ const CustomerVehicleForm = ({ open, close, refresh, setRefresh, CustomerId, get
                                     {/* </div> */}
 
                                     {/* {(touched.make && errors.make) ? (
-                                            <div className="text-red-500">
+                                            <div className="mt-1 text-xs text-red-600">
                                                 {errors.make}
                                             </div>
                                         ) : (<div></div>)} */}
                                     {/* </div> */}
                                     <div className="col-span-1">
-                                        <label className="font-bold">Odometer</label> <br />
+                                        <label className="text-[13px] font-medium text-slate-700">Odometer</label> <br />
                                         <input
-                                            className="w-full p-2 border border-gray-300 rounded-md text-black font-small"
+                                            className="w-full h-9 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                                             id="odometer"
                                             name="odometer"
                                             type="number"
@@ -374,7 +373,7 @@ const CustomerVehicleForm = ({ open, close, refresh, setRefresh, CustomerId, get
                                             autoComplete="off"
                                         />
                                         {touched.odometer && errors.odometer ? (
-                                            <div className="text-red-500 text-xs mt-1">
+                                            <div className="mt-1 text-xs text-red-600">
                                                 {errors.odometer}
                                             </div>
                                         ) : (<div></div>)}
@@ -385,9 +384,9 @@ const CustomerVehicleForm = ({ open, close, refresh, setRefresh, CustomerId, get
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
 
                                     <div className="col-span-1">
-                                        <label className="font-bold">License No.</label> <br />
+                                        <label className="text-[13px] font-medium text-slate-700">License No.</label> <br />
                                         <input
-                                            className="w-full p-2 border border-gray-300 rounded-md text-black font-small"
+                                            className="w-full h-9 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                                             id="licenseNo"
                                             name="licenseNo"
                                             type="text"
@@ -397,15 +396,15 @@ const CustomerVehicleForm = ({ open, close, refresh, setRefresh, CustomerId, get
                                             autoComplete="off"
                                         />
                                         {touched.licenseNo && errors.licenseNo ? (
-                                            <div className="text-red-500">
+                                            <div className="mt-1 text-xs text-red-600">
                                                 {errors.licenseNo}
                                             </div>
                                         ) : (<div></div>)}
                                     </div>
                                     <div className="col-span-1">
-                                        <label className="font-bold">Vin No.</label> <br />
+                                        <label className="text-[13px] font-medium text-slate-700">Vin No.</label> <br />
                                         <input
-                                            className="w-full p-2 border border-gray-300 rounded-md text-black font-small"
+                                            className="w-full h-9 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                                             id="vinNo"
                                             name="vinNo"
                                             type="text"
@@ -415,15 +414,15 @@ const CustomerVehicleForm = ({ open, close, refresh, setRefresh, CustomerId, get
                                             autoComplete="off"
                                         />
                                         {touched.vinNo && errors.vinNo ? (
-                                            <div className="text-red-500">
+                                            <div className="mt-1 text-xs text-red-600">
                                                 {errors.vinNo}
                                             </div>
                                         ) : (<div></div>)}
                                     </div>
                                     <div>
-                                        <label className="font-bold">Engine Size</label> <br />
+                                        <label className="text-[13px] font-medium text-slate-700">Engine Size</label> <br />
                                         <input
-                                            className="w-full p-2 border border-gray-300 rounded-md text-black font-small"
+                                            className="w-full h-9 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                                             id="engineSize"
                                             name="engineSize"
                                             type="number"
@@ -433,15 +432,15 @@ const CustomerVehicleForm = ({ open, close, refresh, setRefresh, CustomerId, get
                                             autoComplete="off"
                                         />
                                         {touched.engineSize && errors.engineSize ? (
-                                            <div className="text-red-500">
+                                            <div className="mt-1 text-xs text-red-600">
                                                 {errors.engineSize}
                                             </div>
                                         ) : (<div></div>)}
                                     </div>
                                     <div>
-                                        <label className="font-bold">Color</label> <br />
+                                        <label className="text-[13px] font-medium text-slate-700">Color</label> <br />
                                         <input
-                                            className="w-full p-2 border border-gray-300 rounded-md text-black font-small"
+                                            className="w-full h-9 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                                             id="color"
                                             name="color"
                                             type="text"
@@ -451,7 +450,7 @@ const CustomerVehicleForm = ({ open, close, refresh, setRefresh, CustomerId, get
                                             autoComplete="off"
                                         />
                                         {touched.color && errors.color ? (
-                                            <div className="text-red-500">
+                                            <div className="mt-1 text-xs text-red-600">
                                                 {errors.color}
                                             </div>
                                         ) : (<div></div>)}
@@ -459,9 +458,9 @@ const CustomerVehicleForm = ({ open, close, refresh, setRefresh, CustomerId, get
                                 </div>
                                 {/* </div> */}
                                 <div className="mt-4">
-                                    <label className="font-bold">Notes</label> <br />
+                                    <label className="text-[13px] font-medium text-slate-700">Notes</label> <br />
                                     <textarea
-                                        className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
+                                        className="w-full h-9 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                                         id="notes"
                                         name="notes"
                                         value={values.notes}
@@ -469,15 +468,15 @@ const CustomerVehicleForm = ({ open, close, refresh, setRefresh, CustomerId, get
                                         onBlur={handleBlur}
                                     />
                                     {touched.notes && errors.notes && (
-                                        <div className="text-red-500">
+                                        <div className="mt-1 text-xs text-red-600">
                                             {errors.notes}
                                         </div>
                                     )}
                                 </div>
                             </div>
-                            <div className="flex items-center justify-end space-x-2 sticky bg-gradient-to-br from-gray-800 to-gray-700">
+                            <div className="flex items-center justify-end gap-2 border-t border-slate-200 bg-slate-50 px-4 py-2.5">
                                 <button
-                                    className=" w-32 bg-gray-600 hover:bg-gray-900 text-white font-bold py-2 px-4"
+                                    className="w-auto rounded-md px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-200/60"
                                     onClick={() => clearForm(formikProps)}
                                     type="button"
                                 >
@@ -485,13 +484,13 @@ const CustomerVehicleForm = ({ open, close, refresh, setRefresh, CustomerId, get
                                 </button>
                                 <button
                                     disabled={isLoading}
-                                    className="w-32 bg-gray-600 hover:bg-gray-900 text-white font-bold py-2 px-4"
+                                    className="w-28 rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800 disabled:opacity-50"
                                     type="submit"
                                 >
                                     {!isLoading ?
                                         <span>{edit ? 'Update' : 'Save'}</span> :
                                         <div className="flex items-center justify-center h-fit">
-                                            <div className="w-6 h-6 border-4 border-gray-500 border-t-transparent rounded-full animate-spin"></div>
+                                            <div className="w-6 h-6 rounded-full border-2 border-white/40 border-t-white animate-spin"></div>
                                         </div>
                                     }
                                 </button>

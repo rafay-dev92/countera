@@ -1,16 +1,18 @@
-const express = require("express");
-const sendMail = require("../utils/sendMail");
+import express from "express";
+import sendMail from "../utils/sendMail";
 const router = express.Router();
-const multer = require("multer");
+import multer from "multer";
+import type { SendMailOptions } from "nodemailer";
 
 const upload = multer();
 
+// the middleware is runtime-identical, so bridge the type mismatch with a cast.
 router.post("/send/invoice", upload.single("pdf"), async (req, res) => {
   try {
     if (req.body.customerEmail === "" || req.body.businessEmail === "") return res.status(400).json({ message: "Customer or Business Email is missing" });
     if (req.body.businessName === "") return res.status(400).json({ message: "Business Name is missing" });
 
-    const mailOptions = {
+    const mailOptions: SendMailOptions = {
       from: `"${req.body.businessName}" <${process.env.GMAIL_SMTP_EMAIL}>`,
       to: req.body.customerEmail,
       replyTo: req.body.businessEmail,
@@ -24,7 +26,7 @@ router.post("/send/invoice", upload.single("pdf"), async (req, res) => {
       attachments: [
         {
           filename: "invoice.pdf",
-          content: req.file.buffer,
+          content: req.file!.buffer,
           contentType: "application/pdf",
         },
       ],
@@ -42,7 +44,7 @@ router.post("/send/quotation", upload.single("pdf"), async (req, res) => {
     if (req.body.customerEmail === "" || req.body.businessEmail === "") return res.status(400).json({ message: "Customer or Business Email is missing" });
     if (req.body.businessName === "") return res.status(400).json({ message: "Business Name is missing" });
 
-    const mailOptions = {
+    const mailOptions: SendMailOptions = {
       from: `"${req.body.businessName}" <${process.env.GMAIL_SMTP_EMAIL}>`,
       to: req.body.customerEmail,
       replyTo: req.body.businessEmail,
@@ -56,7 +58,7 @@ router.post("/send/quotation", upload.single("pdf"), async (req, res) => {
       attachments: [
         {
           filename: "quotation.pdf",
-          content: req.file.buffer,
+          content: req.file!.buffer,
           contentType: "application/pdf",
         },
       ],
@@ -69,4 +71,4 @@ router.post("/send/quotation", upload.single("pdf"), async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

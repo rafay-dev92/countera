@@ -110,14 +110,14 @@ function MonthlyReportForm({ open, close, setReportData, onReportGenerated }) {
                 {open && (
                     <form onSubmit={handleSubmit} autoComplete="new" >
                         <div className="">
-                            <div className="bg-white rounded shadow-xl">
-                                <div className="flex items-center justify-between sticky bg-gradient-to-br from-gray-800 to-gray-700">
+                            <div className="bg-white rounded-xl shadow-xl overflow-hidden">
+                                <div className="flex items-center justify-between sticky bg-slate-50 px-2 py-1.5">
                                     <div></div>
                                     <div className="text-lg text-white font-medium" >
                                         Monthly Report
                                     </div>
                                     <button
-                                        className="bg-transparent hover:bg-gray-800 text-white font-bold py-2 px-4 rounded"
+                                        className="rounded-md p-2 text-slate-400 hover:bg-slate-200/70 hover:text-slate-600"
                                         onClick={handleClose}
                                         type="button"
                                     >
@@ -140,7 +140,7 @@ function MonthlyReportForm({ open, close, setReportData, onReportGenerated }) {
 
                                 <div className="p-6 space-y-4">
                                     <div className="flex flex-col gap-1">
-                                        <label className="font-bold">Month</label>
+                                        <label className="text-[13px] font-medium text-slate-700">Month</label>
                                         <DatePicker
                                             id="month"
                                             name="month"
@@ -149,18 +149,18 @@ function MonthlyReportForm({ open, close, setReportData, onReportGenerated }) {
                                             onBlur={handleBlur}
                                             dateFormat="yyyy-MM"
                                             showMonthYearPicker
-                                            className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
+                                            className="w-full h-9 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                                         />
                                         {(touched.month && errors.month) ? (
-                                            <div className="text-red-500">
+                                            <div className="mt-1 text-xs text-red-600">
                                                 {errors.month}
                                             </div>
                                         ) : (<div></div>)}
                                     </div>
                                 </div>
-                                <div className="flex items-center justify-end space-x-2 sticky bg-gradient-to-br from-gray-800 to-gray-700">
+                                <div className="flex items-center justify-end space-x-2 sticky bg-slate-50 px-2 py-1.5">
                                     <button
-                                        className=" w-32 bg-gray-600 hover:bg-gray-900 text-white font-bold py-2 px-4"
+                                        className=" w-28 rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800 disabled:opacity-50"
                                         onClick={() => clearForm(formikProps)}
                                         type="button"
                                     >
@@ -168,14 +168,14 @@ function MonthlyReportForm({ open, close, setReportData, onReportGenerated }) {
                                     </button>
                                     <button
                                         disabled={isLoading}
-                                        className="w-32 bg-gray-600 hover:bg-gray-900 text-white font-bold py-2 px-4"
+                                        className="w-28 rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800 disabled:opacity-50"
                                         type="submit"
                                     >
                                         {!isLoading ?
                                             <span>Generate</span>
                                             :
                                             <div className="flex items-center justify-center h-fit">
-                                                <div className="w-6 h-6 border-4 border-gray-500 border-t-transparent rounded-full animate-spin"></div>
+                                                <div className="w-6 h-6 rounded-full border-2 border-white/40 border-t-white animate-spin"></div>
                                             </div>
                                         }
                                     </button>

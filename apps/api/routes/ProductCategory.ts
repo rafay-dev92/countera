@@ -1,32 +1,26 @@
-const express = require("express");
+import express from "express";
 const router = express.Router();
-const { Product_Category, User, Business } = require("../models");
-const fetchUser = require("../middlewares/fetchUser");
-const { Op } = require("sequelize");
-require("dotenv").config();
+import { db, product_categories, users } from "../db";
+import { pickColumns } from "../db/helpers";
+import { eq, ne, and, desc } from "drizzle-orm";
+import fetchUser from "../middlewares/fetchUser";
+import "dotenv/config";
 
 // routes below
 router.get("/", fetchUser, async (req, res) => {
   try {
-    const user = await User.findOne({
-      where: { id: req.user.id },
-      include: [
-        {
-          model: Business,
-          as: "Business",
-        },
-      ],
+    const user = await db.query.users.findFirst({
+      where: eq(users.id, req.user.id),
+      with: { Business: true },
     });
 
     if (!user || !user.Business) {
       return res.status(404).json({ message: "User or business not found" });
     }
 
-    const products_categories = await Product_Category.findAll({
-      where: {
-        BusinessId: user.Business.id,
-      },
-      order: [["createdAt", "DESC"]],
+    const products_categories = await db.query.product_categories.findMany({
+      where: eq(product_categories.BusinessId, user.Business.id),
+      orderBy: [desc(product_categories.createdAt)],
     });
 
     return res.status(200).json(products_categories);
@@ -61,8 +55,11 @@ router.post("/create", fetchUser, async (req, res) => {
   try {
     const categoryData = req.body;
 
-    const existingCategory = await Product_Category.findOne({
-      where: { name: categoryData.name, BusinessId: categoryData.BusinessId },
+    const existingCategory = await db.query.product_categories.findFirst({
+      where: and(
+        eq(product_categories.name, categoryData.name),
+        eq(product_categories.BusinessId, categoryData.BusinessId)
+      ),
     });
 
     if (existingCategory) {
@@ -71,7 +68,9 @@ router.post("/create", fetchUser, async (req, res) => {
       });
     }
 
-    await Product_Category.create(categoryData);
+    await db
+      .insert(product_categories)
+      .values(pickColumns(product_categories, categoryData));
     return res.status(200).json({ message: "Category added successfully" });
   } catch (error) {
     console.error(error);
@@ -81,18 +80,20 @@ router.post("/create", fetchUser, async (req, res) => {
 
 router.put("/update/:id", fetchUser, async (req, res) => {
   try {
-    const category = await Product_Category.findByPk(req.params.id);
+    const category = await db.query.product_categories.findFirst({
+      where: eq(product_categories.id, req.params.id),
+    });
 
     if (!category) {
       return res.status(404).json({ message: "category not found" });
     }
 
-    const isExistingCategory = await Product_Category.findOne({
-      where: {
-        name: req.body.name,
-        BusinessId: req.body.BusinessId,
-        id: { [Op.ne]: req.params.id },
-      },
+    const isExistingCategory = await db.query.product_categories.findFirst({
+      where: and(
+        eq(product_categories.name, req.body.name),
+        eq(product_categories.BusinessId, req.body.BusinessId),
+        ne(product_categories.id, req.params.id)
+      ),
     });
 
     if (isExistingCategory) {
@@ -101,7 +102,13 @@ router.put("/update/:id", fetchUser, async (req, res) => {
       });
     }
 
-    await category.update(req.body);
+    const updates = pickColumns(product_categories, req.body);
+    if (Object.keys(updates).length) {
+      await db
+        .update(product_categories)
+        .set(updates)
+        .where(eq(product_categories.id, req.params.id));
+    }
 
     return res.status(200).json({ message: "Category updated successfully" });
   } catch (error) {
@@ -112,13 +119,17 @@ router.put("/update/:id", fetchUser, async (req, res) => {
 
 router.delete("/delete/:id", fetchUser, async (req, res) => {
   try {
-    const category = await Product_Category.findByPk(req.params.id);
+    const category = await db.query.product_categories.findFirst({
+      where: eq(product_categories.id, req.params.id),
+    });
 
     if (!category) {
       return res.status(404).json({ message: "category not found" });
     }
 
-    await category.destroy();
+    await db
+      .delete(product_categories)
+      .where(eq(product_categories.id, req.params.id));
 
     return res.status(200).json({ message: "Category deleted successfully" });
   } catch (error) {
@@ -127,4 +138,4 @@ router.delete("/delete/:id", fetchUser, async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

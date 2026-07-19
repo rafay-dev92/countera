@@ -368,7 +368,7 @@ const ViewInvoice = ({ printInvoice, setPrintInvoice, componentRef, appliedTaxes
                     </div>
 
                     {/* Desktop Sidebar */}
-                    <div className="w-64 bg-gradient-to-br from-gray-800 to-gray-700">
+                    <div className="w-64 bg-slate-50 px-2 py-1.5">
                         <SidebarContent />
                     </div>
                 </div>
@@ -376,7 +376,7 @@ const ViewInvoice = ({ printInvoice, setPrintInvoice, componentRef, appliedTaxes
                 {/* Mobile Layout */}
                 <div className="lg:hidden h-full flex flex-col relative overflow-hidden">
                     {/* Mobile Header with Menu */}
-                    <div className="flex items-center justify-between p-4 bg-gradient-to-br from-gray-800 to-gray-700">
+                    <div className="flex items-center justify-between p-4 bg-slate-50 px-2 py-1.5">
                         <div className="text-white">
                             <h2 className="text-sm font-normal text-gray-400">Balance Due</h2>
                             <h5 className="text-xl text-white font-normal">
@@ -405,7 +405,7 @@ const ViewInvoice = ({ printInvoice, setPrintInvoice, componentRef, appliedTaxes
 
                         {/* Mobile Sidebar */}
                         <div
-                            className={`absolute top-0 right-0 w-64 h-full bg-gradient-to-br from-gray-800 to-gray-700 border-l border-gray-600 shadow-lg transition-transform duration-300 ease-in-out ${isOpen ? "transform translate-x-0" : "transform translate-x-full"}`}
+                            className={`absolute top-0 right-0 w-64 h-full bg-slate-50 px-2 py-1.5 border-l border-gray-600 shadow-lg transition-transform duration-300 ease-in-out ${isOpen ? "transform translate-x-0" : "transform translate-x-full"}`}
                         >
                             <SidebarContent />
                         </div>

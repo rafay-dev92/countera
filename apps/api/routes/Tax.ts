@@ -1,29 +1,31 @@
-const express = require('express');
+import express from "express";
 const router = express.Router();
-const { Tax, User } = require('../models');
-const fetchUser = require('../middlewares/fetchUser');
-const { Op } = require('sequelize');
-require('dotenv').config();
+import { db, taxes, users } from "../db";
+import { pickColumns } from "../db/helpers";
+import { eq, ne, and, isNotNull } from "drizzle-orm";
+import { UserRole } from "@countera/shared";
+import fetchUser from "../middlewares/fetchUser";
+import "dotenv/config";
 
 router.get('/', fetchUser, async (req, res) => {
     try {
         const userId = req.user.id;
-        const user = await User.findOne({
-            where: { id: userId, role: { [Op.ne]: 'super-admin' }, BusinessId: { [Op.ne]: null } },
+        const user = await db.query.users.findFirst({
+            where: and(eq(users.id, userId), ne(users.role, UserRole.SUPER_ADMIN), isNotNull(users.BusinessId)),
         })
 
         if (user) {
-            const taxes = await Tax.findAll({
-                where: { BusinessId: user.dataValues.BusinessId },
-                include: ['Business']
+            const taxList = await db.query.taxes.findMany({
+                where: eq(taxes.BusinessId, user.BusinessId!),
+                with: { Business: true }
             });
-            return res.json(taxes);
+            return res.json(taxList);
         }
 
-        const taxes = await Tax.findAll({
-            include: ['Business']
+        const taxList = await db.query.taxes.findMany({
+            with: { Business: true }
         });
-        return res.json(taxes);
+        return res.json(taxList);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -31,7 +33,7 @@ router.get('/', fetchUser, async (req, res) => {
 
 router.get('/:id', fetchUser, async (req, res) => {
     try {
-        const tax = await Tax.findByPk(req.params.id);
+        const tax = await db.query.taxes.findFirst({ where: eq(taxes.id, req.params.id) });
 
         if (!tax) {
             return res.status(404).json({ message: 'Tax not found' });
@@ -46,8 +48,8 @@ router.get('/:id', fetchUser, async (req, res) => {
 router.post('/create', fetchUser, async (req, res) => {
     try {
         const taxData = req.body;
-        const existingTax = await Tax.findOne({
-            where: { name: taxData.name, BusinessId: taxData.BusinessId }
+        const existingTax = await db.query.taxes.findFirst({
+            where: and(eq(taxes.name, taxData.name), eq(taxes.BusinessId, taxData.BusinessId))
         });
 
         if (existingTax) {
@@ -55,13 +57,15 @@ router.post('/create', fetchUser, async (req, res) => {
         }
 
         if (taxData.default) {
-            const DefaultTax = await Tax.findOne({ default: true, BusinessId: taxData.BusinessId });
+            const DefaultTax = await db.query.taxes.findFirst({
+                where: and(eq(taxes.default, true), eq(taxes.BusinessId, taxData.BusinessId))
+            });
             if (DefaultTax) {
-                await DefaultTax.update({ default: false });
+                await db.update(taxes).set({ default: false }).where(eq(taxes.id, DefaultTax.id));
             }
         }
 
-        await Tax.create(taxData);
+        await db.insert(taxes).values(pickColumns(taxes, taxData));
         res.status(200).json({ message: "Tax created successfully" });
 
     } catch (error) {
@@ -72,21 +76,26 @@ router.post('/create', fetchUser, async (req, res) => {
 
 router.put('/update/:id', fetchUser, async (req, res) => {
     try {
-        const tax = await Tax.findByPk(req.params.id);
+        const tax = await db.query.taxes.findFirst({ where: eq(taxes.id, req.params.id) });
 
         if (!tax) {
             return res.status(404).json({ message: 'tax not found' });
         }
 
         if (req.body.default) {
-            const DefaultTax = await Tax.findOne({ where: { default: true, BusinessId: tax.BusinessId } });
+            const DefaultTax = await db.query.taxes.findFirst({
+                where: and(eq(taxes.default, true), eq(taxes.BusinessId, tax.BusinessId!))
+            });
             console.log(DefaultTax);
             if (DefaultTax) {
-                await DefaultTax.update({ default: false });
+                await db.update(taxes).set({ default: false }).where(eq(taxes.id, DefaultTax.id));
             }
         }
 
-        await tax.update(req.body);
+        const updates = pickColumns(taxes, req.body);
+        if (Object.keys(updates).length) {
+            await db.update(taxes).set(updates).where(eq(taxes.id, req.params.id));
+        }
 
         res.status(200).json({ message: 'Tax updated successfully' });
     } catch (error) {
@@ -97,13 +106,13 @@ router.put('/update/:id', fetchUser, async (req, res) => {
 
 router.delete('/delete/:id', fetchUser, async (req, res) => {
     try {
-        const tax = await Tax.findByPk(req.params.id);
+        const tax = await db.query.taxes.findFirst({ where: eq(taxes.id, req.params.id) });
 
         if (!tax) {
             return res.status(404).json({ message: 'tax not found' });
         }
 
-        await tax.destroy();
+        await db.delete(taxes).where(eq(taxes.id, req.params.id));
 
         res.status(200).json({ message: 'Tax deleted successfully' });
     } catch (error) {
@@ -112,4 +121,4 @@ router.delete('/delete/:id', fetchUser, async (req, res) => {
     }
 })
 
-module.exports = router;
+export default router;

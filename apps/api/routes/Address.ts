@@ -1,13 +1,15 @@
-const express = require('express');
+import express from "express";
 const router = express.Router();
-const { Address } = require('../models');
-const fetchUser = require('../middlewares/fetchUser');
-require('dotenv').config();
+import { db, addresses } from "../db";
+import { pickColumns } from "../db/helpers";
+import { eq } from "drizzle-orm";
+import fetchUser from "../middlewares/fetchUser";
+import "dotenv/config";
 
 router.get('/', fetchUser, async (req, res) => {
     try {
-        const addresses = await Address.findAll();
-        res.json(addresses);
+        const addressRows = await db.query.addresses.findMany();
+        res.json(addressRows);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -15,7 +17,9 @@ router.get('/', fetchUser, async (req, res) => {
 
 router.get('/:id', fetchUser, async (req, res) => {
     try {
-        const address = await Address.findByPk(req.params.id);
+        const address = await db.query.addresses.findFirst({
+            where: eq(addresses.id, req.params.id),
+        });
 
         if (!address) {
             return res.status(404).json({ message: 'Address not found' });
@@ -30,7 +34,10 @@ router.get('/:id', fetchUser, async (req, res) => {
 router.post('/create', async (req, res) => {
     try {
         const addressData = req.body;
-        const newAddress = await Address.create(addressData);
+        const [newAddress] = await db
+            .insert(addresses)
+            .values(pickColumns(addresses, addressData))
+            .returning();
         res.json(newAddress);
 
     } catch (error) {
@@ -41,13 +48,21 @@ router.post('/create', async (req, res) => {
 
 router.put('/update/:id', async (req, res) => {
     try {
-        const address = await Address.findByPk(req.params.id);
+        const address = await db.query.addresses.findFirst({
+            where: eq(addresses.id, req.params.id),
+        });
 
         if (!address) {
             return res.status(404).json({ message: 'address not found' });
         }
 
-        await address.update(req.body);
+        const updates = pickColumns(addresses, req.body);
+        if (Object.keys(updates).length) {
+            await db
+                .update(addresses)
+                .set(updates)
+                .where(eq(addresses.id, req.params.id));
+        }
 
         res.json({ message: 'Address updated successfully' });
     } catch (error) {
@@ -58,13 +73,15 @@ router.put('/update/:id', async (req, res) => {
 
 router.delete('/delete/:id', async (req, res) => {
     try {
-        const address = await Address.findByPk(req.params.id);
+        const address = await db.query.addresses.findFirst({
+            where: eq(addresses.id, req.params.id),
+        });
 
         if (!address) {
             return res.status(404).json({ message: 'address not found' });
         }
 
-        await address.destroy();
+        await db.delete(addresses).where(eq(addresses.id, req.params.id));
 
         res.json({ message: 'Address deleted successfully' });
     } catch (error) {
@@ -73,4 +90,4 @@ router.delete('/delete/:id', async (req, res) => {
     }
 })
 
-module.exports = router;
+export default router;

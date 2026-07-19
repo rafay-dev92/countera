@@ -334,14 +334,13 @@ const CustomerForm = ({ open, close, selectedItem, setSelectedItem, refresh, set
         {open && (
           <form onSubmit={handleSubmit} autoComplete="new">
             <div className="fixed -top-16 lg:top-0 left-0 w-full h-full flex justify-center items-center">
-              <div className="bg-white rounded shadow-xl">
-                <div className="flex items-center justify-between sticky bg-gradient-to-br from-gray-800 to-gray-700">
-                  <div></div>
-                  <div className="text-white text-center text-lg">
-                    {edit ? "EDIT CUSTOMER" : "NEW CUSTOMER"}
+              <div className="bg-white rounded-xl shadow-xl overflow-hidden">
+                <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-2">
+                  <div className="text-[15px] font-semibold text-slate-900">
+                    {edit ? "Edit customer" : "New customer"}
                   </div>
                   <button
-                    className=" bg-transparent hover:bg-gray-800 text-white font-bold py-2 px-4 rounded"
+                    className=" rounded-md p-2 text-slate-400 hover:bg-slate-200/70 hover:text-slate-600"
                     onClick={handleClose}
                     type="button"
                   >
@@ -375,7 +374,7 @@ const CustomerForm = ({ open, close, selectedItem, setSelectedItem, refresh, set
                           className="hidden"
                         />
                         <div
-                          className={`px-4 py-2 rounded-full transition-colors ${values.customerType === 'personal' ? 'bg-gradient-to-br from-gray-800 to-gray-700 text-white' : 'bg-gray-200 text-gray-700'
+                          className={`px-4 py-2 rounded-full transition-colors ${values.customerType === 'personal' ? 'bg-teal-700 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200/60'
                             }`}
                         >
                           Personal
@@ -392,7 +391,7 @@ const CustomerForm = ({ open, close, selectedItem, setSelectedItem, refresh, set
                           className="hidden"
                         />
                         <div
-                          className={`px-4 py-2 rounded-full transition-colors ${values.customerType === 'business' ? 'bg-gradient-to-br from-gray-800 to-gray-700 text-white' : 'bg-gray-200 text-gray-700'
+                          className={`px-4 py-2 rounded-full transition-colors ${values.customerType === 'business' ? 'bg-teal-700 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200/60'
                             }`}
                         >
                           Business
@@ -402,9 +401,9 @@ const CustomerForm = ({ open, close, selectedItem, setSelectedItem, refresh, set
                   </div>
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                     <div className="flex flex-col">
-                      <label className="font-bold">First Name</label>
+                      <label className="text-[13px] font-medium text-slate-700">First Name</label>
                       <input
-                        className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
+                        className="w-full h-9 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                         id="firstName"
                         name="firstName"
                         type="text"
@@ -413,15 +412,15 @@ const CustomerForm = ({ open, close, selectedItem, setSelectedItem, refresh, set
                         onBlur={handleBlur}
                       />
                       {(touched.firstName && errors.firstName) ? (
-                        <div className="text-red-500">
+                        <div className="mt-1 text-xs text-red-600">
                           {errors.firstName}
                         </div>
                       ) : (<div></div>)}
                     </div>
                     <div className="flex flex-col">
-                      <label className="font-bold">Last Name</label>
+                      <label className="text-[13px] font-medium text-slate-700">Last Name</label>
                       <input
-                        className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
+                        className="w-full h-9 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                         id="lastName"
                         name="lastName"
                         type="text"
@@ -430,16 +429,16 @@ const CustomerForm = ({ open, close, selectedItem, setSelectedItem, refresh, set
                         onBlur={handleBlur}
                       />
                       {touched.lastName && errors.lastName ? (
-                        <div className="text-red-500">
+                        <div className="mt-1 text-xs text-red-600">
                           {errors.lastName}
                         </div>
                       ) : (<div></div>)}
                     </div>
 
                     <div className="flex flex-col">
-                      <label className="font-bold">Mobile Phone</label>
+                      <label className="text-[13px] font-medium text-slate-700">Mobile Phone</label>
                       <input
-                        className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
+                        className="w-full h-9 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                         id="phone"
                         name="phone"
                         type="text"
@@ -448,7 +447,7 @@ const CustomerForm = ({ open, close, selectedItem, setSelectedItem, refresh, set
                         onBlur={handleBlur}
                       />
                       {(touched.phone && errors.phone) ? (
-                        <div className="text-red-500">
+                        <div className="mt-1 text-xs text-red-600">
                           {errors.phone}
                         </div>
                       ) : (<div></div>)}
@@ -457,9 +456,9 @@ const CustomerForm = ({ open, close, selectedItem, setSelectedItem, refresh, set
 
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                     <div className="flex flex-col">
-                      <label className="font-bold">Email</label>
+                      <label className="text-[13px] font-medium text-slate-700">Email</label>
                       <input
-                        className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
+                        className="w-full h-9 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                         id="email"
                         name="email"
                         type="email"
@@ -468,15 +467,15 @@ const CustomerForm = ({ open, close, selectedItem, setSelectedItem, refresh, set
                         onBlur={handleBlur}
                       />
                       {touched.email && errors.email && (
-                        <div className="text-red-500">
+                        <div className="mt-1 text-xs text-red-600">
                           {errors.email}
                         </div>
                       )}
                     </div>
                     <div className="flex flex-col">
-                      <label className="font-bold">Permit/License No</label>
+                      <label className="text-[13px] font-medium text-slate-700">Permit/License No</label>
                       <input
-                        className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
+                        className="w-full h-9 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                         id="licenseNo"
                         name="licenseNo"
                         type="text"
@@ -486,7 +485,7 @@ const CustomerForm = ({ open, close, selectedItem, setSelectedItem, refresh, set
                         disabled={values.customerType !== 'business'}
                       />
                       {touched.licenseNo && errors.licenseNo && (
-                        <div className="text-red-500">
+                        <div className="mt-1 text-xs text-red-600">
                           {errors.licenseNo}
                         </div>
                       )}
@@ -497,8 +496,8 @@ const CustomerForm = ({ open, close, selectedItem, setSelectedItem, refresh, set
 
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-8">
                     <div className="flex flex-col gap-1.5 lg:col-span-3">
-                      <label className="font-bold">Street</label>
-                      <input className="p-2 w-full border border-gray-300 rounded-md text-black font-medium"
+                      <label className="text-[13px] font-medium text-slate-700">Street</label>
+                      <input className="w-full h-9 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                         id="Address.street"
                         name="Address.street"
                         type="text"
@@ -507,15 +506,15 @@ const CustomerForm = ({ open, close, selectedItem, setSelectedItem, refresh, set
                         onBlur={handleBlur}
                       />
                       {(touched.Address?.street && errors.Address?.street) ? (
-                        <div className="text-red-500">
+                        <div className="mt-1 text-xs text-red-600">
                           {errors.Address.street}
                         </div>
                       ) : (<div></div>)}
                     </div>
 
                     <div className="flex flex-col gap-1.5 lg:col-span-2">
-                      <label className="font-bold">City</label>
-                      <input className="p-2 w-full border border-gray-300 rounded-md text-black font-medium"
+                      <label className="text-[13px] font-medium text-slate-700">City</label>
+                      <input className="w-full h-9 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                         id="Address.city"
                         name="Address.city"
                         type="text"
@@ -524,15 +523,15 @@ const CustomerForm = ({ open, close, selectedItem, setSelectedItem, refresh, set
                         onBlur={handleBlur}
                       />
                       {(touched.Address?.city && errors.Address?.city) ? (
-                        <div className="text-red-500">
+                        <div className="mt-1 text-xs text-red-600">
                           {errors.Address.city}
                         </div>
                       ) : (<div></div>)}
                     </div>
 
                     <div className="flex flex-col gap-1.5 lg:col-span-2">
-                      <label className="font-bold">State</label>
-                      <input className="p-2 w-full border border-gray-300 rounded-md text-black font-medium"
+                      <label className="text-[13px] font-medium text-slate-700">State</label>
+                      <input className="w-full h-9 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                         id="Address.state"
                         name="Address.state"
                         type="text"
@@ -541,15 +540,15 @@ const CustomerForm = ({ open, close, selectedItem, setSelectedItem, refresh, set
                         onBlur={handleBlur}
                       />
                       {(touched.Address?.state && errors.Address?.state) ? (
-                        <div className="text-red-500">
+                        <div className="mt-1 text-xs text-red-600">
                           {errors.Address.state}
                         </div>
                       ) : (<div></div>)}
                     </div>
 
                     <div className="flex flex-col gap-1.5 lg:col-span-1">
-                      <label className="font-bold">Zip Code</label>
-                      <input className="p-2 w-full border border-gray-300 rounded-md text-black font-medium"
+                      <label className="text-[13px] font-medium text-slate-700">Zip Code</label>
+                      <input className="w-full h-9 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                         id="Address.zipcode"
                         name="Address.zipcode"
                         type="text"
@@ -558,7 +557,7 @@ const CustomerForm = ({ open, close, selectedItem, setSelectedItem, refresh, set
                         onBlur={handleBlur}
                       />
                       {(touched.Address?.zipcode && errors.Address?.zipcode) ? (
-                        <div className="text-red-500">
+                        <div className="mt-1 text-xs text-red-600">
                           {errors.Address.zipcode}
                         </div>
                       ) : (<div></div>)}
@@ -568,8 +567,8 @@ const CustomerForm = ({ open, close, selectedItem, setSelectedItem, refresh, set
                     <div className="my-4 flex flex-col w-full">
                       <div className="basis-[10%] ">
                         <div className="flex items-center">
-                          <label className="p-1 font-bold">Vehicles</label>
-                          <PlusCircleIcon onClick={openPopup} className="h-6 w-6 text-blue-600 cursor-pointer" />
+                          <label className="text-[13px] font-medium text-slate-700">Vehicles</label>
+                          <PlusCircleIcon onClick={openPopup} className="h-6 w-6 text-teal-700 cursor-pointer" />
                         </div>
                         <CustomerForm />
                         {/* <select
@@ -599,18 +598,18 @@ const CustomerForm = ({ open, close, selectedItem, setSelectedItem, refresh, set
                       <div className="flex overflow-x-auto basis-[90%]">
                         {values.Vehicle && values.Vehicle.length > 0 &&
                           values.Vehicle.map((vehicle) => (
-                            <div className="flex items-center gap-4 w-fit h-fit border px-2 py-1 m-1 rounded-md whitespace-nowrap">
-                              <span onClick={() => handleEditVehicle(vehicle)} className="hover:underline cursor-pointer">{vehicle.make} {vehicle.model} {vehicle.year}</span>
-                              <TrashIcon className="h-4 w-4 text-red-500 cursor-pointer" onClick={() => { deleteVehicle(vehicle.id) }} />
+                            <div className="flex items-center gap-4 w-fit h-fit border border-slate-200 px-2 py-1 m-1 rounded-md whitespace-nowrap">
+                              <span onClick={() => handleEditVehicle(vehicle)} className="text-teal-700 font-medium hover:underline cursor-pointer">{vehicle.make} {vehicle.model} {vehicle.year}</span>
+                              <TrashIcon className="h-4 w-4 text-red-600 cursor-pointer" onClick={() => { deleteVehicle(vehicle.id) }} />
                             </div>
                           ))
                         }
                       </div>
                       {inspections.length > 0 && (
                         <div className="flex flex-col gap-2 basis-[90%]">
-                          <span className="font-bold mx-1 mt-2">Inspections</span>
+                          <span className="text-[13px] font-medium text-slate-700 mx-1 mt-2">Inspections</span>
                           <select
-                            className="w-full px-3 py-2 border rounded"
+                            className="w-full h-9 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                             onChange={(e) => setSelectedInspection(e.target.value)}
                           >
                             <option value="">Select an Inspection</option>
@@ -627,7 +626,7 @@ const CustomerForm = ({ open, close, selectedItem, setSelectedItem, refresh, set
                             })}
                           </select>
                           {selectedInspection && (
-                            <Button onClick={openInspection} className='bg-blue-600 w-fit ms-auto'>Open</Button>
+                            <Button onClick={openInspection} className='bg-teal-700 hover:bg-teal-800 w-fit ms-auto'>Open</Button>
                           )}
                         </div>
                       )}
@@ -635,9 +634,9 @@ const CustomerForm = ({ open, close, selectedItem, setSelectedItem, refresh, set
                   )}
 
                   <div className="w-full">
-                    <label className="font-bold">Notes</label> <br />
+                    <label className="text-[13px] font-medium text-slate-700">Notes</label> <br />
                     <textarea
-                      className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
+                      className="w-full h-9 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                       id="notes"
                       name="notes"
                       value={values.notes}
@@ -645,14 +644,14 @@ const CustomerForm = ({ open, close, selectedItem, setSelectedItem, refresh, set
                       onBlur={handleBlur}
                     />
                     {touched.notes && errors.notes && (
-                      <div className="text-red-500">
+                      <div className="mt-1 text-xs text-red-600">
                         {errors.notes}
                       </div>
                     )}
                   </div>
                   {values.customerType !== 'business' && (
                     <div>
-                      <label className="font-bold">
+                      <label className="text-[13px] font-medium text-slate-700">
                         <input
                           type="checkbox"
                           id="taxableCheckbox"
@@ -670,9 +669,9 @@ const CustomerForm = ({ open, close, selectedItem, setSelectedItem, refresh, set
                     </div>
                   )}
                 </div>
-                <div className="flex items-center justify-end space-x-2 sticky bg-gradient-to-br from-gray-800 to-gray-700">
+                <div className="flex items-center justify-end gap-2 border-t border-slate-200 bg-slate-50 px-4 py-2.5">
                   <button
-                    className=" w-32 bg-gray-600 hover:bg-gray-900 text-white font-bold py-2 px-4"
+                    className="w-auto rounded-md px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-200/60"
                     onClick={() => clearForm(formikProps)}
                     type="button"
                   >
@@ -680,13 +679,13 @@ const CustomerForm = ({ open, close, selectedItem, setSelectedItem, refresh, set
                   </button>
                   <button
                     disabled={isLoading}
-                    className="w-32 bg-gray-600 hover:bg-gray-900 text-white font-bold py-2 px-4"
+                    className="w-28 rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800 disabled:opacity-50"
                     type="submit"
                   >
                     {!isLoading ?
                       <span>{edit ? "Update" : "Save"}</span> :
                       <div className="flex items-center justify-center h-fit">
-                        <div className="w-6 h-6 border-4 border-gray-500 border-t-transparent rounded-full animate-spin"></div>
+                        <div className="w-6 h-6 rounded-full border-2 border-white/40 border-t-white animate-spin"></div>
                       </div>
                     }
                   </button>

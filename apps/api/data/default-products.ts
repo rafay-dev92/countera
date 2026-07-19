@@ -317,4 +317,4 @@ function getDefaultProducts() {
   ];
 }
 
-module.exports = getDefaultProducts;
+export default getDefaultProducts;

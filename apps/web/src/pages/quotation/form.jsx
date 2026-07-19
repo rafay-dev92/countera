@@ -1028,18 +1028,17 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
 
   return (
     <>
-      <Dialog className="bg-transparent shadow-none p-0" open={open} size="lg">
+      <Dialog className="bg-transparent shadow-none p-0" open={open} size="xl">
         {open && (
           <form onSubmit={handleSubmit}>
             <div className="flex justify-center items-start lg:items-center min-h-screen lg:max-h-[90vh]">
-              <div className="bg-white rounded shadow-xl w-[95vw] md:w-[95vw] lg:w-[95vw] xl:w-[80vw] 2xl:w-[65vw] mx-auto">
-                <div className="flex items-center justify-between sticky bg-gradient-to-br from-gray-800 to-gray-700">
-                  <div></div>
-                  <div className="text-white text-center text-lg">
-                    {state?.quotation?.isViewOpen ? "VIEW" : edit ? "EDIT" : "NEW"} {"QUOTATION"}
+              <div className="bg-white rounded-xl shadow-xl overflow-hidden w-full">
+                <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-2">
+                  <div className="text-[15px] font-semibold text-slate-900">
+                    {state?.quotation?.isViewOpen ? "View quotation" : edit ? "Edit quotation" : "New quotation"}
                   </div>
                   <button
-                    className="bg-transparent hover:bg-gray-800 text-white font-bold py-2 px-4 rounded"
+                    className="rounded-md p-2 text-slate-400 hover:bg-slate-200/70 hover:text-slate-600"
                     onClick={handleClose}
                     type="button"
                   >
@@ -1063,19 +1062,19 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
                 {state?.quotation?.isViewOpen ? (
                   <ViewQuotation quotationData={printQuotation} setQuotationData={setPrintQuotation} componentRef={componentRef} appliedTaxes={appliedTaxes} setEdit={setEdit} close={handleClose} />
                 ) : (
-                  <div className="overflow-y-auto h-[65vh] lg:h-[85vh] overflow-x-hidden p-4 md:p-6 w-[95vw] md:w-[95vw] lg:w-[95vw] xl:w-[80vw] 2xl:w-[65vw]">
+                  <div className="overflow-y-auto h-[65vh] lg:h-[85vh] overflow-x-auto p-4 md:p-6 w-full">
                     <div className="flex flex-col lg:flex-row gap-4">
                       <div className="w-full lg:w-[35%]">
                         <div className="relative mb-7" ref={customerInputRef}>
                           <div className="flex items-center pl-2">
-                            <label className="font-bold">Customer</label>
+                            <label className="text-[13px] font-medium text-slate-700">Customer</label>
                             <IconButton variant="text" onClick={() => setIsCustomerFormOpen(true)}>
                               <PlusCircleIcon className="h-5 w-5 text-teal-700 cursor-pointer" />
                             </IconButton>
                           </div>
                           <div className="px-2 relative">
                             <input
-                              className="w-full h-[97%] p-2 border border-gray-300 rounded-md text-gray-600 font-small"
+                              className="w-full h-9 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                               id="customer"
                               name="customer"
                               type="text"
@@ -1087,7 +1086,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
                               placeholder="Select Customer"
                             />
                             {showCustomerSuggestions && (
-                              <ul className="absolute left-0 right-0 z-50 bg-white border border-slate-700 mt-1 overflow-y-auto min-h-24 max-h-48">
+                              <ul className="absolute left-0 right-0 z-50 bg-white border border-slate-200 rounded-md shadow-lg mt-1 overflow-y-auto min-h-24 max-h-48">
                                 {customers.length > 0 ?
                                   customers
                                     .filter(customer => {
@@ -1100,7 +1099,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
                                     .map(customer => (
                                       <li
                                         key={customer.id}
-                                        className="cursor-pointer px-2 py-1 rounded-sm hover:bg-gray-200"
+                                        className="cursor-pointer px-2 py-1 rounded-sm hover:bg-slate-100"
                                         onClick={() => handleCustomerChange(customer)}
                                       >
                                         {customer.firstName} {customer.lastName}
@@ -1116,9 +1115,9 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
 
                         <div className="space-y-4 px-2">
                           <div>
-                            <label className="font-bold">Name</label>
+                            <label className="text-[13px] font-medium text-slate-700">Name</label>
                             <input
-                              className="w-full p-2 border border-gray-300 rounded-md text-black"
+                              className="w-full h-9 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20 disabled:bg-slate-50 disabled:text-slate-500"
                               id="email"
                               name="email"
                               type="email"
@@ -1128,9 +1127,9 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
                           </div>
 
                           <div>
-                            <label className="font-bold">Email</label>
+                            <label className="text-[13px] font-medium text-slate-700">Email</label>
                             <input
-                              className="w-full p-2 border border-gray-300 rounded-md text-black"
+                              className="w-full h-9 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20 disabled:bg-slate-50 disabled:text-slate-500"
                               id="email"
                               name="email"
                               type="email"
@@ -1140,9 +1139,9 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
                           </div>
 
                           <div>
-                            <label className="font-bold">Phone</label>
+                            <label className="text-[13px] font-medium text-slate-700">Phone</label>
                             <input
-                              className="w-full p-2 border border-gray-300 rounded-md text-black"
+                              className="w-full h-9 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20 disabled:bg-slate-50 disabled:text-slate-500"
                               id="phone"
                               name="phone"
                               type="text"
@@ -1152,9 +1151,9 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
                           </div>
 
                           <div>
-                            <label className="font-bold">Address</label>
+                            <label className="text-[13px] font-medium text-slate-700">Address</label>
                             <textarea
-                              className="w-full p-2 border border-gray-300 rounded-md text-black"
+                              className="w-full rounded-md border border-slate-300 bg-white px-2.5 py-2 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20 disabled:bg-slate-50 disabled:text-slate-500"
                               id="address"
                               name="address"
                               type="text"
@@ -1173,7 +1172,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
                           <div className="flex flex-col lg:flex-row gap-4">
                             <div className="w-full lg:w-1/2">
                               <div className="flex items-center pl-2">
-                                <label className="font-bold">Vehicle</label>
+                                <label className="text-[13px] font-medium text-slate-700">Vehicle</label>
                                 <IconButton variant="text" onClick={() => selectedCustomer && setIsCustomerVehicleFormOpen(true)}>
                                   <PlusCircleIcon className="h-5 w-5 text-teal-700 cursor-pointer" />
                                 </IconButton>
@@ -1182,7 +1181,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
                                 <select
                                   id="vehicle"
                                   name="vehicle"
-                                  className="w-full p-2 border border-gray-300 bg-inherit rounded-md"
+                                  className="w-full h-9 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20 disabled:bg-slate-50 disabled:text-slate-500"
                                   value={values.vehicle}
                                   onChange={(e) =>
                                     handleVehicleChange(e.target.value)
@@ -1199,10 +1198,10 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
                             </div>
 
                             <div className="w-full lg:w-1/2">
-                              <label className="font-bold pl-2">Comments</label>
+                              <label className="pl-2 text-[13px] font-medium text-slate-700">Comments</label>
                               <div className="px-2">
                                 <textarea
-                                  className="w-full p-2 border border-gray-300 rounded-md text-black"
+                                  className="w-full rounded-md border border-slate-300 bg-white px-2.5 py-2 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                                   id="comments"
                                   name="comments"
                                   type="text"
@@ -1216,10 +1215,10 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div className="space-y-4">
                               <div>
-                                <label className="pl-2 font-bold">Make</label>
+                                <label className="pl-2 text-[13px] font-medium text-slate-700">Make</label>
                                 <div className="px-2">
                                   <input
-                                    className="w-full p-2 border border-gray-300 rounded-md text-black"
+                                    className="w-full h-9 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20 disabled:bg-slate-50 disabled:text-slate-500"
                                     id="make"
                                     name="make"
                                     type="text"
@@ -1230,10 +1229,10 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
                               </div>
 
                               <div>
-                                <label className="pl-2 font-bold">Model</label>
+                                <label className="pl-2 text-[13px] font-medium text-slate-700">Model</label>
                                 <div className="px-2">
                                   <input
-                                    className="w-full p-2 border border-gray-300 rounded-md text-black"
+                                    className="w-full h-9 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20 disabled:bg-slate-50 disabled:text-slate-500"
                                     id="model"
                                     name="model"
                                     type="text"
@@ -1246,10 +1245,10 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
 
                             <div className="space-y-4">
                               <div>
-                                <label className="pl-2 font-bold">Year</label>
+                                <label className="pl-2 text-[13px] font-medium text-slate-700">Year</label>
                                 <div className="px-2">
                                   <input
-                                    className="w-full p-2 border border-gray-300 rounded-md text-black"
+                                    className="w-full h-9 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20 disabled:bg-slate-50 disabled:text-slate-500"
                                     id="year"
                                     name="year"
                                     type="number"
@@ -1260,10 +1259,10 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
                               </div>
 
                               <div>
-                                <label className="pl-2 font-bold">Color</label>
+                                <label className="pl-2 text-[13px] font-medium text-slate-700">Color</label>
                                 <div className="px-2">
                                   <input
-                                    className="w-full p-2 border border-gray-300 rounded-md text-black"
+                                    className="w-full h-9 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20 disabled:bg-slate-50 disabled:text-slate-500"
                                     id="color"
                                     name="color"
                                     type="text"
@@ -1280,7 +1279,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
                             <div className="space-y-4">
                               <div>
                                 <div className="flex items-center pl-2">
-                                  <label className="font-bold">Odometer</label>
+                                  <label className="text-[13px] font-medium text-slate-700">Odometer</label>
                                   <Tooltip content="Reset" className="z-[9999]">
                                     <IconButton
                                       variant='text'
@@ -1293,7 +1292,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
                                 </div>
                                 <div className="px-2">
                                   <input
-                                    className="w-full p-2 border border-gray-300 rounded-md text-black"
+                                    className="w-full h-9 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20 disabled:bg-slate-50 disabled:text-slate-500"
                                     id="year"
                                     name="year"
                                     type="number"
@@ -1304,10 +1303,10 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
                               </div>
 
                               <div>
-                                <label className="pl-2 font-bold">License No.</label>
+                                <label className="pl-2 text-[13px] font-medium text-slate-700">License No.</label>
                                 <div className="px-2">
                                   <input
-                                    className="w-full p-2 border border-gray-300 rounded-md text-black"
+                                    className="w-full h-9 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20 disabled:bg-slate-50 disabled:text-slate-500"
                                     id="color"
                                     name="color"
                                     type="text"
@@ -1320,12 +1319,12 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
 
                             <div className="space-y-12 mt-3">
                               <div>
-                                <label className="p-2 font-bold">Packages</label>
+                                <label className="p-2 text-[13px] font-medium text-slate-700">Packages</label>
                                 <div className="px-2">
                                   <select
                                     value={selectedPackage}
                                     disabled={!selectedCustomer}
-                                    className="w-full p-2 border border-gray-300 bg-inherit rounded-md"
+                                    className="w-full h-9 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20 disabled:bg-slate-50 disabled:text-slate-500"
                                     onChange={(e) => {
                                       setSelectedPackage(e.target.value);
                                       handlePackageChange(e.target.value);
@@ -1356,12 +1355,11 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
                             {TABLE_HEAD.map((head) => (
                               <th
                                 key={head}
-                                className="border-y border-blue-gray-100 bg-blue-gray-50/50 p-4"
+                                className="border-y border-slate-200 bg-slate-50/70 p-4"
                               >
                                 <Typography
                                   variant="small"
-                                  color="blue-gray"
-                                  className="font-normal leading-none opacity-70"
+                                  className="text-xs font-semibold leading-none text-slate-500"
                                 >
                                   {head}
                                 </Typography>
@@ -1369,13 +1367,13 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
                             ))}
                           </tr>
                         </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
+                        <tbody className="bg-white divide-y divide-slate-100">
                           {selectedProducts.map((item, index) => (
                             <tr key={index}>
-                              <td className="p-4 border-b border-blue-gray-50">
+                              <td className="p-4 border-b border-slate-100">
                                 {index !== (selectedProducts.length - 1) ?
                                   <div className="flex flex-col">
-                                    <div className="w-80 h-[97%] mx-2 p-2 border border-gray-300 rounded-md text-gray-600 font-small">
+                                    <div className="w-80 h-[97%] mx-2 p-2 border border-slate-300 rounded-md text-sm text-slate-700">
                                       {item.name}
                                     </div>
                                     {/* Product description */}
@@ -1383,7 +1381,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
                                       <input
                                         id="description"
                                         name="description"
-                                        className="w-80 h-[30%] mx-2 p-1 rounded-md text-gray-600 text-xs focus:outline-none "
+                                        className="w-80 h-[30%] mx-2 p-1 rounded-md text-slate-600 text-xs focus:outline-none "
                                         type="text"
                                         value={item.description}
                                         onChange={(e) => { setSelectedProducts((prev) => { const newProducts = [...prev]; newProducts[index].description = e.target.value; return newProducts }) }}
@@ -1396,7 +1394,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
                                   :
                                   <div ref={productInputRef} className="relative w-fit">
                                     <input
-                                      className="w-80 h-[97%] m-2 p-2 border border-gray-300 rounded-md text-gray-600 font-small"
+                                      className="w-80 h-[97%] m-2 p-2 rounded-md border border-slate-300 bg-white text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                                       id="product"
                                       name="product"
                                       type="text"
@@ -1408,7 +1406,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
                                       placeholder="Select Product"
                                     />
                                     {showProductSuggestions && (
-                                      <ul className="fixed bg-white border border-gray-300 overflow-y-auto min-h-24 max-h-48 w-80"
+                                      <ul className="fixed bg-white border border-slate-200 rounded-md shadow-lg overflow-y-auto min-h-24 max-h-48 w-80"
                                         style={{
                                           top: productsPosition.top,
                                           left: productsPosition.left,
@@ -1424,7 +1422,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
                                             .map(product => (
                                               <li
                                                 key={product.id}
-                                                className="cursor-pointer px-2 py-1 rounded-sm hover:bg-gray-200"
+                                                className="cursor-pointer px-2 py-1 rounded-sm hover:bg-slate-100"
                                                 onClick={() => {
                                                   handleProductChange(index, item.quantity, product.id);
                                                   setShowProductSuggestions(false);
@@ -1484,23 +1482,23 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
                                   </div>
                                 }
                               </td>
-                              <td className="p-4 border-b border-blue-gray-50">
+                              <td className="p-4 border-b border-slate-100">
                                 <input
                                   type="number"
                                   min={1}
-                                  className="w-14 p-2 border rounded-md text-black"
+                                  className="w-14 p-2 border border-slate-300 rounded-md text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                                   value={item.quantity}
                                   onChange={(e) =>
                                     handleQuantityChange(index, e.target.value)
                                   }
                                 />
                               </td>
-                              <td className="p-4 border-b border-blue-gray-50">
+                              <td className="p-4 border-b border-slate-100">
                                 <input
                                   type="number"
                                   min={0}
                                   step="0.01"
-                                  className="w-24 p-2 border rounded-md text-black"
+                                  className="w-24 p-2 border border-slate-300 rounded-md text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                                   value={item.price === 0 ? '' : item.price}
                                   placeholder="0.00"
                                   onChange={(e) =>
@@ -1508,28 +1506,27 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
                                   }
                                 />
                               </td>
-                              <td className="p-4 border-b border-blue-gray-50">
+                              <td className="p-4 border-b border-slate-100">
                                 <input
                                   type="checkbox"
                                   checked={selectedCustomer?.taxable && item.taxable}
                                   readOnly
                                 />
                               </td>
-                              <td className="p-4 border-b border-blue-gray-50">
+                              <td className="p-4 border-b border-slate-100 text-right">
                                 <Typography
                                   variant="small"
-                                  color="blue-gray"
-                                  className="font-normal opacity-70"
+                                  className="font-normal text-slate-700 tabular-nums"
                                 >
 
                                   {calculateAmount(item.price, item.quantity)}
                                 </Typography>
                               </td>
-                              <td className="p-4 border-b border-blue-gray-50 text-center px-4 py-2">
+                              <td className="p-4 border-b border-slate-100 text-center px-4 py-2">
                                 {index !== selectedProducts.length - 1 ?
                                   <XCircleIcon
                                     onClick={() => handleRemoveProduct(index)}
-                                    className="h-6 w-6 text-gray-600 hover:text-red-500 cursor-pointer"
+                                    className="h-6 w-6 text-slate-400 hover:text-red-600 cursor-pointer"
                                   />
                                   :
                                   null
@@ -1543,12 +1540,12 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
                     </div>
 
                     <div className="flex flex-col lg:flex-row gap-4">
-                      <div className="lg:basis-[50%] lg:max-w-[50%]">
+                      <div className="w-full min-w-0 lg:flex-1">
                       </div>
 
-                      <div className="lg:basis-[50%] lg:max-w-[50%] border my-4 font-normal">
+                      <div className="w-full lg:w-96 lg:shrink-0 border border-slate-200 rounded-lg overflow-hidden my-4 font-normal">
                         {/* {!edit && ( */}
-                          <div className="flex items-center justify-between px-2 lg:p-2 border-b-2 bg-yellow-300">
+                          <div className="flex items-center justify-between px-2 lg:p-2 border-b border-slate-200 bg-slate-50">
                             <div className="text-md">
                               <Input
                                 type="number"
@@ -1591,7 +1588,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
                           </div>
                         </div>
 
-                        <div className="flex flex-col divide-y border-y">
+                        <div className="flex flex-col divide-y divide-slate-200 border-y border-slate-200">
                           {Object.values(appliedTaxes).map((tax, ind) => (
                             <div key={ind} className="flex justify-between">
                               <span className="rounded w-min p-2 whitespace-nowrap basis-[50%]" >{`${tax.tax_name ?? ""} (${String(tax.tax_rate ?? "")}${String(tax.tax_type ?? "")})`}</span>
@@ -1600,7 +1597,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
                           ))}
                         </div>
                        
-                        <div className="flex justify-between border-b">
+                        <div className="flex justify-between border-b border-slate-200">
                           <span className="rounded w-min p-2 whitespace-nowrap basis-[50%]">
                             Labour
                           </span>
@@ -1657,7 +1654,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
                         <div></div>                        
                       </div> */}
 
-                        <div className="flex items-center justify-between p-2 font-medium text-black bg-yellow-700">
+                        <div className="flex items-center justify-between p-2 font-medium text-white bg-teal-700">
                           <div className="text-md">
                             <h1>Total</h1>
                           </div>
@@ -1670,12 +1667,12 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
                   </div>
                 )}
                 {!state?.quotation?.isViewOpen ? (
-                  <div className="flex items-center justify-end space-x-2 sticky bg-gradient-to-br from-gray-800 to-gray-700">
+                  <div className="flex items-center justify-end gap-2 border-t border-slate-200 bg-slate-50 px-4 py-2.5">
                     {/* <ReactToPrint
                     ref={printRef}
                     trigger={() => <button
                       onClick={() => setSelectedQuotation(selectedQuotation)}
-                      className={`w-32 bg-gray-600 hover:bg-gray-900 text-white font-bold py-2 px-4 ${!edit ? 'hidden' : ''}`}
+                      className={`w-28 rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800 disabled:opacity-50 ${!edit ? 'hidden' : ''}`}
                       type="button"
                     >
                       Print
@@ -1684,7 +1681,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
                   /> */}
 
                     {edit && (
-                      <button className=" w-32 bg-gray-600 hover:bg-gray-900 text-white font-bold py-2 px-4"
+                      <button className="w-auto rounded-md px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-200/60"
                         onClick={() => { setEdit(false); dispatch({ type: 'SET_QUOTATION_VIEW', payload: true }); }}
                         type="button"
                       >
@@ -1693,7 +1690,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
                     )}
 
                     <button
-                      className=" w-32 bg-gray-600 hover:bg-gray-900 text-white font-bold py-2 px-4"
+                      className="w-auto rounded-md px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-200/60"
                       onClick={() => clearForm(formikProps)}
                       type="button"
                     >
@@ -1701,19 +1698,19 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
                     </button>
                     <button
                       disabled={isLoading}
-                      className="w-32 bg-gray-600 hover:bg-gray-900 text-white font-bold py-2 px-4"
+                      className="w-28 rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800 disabled:opacity-50"
                       type="submit"
                     >
                       {!isLoading ?
                         <span>{edit ? 'Update' : 'Save'}</span> :
                         <div className="flex items-center justify-center h-fit">
-                          <div className="w-6 h-6 border-4 border-gray-500 border-t-transparent rounded-full animate-spin"></div>
+                          <div className="w-6 h-6 rounded-full border-2 border-white/40 border-t-white animate-spin"></div>
                         </div>
                       }
                     </button>
                   </div>
                 ) :
-                  <div className="flex items-center justify-end space-x-2 sticky bg-gradient-to-br from-gray-800 to-gray-700"></div>
+                  <div className="flex items-center justify-end gap-2 border-t border-slate-200 bg-slate-50 px-4 py-2.5"></div>
                 }
               </div>
             </div>
@@ -1734,31 +1731,31 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
           />
           <div className="relative bg-white p-6 rounded-xl shadow-2xl z-[10000]
                  transition-transform duration-300 ease-out animate-scaleIn w-[90%] max-w-xl max-h-[90%] overflow-y-auto">
-            <h2 className="text-lg font-bold mb-4">Package: {packagePreview.name}</h2>
+            <h2 className="text-lg font-semibold text-slate-900 mb-4">Package: {packagePreview.name}</h2>
 
             <div className="space-y-3 max-h-64 overflow-y-auto">
               {packagePreview.Product.map((product) => (
                 <div
                   key={product.id}
-                  className="flex justify-between items-center border p-2 rounded-md"
+                  className="flex justify-between items-center border border-slate-200 p-2 rounded-md"
                 >
                   <div>
                     <p className="font-medium">{product.name}</p>
-                    <p className="text-sm text-gray-500">Original Quantity: {product.package_product.quantity}</p>
-                    <p className="text-sm text-gray-500">Price: ${product.price}</p>
+                    <p className="text-sm text-slate-500">Original Quantity: {product.package_product.quantity}</p>
+                    <p className="text-sm text-slate-500">Price: ${product.price}</p>
                   </div>
                 </div>
               ))}
             </div>
 
             <div className="mt-4">
-              <label className="block font-medium">Update Quantity</label>
+              <label className="block text-[13px] font-medium text-slate-700">Update Quantity</label>
               <input
                 type="number"
                 min={1}
                 value={modalQuantity}
                 onChange={(e) => e.target.value > 0 ? setModalQuantity(Number(e.target.value)) : setModalQuantity(e.target.value)}
-                className="w-full p-2 border rounded-md mt-1"
+                className="w-full p-2 border border-slate-300 rounded-md mt-1 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
               />
             </div>
 
@@ -1769,7 +1766,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
                   setPackagePreview(null);
                   setSelectedPackage("");
                 }}
-                className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+                className="rounded-md px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-200/60"
               >
                 Discard
               </button>
@@ -1828,7 +1825,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedQuotation, setS
                   setShowPackageModal(false);
                   setPackagePreview(null);
                 }}
-                className={`px-4 py-2 bg-teal-700 text-white rounded hover:bg-teal-800 ${modalQuantity < 1 ? "opacity-50 cursor-not-allowed" : ""}`}
+                className={`rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800 ${modalQuantity < 1 ? "opacity-50 cursor-not-allowed" : ""}`}
               >
                 Add to Quote
               </button>

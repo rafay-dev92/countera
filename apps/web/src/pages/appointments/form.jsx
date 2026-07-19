@@ -246,14 +246,13 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, close, refresh, 
                 {open && (
                     <form onSubmit={handleSubmit} autoComplete="new" >
                         <div className="fixed -top-16 lg:top-0 left-0 w-full h-full flex justify-center items-center">
-                            <div className="bg-white rounded shadow-xl">
-                                <div className="flex items-center justify-between sticky bg-gradient-to-br from-gray-800 to-gray-700">
-                                    <div></div>
-                                    <div className={'text-white text-center text-lg'} >
-                                        {edit ? "EDIT APPOINTMENT" : "NEW APPOINTMENT"}
+                            <div className="bg-white rounded-xl shadow-xl overflow-hidden">
+                                <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-2">
+                                    <div className="text-[15px] font-semibold text-slate-900" >
+                                        {edit ? "Edit appointment" : "New appointment"}
                                     </div>
                                     <button
-                                        className="bg-transparent hover:bg-gray-800 text-white font-bold py-2 px-4 rounded"
+                                        className="rounded-md p-2 text-slate-400 hover:bg-slate-200/70 hover:text-slate-600"
                                         onClick={handleClose}
                                         type="button"
                                     >
@@ -278,9 +277,9 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, close, refresh, 
                                     <div className="space-y-4">
                                         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                                             <div className="flex flex-col gap-1">
-                                                <label className="font-bold">Customer Name</label>
+                                                <label className="text-[13px] font-medium text-slate-700">Customer Name</label>
                                                 <input
-                                                    className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
+                                                    className="w-full h-9 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                                                     id="customerName"
                                                     name="customerName"
                                                     type="customerName"
@@ -289,15 +288,15 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, close, refresh, 
                                                     onBlur={handleBlur}
                                                 />
                                                 {touched.customerName && errors.customerName && (
-                                                    <div className="text-red-500">
+                                                    <div className="mt-1 text-xs text-red-600">
                                                         {errors.customerName}
                                                     </div>
                                                 )}
                                             </div>
                                             <div className="flex flex-col">
-                                                <label className="font-bold">Customer Email</label>
+                                                <label className="text-[13px] font-medium text-slate-700">Customer Email</label>
                                                 <input
-                                                    className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
+                                                    className="w-full h-9 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                                                     id="customerEmail"
                                                     name="customerEmail"
                                                     type="customerEmail"
@@ -306,13 +305,13 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, close, refresh, 
                                                     onBlur={handleBlur}
                                                 />
                                                 {touched.customerEmail && errors.customerEmail && (
-                                                    <div className="text-red-500">
+                                                    <div className="mt-1 text-xs text-red-600">
                                                         {errors.customerEmail}
                                                     </div>
                                                 )}
                                             </div>
                                             <div className="flex flex-col">
-                                                <label className="font-bold">Start Date & Time</label>
+                                                <label className="text-[13px] font-medium text-slate-700">Start Date & Time</label>
                                                 <DatePicker
                                                     id="startDateTime"
                                                     name="startDateTime"
@@ -324,10 +323,10 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, close, refresh, 
                                                     timeIntervals={15}
                                                     dateFormat="yyyy-MM-dd HH:mm"
                                                     minDate={new Date()}
-                                                    className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
+                                                    className="w-full h-9 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                                                 />
                                                 {(touched.startDateTime && errors.startDateTime) ? (
-                                                    <div className="text-red-500">
+                                                    <div className="mt-1 text-xs text-red-600">
                                                         {errors.startDateTime}
                                                     </div>
                                                 ) : (<div></div>)}
@@ -336,9 +335,9 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, close, refresh, 
 
                                         {/* <div className="flex items-center justify-start space-x-4 w-full">
                                         <div className="basis-[50%]">
-                                            <label className="font-bold">Start Date & Time</label> <br />
+                                            <label className="text-[13px] font-medium text-slate-700">Start Date & Time</label> <br />
                                             <input
-                                                className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
+                                                className="w-full h-9 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                                                 id="startDateTime"
                                                 name="startDateTime"
                                                 type="datetime-local"
@@ -348,15 +347,15 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, close, refresh, 
                                                 onBlur={handleBlur}
                                             />
                                             {(touched.startDateTime && errors.startDateTime) ? (
-                                                <div className="text-red-500">
+                                                <div className="mt-1 text-xs text-red-600">
                                                     {errors.startDateTime}
                                                 </div>
                                             ) : (<div></div>)}
                                         </div>
                                         <div className="basis-[50%]">
-                                            <label className="font-bold">End Time</label> <br />
+                                            <label className="text-[13px] font-medium text-slate-700">End Time</label> <br />
                                             <input
-                                                className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
+                                                className="w-full h-9 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                                                 id="endDateTime"
                                                 name="endDateTime"
                                                 type="time"
@@ -365,7 +364,7 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, close, refresh, 
                                                 onBlur={handleBlur}
                                             />
                                             {touched.endDateTime && errors.endDateTime ? (
-                                                <div className="text-red-500">
+                                                <div className="mt-1 text-xs text-red-600">
                                                     {errors.endDateTime}
                                                 </div>
                                             ) : (<div></div>)}
@@ -373,9 +372,9 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, close, refresh, 
                                     </div> */}
 
                                         <div>
-                                            <label className="font-bold">Description</label> <br />
+                                            <label className="text-[13px] font-medium text-slate-700">Description</label> <br />
                                             <textarea
-                                                className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
+                                                className="w-full h-9 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                                                 id="description"
                                                 name="description"
                                                 type="description"
@@ -384,16 +383,16 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, close, refresh, 
                                                 onBlur={handleBlur}
                                             />
                                             {touched.description && errors.description && (
-                                                <div className="text-red-500">
+                                                <div className="mt-1 text-xs text-red-600">
                                                     {errors.description}
                                                 </div>
                                             )}
                                         </div>
                                     </div>
                                 </div>
-                                <div className="flex items-center justify-end space-x-2 sticky bg-gradient-to-br from-gray-800 to-gray-700">
+                                <div className="flex items-center justify-end gap-2 border-t border-slate-200 bg-slate-50 px-4 py-2.5">
                                     <button
-                                        className=" w-32 bg-gray-600 hover:bg-gray-900 text-white font-bold py-2 px-4"
+                                        className="w-auto rounded-md px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-200/60"
                                         onClick={() => clearForm(formikProps)}
                                         type="button"
                                     >
@@ -401,13 +400,13 @@ function AppointmentForm({ selectedItem, setSelectedItem, open, close, refresh, 
                                     </button>
                                     <button
                                         disabled={isLoading}
-                                        className="w-32 bg-gray-600 hover:bg-gray-900 text-white font-bold py-2 px-4"
+                                        className="w-28 rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800 disabled:opacity-50"
                                         type="submit"
                                     >
                                         {!isLoading ?
                                             <span>{edit ? "Update" : "Save"}</span> :
                                             <div className="flex items-center justify-center h-fit">
-                                                <div className="w-6 h-6 border-4 border-gray-500 border-t-transparent rounded-full animate-spin"></div>
+                                                <div className="w-6 h-6 rounded-full border-2 border-white/40 border-t-white animate-spin"></div>
                                             </div>
                                         }
                                     </button>

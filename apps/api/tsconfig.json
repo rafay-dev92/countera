@@ -4,8 +4,9 @@
     "allowJs": true,
     "checkJs": false,
     "noEmit": true,
-    "module": "CommonJS",
-    "moduleResolution": "Node"
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "useUnknownInCatchVariables": false
   },
   "include": ["**/*.js", "**/*.ts"],
   "exclude": ["node_modules", "uploads", "backups", "logs", "dist"]

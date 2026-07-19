@@ -1,6 +1,8 @@
-const express = require("express");
+import express from "express";
 const router = express.Router();
-const { Inspection } = require("../models"); // adjust path as needed
+import { db, inspections } from "../db"; // adjust path as needed
+import { pickColumns } from "../db/helpers";
+import { eq } from "drizzle-orm";
 
 // Create
 router.post("/create", async (req, res) => {
@@ -12,7 +14,10 @@ router.post("/create", async (req, res) => {
     //     CustomerVehicleId: data.CustomerVehicleId,
     // }));
 
-    const inspection = await Inspection.create(data);
+    const [inspection] = await db
+      .insert(inspections)
+      .values(pickColumns(inspections, data))
+      .returning();
     res.status(201).json(inspection);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -22,10 +27,10 @@ router.post("/create", async (req, res) => {
 // Read all
 router.get("/", async (req, res) => {
   try {
-    const inspections = await Inspection.findAll({
-      include: ["Customer", "CustomerVehicle"],
+    const inspectionRows = await db.query.inspections.findMany({
+      with: { Customer: true, CustomerVehicle: true },
     });
-    res.json(inspections);
+    res.json(inspectionRows);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -34,8 +39,9 @@ router.get("/", async (req, res) => {
 // Read one
 router.get("/:id", async (req, res) => {
   try {
-    const inspection = await Inspection.findByPk(req.params.id, {
-      include: ["Customer", "CustomerVehicle"],
+    const inspection = await db.query.inspections.findFirst({
+      where: eq(inspections.id, req.params.id),
+      with: { Customer: true, CustomerVehicle: true },
     });
     if (!inspection) return res.status(404).json({ error: "Not found" });
     res.json(inspection);
@@ -47,11 +53,22 @@ router.get("/:id", async (req, res) => {
 // Update
 router.put("/update/:id", async (req, res) => {
   try {
-    const inspection = await Inspection.findByPk(req.params.id);
+    const inspection = await db.query.inspections.findFirst({
+      where: eq(inspections.id, req.params.id),
+    });
     if (!inspection) return res.status(404).json({ error: "Not found" });
 
-    await inspection.update(req.body);
-    res.json(inspection);
+    const updates = pickColumns(inspections, req.body);
+    let updated = inspection;
+    if (Object.keys(updates).length) {
+      const [row] = await db
+        .update(inspections)
+        .set(updates)
+        .where(eq(inspections.id, req.params.id))
+        .returning();
+      updated = row;
+    }
+    res.json(updated);
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
@@ -60,14 +77,16 @@ router.put("/update/:id", async (req, res) => {
 // Delete
 router.delete("/delete/:id", async (req, res) => {
   try {
-    const inspection = await Inspection.findByPk(req.params.id);
+    const inspection = await db.query.inspections.findFirst({
+      where: eq(inspections.id, req.params.id),
+    });
     if (!inspection) return res.status(404).json({ error: "Not found" });
 
-    await inspection.destroy();
+    await db.delete(inspections).where(eq(inspections.id, req.params.id));
     res.json({ message: "Deleted successfully" });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-module.exports = router;
+export default router;

@@ -338,14 +338,13 @@ function PackageForm({ packageData, setPackageData, open, close, refresh, setRef
                     <form autoComplete="new">
                         {/* <div className="flex justify-center w-full"> */}
                         <div className="fixed -top-16 lg:top-0 left-0 w-full h-full flex justify-center items-center">
-                            <div className="bg-white rounded shadow-xl">
-                                <div className="flex items-center justify-between sticky bg-gradient-to-br from-gray-800 to-gray-700">
-                                    <div></div>
-                                    <div className="text-white text-center text-lg">
-                                        {edit ? "EDIT PACKAGE" : "NEW PACKAGE"}
+                            <div className="bg-white rounded-xl shadow-xl overflow-hidden">
+                                <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-2">
+                                    <div className="text-[15px] font-semibold text-slate-900">
+                                        {edit ? "Edit package" : "New package"}
                                     </div>
                                     <button
-                                        className=" bg-transparent hover:bg-gray-800 text-white font-bold py-2 px-4 rounded"
+                                        className=" rounded-md p-2 text-slate-400 hover:bg-slate-200/70 hover:text-slate-600"
                                         onClick={handleClose}
                                         type="button"
                                     >
@@ -369,9 +368,9 @@ function PackageForm({ packageData, setPackageData, open, close, refresh, setRef
                                     <div className="space-y-4 w-full overflow-y-auto ">
                                         <div className="flex items-center justify-between space-x-4 ">
                                             <div className="w-full">
-                                                <label className="font-bold">Name</label> <br />
+                                                <label className="text-[13px] font-medium text-slate-700">Name</label> <br />
                                                 <input
-                                                    className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
+                                                    className="w-full h-9 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                                                     id="name"
                                                     name="name"
                                                     type="text"
@@ -380,15 +379,15 @@ function PackageForm({ packageData, setPackageData, open, close, refresh, setRef
                                                     onBlur={handleBlur}
                                                 />
                                                 {(touched.name && errors.name) ? (
-                                                    <div className="text-red-500">
+                                                    <div className="mt-1 text-xs text-red-600">
                                                         {errors.name}
                                                     </div>
                                                 ) : (<div></div>)}
                                             </div>
                                             {/* <div className="basis-[50%]">
-                                                <label className="font-bold">Quantity Of Each</label> <br />
+                                                <label className="text-[13px] font-medium text-slate-700">Quantity Of Each</label> <br />
                                                 <input
-                                                    className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
+                                                    className="w-full h-9 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                                                     id="quantity"
                                                     name="quantity"
                                                     min={1}
@@ -398,7 +397,7 @@ function PackageForm({ packageData, setPackageData, open, close, refresh, setRef
                                                     onBlur={handleBlur}
                                                 />
                                                 {(touched.quantity && errors.quantity) ? (
-                                                    <div className="text-red-500">
+                                                    <div className="mt-1 text-xs text-red-600">
                                                         {errors.quantity}
                                                     </div>
                                                 ) : (<div></div>)}
@@ -406,10 +405,10 @@ function PackageForm({ packageData, setPackageData, open, close, refresh, setRef
                                         </div>
                                         <div className="flex items-center justify-start space-x-4">
                                             <div className="w-full">
-                                                <label className="font-bold">Description</label> <br />
+                                                <label className="text-[13px] font-medium text-slate-700">Description</label> <br />
                                                 <textarea
                                                     rows={3}
-                                                    className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
+                                                    className="w-full h-9 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                                                     id="description"
                                                     name="description"
                                                     type="text"
@@ -422,27 +421,27 @@ function PackageForm({ packageData, setPackageData, open, close, refresh, setRef
 
                                         {/* Products */}
                                         <div className="overflow-x-auto my-2">
-                                            <table className="w-full border border-collapse table-auto mb-16">
-                                                <thead className="bg-gray-100">
+                                            <table className="w-full border border-slate-200 border-collapse table-auto mb-16">
+                                                <thead className="bg-slate-50">
                                                     <tr>
-                                                        <th className="p-2 border">Product</th>
-                                                        <th className="p-2 border">Quantity</th>
-                                                        <th className="p-2 border">Price</th>
-                                                        <th className="p-2 border">Total</th>
-                                                        <th className="p-2 border">Action</th>
+                                                        <th className="border border-slate-200 p-2 text-[13px] font-semibold text-slate-700">Product</th>
+                                                        <th className="border border-slate-200 p-2 text-[13px] font-semibold text-slate-700">Quantity</th>
+                                                        <th className="border border-slate-200 p-2 text-[13px] font-semibold text-slate-700">Price</th>
+                                                        <th className="border border-slate-200 p-2 text-[13px] font-semibold text-slate-700">Total</th>
+                                                        <th className="border border-slate-200 p-2 text-[13px] font-semibold text-slate-700">Action</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody className="max-h-48 overflow-y-auto">
                                                     {selectedProducts.map((item, index) => (
                                                         <tr key={index} className="text-center">
-                                                            <td className="p-2 border ">
+                                                            <td className="border border-slate-200 p-2 text-sm text-slate-700">
                                                                 {index !== (selectedProducts.length - 1) ? (
-                                                                    <div className="w-80 h-[30%] mx-2 p-1 rounded-md text-gray-600 text-base text-left focus:outline-none "
+                                                                    <div className="w-80 h-[30%] mx-2 p-1 rounded-md text-slate-700 text-sm text-left focus:outline-none "
                                                                     >{item.name}</div>
                                                                 ) : (
                                                                     <div ref={productInputRef} className="relative w-fit">
                                                                         <input
-                                                                            className="lg:w-80 h-[97%] m-2 p-2 border border-gray-300 rounded-md text-gray-600 font-small"
+                                                                            className="lg:w-80 h-9 m-2 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                                                                             id="product"
                                                                             name="product"
                                                                             type="text"
@@ -454,7 +453,7 @@ function PackageForm({ packageData, setPackageData, open, close, refresh, setRef
                                                                             placeholder="Select Product"
                                                                         />
                                                                         {showProductSuggestions && (
-                                                                            <ul className="fixed bg-white border border-gray-300 overflow-y-auto min-h-24 max-h-48 lg:w-80"
+                                                                            <ul className="fixed bg-white rounded-md border border-slate-200 shadow-lg overflow-y-auto min-h-24 max-h-48 lg:w-80"
                                                                                 style={{
                                                                                     top: productsPosition.top,
                                                                                     left: productsPosition.left,
@@ -468,7 +467,7 @@ function PackageForm({ packageData, setPackageData, open, close, refresh, setRef
                                                                                         .map((product) => (
                                                                                             <li
                                                                                                 key={product.id}
-                                                                                                className="cursor-pointer px-2 py-1 hover:bg-gray-200"
+                                                                                                className="cursor-pointer px-2 py-1 text-sm text-slate-700 hover:bg-slate-50"
                                                                                                 onClick={() => {
                                                                                                     handleProductChange(index, item.quantity, product.id);
                                                                                                     setShowProductSuggestions(false);
@@ -478,7 +477,7 @@ function PackageForm({ packageData, setPackageData, open, close, refresh, setRef
                                                                                             </li>
                                                                                         ))
                                                                                 ) : (
-                                                                                    <li className="px-2 py-1">No Product</li>
+                                                                                    <li className="px-2 py-1 text-sm text-slate-500">No Product</li>
                                                                                 )}
                                                                             </ul>
                                                                         )}
@@ -486,25 +485,25 @@ function PackageForm({ packageData, setPackageData, open, close, refresh, setRef
                                                                 )}
                                                             </td>
 
-                                                            <td className="p-2 border">
+                                                            <td className="border border-slate-200 p-2">
                                                                 <input
                                                                     type="number"
                                                                     min={1}
-                                                                    className="w-14 p-2 border rounded-md text-black text-center"
+                                                                    className="w-14 rounded-md border border-slate-300 bg-white p-1.5 text-center text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                                                                     value={item.quantity}
                                                                     onChange={(e) => handleQuantityChange(index, e.target.value)}
                                                                 />
                                                             </td>
 
-                                                            <td className="w-24 p-2 border">{item.price}</td>
+                                                            <td className="w-24 border border-slate-200 p-2 text-sm text-slate-700">{item.price}</td>
 
-                                                            <td className="p-2 border">{calculateAmount(item.price, item.quantity)}</td>
+                                                            <td className="border border-slate-200 p-2 text-sm text-slate-700">{calculateAmount(item.price, item.quantity)}</td>
 
-                                                            <td className="p-2 border">
+                                                            <td className="border border-slate-200 p-2">
                                                                 {index !== (selectedProducts.length - 1) && (
                                                                     <XCircleIcon
                                                                         onClick={() => handleRemoveProduct(index)}
-                                                                        className="h-5 w-5 mx-auto text-gray-600 hover:text-red-500 cursor-pointer"
+                                                                        className="h-5 w-5 mx-auto text-slate-500 hover:text-red-600 cursor-pointer"
                                                                     />
                                                                 )}
                                                             </td>
@@ -515,9 +514,9 @@ function PackageForm({ packageData, setPackageData, open, close, refresh, setRef
                                         </div>
                                     </div>
                                 </div>
-                                <div className="flex items-center justify-end space-x-2 sticky bg-gradient-to-br from-gray-800 to-gray-700">
+                                <div className="flex items-center justify-end gap-2 border-t border-slate-200 bg-slate-50 px-4 py-2.5">
                                     <button
-                                        className=" w-32 bg-gray-600 hover:bg-gray-900 text-white font-bold py-2 px-4"
+                                        className="w-auto rounded-md px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-200/60"
                                         onClick={() => clearForm(formikProps)}
                                         type="button"
                                     >
@@ -526,13 +525,13 @@ function PackageForm({ packageData, setPackageData, open, close, refresh, setRef
                                     <button
                                         disabled={isLoading}
                                         onClick={() => onSubmit(values)}
-                                        className="w-32 bg-gray-600 hover:bg-gray-900 text-white font-bold py-2 px-4"
+                                        className="w-28 rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800 disabled:opacity-50"
                                         type="submit"
                                     >
                                         {!isLoading ?
                                             <span>{edit ? "Update" : "Save"}</span> :
                                             <div className="flex items-center justify-center h-fit">
-                                                <div className="w-6 h-6 border-4 border-gray-500 border-t-transparent rounded-full animate-spin"></div>
+                                                <div className="w-6 h-6 rounded-full border-2 border-white/40 border-t-white animate-spin"></div>
                                             </div>
                                         }
                                     </button>

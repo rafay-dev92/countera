@@ -186,7 +186,7 @@ export function Home() {
                 ...chartsConfig.yaxis,
                 labels: {
                     ...chartsConfig.yaxis.labels,
-                    formatter: (value) => `$${Number(value).toFixed(0)}k`,
+                    formatter: (value) => { const n = Number(value); return `$${n % 1 ? n.toFixed(1) : n.toFixed(0)}k`; },
                 },
             },
             tooltip: {

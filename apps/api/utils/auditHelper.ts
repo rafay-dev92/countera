@@ -1,14 +1,31 @@
-const { InvoiceAudit, Product } = require("../models");
+import { db, invoice_audits, products as productsTable } from "../db";
+import { eq } from "drizzle-orm";
+
+type ChangeType =
+  | "UPDATE"
+  | "ADD"
+  | "REMOVE"
+  | "UPDATE_ADD"
+  | "UPDATE_REMOVE"
+  | "ADD_REMOVE"
+  | "MULTIPLE";
+
+type AuditChange = {
+  fieldName: string;
+  oldValue: any;
+  newValue: any;
+  type: ChangeType;
+};
 
 // Helper function to safely stringify values
-const safeStringify = (value) => {
+const safeStringify = (value: any) => {
   if (value === null || value === undefined) return null;
   if (typeof value === "object") return JSON.stringify(value);
   return String(value);
 };
 
 // Helper function to compare values
-const hasValueChanged = (oldValue, newValue) => {
+const hasValueChanged = (oldValue: any, newValue: any) => {
   if (newValue === undefined) return false;
   if (oldValue === newValue) return false;
 
@@ -20,7 +37,7 @@ const hasValueChanged = (oldValue, newValue) => {
 };
 
 // Helper function to determine change type
-const determineChangeType = (oldValue, newValue) => {
+const determineChangeType = (oldValue: any, newValue: any): ChangeType => {
   if (oldValue === undefined && newValue !== undefined) return "ADD";
   if (oldValue !== undefined && newValue === undefined) return "REMOVE";
   return "UPDATE";
@@ -28,17 +45,17 @@ const determineChangeType = (oldValue, newValue) => {
 
 // Track changes for a single field
 const trackFieldChange = async (
-  invoiceId,
-  userId,
-  fieldName,
-  oldValue,
-  newValue,
-  changeType = null
+  invoiceId: string,
+  userId: string,
+  fieldName: string,
+  oldValue: any,
+  newValue: any,
+  changeType: ChangeType | null = null
 ) => {
   if (hasValueChanged(oldValue, newValue)) {
     const actualChangeType =
       changeType || determineChangeType(oldValue, newValue);
-    await InvoiceAudit.create({
+    await db.insert(invoice_audits).values({
       invoiceId,
       userId,
       fieldName,
@@ -51,15 +68,15 @@ const trackFieldChange = async (
 
 // Track changes for an object (like invoice data)
 const trackObjectChanges = async (
-  invoiceId,
-  userId,
-  oldObject,
-  newObject,
-  products,
+  invoiceId: string,
+  userId: string,
+  oldObject: any,
+  newObject: any,
+  products: any[],
   prefix = ""
 ) => {
   const fieldsToTrack = Object.keys(oldObject || {});
-  const changes = [];
+  const changes: AuditChange[] = [];
 
   for (const field of fieldsToTrack) {
     if (
@@ -102,11 +119,11 @@ const trackObjectChanges = async (
         const oldProduct = oldProducts.find((p) => p.id === newProduct.id);
 
         if (!oldProduct) {
-          const product = await Product.findOne({
-            where: { id: newProduct.id },
+          const product = await db.query.products.findFirst({
+            where: eq(productsTable.id, newProduct.id),
           });
           changes.push({
-            fieldName: `product_${product.name}`,
+            fieldName: `product_${product!.name}`,
             oldValue: null,
             newValue: newProduct,
             type: "ADD",
@@ -174,7 +191,7 @@ const trackObjectChanges = async (
 
   if (changes.length > 1) {
     const changeTypes = new Set(changes.map((c) => c.type));
-    let combinedType = "MULTIPLE";
+    let combinedType: ChangeType = "MULTIPLE";
 
     if (changeTypes.size === 2) {
       if (changeTypes.has("UPDATE") && changeTypes.has("ADD")) {
@@ -187,15 +204,15 @@ const trackObjectChanges = async (
     }
 
     // Create a single object with all changes
-    const oldValueObj = {};
-    const newValueObj = {};
+    const oldValueObj: Record<string, any> = {};
+    const newValueObj: Record<string, any> = {};
 
     changes.forEach((change) => {
       oldValueObj[change.fieldName] = change.oldValue;
       newValueObj[change.fieldName] = change.newValue;
     });
 
-    await InvoiceAudit.create({
+    await db.insert(invoice_audits).values({
       invoiceId,
       userId,
       fieldName: prefix || "multiple_fields",
@@ -209,7 +226,7 @@ const trackObjectChanges = async (
     const oldValueObj = { [change.fieldName]: change.oldValue };
     const newValueObj = { [change.fieldName]: change.newValue };
 
-    await InvoiceAudit.create({
+    await db.insert(invoice_audits).values({
       invoiceId,
       userId,
       fieldName: change.fieldName,
@@ -222,14 +239,14 @@ const trackObjectChanges = async (
 
 // Track changes for products
 const trackProductChanges = async (
-  invoiceId,
-  userId,
-  oldProducts,
-  newProducts
+  invoiceId: string,
+  userId: string,
+  oldProducts: any[],
+  newProducts: any[]
 ) => {
   const oldProductMap = new Map(oldProducts.map((p) => [p.id, p]));
   const newProductMap = new Map(newProducts.map((p) => [p.id, p]));
-  const changes = [];
+  const changes: AuditChange[] = [];
 
   // Track removed products
   for (const [productId, oldProduct] of oldProductMap) {
@@ -248,11 +265,11 @@ const trackProductChanges = async (
     const oldProduct = oldProductMap.get(productId);
 
     if (!oldProduct) {
-      const product = await Product.findOne({
-        where: { id: newProduct.id },
+      const product = await db.query.products.findFirst({
+        where: eq(productsTable.id, newProduct.id),
       });
       changes.push({
-        fieldName: `product_${product.name}`,
+        fieldName: `product_${product!.name}`,
         oldValue: null,
         newValue: newProduct,
         type: "ADD",
@@ -283,7 +300,7 @@ const trackProductChanges = async (
 
   if (changes.length > 1) {
     const changeTypes = new Set(changes.map((c) => c.type));
-    let combinedType = "MULTIPLE";
+    let combinedType: ChangeType = "MULTIPLE";
 
     if (changeTypes.size === 2) {
       if (changeTypes.has("UPDATE") && changeTypes.has("ADD")) {
@@ -295,7 +312,7 @@ const trackProductChanges = async (
       }
     }
 
-    await InvoiceAudit.create({
+    await db.insert(invoice_audits).values({
       invoiceId,
       userId,
       fieldName: "products",
@@ -320,8 +337,4 @@ const trackProductChanges = async (
   }
 };
 
-module.exports = {
-  trackObjectChanges,
-  trackProductChanges,
-  trackFieldChange,
-};
+export { trackObjectChanges, trackProductChanges, trackFieldChange, };

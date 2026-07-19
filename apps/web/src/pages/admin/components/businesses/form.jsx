@@ -188,14 +188,13 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
             {open && (
                 <form onSubmit={handleSubmit} autoComplete="new">
                     <div className="flex items-center justify-center">
-                        <div className="bg-white rounded shadow-xl">
-                            <div className="flex items-center justify-between sticky bg-gradient-to-br from-gray-800 to-gray-700">
-                                <div></div>
-                                <div className="text-white text-center text-lg">
-                                    {edit ? "Edit Business" : "New Business"}
+                        <div className="bg-white rounded-xl shadow-xl overflow-hidden">
+                            <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-2">
+                                <div className="text-[15px] font-semibold text-slate-900">
+                                    {edit ? "Edit business" : "New business"}
                                 </div>
                                 <button
-                                    className=" bg-transparent hover:bg-gray-800 text-white font-bold py-2 px-4 rounded"
+                                    className=" rounded-md p-2 text-slate-400 hover:bg-slate-200/70 hover:text-slate-600"
                                     onClick={handleClose}
                                     type="button"
                                 >
@@ -219,9 +218,9 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
                             <div className="p-6 overflow-y-auto max-h-[80vh]">
                                 <div className="flex justify-between space-x-4 mb-3 w-full">
                                     <div className="basis-[50%]">
-                                        <label className="font-bold">Image</label>
+                                        <label className="text-[13px] font-medium text-slate-700">Image</label>
                                         <input
-                                            className="w-full p-2 border border-gray-300 bg-inherit rounded-md"
+                                            className="w-full rounded-md border border-slate-300 bg-white p-2 text-sm text-slate-700"
                                             id="image"
                                             name="image"
                                             type="file"
@@ -232,7 +231,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
                                             }}
                                         />
                                         {touched.image && errors.image ? (
-                                            <div className="text-red-500">{errors.image}</div>
+                                            <div className="mt-1 text-xs text-red-600">{errors.image}</div>
                                         ) : null}
                                     </div>
                                     <div className="basis-[50%] max-h-[150px] overflow-hidden max-w-fit">
@@ -241,9 +240,9 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
                                 </div>
                                 <div className="flex items-center justify-start space-x-4 mb-3 w-full">
                                     <div className="basis-[50%]">
-                                        <label className="font-bold">Name</label> <br />
+                                        <label className="text-[13px] font-medium text-slate-700">Name</label> <br />
                                         <input
-                                            className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
+                                            className="w-full h-9 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                                             id="name"
                                             name="name"
                                             type="text"
@@ -252,16 +251,16 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
                                             onBlur={handleBlur}
                                         />
                                         {touched.name && errors.name && (
-                                            <div className="text-red-500">
+                                            <div className="mt-1 text-xs text-red-600">
                                                 {errors.name}
                                             </div>
                                         )}
                                     </div>
 
                                     <div className="basis-[30%]">
-                                        <label className="font-bold">Email</label>
+                                        <label className="text-[13px] font-medium text-slate-700">Email</label>
                                         <input
-                                            className="w-full p-2 border border-gray-300 bg-inherit rounded-md text-black font-medium"
+                                            className="w-full h-9 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                                             id="email"
                                             name="email"
                                             value={values.email}
@@ -269,16 +268,16 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
                                             onBlur={handleBlur}
                                         />
                                         {touched.email && errors.email ? (
-                                            <div className="text-red-500">
+                                            <div className="mt-1 text-xs text-red-600">
                                                 {errors.email}
                                             </div>
                                         ) : (<div></div>)}
                                     </div>
 
                                     <div className="basis-[20%]">
-                                        <label className="font-bold">Default Margin %</label> <br />
+                                        <label className="text-[13px] font-medium text-slate-700">Default Margin %</label> <br />
                                         <input
-                                            className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
+                                            className="w-full h-9 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                                             id="defaultMargin"
                                             name="defaultMargin"
                                             type="number"
@@ -287,7 +286,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
                                             onBlur={handleBlur}
                                         />
                                         {(touched.defaultMargin && errors.defaultMargin) ? (
-                                            <div className="text-red-500">
+                                            <div className="mt-1 text-xs text-red-600">
                                                 {errors.defaultMargin}
                                             </div>
                                         ) : (<div></div>)}
@@ -296,9 +295,9 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
 
                                 <div className="flex items-center justify-start space-x-4 mb-3 w-full">
                                     <div className="basis-[25%]">
-                                        <label className="font-bold">Telephone</label> <br />
+                                        <label className="text-[13px] font-medium text-slate-700">Telephone</label> <br />
                                         <input
-                                            className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
+                                            className="w-full h-9 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                                             id="tel"
                                             name="tel"
                                             type="text"
@@ -307,16 +306,16 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
                                             onBlur={handleBlur}
                                         />
                                         {(touched.tel && errors.tel) ? (
-                                            <div className="text-red-500">
+                                            <div className="mt-1 text-xs text-red-600">
                                                 {errors.tel}
                                             </div>
                                         ) : (<div></div>)}
                                     </div>
 
                                     <div className="basis-[25%]">
-                                        <label className="font-bold">Fax</label> <br />
+                                        <label className="text-[13px] font-medium text-slate-700">Fax</label> <br />
                                         <input
-                                            className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
+                                            className="w-full h-9 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                                             id="fax"
                                             name="fax"
                                             type="text"
@@ -325,16 +324,16 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
                                             onBlur={handleBlur}
                                         />
                                         {touched.fax && errors.fax ? (
-                                            <div className="text-red-500">
+                                            <div className="mt-1 text-xs text-red-600">
                                                 {errors.fax}
                                             </div>
                                         ) : (<div></div>)}
                                     </div>
 
                                     <div className="basis-[25%]">
-                                        <label className="font-bold">License Number</label> <br />
+                                        <label className="text-[13px] font-medium text-slate-700">License Number</label> <br />
                                         <input
-                                            className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
+                                            className="w-full h-9 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                                             id="licenseNumber"
                                             name="licenseNumber"
                                             type="text"
@@ -343,15 +342,15 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
                                             onBlur={handleBlur}
                                         />
                                         {(touched.licenseNumber && errors.licenseNumber) ? (
-                                            <div className="text-red-500">
+                                            <div className="mt-1 text-xs text-red-600">
                                                 {errors.licenseNumber}
                                             </div>
                                         ) : (<div></div>)}
                                     </div>
                                     <div className="basis-[25%]">
-                                        <label className="font-bold">Permit Number</label> <br />
+                                        <label className="text-[13px] font-medium text-slate-700">Permit Number</label> <br />
                                         <input
-                                            className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
+                                            className="w-full h-9 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                                             id="permitNumber"
                                             name="permitNumber"
                                             value={values.permitNumber}
@@ -359,7 +358,7 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
                                             onBlur={handleBlur}
                                         />
                                         {touched.description && errors.description && (
-                                            <div className="text-red-500">
+                                            <div className="mt-1 text-xs text-red-600">
                                                 {errors.description}
                                             </div>
                                         )}
@@ -367,8 +366,8 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
                                 </div>
                                 <div className="flex items-center justify-start space-x-4">
                                     <div className="basis-[40%]">
-                                        <label className="font-bold">Street</label> <br />
-                                        <input className="p-2 w-full border border-gray-300 rounded-md text-black font-medium"
+                                        <label className="text-[13px] font-medium text-slate-700">Street</label> <br />
+                                        <input className="w-full h-9 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                                             id="address"
                                             name="address"
                                             type="text"
@@ -377,15 +376,15 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
                                             onBlur={handleBlur}
                                         />
                                         {(touched.address && errors.address) ? (
-                                            <div className="text-red-500">
+                                            <div className="mt-1 text-xs text-red-600">
                                                 {errors.address}
                                             </div>
                                         ) : (<div></div>)}
                                     </div>
 
                                     <div className="basis-[20%]">
-                                        <label className="font-bold">City</label> <br />
-                                        <input className="p-2 w-full border border-gray-300 rounded-md text-black font-medium"
+                                        <label className="text-[13px] font-medium text-slate-700">City</label> <br />
+                                        <input className="w-full h-9 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                                             id="city"
                                             name="city"
                                             type="text"
@@ -394,15 +393,15 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
                                             onBlur={handleBlur}
                                         />
                                         {(touched.city && errors.city) ? (
-                                            <div className="text-red-500">
+                                            <div className="mt-1 text-xs text-red-600">
                                                 {errors.city}
                                             </div>
                                         ) : (<div></div>)}
                                     </div>
 
                                     <div className="basis-[20%]">
-                                        <label className="font-bold">State</label> <br />
-                                        <input className="p-2 w-full border border-gray-300 rounded-md text-black font-medium"
+                                        <label className="text-[13px] font-medium text-slate-700">State</label> <br />
+                                        <input className="w-full h-9 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                                             id="state"
                                             name="state"
                                             type="text"
@@ -411,15 +410,15 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
                                             onBlur={handleBlur}
                                         />
                                         {(touched.state && errors.state) ? (
-                                            <div className="text-red-500">
+                                            <div className="mt-1 text-xs text-red-600">
                                                 {errors.state}
                                             </div>
                                         ) : (<div></div>)}
                                     </div>
 
                                     <div className="basis-[20%]">
-                                        <label className="font-bold">Zip Code</label> <br />
-                                        <input className="p-2 w-full border border-gray-300 rounded-md text-black font-medium"
+                                        <label className="text-[13px] font-medium text-slate-700">Zip Code</label> <br />
+                                        <input className="w-full h-9 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                                             id="zipcode"
                                             name="zipcode"
                                             type="text"
@@ -428,29 +427,29 @@ const MyPopUpForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
                                             onBlur={handleBlur}
                                         />
                                         {(touched.zipcode && errors.zipcode) ? (
-                                            <div className="text-red-500">
+                                            <div className="mt-1 text-xs text-red-600">
                                                 {errors.zipcode}
                                             </div>
                                         ) : (<div></div>)}
                                     </div>
                                 </div>
                             </div>
-                            <div className="flex items-center justify-end space-x-2 sticky bg-gradient-to-br from-gray-800 to-gray-700">
+                            <div className="flex items-center justify-end gap-2 border-t border-slate-200 bg-slate-50 px-4 py-2.5">
                                 <button
-                                    className=" w-32 bg-gray-600 hover:bg-gray-900 text-white font-bold py-2 px-4"
+                                    className="w-auto rounded-md px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-200/60"
                                     onClick={() => clearForm(formikProps)}
                                     type="button"
                                 >
                                     Clear
                                 </button>
                                 <button
-                                    className="w-32 bg-gray-600 hover:bg-gray-900 text-white font-bold py-2 px-4"
+                                    className="w-28 rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800 disabled:opacity-50"
                                     type="submit"
                                 >
                                     {!isLoading ?
                                         <span>{edit ? "Update" : "Save"}</span> :
                                         <div className="flex items-center justify-center h-fit">
-                                            <div className="w-6 h-6 border-4 border-gray-500 border-t-transparent rounded-full animate-spin"></div>
+                                            <div className="w-6 h-6 rounded-full border-2 border-white/40 border-t-white animate-spin"></div>
                                         </div>
                                     }
                                 </button>

@@ -10,7 +10,7 @@ pnpm workspaces + Turborepo monorepo:
 
 | Package | Path | What it is |
 |---|---|---|
-| `@countera/api` | `apps/api` | Express 4 + Sequelize (MySQL) REST API |
+| `@countera/api` | `apps/api` | Express 4 + Drizzle ORM (PostgreSQL) REST API |
 | `@countera/web` | `apps/web` | React 18 + Vite SPA (Material Tailwind) |
 | `@countera/shared` | `packages/shared` | Shared TypeScript package (domain enums), built with tsup to dual CJS/ESM |
 
@@ -37,7 +37,7 @@ Never rename existing migration files — production `SequelizeMeta` tracks them
 
 ## TypeScript
 
-Incremental migration: all packages have `tsconfig.json` with `allowJs`; `packages/shared` is TS-only. New code should be TS. Suggested order for converting existing code: `apps/web/src/services` → `apps/api/utils` (adopt `tsx watch` when the first API `.ts` lands) → web components → API routes/models.
+`packages/shared` and `apps/api` are fully TypeScript (the API is strict-mode ESM, run via tsx). `apps/web` remains on the incremental path: `tsconfig.json` with `allowJs`, new code in TS, suggested order `src/services` → components.
 
 ## Deployment
 

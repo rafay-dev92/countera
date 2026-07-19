@@ -1,68 +1,76 @@
-const express = require("express");
+import express from "express";
 const router = express.Router();
-const {
-  Package,
-  Product,
-  package_product,
-  User,
-  Business,
-} = require("../models");
-const fetchUser = require("../middlewares/fetchUser");
-const { Op } = require("sequelize");
-require("dotenv").config();
+import { db, packages, package_product, users } from "../db";
+import { pickColumns } from "../db/helpers";
+import { eq, and, ne, isNotNull, inArray, desc } from "drizzle-orm";
+import { UserRole } from "@countera/shared";
+import fetchUser from "../middlewares/fetchUser";
+import "dotenv/config";
+
+const packageIncludes = {
+  PackageProducts: {
+    with: {
+      Product: {
+        with: {
+          ProductTaxes: { with: { Tax: true } },
+          Category: true,
+        },
+      },
+    },
+  },
+  Business: true,
+} as const;
+
+// flatten the join rows back into the old Sequelize aliases:
+// Package.Product = [{...product, Tax: [{...tax, product_tax}], Category, package_product}]
+function withProductAlias(pkg: any) {
+  const { PackageProducts, ...rest } = pkg;
+  return {
+    ...rest,
+    Product: PackageProducts.map(({ Product, ...package_product }: any) => {
+      const { ProductTaxes, ...productRest } = Product;
+      return {
+        ...productRest,
+        Tax: ProductTaxes.map(({ Tax, ...product_tax }: any) => ({
+          ...Tax,
+          product_tax,
+        })),
+        package_product,
+      };
+    }),
+  };
+}
 
 router.get("/", fetchUser, async (req, res) => {
   try {
     const userId = req.user.id;
-    const user = await User.findOne({
-      where: {
-        id: userId,
-        role: { [Op.ne]: "super-admin" },
-        BusinessId: { [Op.ne]: null },
-      },
+    const user = await db.query.users.findFirst({
+      where: and(
+        eq(users.id, userId),
+        ne(users.role, UserRole.SUPER_ADMIN),
+        isNotNull(users.BusinessId)
+      ),
     });
 
     if (user) {
-      const packages = await Package.findAll({
-        where: { BusinessId: user.dataValues.BusinessId },
-        order: [["createdAt", "DESC"]],
-        include: [
-          {
-            model: Product,
-            as: "Product",
-            through: "package_product",
-            include: ["Tax", "Category"],
-          },
-          {
-            model: Business,
-            as: "Business",
-          },
-        ],
+      const packageRows = await db.query.packages.findMany({
+        where: eq(packages.BusinessId, user.BusinessId!),
+        orderBy: [desc(packages.createdAt)],
+        with: packageIncludes,
       });
       return res.json({
         message: "Packages fetched successfully",
-        data: packages,
+        data: packageRows.map(withProductAlias),
       });
     }
 
-    const packages = await Package.findAll({
-      order: [["createdAt", "DESC"]],
-      include: [
-        {
-          model: Product,
-          as: "Product",
-          through: "package_product",
-          include: ["Tax", "Category"],
-        },
-        {
-          model: Business,
-          as: "Business",
-        },
-      ],
+    const packageRows = await db.query.packages.findMany({
+      orderBy: [desc(packages.createdAt)],
+      with: packageIncludes,
     });
     return res.json({
       message: "Packages fetched successfully",
-      data: packages,
+      data: packageRows.map(withProductAlias),
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -71,28 +79,18 @@ router.get("/", fetchUser, async (req, res) => {
 
 router.get("/:id", fetchUser, async (req, res) => {
   try {
-    const package = await Package.findByPk(req.params.id, {
-      include: [
-        {
-          model: Product,
-          as: "Product",
-          through: "package_product",
-          include: ["Tax", "Category"],
-        },
-        {
-          model: Business,
-          as: "Business",
-        },
-      ],
+    const pkg = await db.query.packages.findFirst({
+      where: eq(packages.id, req.params.id),
+      with: packageIncludes,
     });
 
-    if (!package) {
+    if (!pkg) {
       return res.status(404).json({ message: "Package not found" });
     }
 
     return res.json({
       message: "Package fetched successfully",
-      data: package,
+      data: withProductAlias(pkg),
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -103,35 +101,31 @@ router.post("/create", fetchUser, async (req, res) => {
   try {
     const packageData = req.body.packageData;
 
-    const newPackage = await Package.create(packageData);
-    if (req.body.products.length !== 0) {
-      await Promise.all(
-        req.body.products.map(async (item) => {
-          const product = await Product.findByPk(item.split(":")[0]);
-          await newPackage.addProduct(product, {
-            through: { quantity: item.split(":")[1] },
-          });
-        })
-      );
-    }
-
-    const currentPackage = await Package.findByPk(newPackage.id, {
-      include: [
-        {
-          model: Product,
-          as: "Product",
-          through: "package_product",
-          include: ["Tax", "Category"],
-        },
-        {
-          model: Business,
-          as: "Business",
-        },
-      ],
+    const newPackage = await db.transaction(async (tx) => {
+      const [created] = await tx
+        .insert(packages)
+        .values(pickColumns(packages, packageData))
+        .returning();
+      if (req.body.products.length !== 0) {
+        await tx.insert(package_product).values(
+          req.body.products.map((item: any) => ({
+            PackageId: created.id,
+            ProductId: item.split(":")[0],
+            quantity: item.split(":")[1],
+          }))
+        );
+      }
+      return created;
     });
-    return res
-      .status(200)
-      .json({ message: "Package created successfully", data: currentPackage });
+
+    const currentPackage = await db.query.packages.findFirst({
+      where: eq(packages.id, newPackage.id),
+      with: packageIncludes,
+    });
+    return res.status(200).json({
+      message: "Package created successfully",
+      data: withProductAlias(currentPackage),
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: error.message });
@@ -141,84 +135,85 @@ router.post("/create", fetchUser, async (req, res) => {
 router.put("/update/:id", fetchUser, async (req, res) => {
   try {
     let packageData = req.body.packageData;
-    const package = await Package.findByPk(req.params.id, {
-      include: ["Product"],
+    const pkg = await db.query.packages.findFirst({
+      where: eq(packages.id, req.params.id),
+      with: { PackageProducts: { with: { Product: true } } },
     });
 
-    if (!package) {
+    if (!pkg) {
       return res.status(404).json({ message: "Package not found" });
     }
 
+    (pkg as any).Product = pkg.PackageProducts.map(({ Product }) => Product);
+
     if (req.body?.products && req.body?.products.length > 0) {
       try {
-        req.body.products.forEach(async (newProduct) => {
-          const productId = newProduct.split(":")[0];
-          const newQuantity = newProduct.split(":")[1];
+        await db.transaction(async (tx) => {
+          for (const newProduct of req.body.products) {
+            const productId = newProduct.split(":")[0];
+            const newQuantity = newProduct.split(":")[1];
 
-          const existingProduct = package.Product.find(
-            (currentProduct) => currentProduct.dataValues.id === productId
-          );
-
-          if (existingProduct) {
-            await package_product.update(
-              { quantity: newQuantity },
-              {
-                where: {
-                  PackageId: package.id,
-                  ProductId: productId,
-                },
-              }
+            const existingProduct = (pkg as any).Product.find(
+              (currentProduct: any) => currentProduct.id === productId
             );
-          } else {
-            // If the product doesn't exist, add a new entry to the junction table
-            await package_product.create({
-              PackageId: package.id,
-              ProductId: productId,
-              quantity: newQuantity,
-            });
+
+            if (existingProduct) {
+              await tx
+                .update(package_product)
+                .set({ quantity: newQuantity })
+                .where(
+                  and(
+                    eq(package_product.PackageId, pkg.id),
+                    eq(package_product.ProductId, productId)
+                  )
+                );
+            } else {
+              // If the product doesn't exist, add a new entry to the junction table
+              await tx.insert(package_product).values({
+                PackageId: pkg.id,
+                ProductId: productId,
+                quantity: newQuantity,
+              });
+            }
+          }
+
+          const deletedItems = (pkg as any).Product.filter(
+            (orgProd: any) =>
+              !req.body.products.some(
+                (item: any) => item.split(":")[0] === orgProd.id
+              )
+          ).map((changeItem: any) => changeItem.id);
+
+          if (deletedItems.length !== 0) {
+            await tx
+              .delete(package_product)
+              .where(
+                and(
+                  eq(package_product.PackageId, pkg.id),
+                  inArray(package_product.ProductId, deletedItems)
+                )
+              );
           }
         });
       } catch (error) {
         return res.status(500).json({ message: "Internel Server Error" });
       }
-
-      const deletedItems = package.Product.filter(
-        (orgProd) =>
-          !req.body.products.some(
-            (item) => item.split(":")[0] === orgProd.dataValues.id
-          )
-      ).map((changeItem) => changeItem.dataValues.id);
-
-      if (deletedItems.length !== 0) {
-        await Promise.all(
-          deletedItems.map(async (item) => {
-            const product = await Product.findByPk(item.split(":")[0]);
-            await package.removeProduct(product);
-          })
-        );
-      }
     }
 
-    await package.update(packageData);
+    const updates = pickColumns(packages, packageData);
+    if (Object.keys(updates).length) {
+      await db.update(packages).set(updates).where(eq(packages.id, pkg.id));
+    }
 
-    const currentPackage = await Package.findByPk(package.id, {
-        include: [
-            {
-              model: Product,
-              as: "Product",
-              through: "package_product",
-              include: ["Tax", "Category"],
-            },
-            {
-              model: Business,
-              as: "Business",
-            },
-          ],
+    const currentPackage = await db.query.packages.findFirst({
+      where: eq(packages.id, pkg.id),
+      with: packageIncludes,
     });
 
-    return res
-      .status(200)
-      .json({ message: "Package updated successfully", data: currentPackage });
+    return res.status(200).json({
+      message: "Package updated successfully",
+      data: withProductAlias(currentPackage),
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: error.message });
@@ -227,13 +222,15 @@ router.put("/update/:id", fetchUser, async (req, res) => {
 
 router.delete("/delete/:id", fetchUser, async (req, res) => {
   try {
-    const package = await Package.findByPk(req.params.id);
+    const pkg = await db.query.packages.findFirst({
+      where: eq(packages.id, req.params.id),
+    });
 
-    if (!package) {
+    if (!pkg) {
       return res.status(404).json({ message: "package not found" });
     }
 
-    await package.destroy();
+    await db.delete(packages).where(eq(packages.id, req.params.id));
 
     return res.status(200).json({ message: "package deleted successfully" });
   } catch (error) {
@@ -242,4 +239,4 @@ router.delete("/delete/:id", fetchUser, async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

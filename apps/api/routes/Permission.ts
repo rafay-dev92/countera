@@ -1,15 +1,16 @@
-const express = require('express');
+import express from "express";
 const router = express.Router();
-const { Permission } = require('../models');
-const fetchUser = require('../middlewares/fetchUser');
-require('dotenv').config();
-const { Op } = require("sequelize");
+import { db, permissions } from "../db";
+import { pickColumns } from "../db/helpers";
+import { eq, ne, desc } from "drizzle-orm";
+import fetchUser from "../middlewares/fetchUser";
+import "dotenv/config";
 
 router.get('/', fetchUser, async (req, res) => {
     try {
-        const permission = await Permission.findAll({
-            where: {name: { [Op.ne]: 'IS_SUPER_ADMIN' }},
-            order: [["createdAt", "DESC"]],
+        const permission = await db.query.permissions.findMany({
+            where: ne(permissions.name, 'IS_SUPER_ADMIN'),
+            orderBy: [desc(permissions.createdAt)],
         });
         res.json(permission);
     } catch (error) {
@@ -19,7 +20,9 @@ router.get('/', fetchUser, async (req, res) => {
 
 router.get('/:id', fetchUser, async (req, res) => {
     try {
-        const permission = await Permission.findByPk(req.params.id);
+        const permission = await db.query.permissions.findFirst({
+            where: eq(permissions.id, req.params.id),
+        });
 
         if (!permission) {
             return res.status(404).json({ message: 'Permission not found' });
@@ -34,14 +37,17 @@ router.get('/:id', fetchUser, async (req, res) => {
 router.post('/create', async (req, res) => {
     try {
         const permissionData = req.body;
-        const existingPermission = await Permission.findOne({
-            where: { name: permissionData.name }
+        const existingPermission = await db.query.permissions.findFirst({
+            where: eq(permissions.name, permissionData.name)
         });
 
         if (existingPermission) {
             res.status(409).json({ message: 'Permission with this name already exists' });
         } else {
-            const newPermission = await Permission.create(permissionData);
+            const [newPermission] = await db
+                .insert(permissions)
+                .values(pickColumns(permissions, permissionData))
+                .returning();
             res.json(newPermission);
         }
     } catch (error) {
@@ -52,13 +58,21 @@ router.post('/create', async (req, res) => {
 
 router.put('/update/:id', async (req, res) => {
     try {
-        const permission = await Permission.findByPk(req.params.id);
+        const permission = await db.query.permissions.findFirst({
+            where: eq(permissions.id, req.params.id),
+        });
 
         if (!permission) {
             return res.status(404).json({ message: 'permission not found' });
         }
 
-        await permission.update(req.body);
+        const updates = pickColumns(permissions, req.body);
+        if (Object.keys(updates).length) {
+            await db
+                .update(permissions)
+                .set(updates)
+                .where(eq(permissions.id, req.params.id));
+        }
 
         res.json({ message: 'Permission updated successfully' });
     } catch (error) {
@@ -69,13 +83,15 @@ router.put('/update/:id', async (req, res) => {
 
 router.delete('/delete/:id', async (req, res) => {
     try {
-        const permission = await Permission.findByPk(req.params.id);
+        const permission = await db.query.permissions.findFirst({
+            where: eq(permissions.id, req.params.id),
+        });
 
         if (!permission) {
             return res.status(404).json({ message: 'Permission not found' });
         }
 
-        await permission.destroy();
+        await db.delete(permissions).where(eq(permissions.id, req.params.id));
 
         res.json({ message: 'Permission deleted successfully' });
     } catch (error) {
@@ -84,4 +100,4 @@ router.delete('/delete/:id', async (req, res) => {
     }
 })
 
-module.exports = router;
+export default router;

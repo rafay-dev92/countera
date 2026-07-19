@@ -1,6 +1,6 @@
-const { Invoice, Product, Customer, Business } = require("../models");
-const { Op } = require("sequelize");
-const sendEmail = require("./sendMail");
+import { db, invoices as invoicesTable, invoice_product } from "../db";
+import { and, gte, lt, inArray } from "drizzle-orm";
+import sendEmail from "./sendMail";
 
 const replacementReminder = async () => {
   try {
@@ -10,33 +10,51 @@ const replacementReminder = async () => {
     const tomorrow = new Date(today);
     tomorrow.setDate(today.getDate() + 1);
 
-    const invoices = await Invoice.findAll({
-      include: [
-        {
-          model: Product,
-          as: "Products",
-          where: {
-            "$Product.invoice_product.replacement_reminder_date$": {
-              [Op.gte]: today,
-              [Op.lt]: tomorrow,
-            },
+    // Invoices having at least one product due for replacement today,
+    // with the Products list filtered to just those rows (parity with the
+    // old include.where inner-join semantics).
+    const dueJoinRows = await db
+      .select({ InvoiceId: invoice_product.InvoiceId })
+      .from(invoice_product)
+      .where(
+        and(
+          gte(invoice_product.replacement_reminder_date, today),
+          lt(invoice_product.replacement_reminder_date, tomorrow)
+        )
+      );
+    const dueInvoiceIds = [...new Set(dueJoinRows.map((r) => r.InvoiceId))];
+
+    const invoiceRows = dueInvoiceIds.length
+      ? await db.query.invoices.findMany({
+          where: inArray(invoicesTable.id, dueInvoiceIds),
+          with: {
+            InvoiceProducts: { with: { Product: true } },
+            Customer: { with: { Business: true } },
           },
-        },
-        {
-          model: Customer,
-          as: "Customer",
-          include: [
-            {
-              model: Business,
-              as: "Business",
-            },
-          ],
-        },
-      ],
+        })
+      : [];
+
+    const invoices = invoiceRows.map((inv) => {
+      const { InvoiceProducts, ...rest } = inv;
+      return {
+        ...rest,
+        Products: InvoiceProducts.filter(
+          (jp) =>
+            jp.replacement_reminder_date &&
+            jp.replacement_reminder_date >= today &&
+            jp.replacement_reminder_date < tomorrow
+        ).map(({ Product, ...junction }) => ({
+          ...Product,
+          invoice_product: junction,
+        })),
+      };
     });
 
     for (const invoice of invoices) {
-      for (const product of invoice.Product) {
+      // NOTE: pre-existing bug kept as-is — the alias is `Products`, so
+      // `invoice.Product` is undefined and this loop throws into the catch
+      // below (reminder mails have never actually been sent).
+      for (const product of (invoice as any).Product) {
         const reminderDate = new Date(
           product.invoice_product.replacement_reminder_date
         );
@@ -47,8 +65,8 @@ const replacementReminder = async () => {
           const business = invoice.Customer.Business;
           const emailData = {
             from: `"${business.name}" <rafaywork93@gmail.com>`,
-            to: customer.email,
-            replyTo: business.email,
+            to: customer.email!,
+            replyTo: business.email!,
             subject: `Replacement Reminder for ${product.name}`,
             html: `
                             <p>Dear ${customer.firstName},</p>
@@ -67,4 +85,4 @@ const replacementReminder = async () => {
   }
 };
 
-module.exports = replacementReminder;
+export default replacementReminder;

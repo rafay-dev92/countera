@@ -1,53 +1,46 @@
-const express = require("express");
+import express from "express";
 const router = express.Router();
-const {
-  Invoice,
-  User,
-  Business,
-} = require("../models");
-const fetchUser = require("../middlewares/fetchUser");
-const { Op, fn, col, literal } = require("sequelize");
-const moment = require("moment");
-require("dotenv").config();
+import { db, invoices, users } from "../db";
+import fetchUser from "../middlewares/fetchUser";
+import { eq, and, gte, lte, inArray, sql } from "drizzle-orm";
+import moment from "moment";
+import "dotenv/config";
 
 router.get("/monthly", fetchUser, async (req, res) => {
   try {
-    const currentYear = moment().year();
-    const user = await User.findOne({
-      where: { id: req.user.id },
-      include: [{
-        model: Business,
-        as: 'Business'
-      }]
+    const user = await db.query.users.findFirst({
+      where: eq(users.id, req.user.id),
+      with: { Business: true },
     });
 
     if (!user || !user.Business) {
       return res.status(404).json({ message: "User or business not found" });
     }
-    const salesData = await Invoice.findAll({
-      attributes: [
-        [fn('MONTH', col('createdAt')), 'month'],
-        [fn('SUM', col('paidAmount')), 'totalSales'],
-      ],
-      where: {
-        paymentStatus: { [Op.in]: ['Paid', 'Partially Paid'] },
-        BusinessId: user.Business.id,
-        createdAt: {
-          [Op.gte]: moment().startOf('year').toDate(),
-          [Op.lte]: moment().endOf('year').toDate(),
-        },
-      },
-      group: [literal('month')],
-      order: [[literal('month'), 'ASC']],
-      raw: true,
-    });
+
+    const month = sql<number>`extract(month from ${invoices.createdAt})::int`;
+    const salesData = await db
+      .select({
+        month: month.as("month"),
+        totalSales: sql<number>`sum(${invoices.paidAmount})`.as("totalSales"),
+      })
+      .from(invoices)
+      .where(
+        and(
+          inArray(invoices.paymentStatus, ["PAID", "PARTIALLY_PAID"]),
+          eq(invoices.BusinessId, user.Business.id),
+          gte(invoices.createdAt, moment().startOf("year").toDate()),
+          lte(invoices.createdAt, moment().endOf("year").toDate())
+        )
+      )
+      .groupBy(sql`month`)
+      .orderBy(sql`month asc`);
 
     // Prepare an array for all 12 months (initialize with 0)
-    const monthlyTotals = Array(12).fill(0);
+    const monthlyTotals: (number | string)[] = Array(12).fill(0);
 
     salesData.forEach((entry) => {
       const monthIndex = entry.month - 1;
-      monthlyTotals[monthIndex] = parseFloat(entry.totalSales / 1000).toFixed(2);
+      monthlyTotals[monthIndex] = (Number(entry.totalSales) / 1000).toFixed(2);
     });
 
     const months = moment.monthsShort(); // ['Jan', 'Feb', ..., 'Dec']
@@ -62,4 +55,4 @@ router.get("/monthly", fetchUser, async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

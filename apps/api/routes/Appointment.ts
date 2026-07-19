@@ -1,12 +1,14 @@
-const express = require("express");
+import express from "express";
 const router = express.Router();
-const { Appointment, User } = require("../models");
-require("dotenv").config();
-const { Op } = require("sequelize");
-const fetchUser = require("../middlewares/fetchUser");
-const sendMail = require("../utils/sendMail");
-const moment = require("moment-timezone");
-const authorizePermission = require("../middlewares/authorizePermissions");
+import { db, appointments, users } from "../db";
+import { pickColumns } from "../db/helpers";
+import "dotenv/config";
+import { eq, ne, and, or, gt, lt, gte, lte, isNotNull, asc, } from "drizzle-orm";
+import { UserRole } from "@countera/shared";
+import fetchUser from "../middlewares/fetchUser";
+import sendMail from "../utils/sendMail";
+import moment from "moment-timezone";
+import authorizePermission from "../middlewares/authorizePermissions";
 
 router.get(
   "/",
@@ -15,28 +17,28 @@ router.get(
   async (req, res) => {
     try {
       const userId = req.user.id;
-      const user = await User.findOne({
-        where: {
-          id: userId,
-          role: { [Op.ne]: "super-admin" },
-          BusinessId: { [Op.ne]: null },
-        },
+      const user = await db.query.users.findFirst({
+        where: and(
+          eq(users.id, userId),
+          ne(users.role, UserRole.SUPER_ADMIN),
+          isNotNull(users.BusinessId)
+        ),
       });
 
       if (user) {
-        const appointments = await Appointment.findAll({
-          where: { BusinessId: user.dataValues.BusinessId },
-          include: ["Business"],
-          order: [["createdAt", "ASC"]],
+        const appointmentRows = await db.query.appointments.findMany({
+          where: eq(appointments.BusinessId, user.BusinessId!),
+          with: { Business: true },
+          orderBy: [asc(appointments.createdAt)],
         });
-        return res.status(200).json(appointments);
+        return res.status(200).json(appointmentRows);
       }
 
-      const appointments = await Appointment.findAll({
-        include: ["Business"],
-        order: [["createdAt", "ASC"]],
+      const appointmentRows = await db.query.appointments.findMany({
+        with: { Business: true },
+        orderBy: [asc(appointments.createdAt)],
       });
-      return res.status(200).json(appointments);
+      return res.status(200).json(appointmentRows);
     } catch (error) {
       res.status(500).json({ message: error.message });
     }
@@ -50,33 +52,32 @@ router.get(
   async (req, res) => {
     try {
       const userId = req.user.id;
-      const user = await User.findOne({
-        where: {
-          id: userId,
-          role: { [Op.ne]: "super-admin" },
-          BusinessId: { [Op.ne]: null },
-        },
-        include: ["Business"],
+      const user = await db.query.users.findFirst({
+        where: and(
+          eq(users.id, userId),
+          ne(users.role, UserRole.SUPER_ADMIN),
+          isNotNull(users.BusinessId)
+        ),
+        with: { Business: true },
       });
 
       if (!user) return res.status(401).send("Unauthorized");
       const timezone = user.Business?.timezone;
-      const startOfDay = moment().tz(timezone).startOf("day").toDate();
-      const endOfDay = moment().tz(timezone).endOf("day").toDate();
+      const startOfDay = moment().tz(timezone!).startOf("day").toDate();
+      const endOfDay = moment().tz(timezone!).endOf("day").toDate();
 
-      const appointments = await Appointment.findAll({
-        where: {
-          BusinessId: user.Business.id,
-          startDateTime: {
-            [Op.between]: [startOfDay, endOfDay],
-          },
-        },
-        include: ["Business"],
-        order: [["createdAt", "ASC"]],
+      const appointmentRows = await db.query.appointments.findMany({
+        where: and(
+          eq(appointments.BusinessId, user.Business!.id),
+          gte(appointments.startDateTime, startOfDay),
+          lte(appointments.startDateTime, endOfDay)
+        ),
+        with: { Business: true },
+        orderBy: [asc(appointments.createdAt)],
       });
       return res
         .status(200)
-        .json({ message: "Daily appointments fetched", data: appointments });
+        .json({ message: "Daily appointments fetched", data: appointmentRows });
     } catch (error) {
       res.status(500).json({ message: error.message });
     }
@@ -89,7 +90,9 @@ router.get(
   authorizePermission("appointment:view"),
   async (req, res) => {
     try {
-      const appointment = await Appointment.findByPk(req.params.id);
+      const appointment = await db.query.appointments.findFirst({
+        where: eq(appointments.id, req.params.id),
+      });
 
       if (!appointment) {
         return res.status(404).json({ message: "Appointment not found" });
@@ -109,44 +112,27 @@ router.post(
   async (req, res) => {
     try {
       const appointmentData = req.body;
-      const existingAppointment = await Appointment.findOne({
-        where: {
-          [Op.or]: [
-            {
-              [Op.and]: [
-                {
-                  startDateTime: {
-                    [Op.between]: [
-                      req.body.startDateTime,
-                      req.body.endDateTime,
-                    ],
-                  },
-                },
-                { BusinessId: { [Op.eq]: req.body.BusinessId } },
-              ],
-            },
-            {
-              [Op.and]: [
-                {
-                  endDateTime: {
-                    [Op.between]: [
-                      req.body.startDateTime,
-                      req.body.endDateTime,
-                    ],
-                  },
-                },
-                { BusinessId: { [Op.eq]: req.body.BusinessId } },
-              ],
-            },
-            {
-              [Op.and]: [
-                { startDateTime: { [Op.gt]: req.body.startDateTime } },
-                { endDateTime: { [Op.lt]: req.body.endDateTime } },
-                { BusinessId: { [Op.eq]: req.body.BusinessId } },
-              ],
-            },
-          ],
-        },
+      const existingAppointment = await db.query.appointments.findFirst({
+        where: or(
+          and(
+            gte(
+              appointments.startDateTime,
+              new Date(req.body.startDateTime)
+            ),
+            lte(appointments.startDateTime, new Date(req.body.endDateTime)),
+            eq(appointments.BusinessId, req.body.BusinessId)
+          ),
+          and(
+            gte(appointments.endDateTime, new Date(req.body.startDateTime)),
+            lte(appointments.endDateTime, new Date(req.body.endDateTime)),
+            eq(appointments.BusinessId, req.body.BusinessId)
+          ),
+          and(
+            gt(appointments.startDateTime, new Date(req.body.startDateTime)),
+            lt(appointments.endDateTime, new Date(req.body.endDateTime)),
+            eq(appointments.BusinessId, req.body.BusinessId)
+          )
+        ),
       });
 
       if (existingAppointment) {
@@ -161,7 +147,9 @@ router.post(
         req.body.endTime !== ""
       ) {
         const { BusinessEmail, BusinessName, ...usefulData } = appointmentData;
-        await Appointment.create(usefulData);
+        await db
+          .insert(appointments)
+          .values(pickColumns(appointments, usefulData));
         //   if (newAppointment.sendEmail) {
         if (BusinessEmail === null) {
           return res.status(400).json({
@@ -179,7 +167,7 @@ router.post(
             appointmentData.customerName
           } your appointment has been scheduled on ${
             appointmentData.startDateTime.split("T")[0]
-          } at ${appointmentData.startDateTime.split("T")[1]} 
+          } at ${appointmentData.startDateTime.split("T")[1]}
                     Thanks and Have a nice day!`,
           html: `<h3>Hey ${appointmentData.customerName}!</h3>
                     <p>Your appointment has been scheduled on <b>${
@@ -213,38 +201,31 @@ router.put(
   authorizePermission("appointment:update"),
   async (req, res) => {
     try {
-      const appointment = await Appointment.findByPk(req.params.id);
+      const appointment = await db.query.appointments.findFirst({
+        where: eq(appointments.id, req.params.id),
+      });
 
       if (!appointment) {
         return res.status(404).json({ message: "appointment not found" });
       }
 
-      const existingAppointment = await Appointment.findOne({
-        where: {
-          [Op.and]: [
-            { id: { [Op.ne]: req.params.id } },
-            {
-              [Op.or]: [
-                {
-                  startDateTime: {
-                    [Op.between]: [
-                      req.body.startDateTime,
-                      req.body.endDateTime,
-                    ],
-                  },
-                },
-                {
-                  endDateTime: {
-                    [Op.between]: [
-                      req.body.startDateTime,
-                      req.body.endDateTime,
-                    ],
-                  },
-                },
-              ],
-            },
-          ],
-        },
+      const existingAppointment = await db.query.appointments.findFirst({
+        where: and(
+          ne(appointments.id, req.params.id),
+          or(
+            and(
+              gte(
+                appointments.startDateTime,
+                new Date(req.body.startDateTime)
+              ),
+              lte(appointments.startDateTime, new Date(req.body.endDateTime))
+            ),
+            and(
+              gte(appointments.endDateTime, new Date(req.body.startDateTime)),
+              lte(appointments.endDateTime, new Date(req.body.endDateTime))
+            )
+          )
+        ),
       });
 
       if (existingAppointment) {
@@ -253,7 +234,13 @@ router.put(
           .json({ message: "Appointment with this schedule already exists" });
       }
 
-      await appointment.update(req.body);
+      const updates = pickColumns(appointments, req.body);
+      if (Object.keys(updates).length) {
+        await db
+          .update(appointments)
+          .set(updates)
+          .where(eq(appointments.id, req.params.id));
+      }
 
       res.status(200).json({ message: "Appointment updated successfully" });
     } catch (error) {
@@ -269,13 +256,15 @@ router.delete(
   authorizePermission("appointment:delete"),
   async (req, res) => {
     try {
-      const appointment = await Appointment.findByPk(req.params.id);
+      const appointment = await db.query.appointments.findFirst({
+        where: eq(appointments.id, req.params.id),
+      });
 
       if (!appointment) {
         return res.status(404).json({ message: "appointment not found" });
       }
 
-      await appointment.destroy();
+      await db.delete(appointments).where(eq(appointments.id, req.params.id));
 
       res.status(200).json({ message: "Appointment deleted successfully" });
     } catch (error) {
@@ -285,4 +274,4 @@ router.delete(
   }
 );
 
-module.exports = router;
+export default router;

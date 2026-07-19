@@ -119,14 +119,13 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
             {open && (
                 <form onSubmit={handleSubmit} autoComplete="new" >
                     <div className="fixed top-0 left-0 w-full h-full flex items-center justify-center">
-                        <div className="bg-white rounded shadow-xl">
-                            <div className="flex items-center justify-between sticky bg-gradient-to-br from-gray-800 to-gray-700">
-                                <div></div>
-                                <div className="text-white text-center text-lg">
-                                    {edit ? "EDIT VEHICLE" : "NEW VEHICLE"}
+                        <div className="bg-white rounded-xl shadow-xl overflow-hidden">
+                            <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-2">
+                                <div className="text-[15px] font-semibold text-slate-900">
+                                    {edit ? "Edit vehicle" : "New vehicle"}
                                 </div>
                                 <button
-                                    className="bg-transparent hover:bg-gray-800 text-white font-bold py-2 px-4 rounded"
+                                    className="rounded-md p-2 text-slate-400 hover:bg-slate-200/70 hover:text-slate-600"
                                     onClick={handleClose}
                                     type="button"
                                 >
@@ -150,9 +149,9 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
                             <div className="p-6">
                                 <div className="flex items-center justify-start space-x-4">
                                     <div className="relative">
-                                        <label className="font-bold">Make</label> <br />
+                                        <label className="text-[13px] font-medium text-slate-700">Make</label> <br />
                                         <input
-                                            className="w-full p-2 border border-gray-300 rounded-md text-black font-small"
+                                            className="w-full h-9 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                                             id="make"
                                             name="make"
                                             type="text"
@@ -161,7 +160,7 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
                                             onBlur={handleBlur}
                                         />
                                         {(touched.make && errors.make) ? (
-                                            <div className="text-red-500">
+                                            <div className="mt-1 text-xs text-red-600">
                                                 {errors.make}
                                             </div>
                                         ) : (<div></div>)}
@@ -170,9 +169,9 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
 
                                 <div className="flex items-center justify-start space-x-4">
                                     <div className="relative" >
-                                        <label className="font-bold">Model</label> <br />
+                                        <label className="text-[13px] font-medium text-slate-700">Model</label> <br />
                                         <input
-                                            className="w-full p-2 border border-gray-300 rounded-md text-black font-small"
+                                            className="w-full h-9 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                                             id="model"
                                             name="model"
                                             type="text"
@@ -181,16 +180,16 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
                                             onBlur={handleBlur}
                                         />
                                         {touched.model && errors.model ? (
-                                            <div className="text-red-500">
+                                            <div className="mt-1 text-xs text-red-600">
                                                 {errors.model}
                                             </div>
                                         ) : (<div></div>)}
                                     </div>
                                 </div>
                             </div>
-                            <div className="flex items-center justify-end space-x-2 sticky bg-gradient-to-br from-gray-800 to-gray-700">
+                            <div className="flex items-center justify-end gap-2 border-t border-slate-200 bg-slate-50 px-4 py-2.5">
                                 <button
-                                    className=" w-32 bg-gray-600 hover:bg-gray-900 text-white font-bold py-2 px-4"
+                                    className="w-auto rounded-md px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-200/60"
                                     onClick={() => clearForm(formikProps)}
                                     type="button"
                                 >
@@ -198,13 +197,13 @@ const MyPopUpForm = ({ open, close, selectedItem, setSelectedItem, refresh, setR
                                 </button>
                                 <button
                                     disabled={isLoading}
-                                    className="w-32 bg-gray-600 hover:bg-gray-900 text-white font-bold py-2 px-4"
+                                    className="w-28 rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800 disabled:opacity-50"
                                     type="submit"
                                 >
                                     {!isLoading ?
                                         <span>{edit ? "Update" : "Save"}</span> :
                                         <div className="flex items-center justify-center h-fit">
-                                            <div className="w-6 h-6 border-4 border-gray-500 border-t-transparent rounded-full animate-spin"></div>
+                                            <div className="w-6 h-6 rounded-full border-2 border-white/40 border-t-white animate-spin"></div>
                                         </div>
                                     }
                                 </button>

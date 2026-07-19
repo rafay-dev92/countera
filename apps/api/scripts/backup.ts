@@ -1,18 +1,15 @@
-const { exec } = require('child_process');
-const path = require('path');
-const fs = require('fs');
-const moment = require('moment');
-require('dotenv').config();
+import { exec } from "child_process";
+import path from "path";
+import fs from "fs";
+import moment from "moment";
+import "dotenv/config";
 
 // Get the absolute path of the project root
-const projectRoot = path.resolve(__dirname, '..');
+const projectRoot = path.resolve(import.meta.dirname, '..');
 
 // Configuration
-const DB_NAME = process.env.DB_NAME || 'defaultdb';
-const DB_USER = process.env.DB_USERNAME || 'avnadmin';
-const DB_PASSWORD = process.env.DB_PASSWORD;
-const DB_HOST = process.env.DB_HOST || 'mysql-361e9fc0-krafay92-99d8.i.aivencloud.com';
-const DB_PORT = process.env.DB_PORT || '12200';
+const DATABASE_URL = process.env.DATABASE_URL;
+const PG_DUMP = process.env.PG_DUMP_PATH || 'pg_dump';
 const BACKUP_DIR = path.join(projectRoot, 'backups');
 const LOG_DIR = path.join(projectRoot, 'logs');
 
@@ -29,31 +26,31 @@ const backupFileName = `backup_${timestamp}.sql`;
 const backupPath = path.join(BACKUP_DIR, backupFileName);
 const logPath = path.join(LOG_DIR, 'backup.log');
 
-// Create a temporary config file for secure password handling
-const configPath = path.join(projectRoot, 'mysql_backup.cnf');
-const configContent = `[client]
-user=${DB_USER}
-password=${DB_PASSWORD}
-host=${DB_HOST}
-port=${DB_PORT}
-ssl-mode=REQUIRED`;
+if (!DATABASE_URL) {
+    const errorMsg = 'Backup failed: DATABASE_URL is not set';
+    console.error(errorMsg);
+    fs.appendFileSync(logPath, `[${moment().format('YYYY-MM-DD HH:mm:ss')}] ` + errorMsg + '\n');
+    process.exit(1);
+}
 
-// Write the config file
-fs.writeFileSync(configPath, configContent, { mode: 0o600 }); // Set secure permissions
-
-// Create backup command for MySQL with improved options
-const backupCommand = `mysqldump --defaults-file=${configPath} --single-transaction --routines --triggers --events --set-gtid-purged=OFF ${DB_NAME} > ${backupPath}`;
+// Split the URL into PG* env vars so the password stays out of the command
+// line (argv is world-readable via ps; env is not).
+const dbUrl = new URL(DATABASE_URL);
+const urlSslMode = dbUrl.searchParams.get('sslmode');
+const backupCommand = `${PG_DUMP} --no-owner --no-privileges --format=plain --file=${backupPath} ${dbUrl.pathname.slice(1)}`;
+const backupEnv = {
+    ...process.env,
+    PGHOST: dbUrl.hostname,
+    PGPORT: dbUrl.port || '5432',
+    PGUSER: decodeURIComponent(dbUrl.username),
+    PGPASSWORD: decodeURIComponent(dbUrl.password),
+    // node-postgres's "no-verify" is not a valid libpq sslmode
+    PGSSLMODE: urlSslMode === 'no-verify' ? 'require' : urlSslMode || 'prefer',
+};
 
 // Execute backup
-exec(backupCommand, (error, stdout, stderr) => {
+exec(backupCommand, { env: backupEnv }, (error, stdout, stderr) => {
     const logMessage = `[${moment().format('YYYY-MM-DD HH:mm:ss')}] `;
-    
-    // Clean up the config file
-    try {
-        fs.unlinkSync(configPath);
-    } catch (unlinkError) {
-        console.error(`Failed to remove config file: ${unlinkError.message}`);
-    }
 
     if (error) {
         const errorMsg = `Backup failed: ${error.message}`;
@@ -76,12 +73,12 @@ exec(backupCommand, (error, stdout, stderr) => {
     try {
         const files = fs.readdirSync(BACKUP_DIR);
         const now = moment();
-        
+
         files.forEach(file => {
             const filePath = path.join(BACKUP_DIR, file);
             const fileStat = fs.statSync(filePath);
             const fileDate = moment(fileStat.mtime);
-            
+
             if (now.diff(fileDate, 'days') > 7) {
                 fs.unlinkSync(filePath);
                 const deleteMsg = `Deleted old backup: ${file}`;
@@ -90,8 +87,8 @@ exec(backupCommand, (error, stdout, stderr) => {
             }
         });
     } catch (cleanupError) {
-        const cleanupMsg = `Cleanup failed: ${cleanupError.message}`;
+        const cleanupMsg = `Backup cleanup failed: ${cleanupError.message}`;
         console.error(cleanupMsg);
         fs.appendFileSync(logPath, logMessage + cleanupMsg + '\n');
     }
-}); 
+});

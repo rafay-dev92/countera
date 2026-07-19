@@ -1,17 +1,39 @@
-const express = require("express");
-const cors = require("cors");
-const cron = require("node-cron");
-const path = require("path");
-const { exec } = require("child_process");
+import "dotenv/config";
+import express from "express";
+import cors from "cors";
+import cron from "node-cron";
+import path from "path";
+import { exec } from "child_process";
+import fs from "fs";
+import replacementReminder from "./utils/replacementReminder";
+import sendMail from "./utils/sendMail";
+import userRouter from "./routes/User";
+import permissionRouter from "./routes/Permission";
+import businessRouter from "./routes/Business";
+import customerRouter from "./routes/Customer";
+import vehicleRouter from "./routes/Vehicle";
+import productRouter from "./routes/Product";
+import packageRouter from "./routes/Package";
+import productCategoryRouter from "./routes/ProductCategory";
+import taxRouter from "./routes/Tax";
+import appointmentRouter from "./routes/Appointment";
+import invoiceRouter from "./routes/Invoice";
+import archivedInvoicesRouter from "./routes/ArchivedInvoices";
+import quotationRouter from "./routes/Quotation";
+import workOrderRouter from "./routes/WorkOrder";
+import inspectionRouter from "./routes/Inspection";
+import addressRouter from "./routes/Address";
+import customerVehicleRouter from "./routes/CustomerVehicle";
+import paymentRouter from "./routes/Payment";
+import mailRouter from "./routes/Mail";
+import salesRouter from "./routes/Sales";
+
 const app = express();
-const fs = require("fs");
-const replacementReminder = require("./utils/replacementReminder");
-const sendMail = require('./utils/sendMail');
 
 app.set("trust proxy", true);
 
-const productDir = path.join(__dirname, "uploads/products");
-const businessDir = path.join(__dirname, "uploads/business");
+const productDir = path.join(import.meta.dirname, "uploads/products");
+const businessDir = path.join(import.meta.dirname, "uploads/business");
 // Check if uploads directory exists, and create it if it doesn't
 if (!fs.existsSync(productDir)) {
   fs.mkdirSync(productDir, { recursive: true });
@@ -24,7 +46,7 @@ if (!fs.existsSync(businessDir)) {
   console.log("Images directory already exists");
 }
 
-const backupDir = path.join(__dirname, "backups");
+const backupDir = path.join(import.meta.dirname, "backups");
 if (!fs.existsSync(backupDir)) {
   fs.mkdirSync(backupDir, { recursive: true });
   console.log("Backups directory created");
@@ -34,7 +56,7 @@ if (!fs.existsSync(backupDir)) {
 cron.schedule("0 0 * * *", () => {
   const now = new Date();
   console.log(`[${now.toISOString()}] Starting scheduled database backup...`);
-  const backupScript = path.join(__dirname, "scripts", "backup.js");
+  const backupScript = path.join(import.meta.dirname, "scripts", "backup.ts");
 
   exec(`node ${backupScript}`, (error, stdout, stderr) => {
     const endTime = new Date();
@@ -44,7 +66,12 @@ cron.schedule("0 0 * * *", () => {
       );
       const errorMsg = `Backup failed: ${error.message}`;
       console.error(errorMsg);
-      fs.appendFileSync(logPath, logMessage + errorMsg + '\n');
+      const logDir = path.join(import.meta.dirname, "logs");
+      if (!fs.existsSync(logDir)) fs.mkdirSync(logDir, { recursive: true });
+      fs.appendFileSync(
+        path.join(logDir, "backup.log"),
+        `[${endTime.toISOString()}] ` + errorMsg + '\n'
+      );
 
       // Send email on failure
       const mailOptions = {
@@ -69,7 +96,7 @@ cron.schedule("0 0 * * *", () => {
   });
 });
 
-// daily invoice's product replacement 
+// daily invoice's product replacement
 cron.schedule('0 9 * * *', () => {
   replacementReminder()
 });
@@ -94,35 +121,35 @@ app.get("/", (req, res) => {
 });
 app.use(
   "/uploads/business",
-  express.static(path.join(__dirname, "uploads/business"))
+  express.static(path.join(import.meta.dirname, "uploads/business"))
 );
 app.use(
   "/uploads/products",
-  express.static(path.join(__dirname, "uploads/products"))
+  express.static(path.join(import.meta.dirname, "uploads/products"))
 );
-app.use("/api/user", require("./routes/User"));
-app.use("/api/permission", require("./routes/Permission"));
-app.use("/api/business", require("./routes/Business"));
-app.use("/api/customer", require("./routes/Customer"));
-app.use("/api/vehicle", require("./routes/Vehicle"));
-app.use("/api/product", require("./routes/Product"));
-app.use("/api/package", require("./routes/Package"));
-app.use("/api/productcategories", require("./routes/ProductCategory"));
-app.use("/api/tax", require("./routes/Tax"));
-app.use("/api/appointment", require("./routes/Appointment"));
-app.use("/api/invoice", require("./routes/Invoice"));
-app.use("/api/archived-invoice", require("./routes/ArchivedInvoices"));
-app.use("/api/quotation", require("./routes/Quotation"));
-app.use("/api/workorder", require("./routes/WorkOrder"));
-app.use("/api/inspection", require("./routes/Inspection"));
-app.use("/api/address", require("./routes/Address"));
-app.use("/api/customervehicle", require("./routes/CustomerVehicle"));
-app.use("/api/payment", require("./routes/Payment"));
-app.use("/api/mail", require("./routes/Mail"));
-app.use("/api/sales", require("./routes/Sales"));
+app.use("/api/user", userRouter);
+app.use("/api/permission", permissionRouter);
+app.use("/api/business", businessRouter);
+app.use("/api/customer", customerRouter);
+app.use("/api/vehicle", vehicleRouter);
+app.use("/api/product", productRouter);
+app.use("/api/package", packageRouter);
+app.use("/api/productcategories", productCategoryRouter);
+app.use("/api/tax", taxRouter);
+app.use("/api/appointment", appointmentRouter);
+app.use("/api/invoice", invoiceRouter);
+app.use("/api/archived-invoice", archivedInvoicesRouter);
+app.use("/api/quotation", quotationRouter);
+app.use("/api/workorder", workOrderRouter);
+app.use("/api/inspection", inspectionRouter);
+app.use("/api/address", addressRouter);
+app.use("/api/customervehicle", customerVehicleRouter);
+app.use("/api/payment", paymentRouter);
+app.use("/api/mail", mailRouter);
+app.use("/api/sales", salesRouter);
 
-const port = process.env.PORT || 3000;
-app.listen(port, (error) => {
+const port = Number(process.env.PORT) || 3000;
+app.listen(port, (error?: unknown) => {
   if (!error)
     console.log(
       `Server is Successfully Running, and App is listening on http://localhost:${port}`

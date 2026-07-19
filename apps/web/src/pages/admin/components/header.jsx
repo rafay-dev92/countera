@@ -1,5 +1,4 @@
 import React from "react";
-import { Button } from "@material-tailwind/react";
 import { State } from "@/state/Context";
 import { useNavigate } from "react-router-dom";
 import { UserCircleIcon } from "@heroicons/react/24/solid";
@@ -18,19 +17,15 @@ const Header = () => {
     }
 
     return (
-        <header className="flex items-center justify-between p-4 bg-white shadow">
-            <div></div>
-            <div className="flex items-center">
-                <Button
-                    variant="text"
-                    color="blue-gray"
-                    className=" items-center gap-1 px-4 xl:flex hidden normal-case"
-                    onClick={logout}
-                >
-                    <UserCircleIcon className="h-7 w-7 text-blue-gray-500" />
-                    Sign Out
-                </Button>
-            </div>
+        <header className="sticky top-0 z-40 flex h-14 items-center justify-end gap-3 border-b border-slate-200 bg-white px-4 md:px-6">
+            <button
+                type="button"
+                onClick={logout}
+                className="hidden items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900 xl:flex"
+            >
+                <UserCircleIcon className="h-6 w-6 text-slate-400" />
+                Sign out
+            </button>
         </header>
     );
 };

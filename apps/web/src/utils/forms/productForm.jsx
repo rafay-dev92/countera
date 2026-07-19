@@ -223,14 +223,13 @@ const ProductForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
       {state.product?.openForm && (
         <form onSubmit={handleSubmit} autoComplete="new">
           <div className="fixed -top-16 lg:top-0 left-0 w-full h-full flex justify-center items-center">
-            <div className="bg-white rounded shadow-xl">
-              <div className="flex items-center justify-between sticky bg-gradient-to-br from-gray-800 to-gray-700">
-                <div></div>
-                <div className="text-white text-center text-lg">
-                  {edit ? "Edit Product" : "New Product"}
+            <div className="bg-white rounded-xl shadow-xl overflow-hidden">
+              <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-2">
+                <div className="text-[15px] font-semibold text-slate-900">
+                  {edit ? "Edit product" : "New product"}
                 </div>
                 <button
-                  className=" bg-transparent hover:bg-gray-800 text-white font-bold py-2 px-4 rounded"
+                  className=" rounded-md p-2 text-slate-400 hover:bg-slate-200/70 hover:text-slate-600"
                   onClick={handleClose}
                   type="button"
                 >
@@ -254,9 +253,9 @@ const ProductForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
               <div className="2xl:w-[50vw] xl:w-[60vw] lg:w-[70vw] md:w-[80vw] w-[90vw] p-6 space-y-3 max-h-[70vh] lg:max-h-[80vh] overflow-y-auto">
                 <div className="flex justify-between space-x-4 mb-3 w-full">
                   <div className="basis-[50%]">
-                    <label className="font-bold">Image</label>
+                    <label className="text-[13px] font-medium text-slate-700">Image</label>
                     <input
-                      className="w-full p-2 border border-gray-300 bg-inherit rounded-md"
+                      className="w-full h-9 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                       id="image"
                       name="image"
                       type="file"
@@ -273,7 +272,7 @@ const ProductForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
                       }}
                     />
                     {touched.image && errors.image ? (
-                      <div className="text-red-500">{errors.image}</div>
+                      <div className="mt-1 text-xs text-red-600">{errors.image}</div>
                     ) : null}
                   </div>
                   <div className="basis-[50%] max-h-[150px] overflow-hidden max-w-fit">
@@ -283,11 +282,11 @@ const ProductForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-3 w-full">
                   {/* Type Field */}
                   <div>
-                    <label htmlFor="type" className="font-bold">
+                    <label htmlFor="type" className="text-[13px] font-medium text-slate-700">
                       Type
                     </label>
                     <select
-                      className="w-full p-2 border border-gray-300 bg-inherit rounded-md"
+                      className="w-full h-9 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                       id="type"
                       name="type"
                       value={values.type}
@@ -299,7 +298,7 @@ const ProductForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
                       <option value="Service">Service</option>
                     </select>
                     {touched.type && errors.type ? (
-                      <div className="text-red-500 text-sm mt-1">{errors.type}</div>
+                      <div className="mt-1 text-xs text-red-600">{errors.type}</div>
                     ) : (
                       <div className="h-5"></div> // Placeholder to maintain height
                     )}
@@ -307,11 +306,11 @@ const ProductForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
 
                   {/* Category Field */}
                   <div>
-                    <label htmlFor="category" className="font-bold">
+                    <label htmlFor="category" className="text-[13px] font-medium text-slate-700">
                       Category
                     </label>
                     <select
-                      className="w-full p-2 border border-gray-300 bg-inherit rounded-md"
+                      className="w-full h-9 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                       id="category"
                       name="category"
                       value={values.category}
@@ -326,7 +325,7 @@ const ProductForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
                       ))}
                     </select>
                     {touched.category && errors.category ? (
-                      <div className="text-red-500 text-sm mt-1">{errors.category}</div>
+                      <div className="mt-1 text-xs text-red-600">{errors.category}</div>
                     ) : (
                       <div className="h-5"></div> // Placeholder to maintain height
                     )}
@@ -334,11 +333,11 @@ const ProductForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
 
                   {/* Name Field */}
                   <div>
-                    <label htmlFor="name" className="font-bold">
+                    <label htmlFor="name" className="text-[13px] font-medium text-slate-700">
                       Name
                     </label>
                     <input
-                      className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
+                      className="w-full h-9 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                       id="name"
                       name="name"
                       type="text"
@@ -347,7 +346,7 @@ const ProductForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
                       onBlur={handleBlur}
                     />
                     {touched.name && errors.name ? (
-                      <div className="text-red-500 text-sm mt-1">{errors.name}</div>
+                      <div className="mt-1 text-xs text-red-600">{errors.name}</div>
                     ) : (
                       <div className="h-5"></div> // Placeholder to maintain height
                     )}
@@ -355,11 +354,11 @@ const ProductForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
 
                   {/* Item Code Field */}
                   <div>
-                    <label htmlFor="itemCode" className="font-bold whitespace-nowrap">
+                    <label htmlFor="itemCode" className="text-[13px] font-medium text-slate-700 whitespace-nowrap">
                       Item Code
                     </label>
                     <input
-                      className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
+                      className="w-full h-9 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                       id="itemCode"
                       name="itemCode"
                       type="text"
@@ -368,7 +367,7 @@ const ProductForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
                       onBlur={handleBlur}
                     />
                     {touched.itemCode && errors.itemCode ? (
-                      <div className="text-red-500 text-sm mt-1">{errors.itemCode}</div>
+                      <div className="mt-1 text-xs text-red-600">{errors.itemCode}</div>
                     ) : (
                       <div className="h-5"></div> // Placeholder to maintain height
                     )}
@@ -377,9 +376,9 @@ const ProductForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
 
                 <div className="flex items-center justify-start space-x-4 mb-3 w-full">
                   <div className="basis-[33.33%]">
-                    <label className="font-bold">Cost</label> <br />
+                    <label className="text-[13px] font-medium text-slate-700">Cost</label> <br />
                     <input
-                      className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
+                      className="w-full h-9 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                       id="cost"
                       name="cost"
                       type="number"
@@ -388,15 +387,15 @@ const ProductForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
                       onBlur={handleBlur}
                     />
                     {touched.cost && errors.cost ? (
-                      <div className="text-red-500">
+                      <div className="mt-1 text-xs text-red-600">
                         {errors.cost}
                       </div>
                     ) : (<div></div>)}
                   </div>
                   <div className="basis-[33.33%]">
-                    <label className="font-bold">Margin %</label> <br />
+                    <label className="text-[13px] font-medium text-slate-700">Margin %</label> <br />
                     <input
-                      className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
+                      className="w-full h-9 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                       id="margin"
                       name="margin"
                       type="number"
@@ -405,16 +404,16 @@ const ProductForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
                       onBlur={handleBlur}
                     />
                     {(touched.margin && errors.margin) ? (
-                      <div className="text-red-500">
+                      <div className="mt-1 text-xs text-red-600">
                         {errors.margin}
                       </div>
                     ) : (<div></div>)}
                   </div>
 
                   <div className="basis-[33.33%]">
-                    <label className="font-bold">Price</label> <br />
+                    <label className="text-[13px] font-medium text-slate-700">Price</label> <br />
                     <input
-                      className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
+                      className="w-full h-9 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                       id="price"
                       name="price"
                       type="number"
@@ -423,16 +422,16 @@ const ProductForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
                       disabled={true}
                     />
                     {(touched.price && errors.price) ? (
-                      <div className="text-red-500">
+                      <div className="mt-1 text-xs text-red-600">
                         {errors.price}
                       </div>
                     ) : (<div></div>)}
                   </div>
                 </div>
                 <div className="w-full">
-                  <label className="font-bold">Description</label> <br />
+                  <label className="text-[13px] font-medium text-slate-700">Description</label> <br />
                   <textarea
-                    className="w-full p-2 border border-gray-300 rounded-md text-black font-medium"
+                    className="w-full h-9 rounded-md border border-slate-300 bg-white px-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                     id="description"
                     name="description"
                     value={values.description}
@@ -440,14 +439,14 @@ const ProductForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
                     onBlur={handleBlur}
                   />
                   {touched.description && errors.description && (
-                    <div className="text-red-500">
+                    <div className="mt-1 text-xs text-red-600">
                       {errors.description}
                     </div>
                   )}
                 </div>
 
                 <div >
-                  <label className="font-bold">
+                  <label className="text-[13px] font-medium text-slate-700">
                     <input
                       type="checkbox"
                       id="taxableCheckbox"
@@ -469,34 +468,34 @@ const ProductForm = ({ refresh, setRefresh, open, close, selectedItem, setSelect
                   taxes?.map((tax) => (
                     <div key={tax.id} className="mb-1 flex">
                       <input
-                        className="form-checkbox h-5 w-5 text-indigo-600 transition duration-150 ease-in-out cursor-pointer"
+                        className="form-checkbox h-5 w-5 text-teal-700 transition duration-150 ease-in-out cursor-pointer"
                         type="checkbox"
                         id={`permission-${tax.id}`}
                         value={JSON.stringify(tax)}
                         checked={selectedTaxes.includes(tax.id)}
                         onChange={(e) => handleTax(tax.id, e)}
                       />
-                      <label className="ml-2 font-medium text-base cursor-pointer" htmlFor={`permission-${tax.id}`}>{tax.name}</label>
+                      <label className="ml-2 text-[13px] font-medium text-slate-700 cursor-pointer" htmlFor={`permission-${tax.id}`}>{tax.name}</label>
                     </div>
                   ))
                 }
               </div>
-              <div className="flex items-center justify-end space-x-2 sticky bg-gradient-to-br from-gray-800 to-gray-700">
+              <div className="flex items-center justify-end gap-2 border-t border-slate-200 bg-slate-50 px-4 py-2.5">
                 <button
-                  className=" w-32 bg-gray-600 hover:bg-gray-900 text-white font-bold py-2 px-4"
+                  className="w-auto rounded-md px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-200/60"
                   onClick={() => clearForm(formikProps)}
                   type="button"
                 >
                   Clear
                 </button>
                 <button
-                  className="w-32 bg-gray-600 hover:bg-gray-900 text-white font-bold py-2 px-4"
+                  className="w-28 rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800 disabled:opacity-50"
                   type="submit"
                 >
                   {!isLoading ?
                     <span>{edit ? "Update" : "Save"}</span> :
                     <div className="flex items-center justify-center h-fit">
-                      <div className="w-6 h-6 border-4 border-gray-500 border-t-transparent rounded-full animate-spin"></div>
+                      <div className="w-6 h-6 rounded-full border-2 border-white/40 border-t-white animate-spin"></div>
                     </div>
                   }
                 </button>

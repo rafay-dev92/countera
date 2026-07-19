@@ -48,4 +48,4 @@ function getDefaultPackages() {
   ];
 }
 
-module.exports = getDefaultPackages;
+export default getDefaultPackages;

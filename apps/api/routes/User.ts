@@ -1,40 +1,67 @@
-const express = require("express");
+import express from "express";
 const router = express.Router();
-const { User, Permission, Business } = require("../models");
-const { body, validationResult } = require("express-validator");
-const bcryptjs = require("bcryptjs");
-const jwt = require("jsonwebtoken");
-const fetchUser = require("../middlewares/fetchUser");
-const { Op } = require("sequelize");
-const { UserRole } = require("@countera/shared");
-require("dotenv").config();
+import { db, users, permissions, user_permission } from "../db";
+import { pickColumns } from "../db/helpers";
+import { eq, and, ne, isNull, isNotNull, asc } from "drizzle-orm";
+import { body, validationResult } from "express-validator";
+import bcryptjs from "bcryptjs";
+import jwt from "jsonwebtoken";
+import fetchUser from "../middlewares/fetchUser";
+import { UserRole } from "@countera/shared";
+import type { Request, Response } from "express";
+import "dotenv/config";
+
+// Sequelize flattened the user_permission join under the "Permission" alias;
+// remap Drizzle's nested UserPermissions rows back to that shape.
+const formatUser = (user: any) => {
+  if (!user) return user;
+  const { UserPermissions, ...rest } = user;
+  return {
+    ...rest,
+    Permission: (UserPermissions || []).map(({ Permission, ...joinRow }: any) => ({
+      ...Permission,
+      user_permission: joinRow,
+    })),
+  };
+};
 
 router.get("/", fetchUser, async (req, res) => {
   try {
     const userId = req.user.id;
-    const loggedInUser = await User.findOne({
-      where: {
-        id: userId,
-        role: { [Op.ne]: UserRole.SUPER_ADMIN },
-        BusinessId: { [Op.ne]: null },
-      },
+    const loggedInUser = await db.query.users.findFirst({
+      where: and(
+        eq(users.id, userId),
+        ne(users.role, UserRole.SUPER_ADMIN),
+        isNotNull(users.BusinessId)
+      ),
     });
 
     if (loggedInUser) {
-      const user = await User.findAll({
-        where: { BusinessId: loggedInUser.dataValues.BusinessId },
-        include: ["Permission", "Business"],
+      const user = await db.query.users.findMany({
+        where: eq(users.BusinessId, loggedInUser.BusinessId!),
+        with: {
+          UserPermissions: { with: { Permission: true } },
+          Business: true,
+        },
       });
-      return res.json(user);
+      return res.json(user.map(formatUser));
     }
-    const user = await User.findAll({
-      include: ["Permission", "Business"],
-      order: [
-        [Business, "name", "ASC"],
-        ["createdAt", "ASC"],
-      ],
+    const user = await db.query.users.findMany({
+      with: {
+        UserPermissions: { with: { Permission: true } },
+        Business: true,
+      },
+      orderBy: [asc(users.createdAt)],
     });
-    return res.json(user);
+    // Relational queries can't order by a joined column; Sequelize ordered by
+    // Business.name ASC (nulls first) then createdAt ASC, so sort in memory.
+    user.sort((a, b) => {
+      const nameA = a.Business?.name ?? "";
+      const nameB = b.Business?.name ?? "";
+      if (nameA !== nameB) return nameA < nameB ? -1 : 1;
+      return a.createdAt.getTime() - b.createdAt.getTime();
+    });
+    return res.json(user.map(formatUser));
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -42,14 +69,15 @@ router.get("/", fetchUser, async (req, res) => {
 
 router.get("/:id", fetchUser, async (req, res) => {
   try {
-    const user = await User.findByPk(req.params.id, {
-      include: ["Permission"],
+    const user = await db.query.users.findFirst({
+      where: eq(users.id, req.params.id),
+      with: { UserPermissions: { with: { Permission: true } } },
     });
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-    res.json(user);
+    res.json(formatUser(user));
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -65,14 +93,14 @@ router.post(
     ).isLength({ min: 5 }),
   ],
   fetchUser,
-  async (req, res) => {
+  async (req: Request, res: Response) => {
     //Checking whether request is normal
     const errors = validationResult(req);
 
     if (!errors.isEmpty())
       return res
         .status(400)
-        .json({ message: `User not created. ${errors.errors[0]?.msg}` });
+        .json({ message: `User not created. ${(errors as any).errors[0]?.msg}` });
 
     try {
       const userData = req.body.user;
@@ -87,11 +115,13 @@ router.post(
           .json({ message: "At least one permission is required" });
       }
 
-      const existingUser = await User.findOne({
-        where: {
-          email: userData.email,
-          BusinessId: userData.BusinessId,
-        },
+      const existingUser = await db.query.users.findFirst({
+        where: and(
+          eq(users.email, userData.email),
+          userData.BusinessId == null
+            ? isNull(users.BusinessId)
+            : eq(users.BusinessId, userData.BusinessId)
+        ),
       });
 
       if (existingUser) {
@@ -100,17 +130,33 @@ router.post(
         const salt = await bcryptjs.genSalt(10);
         const secPass = await bcryptjs.hash(userData.password, salt);
 
-        const newUser = await User.create({
-          ...userData,
-          password: secPass,
-        });
+        await db.transaction(async (tx) => {
+          const [newUser] = await tx
+            .insert(users)
+            .values(pickColumns(users, { ...userData, password: secPass }))
+            .returning();
 
-        await newUser.setPermission(req.body.permissions);
+          // setPermission([...]) equivalent: replace the user's join rows
+          await tx
+            .delete(user_permission)
+            .where(eq(user_permission.UserId, newUser.id));
+          if (req.body.permissions && req.body.permissions.length !== 0) {
+            await tx.insert(user_permission).values(
+              req.body.permissions.map((permissionId: any) => ({
+                UserId: newUser.id,
+                PermissionId: permissionId,
+              }))
+            );
+          }
+        });
 
         res.status(200).json({ message: "User created successfully" });
       }
     } catch (error) {
       console.error(error);
+      if (error.code === "23505") {
+        return res.status(409).json({ message: "User already exist" });
+      }
       res.status(500).json({ message: error.message });
     }
   }
@@ -118,15 +164,22 @@ router.post(
 
 router.post("/add_permission", async (req, res) => {
   try {
-    const user = await User.findByPk(req.body.userId);
+    const user = await db.query.users.findFirst({
+      where: eq(users.id, req.body.userId),
+    });
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
     if (req.body.permission.length !== 0) {
       await Promise.all(
-        req.body.permissions.map(async (item) => {
-          const permission = await Permission.findByPk(item);
-          await user.addPermission(permission);
+        req.body.permissions.map(async (item: any) => {
+          const permission = await db.query.permissions.findFirst({
+            where: eq(permissions.id, item),
+          });
+          await db
+            .insert(user_permission)
+            .values({ UserId: user.id, PermissionId: permission!.id })
+            .onConflictDoNothing();
         })
       );
     }
@@ -141,10 +194,12 @@ router.post("/add_permission", async (req, res) => {
 router.post("/login", async (req, res) => {
   try {
     const { email, password, businessId } = req.body;
-    const whereClause = { email };
-    if (businessId) whereClause.BusinessId = businessId;
+    const whereClause = [eq(users.email, email)];
+    if (businessId) whereClause.push(eq(users.BusinessId, businessId));
 
-    const user = await User.findOne({ where: whereClause });
+    const user = await db.query.users.findFirst({
+      where: and(...whereClause),
+    });
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -164,11 +219,11 @@ router.post("/login", async (req, res) => {
       },
     };
 
-    const token = jwt.sign(data, process.env.JWT_SECRET, {
+    const token = jwt.sign(data, process.env.JWT_SECRET!, {
       expiresIn: 0.5 * 60 * 60,
     });
 
-    const refreshToken = jwt.sign(data, process.env.JWT_SECRET, {
+    const refreshToken = jwt.sign(data, process.env.JWT_SECRET!, {
       expiresIn: 7 * 24 * 60 * 60, // 7 days
     });
 
@@ -199,7 +254,9 @@ router.post("/refresh", async (req, res) => {
     // Verify refresh token
     let refreshTokenData;
     try {
-      refreshTokenData = jwt.verify(refreshToken, process.env.JWT_SECRET);
+      refreshTokenData = jwt.verify(refreshToken, process.env.JWT_SECRET!) as {
+        user: { id: string };
+      };
     } catch (error) {
       return res.status(401).json({ message: "Invalid or expired refresh token" });
     }
@@ -207,7 +264,9 @@ router.post("/refresh", async (req, res) => {
     // Optionally verify the old token (it might be expired, which is fine)
     let oldTokenData;
     try {
-      oldTokenData = jwt.verify(token, process.env.JWT_SECRET);
+      oldTokenData = jwt.verify(token, process.env.JWT_SECRET!) as {
+        user: { id: string };
+      };
       if (oldTokenData.user.id !== refreshTokenData.user.id) {
         return res.status(401).json({ message: "Token mismatch" });
       }
@@ -222,7 +281,7 @@ router.post("/refresh", async (req, res) => {
       },
     };
 
-    const newToken = jwt.sign(data, process.env.JWT_SECRET, {
+    const newToken = jwt.sign(data, process.env.JWT_SECRET!, {
       expiresIn: 0.5 * 60 * 60,
     });
 
@@ -252,7 +311,7 @@ router.post("/businesses-for-email", async (req, res) => {
     // Verify captcha
     const verifyUrl = `https://www.google.com/recaptcha/api/siteverify?secret=${process.env.RECAPTCHA_SECRET_KEY}&response=${captcha}`;
     const response = await fetch(verifyUrl, { method: "POST" });
-    const captchaData = await response.json();
+    const captchaData = (await response.json()) as any;
 
     if (!captchaData.success) {
       return res.status(400).json({
@@ -261,20 +320,18 @@ router.post("/businesses-for-email", async (req, res) => {
       });
     }
 
-    const users = await User.findAll({
-      where: { email },
-      include: {
-        model: Business,
-        as: "Business",
-        attributes: ["id", "name"],
+    const userRows = await db.query.users.findMany({
+      where: eq(users.email, email),
+      with: {
+        Business: { columns: { id: true, name: true } },
       },
     });
 
-    if (users.length > 0 && users[0].role === UserRole.SUPER_ADMIN) {
+    if (userRows.length > 0 && userRows[0].role === UserRole.SUPER_ADMIN) {
       return res.json({ isSuperAdmin: true });
     }
 
-    const businesses = users.map((user) => user.Business).filter(Boolean);
+    const businesses = userRows.map((user) => user.Business).filter(Boolean);
     res.json({ businesses });
   } catch (error) {
     console.error(error);
@@ -285,13 +342,16 @@ router.post("/businesses-for-email", async (req, res) => {
 router.post("/getuser", fetchUser, async (req, res) => {
   try {
     const userId = req.user.id;
-    const user = await User.findOne({
-      where: { id: userId },
-      attributes: { exclude: ["password"] },
-      include: ["Permission", "Business"],
+    const user = await db.query.users.findFirst({
+      where: eq(users.id, userId),
+      columns: { password: false },
+      with: {
+        UserPermissions: { with: { Permission: true } },
+        Business: true,
+      },
     });
 
-    res.send(user);
+    res.send(formatUser(user));
   } catch (error) {
     console.error(error.message);
     res.status(500).send("Internal Server Error");
@@ -300,8 +360,9 @@ router.post("/getuser", fetchUser, async (req, res) => {
 
 router.put("/update/:id", fetchUser, async (req, res) => {
   try {
-    const user = await User.findByPk(req.params.id, {
-      include: ["Permission"],
+    const user = await db.query.users.findFirst({
+      where: eq(users.id, req.params.id),
+      with: { UserPermissions: { with: { Permission: true } } },
     });
 
     if (!user) {
@@ -315,22 +376,33 @@ router.put("/update/:id", fetchUser, async (req, res) => {
     } else {
       req.body.user.password = user.password;
     }
-    await user.update(req.body.user);
+    const updates = pickColumns(users, req.body.user);
+    if (Object.keys(updates).length) {
+      await db.update(users).set(updates).where(eq(users.id, user.id));
+    }
 
-    const deletedItems = user.Permission.filter(
-      (orgPerm) =>
-        !req.body.permissions.some((item) => item === orgPerm.dataValues.id)
-    ).map((changeItem) => changeItem.dataValues.id);
+    const currentPermissions = user.UserPermissions.map((up) => up.Permission);
+
+    const deletedItems = currentPermissions
+      .filter(
+        (orgPerm) => !req.body.permissions.some((item: any) => item === orgPerm.id)
+      )
+      .map((changeItem) => changeItem.id);
 
     const addItems = req.body.permissions.filter(
-      (perm) => !user.Permission.some((item) => item.dataValues.id === perm)
+      (perm: any) => !currentPermissions.some((item) => item.id === perm)
     );
 
     if (addItems.length !== 0) {
       await Promise.all(
-        addItems.map(async (item) => {
-          const permission = await Permission.findByPk(item);
-          await user.addPermission(permission);
+        addItems.map(async (item: any) => {
+          const permission = await db.query.permissions.findFirst({
+            where: eq(permissions.id, item),
+          });
+          await db
+            .insert(user_permission)
+            .values({ UserId: user.id, PermissionId: permission!.id })
+            .onConflictDoNothing();
         })
       );
     }
@@ -338,8 +410,14 @@ router.put("/update/:id", fetchUser, async (req, res) => {
     if (deletedItems.length !== 0) {
       await Promise.all(
         deletedItems.map(async (item) => {
-          const permission = await Permission.findByPk(item);
-          await user.removePermission(permission);
+          await db
+            .delete(user_permission)
+            .where(
+              and(
+                eq(user_permission.UserId, user.id),
+                eq(user_permission.PermissionId, item)
+              )
+            );
         })
       );
     }
@@ -353,13 +431,15 @@ router.put("/update/:id", fetchUser, async (req, res) => {
 
 router.delete("/delete/:id", fetchUser, async (req, res) => {
   try {
-    const user = await User.findByPk(req.params.id);
+    const user = await db.query.users.findFirst({
+      where: eq(users.id, req.params.id),
+    });
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    await user.destroy();
+    await db.delete(users).where(eq(users.id, req.params.id));
     res.status(200).json({ message: "User deleted successfully" });
   } catch (error) {
     console.error(error);
@@ -369,10 +449,21 @@ router.delete("/delete/:id", fetchUser, async (req, res) => {
 
 router.delete("/delete_permission", async (req, res) => {
   try {
-    const user = await User.findByPk(req.body.userId);
-    const permission = await Permission.findByPk(req.body.permissionId);
+    const user = await db.query.users.findFirst({
+      where: eq(users.id, req.body.userId),
+    });
+    const permission = await db.query.permissions.findFirst({
+      where: eq(permissions.id, req.body.permissionId),
+    });
 
-    user.removePermission(permission);
+    await db
+      .delete(user_permission)
+      .where(
+        and(
+          eq(user_permission.UserId, user!.id),
+          eq(user_permission.PermissionId, permission!.id)
+        )
+      );
     res.json({ message: "permission removed from user successfully" });
   } catch (error) {
     console.error(error);
@@ -380,4 +471,4 @@ router.delete("/delete_permission", async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

@@ -1,29 +1,64 @@
-const express = require("express");
+import express from "express";
 const router = express.Router();
-const {
-  Invoice,
-  Product,
-  invoice_product,
-  User,
-  Customer,
-  CustomerVehicle,
-  Business,
-  Payment,
-  InvoiceAudit,
-  ArchivedInvoice,
-  Invoice_Tax,
-  sequelize,
-} = require("../models");
-const fetchUser = require("../middlewares/fetchUser");
-const { Op, fn, where, col } = require("sequelize");
-const moment = require("moment-timezone");
+import { db, invoices, customers, users, products, invoice_product, invoice_tax, invoice_audits, payments, archived_invoices, archived_invoice_product, businesses, } from "../db";
+import { pickColumns, nextDocNumber } from "../db/helpers";
+import { eq, ne, and, ilike, inArray, isNotNull, desc, asc, gte, lte, lt, sql, type SQL, } from "drizzle-orm";
+import { UserRole, InvoicePaymentStatus } from "@countera/shared";
+import fetchUser from "../middlewares/fetchUser";
+import moment from "moment-timezone";
 
-const {
-  trackObjectChanges,
-  trackProductChanges,
-} = require("../utils/auditHelper");
-const authorizePermission = require("../middlewares/authorizePermissions");
-require("dotenv").config();
+import { trackObjectChanges, trackProductChanges, } from "../utils/auditHelper";
+import authorizePermission from "../middlewares/authorizePermissions";
+import "dotenv/config";
+
+const VALID_PAYMENT_STATUSES = Object.values(InvoicePaymentStatus);
+
+// Flatten a drizzle join row ({ ...invoice_product cols, Product }) into the
+// legacy Sequelize shape: { ...product, Tax: [...], invoice_product: {...} }.
+const toLegacyProduct = (joinRow: any) => {
+  const { Product, ...junction } = joinRow;
+  const { ProductTaxes, ...product } = Product;
+  const legacy = { ...product, invoice_product: junction };
+  if (ProductTaxes) {
+    legacy.Tax = ProductTaxes.map(({ Tax, ...productTax }: any) => ({
+      ...Tax,
+      product_tax: productTax,
+    }));
+  }
+  return legacy;
+};
+
+const toLegacyInvoice = (inv: any) => {
+  if (!inv) return inv;
+  const { InvoiceProducts, ...rest } = inv;
+  const out = { ...rest };
+  if (InvoiceProducts) out.Products = InvoiceProducts.map(toLegacyProduct);
+  return out;
+};
+
+const taxesListColumns = {
+  TaxId: true,
+  ProductId: true,
+  tax_name: true,
+  tax_amount: true,
+  tax_rate: true,
+  tax_type: true,
+} as const;
+
+const fullInvoiceIncludes = {
+  Customer: { with: { Address: true, Vehicle: true } },
+  CustomerVehicle: true,
+  InvoiceProducts: {
+    with: {
+      Product: {
+        with: { ProductTaxes: { with: { Tax: true } }, Category: true },
+      },
+    },
+  },
+  Business: true,
+  Payments: true,
+  Taxes: { columns: taxesListColumns },
+} as const;
 
 router.get(
   "/",
@@ -33,7 +68,7 @@ router.get(
     try {
       const { page = 1, limit = 10, filters } = req.query;
 
-      const parsedFilters = JSON.parse(filters);
+      const parsedFilters = JSON.parse(filters as string);
       const {
         CustomerDetails,
         paymentStatus,
@@ -42,178 +77,131 @@ router.get(
         isReport,
         order,
       } = parsedFilters;
-      const selectedFilters = {};
+      const conditions: SQL[] = [];
 
       if (Array.isArray(paymentStatus) && paymentStatus.length > 0) {
-        selectedFilters.paymentStatus = {
-          [Op.in]: paymentStatus,
-        };
+        const validStatuses = paymentStatus.filter((s) =>
+          VALID_PAYMENT_STATUSES.includes(s)
+        );
+        conditions.push(
+          validStatuses.length
+            ? inArray(invoices.paymentStatus, validStatuses)
+            : sql`false`
+        );
       }
 
-      let customers = null;
+      let matchedCustomerIds = null;
       if (
         (CustomerDetails?.name &&
           typeof CustomerDetails?.name === "string" &&
           CustomerDetails?.name?.trim() !== "") ||
         CustomerDetails?.id
       ) {
-        customers = await Customer.findAll({
-          where: where(fn("CONCAT", col("firstName"), " ", col("lastName")), {
-            [Op.like]: `%${CustomerDetails?.name?.trim()}%`,
-          }),
-          attributes: ["id"],
-        });
+        const matched = await db
+          .select({ id: customers.id })
+          .from(customers)
+          .where(
+            ilike(
+              sql`(${customers.firstName} || ' ' || ${customers.lastName})`,
+              `%${CustomerDetails?.name?.trim()}%`
+            )
+          );
+        matchedCustomerIds = matched.map((customer) => customer.id);
       }
 
-      if (customers && customers.length > 0) {
-        const customerIds = customers.map((customer) => customer.id);
-        selectedFilters.CustomerId = { [Op.in]: customerIds };
+      if (matchedCustomerIds && matchedCustomerIds.length > 0) {
+        conditions.push(inArray(invoices.CustomerId, matchedCustomerIds));
       } else if (CustomerDetails?.id) {
-        const customerId = CustomerDetails.id;
-        selectedFilters.CustomerId = { [Op.in]: [customerId] };
-      }
-      else if (CustomerDetails?.name?.trim()) {
-        selectedFilters.CustomerId = { [Op.in]: [null] };        
+        conditions.push(inArray(invoices.CustomerId, [CustomerDetails.id]));
+      } else if (CustomerDetails?.name?.trim()) {
+        conditions.push(sql`false`);
       }
 
       if (startDate && endDate) {
         const parsedStartDate = moment.utc(startDate).toDate();
         const parsedEndDate = moment.utc(endDate).toDate();
 
-        if (!isNaN(parsedStartDate) && !isNaN(parsedEndDate)) {
-          selectedFilters.createdAt = {
-            [Op.gte]: parsedStartDate,
-            [Op.lte]: parsedEndDate,
-          };
+        if (!isNaN(parsedStartDate.getTime()) && !isNaN(parsedEndDate.getTime())) {
+          conditions.push(gte(invoices.createdAt, parsedStartDate));
+          conditions.push(lte(invoices.createdAt, parsedEndDate));
         }
       }
 
       const userId = req.user.id;
-      const user = await User.findOne({
-        where: {
-          id: userId,
-          role: { [Op.ne]: "super-admin" },
-          BusinessId: { [Op.ne]: null },
-        },
+      const user = await db.query.users.findFirst({
+        where: and(
+          eq(users.id, userId),
+          ne(users.role, UserRole.SUPER_ADMIN),
+          isNotNull(users.BusinessId)
+        ),
       });
 
       if (!user) {
         return res.status(404).json({ message: "User not found", data: [] });
       }
 
-      const whereCondition = {
-        ...selectedFilters,
-        BusinessId: user.BusinessId,
-      };
+      conditions.push(eq(invoices.BusinessId, user.BusinessId!));
+      const whereCondition = and(...conditions);
 
-      const sortOrder = order
-        ? [["createdAt", order]]
-        : [["createdAt", "DESC"]];
+      const sortOrder =
+        order && String(order).toUpperCase() === "ASC"
+          ? [asc(invoices.createdAt)]
+          : [desc(invoices.createdAt)];
       const parsedIsReport = isReport ? true : false;
 
       if (parsedIsReport) {
-        const invoices = await Invoice.findAll({
+        const reportInvoices = await db.query.invoices.findMany({
           where: whereCondition,
-          order: sortOrder,
-          include: [
-            {
-              model: Customer,
-              as: "Customer",
-              include: ["Address", "Vehicle"],
+          orderBy: sortOrder,
+          with: {
+            Customer: { with: { Address: true, Vehicle: true } },
+            InvoiceProducts: {
+              with: {
+                Product: {
+                  with: {
+                    ProductTaxes: { with: { Tax: true } },
+                    Category: true,
+                  },
+                },
+              },
             },
-            {
-              model: Product,
-              as: "Products",
-              through: "invoice_product",
-              include: ["Tax", "Category"],
-            },
-            {
-              model: Payment,
-              as: "Payments",
-            },
-            {
-              model: Invoice_Tax,
-              as: "Taxes",
-              attributes: [
-                "TaxId",
-                "ProductId",
-                "tax_name",
-                "tax_amount",
-                "tax_rate",
-                "tax_type",
-              ],
-            },
-          ],
+            Payments: true,
+            Taxes: { columns: taxesListColumns },
+          },
         });
 
         return res.json({
           message: "Invoices fetched successfully (report)",
-          data: invoices,
+          data: reportInvoices.map(toLegacyInvoice),
         });
       }
 
-      const offset = (page - 1) * limit;
+      const offset = (Number(page) - 1) * Number(limit);
 
-      const { count, rows } = await Invoice.findAndCountAll({
+      const count = await db.$count(invoices, whereCondition);
+      const rows = await db.query.invoices.findMany({
         where: whereCondition,
-        distinct: true,
-        order: sortOrder,
+        orderBy: sortOrder,
         limit: Number(limit),
         offset: Number(offset),
-        include: [
-          {
-            model: Customer,
-            as: "Customer",
-            include: ["Address", "Vehicle"],
-          },
-          {
-            model: CustomerVehicle,
-            as: "CustomerVehicle",
-          },
-          {
-            model: Product,
-            as: "Products",
-            through: "invoice_product",
-            include: ["Tax", "Category"],
-          },
-          {
-            model: Business,
-            as: "Business",
-          },
-          {
-            model: Payment,
-            as: "Payments",
-          },
-          {
-            model: Invoice_Tax,
-            as: "Taxes",
-            attributes: [
-              "TaxId",
-              "ProductId",
-              "tax_name",
-              "tax_amount",
-              "tax_rate",
-              "tax_type",
-            ],
-          },
-        ],
+        with: fullInvoiceIncludes,
       });
 
       const formattedInvoices = rows.map((inv) => {
-        const appliedTaxes = {};
+        const appliedTaxes: Record<string, any> = {};
 
         inv.Taxes?.forEach((t) => {
           const key = `${t.ProductId}_${t.TaxId}`;
 
           if (!appliedTaxes[key]) {
-            appliedTaxes[key] = t.toJSON();
+            appliedTaxes[key] = t;
           }
 
           // appliedTaxes[key].total_amount += parseFloat(t.tax_amount || 0);
         });
 
         return {
-          ...inv.toJSON(),
+          ...toLegacyInvoice(inv),
           appliedTaxes: appliedTaxes,
         };
       });
@@ -224,7 +212,7 @@ router.get(
         total: count,
         page: Number(page),
         limit: Number(limit),
-        totalPages: Math.ceil(count / limit),
+        totalPages: Math.ceil(count / Number(limit)),
       });
     } catch (error) {
       console.error(error);
@@ -239,37 +227,12 @@ router.get(
   authorizePermission("invoice:read"),
   async (req, res) => {
     try {
-      const invoice = await Invoice.findByPk(req.params.id, {
-        include: [
-          {
-            model: Customer,
-            as: "Customer",
-            include: ["Address", "Vehicle"],
-          },
-          {
-            model: CustomerVehicle,
-            as: "CustomerVehicle",
-          },
-          {
-            model: Product,
-            as: "Products",
-            through: "invoice_product",
-            include: ["Tax", "Category"],
-          },
-          {
-            model: Business,
-            as: "Business",
-          },
-          {
-            model: Payment,
-            as: "Payments",
-          },
-          {
-            model: Invoice_Tax,
-            as: "Taxes",
-            attributes: ["tax_name", "tax_amount"],
-          },
-        ],
+      const invoice = await db.query.invoices.findFirst({
+        where: eq(invoices.id, req.params.id),
+        with: {
+          ...fullInvoiceIncludes,
+          Taxes: { columns: { tax_name: true, tax_amount: true } },
+        },
       });
 
       if (!invoice) {
@@ -278,7 +241,7 @@ router.get(
 
       return res.json({
         message: "Invoices fetched successfully",
-        data: invoice,
+        data: toLegacyInvoice(invoice),
       });
     } catch (error) {
       res.status(500).json({ message: error.message });
@@ -298,93 +261,64 @@ router.post(
         return res.status(409).json({ message: "Customer Id is mandatory" });
       }
 
-      const transaction = await sequelize.transaction();
+      const newInvoice = await db.transaction(async (tx) => {
+        const invoiceNumber = await nextDocNumber(
+          tx,
+          invoices,
+          invoices.invoiceNumber,
+          invoiceData.BusinessId
+        );
+        const [created] = await tx
+          .insert(invoices)
+          .values({ ...pickColumns(invoices, invoiceData), invoiceNumber })
+          .returning();
 
-      const newInvoice = await Invoice.create(invoiceData, { transaction });
-
-      // Handle products
-      if (req.body.products && req.body.products.length !== 0) {
-        await Promise.all(
-          req.body.products.map(async (product) => {
-            const productRecord = await Product.findByPk(product.id, {
-              transaction,
-            });
-            if (productRecord) {
-              await newInvoice.addProduct(productRecord, {
-                through: {
+        // Handle products
+        if (req.body.products && req.body.products.length !== 0) {
+          await Promise.all(
+            req.body.products.map(async (product: any) => {
+              const productRecord = await tx.query.products.findFirst({
+                where: eq(products.id, product.id),
+              });
+              if (productRecord) {
+                await tx.insert(invoice_product).values({
+                  InvoiceId: created.id,
+                  ProductId: productRecord.id,
                   quantity: product.quantity,
                   description: product.description,
                   price: product.price,
-                  replacement_reminder_date:
-                    product.replacement_reminder_date || null,
-                },
-                transaction,
+                  replacement_reminder_date: product.replacement_reminder_date
+                    ? new Date(product.replacement_reminder_date)
+                    : null,
+                });
+              }
+            })
+          );
+        }
+
+        // Handle taxes
+        if (req.body.taxes && req.body.taxes.length > 0) {
+          await Promise.all(
+            req.body.taxes.map(async (invoiceTax: any) => {
+              await tx.insert(invoice_tax).values({
+                ...pickColumns(invoice_tax, invoiceTax),
+                InvoiceId: created.id,
               });
-            }
-          })
-        );
-      }
+            })
+          );
+        }
 
-      // Handle taxes
-      if (req.body.taxes && req.body.taxes.length > 0) {
-        await Promise.all(
-          req.body.taxes.map(async (invoiceTax) => {
-            await Invoice_Tax.create(
-              {
-                InvoiceId: newInvoice.id,
-                ...invoiceTax,
-              },
-              { transaction }
-            );
-          })
-        );
-      }
+        return created;
+      });
 
-      await transaction.commit();
-
-      const currentInvoice = await Invoice.findByPk(newInvoice.id, {
-        include: [
-          {
-            model: Customer,
-            as: "Customer",
-            include: ["Address", "Vehicle"],
-          },
-          {
-            model: CustomerVehicle,
-            as: "CustomerVehicle",
-          },
-          {
-            model: Product,
-            as: "Products",
-            through: "invoice_product",
-            include: ["Tax", "Category"],
-          },
-          {
-            model: Business,
-            as: "Business",
-          },
-          {
-            model: Payment,
-            as: "Payments",
-          },
-          {
-            model: Invoice_Tax,
-            as: "Taxes",
-            attributes: [
-              "TaxId",
-              "ProductId",
-              "tax_name",
-              "tax_amount",
-              "tax_rate",
-              "tax_type",
-            ],
-          },
-        ],
+      const currentInvoice = await db.query.invoices.findFirst({
+        where: eq(invoices.id, newInvoice.id),
+        with: fullInvoiceIncludes,
       });
 
       const formattedCurrentInvoice = {
-        ...currentInvoice.toJSON(),
-        appliedTaxes: currentInvoice.Taxes.map((tax) => tax.toJSON()),
+        ...toLegacyInvoice(currentInvoice),
+        appliedTaxes: currentInvoice!.Taxes,
       };
 
       return res.status(200).json({
@@ -405,13 +339,16 @@ router.put(
   async (req, res) => {
     try {
       let payload = req.body;
-      const invoice = await Invoice.findByPk(req.params.id, {
-        include: ["Products"],
+      const invoiceRow = await db.query.invoices.findFirst({
+        where: eq(invoices.id, req.params.id),
+        with: { InvoiceProducts: { with: { Product: true } } },
       });
 
-      if (!invoice) {
+      if (!invoiceRow) {
         return res.status(404).json({ message: "Invoice not found" });
       }
+
+      const invoice = toLegacyInvoice(invoiceRow);
 
       if (
         !(
@@ -424,7 +361,7 @@ router.put(
           await trackObjectChanges(
             invoice.id,
             req.user.id,
-            invoice.toJSON(),
+            invoice,
             req.body.invoiceData,
             req.body.products
           );
@@ -433,33 +370,39 @@ router.put(
 
       // Update invoice data
       if (req.body.invoiceData) {
-        await invoice.update(req.body.invoiceData);
+        const updates = pickColumns(invoices, req.body.invoiceData);
+        if (Object.keys(updates).length) {
+          await db
+            .update(invoices)
+            .set(updates)
+            .where(eq(invoices.id, invoice.id));
+        }
       }
 
       // Update products
       if (req.body?.products && req.body?.products.length > 0) {
         try {
           // Remove all existing products
-          await Promise.all(
-            invoice.Products.map(async (product) => {
-              await invoice.removeProduct(product);
-            })
-          );
+          await db
+            .delete(invoice_product)
+            .where(eq(invoice_product.InvoiceId, invoice.id));
 
           // Add updated products
           await Promise.all(
-            req.body.products.map(async (product) => {
-              const productRecord = await Product.findByPk(product.id);
+            req.body.products.map(async (product: any) => {
+              const productRecord = await db.query.products.findFirst({
+                where: eq(products.id, product.id),
+              });
               if (productRecord) {
-                await invoice.addProduct(productRecord, {
-                  through: {
-                    quantity: product.quantity,
-                    description: product.description,
-                    price: product.price,
-                    replacement_reminder_date: product.replacement_reminder_date
-                      ? product.replacement_reminder_date
-                      : null,
-                  },
+                await db.insert(invoice_product).values({
+                  InvoiceId: invoice.id,
+                  ProductId: productRecord.id,
+                  quantity: product.quantity,
+                  description: product.description,
+                  price: product.price,
+                  replacement_reminder_date: product.replacement_reminder_date
+                    ? new Date(product.replacement_reminder_date)
+                    : null,
                 });
               }
             })
@@ -474,14 +417,16 @@ router.put(
       if (req.body?.taxes && req.body?.taxes.length > 0) {
         try {
           // Remove all existing invoice taxes
-          await Invoice_Tax.destroy({ where: { InvoiceId: invoice.id } });
+          await db
+            .delete(invoice_tax)
+            .where(eq(invoice_tax.InvoiceId, invoice.id));
 
           // Add updated invoice taxes
           await Promise.all(
-            req.body.taxes.map(async (invoiceTax) => {
-              await Invoice_Tax.create({
+            req.body.taxes.map(async (invoiceTax: any) => {
+              await db.insert(invoice_tax).values({
+                ...pickColumns(invoice_tax, invoiceTax),
                 InvoiceId: invoice.id,
-                ...invoiceTax,
               });
             })
           );
@@ -491,49 +436,14 @@ router.put(
         }
       }
 
-      const currentInvoice = await Invoice.findByPk(invoice.id, {
-        include: [
-          {
-            model: Customer,
-            as: "Customer",
-            include: ["Address", "Vehicle"],
-          },
-          {
-            model: CustomerVehicle,
-            as: "CustomerVehicle",
-          },
-          {
-            model: Product,
-            as: "Products",
-            through: "invoice_product",
-            include: ["Tax", "Category"],
-          },
-          {
-            model: Business,
-            as: "Business",
-          },
-          {
-            model: Payment,
-            as: "Payments",
-          },
-          {
-            model: Invoice_Tax,
-            as: "Taxes",
-            attributes: [
-              "TaxId",
-              "ProductId",
-              "tax_name",
-              "tax_amount",
-              "tax_rate",
-              "tax_type",
-            ],
-          },
-        ],
+      const currentInvoice = await db.query.invoices.findFirst({
+        where: eq(invoices.id, invoice.id),
+        with: fullInvoiceIncludes,
       });
 
       const formattedCurrentInvoice = {
-        ...currentInvoice.toJSON(),
-        appliedTaxes: currentInvoice.Taxes.map((tax) => tax.toJSON()),
+        ...toLegacyInvoice(currentInvoice),
+        appliedTaxes: currentInvoice!.Taxes,
       };
 
       return res.status(200).json({
@@ -554,48 +464,50 @@ router.put(
   async (req, res) => {
     try {
       const userId = req.user.id;
-      const user = await User.findOne({
-        where: {
-          id: userId,
-          role: { [Op.ne]: "super-admin" },
-          BusinessId: { [Op.ne]: null },
-        },
+      const user = await db.query.users.findFirst({
+        where: and(
+          eq(users.id, userId),
+          ne(users.role, UserRole.SUPER_ADMIN),
+          isNotNull(users.BusinessId)
+        ),
       });
 
-      if (user.role !== "ADMIN")
+      if (user!.role !== "ADMIN")
         return res
           .status(403)
           .json({ message: "Forbidden: Insufficient permission" });
 
       let payload = req.body;
-      const invoice = await Invoice.findByPk(req.params.id, {
-        include: [
-          {
-            model: Product,
-            as: "Products",
-            through: "invoice_product",
-            include: ["Tax", "Category"],
+      const invoiceRow = await db.query.invoices.findFirst({
+        where: eq(invoices.id, req.params.id),
+        with: {
+          InvoiceProducts: {
+            with: {
+              Product: {
+                with: {
+                  ProductTaxes: { with: { Tax: true } },
+                  Category: true,
+                },
+              },
+            },
           },
-          "Business",
-          {
-            model: Payment,
-            as: "Payments",
-          },
-          {
-            model: Invoice_Tax,
-            as: "Taxes",
-          },
-        ],
+          Business: true,
+          Payments: true,
+          Taxes: true,
+        },
       });
 
-      if (!invoice) {
+      if (!invoiceRow) {
         return res.status(404).json({ message: "Invoice not found" });
       }
 
+      const invoice = toLegacyInvoice(invoiceRow);
+
       // Check if archived invoice already exists
-      isArchivedInvoiceExists = await ArchivedInvoice.findOne({
-        where: { originalInvoiceId: invoice.id },
-      });
+      const isArchivedInvoiceExists =
+        await db.query.archived_invoices.findFirst({
+          where: eq(archived_invoices.originalInvoiceId, invoice.id),
+        });
 
       if (isArchivedInvoiceExists) {
         return res.status(409).json({
@@ -604,34 +516,41 @@ router.put(
       }
 
       // create archived invoice
-      const { id, Business, Payments, Products, ...restData } =
-        invoice.dataValues;
+      const { id, Business, Payments, Products, ...restData } = invoice;
 
-      const payments = Payments.map((payment) => {
-        const { id, ...restObj } = payment?.dataValues;
+      const paymentsSnapshot = Payments.map((payment: any) => {
+        const { id, ...restObj } = payment;
         return { ...restObj };
       });
       // Create archived invoice data
-      const invoiceData = {
-        originalInvoiceId: id,
-        payments: JSON.stringify(payments),
-        ...restData,
-      };
-      const newArchivedInvoice = await ArchivedInvoice.create(invoiceData);
+      const archivedData = pickColumns(archived_invoices, restData);
+      // the archive enum predates VOIDED; keep its legacy VOID spelling
+      if ((archivedData.paymentStatus as string) === "VOIDED")
+        archivedData.paymentStatus = "VOID";
+      const [newArchivedInvoice] = await db
+        .insert(archived_invoices)
+        .values({
+          ...archivedData,
+          originalInvoiceId: id,
+          payments: JSON.stringify(paymentsSnapshot),
+          createdAt: restData.createdAt,
+          updatedAt: restData.updatedAt,
+        })
+        .returning();
       if (Products && Products.length !== 0) {
         await Promise.all(
-          Products.map(async (product) => {
+          Products.map(async (product: any) => {
             if (product) {
-              await newArchivedInvoice.addProduct(product, {
-                through: {
-                  quantity: product.invoice_product.quantity,
-                  description: product.invoice_product.description,
-                  price: product.invoice_product.price,
-                  replacement_reminder_date: product.invoice_product
-                    .replacement_reminder_date
-                    ? product.invoice_product.replacement_reminder_date
-                    : null,
-                },
+              await db.insert(archived_invoice_product).values({
+                ArchivedInvoiceId: newArchivedInvoice.id,
+                ProductId: product.id,
+                quantity: product.invoice_product.quantity,
+                description: product.invoice_product.description,
+                price: product.invoice_product.price,
+                replacement_reminder_date: product.invoice_product
+                  .replacement_reminder_date
+                  ? product.invoice_product.replacement_reminder_date
+                  : null,
               });
             }
           })
@@ -640,11 +559,11 @@ router.put(
 
       // get first cash payment
       const getFirstCashPayment = invoice.Payments.find(
-        (payment) => payment.paymentMethod === "Cash"
+        (payment: any) => payment.paymentMethod === "Cash"
       );
 
       // get Total amount of other payments
-      const getOtherPaymentsAmount = invoice.Payments.reduce((acc, payment) => {
+      const getOtherPaymentsAmount = invoice.Payments.reduce((acc: number, payment: any) => {
         if (payment.paymentMethod !== "Cash") {
           return acc + parseFloat(payment.paidAmount);
         }
@@ -660,33 +579,39 @@ router.put(
       payload.invoiceData.paidAmount = payload.invoiceData.totalAmount;
       payload.invoiceData.isArchived = true;
       if (payload.invoiceData) {
-        await invoice.update(payload.invoiceData);
+        const updates = pickColumns(invoices, payload.invoiceData);
+        if (Object.keys(updates).length) {
+          await db
+            .update(invoices)
+            .set(updates)
+            .where(eq(invoices.id, invoice.id));
+        }
       }
 
       // Update products
       if (payload?.products && payload?.products.length > 0) {
         try {
           // Remove all existing products
-          await Promise.all(
-            invoice.Products.map(async (product) => {
-              await invoice.removeProduct(product);
-            })
-          );
+          await db
+            .delete(invoice_product)
+            .where(eq(invoice_product.InvoiceId, invoice.id));
 
           // Add updated products
           await Promise.all(
-            payload.products.map(async (product) => {
-              const productRecord = await Product.findByPk(product.id);
+            payload.products.map(async (product: any) => {
+              const productRecord = await db.query.products.findFirst({
+                where: eq(products.id, product.id),
+              });
               if (productRecord) {
-                await invoice.addProduct(productRecord, {
-                  through: {
-                    quantity: product.quantity,
-                    description: product.description,
-                    price: product.price,
-                    replacement_reminder_date: product.replacement_reminder_date
-                      ? product.replacement_reminder_date
-                      : null,
-                  },
+                await db.insert(invoice_product).values({
+                  InvoiceId: invoice.id,
+                  ProductId: productRecord.id,
+                  quantity: product.quantity,
+                  description: product.description,
+                  price: product.price,
+                  replacement_reminder_date: product.replacement_reminder_date
+                    ? new Date(product.replacement_reminder_date)
+                    : null,
                 });
               }
             })
@@ -700,50 +625,44 @@ router.put(
       // Update Payments
       if (parseInt(paymentDifference) !== 0) {
         // Delete all cash payments
-        await Promise.all(
-          invoice.Payments.filter(
-            (payment) => payment.paymentMethod === "Cash"
-          ).map((payment) => Payment.destroy({ where: { id: payment.id } }))
-        );
+        const cashPaymentIds = invoice.Payments.filter(
+          (payment: any) => payment.paymentMethod === "Cash"
+        ).map((payment: any) => payment.id);
+        if (cashPaymentIds.length) {
+          await db.delete(payments).where(inArray(payments.id, cashPaymentIds));
+        }
 
         const paymentData = {
           InvoiceId: invoice.id,
-          paidAmount: paymentDifference,
-          totalAmount: paymentDifference,
+          paidAmount: Number(paymentDifference),
+          totalAmount: Number(paymentDifference),
           paymentMethod: "Cash",
-          createdAt: getFirstCashPayment.createdAt,
-          updatedAt: getFirstCashPayment.updatedAt,
+          createdAt: getFirstCashPayment!.createdAt,
+          updatedAt: getFirstCashPayment!.updatedAt,
         };
 
         // create a new cash payment
-        await Payment.create(paymentData);
+        await db.insert(payments).values(paymentData);
       }
 
-      const currentInvoice = await Invoice.findByPk(invoice.id, {
-        include: [
-          {
-            model: Customer,
-            as: "Customer",
-            include: ["Address", "Vehicle"],
+      const currentInvoice = await db.query.invoices.findFirst({
+        where: eq(invoices.id, invoice.id),
+        with: {
+          Customer: { with: { Address: true, Vehicle: true } },
+          CustomerVehicle: true,
+          InvoiceProducts: {
+            with: {
+              Product: { with: { ProductTaxes: { with: { Tax: true } } } },
+            },
           },
-          "CustomerVehicle",
-          {
-            model: Product,
-            as: "Products",
-            through: "invoice_product",
-            include: ["Tax"],
-          },
-          "Business",
-          {
-            model: Payment,
-            as: "Payments",
-          },
-        ],
+          Business: true,
+          Payments: true,
+        },
       });
 
       return res.status(200).json({
         message: "Invoice updated successfully",
-        data: currentInvoice,
+        data: toLegacyInvoice(currentInvoice),
       });
     } catch (error) {
       console.error(error);
@@ -758,13 +677,9 @@ router.delete(
   authorizePermission("invoice:delete"),
   async (req, res) => {
     try {
-      const invoice = await Invoice.findByPk(req.params.id, {
-        include: [
-          {
-            model: Payment,
-            as: "Payments",
-          },
-        ],
+      const invoice = await db.query.invoices.findFirst({
+        where: eq(invoices.id, req.params.id),
+        with: { Payments: true },
       });
 
       if (!invoice) {
@@ -773,12 +688,9 @@ router.delete(
 
       if (invoice.Payments.length > 0) {
         try {
-          await Promise.all(
-            invoice.Payments.map(async (item) => {
-              const paymemt = await Payment.findByPk(item.id);
-              await paymemt.destroy();
-            })
-          );
+          await db
+            .delete(payments)
+            .where(eq(payments.InvoiceId, invoice.id));
         } catch (error) {
           console.error(error);
           return res
@@ -794,7 +706,10 @@ router.delete(
         }
       }
 
-      invoice.update({ paymentStatus: req.params.status });
+      await db
+        .update(invoices)
+        .set({ paymentStatus: req.params.status as InvoicePaymentStatus })
+        .where(eq(invoices.id, invoice.id));
       return res.status(200).json({ message: "Invoice deleted successfully" });
     } catch (error) {
       console.error(error);
@@ -805,13 +720,15 @@ router.delete(
 
 router.delete("/delete/:id", fetchUser, async (req, res) => {
   try {
-    const invoice = await Invoice.findByPk(req.params.id);
+    const invoice = await db.query.invoices.findFirst({
+      where: eq(invoices.id, req.params.id),
+    });
 
     if (!invoice) {
       return res.status(404).json({ message: "invoice not found" });
     }
 
-    await invoice.destroy();
+    await db.delete(invoices).where(eq(invoices.id, invoice.id));
 
     return res.status(200).json({ message: "Invoice deleted successfully" });
   } catch (error) {
@@ -832,7 +749,9 @@ router.get("/audit/:id", fetchUser, async (req, res) => {
     }
 
     // Check if invoice exists
-    const invoice = await Invoice.findByPk(req.params.id);
+    const invoice = await db.query.invoices.findFirst({
+      where: eq(invoices.id, req.params.id),
+    });
     if (!invoice) {
       return res.status(404).json({
         message: "Invoice not found",
@@ -841,18 +760,20 @@ router.get("/audit/:id", fetchUser, async (req, res) => {
       });
     }
 
-    const auditHistory = await InvoiceAudit.findAll({
-      where: {
-        invoiceId: req.params.id,
-      },
-      order: [["createdAt", "DESC"]],
-      include: [
-        {
-          model: User,
-          as: "User",
-          attributes: ["id", "first_name", "last_name", "email", "role"],
+    const auditHistory = await db.query.invoice_audits.findMany({
+      where: eq(invoice_audits.invoiceId, req.params.id),
+      orderBy: [desc(invoice_audits.createdAt)],
+      with: {
+        User: {
+          columns: {
+            id: true,
+            first_name: true,
+            last_name: true,
+            email: true,
+            role: true,
+          },
         },
-      ],
+      },
     });
 
     return res.status(200).json({
@@ -872,11 +793,9 @@ router.get("/audit/:id", fetchUser, async (req, res) => {
 
 router.get("/today-reminders/:businessId", fetchUser, async (req, res) => {
   try {
-    const business = await Business.findOne({
-      attributes: ["id", "timezone"],
-      where: {
-        id: req.params.businessId,
-      },
+    const business = await db.query.businesses.findFirst({
+      columns: { id: true, timezone: true },
+      where: eq(businesses.id, req.params.businessId),
     });
 
     if (!business) {
@@ -887,40 +806,33 @@ router.get("/today-reminders/:businessId", fetchUser, async (req, res) => {
       });
     }
 
-    const todayInBusinessTz = moment()
-      .tz(business.timezone || "UTC")
-      .format("YYYY-MM-DD");
+    const tz = business.timezone || "UTC";
+    const todayInBusinessTz = moment().tz(tz).format("YYYY-MM-DD");
+    const dayStart = moment.tz(todayInBusinessTz, tz).toDate();
+    const dayEnd = moment.tz(todayInBusinessTz, tz).add(1, "day").toDate();
 
-    const reminders = await invoice_product.findAll({
-      where: {
-        replacement_reminder_date: todayInBusinessTz,
-      },
-      include: [
-        {
-          model: Invoice,
-          as: "Invoice",
-          where: {
-            BusinessId: business.id,
-          },
-          include: [
-            {
-              model: Customer,
-              as: "Customer",
-              include: [
-                {
-                  model: Business,
-                  as: "Business",
-                },
-              ],
+    const reminderRows = await db.query.invoice_product.findMany({
+      where: and(
+        gte(invoice_product.replacement_reminder_date, dayStart),
+        lt(invoice_product.replacement_reminder_date, dayEnd)
+      ),
+      with: {
+        Invoice: {
+          with: {
+            Customer: {
+              with: {
+                Business: true,
+              },
             },
-          ],
+          },
         },
-        {
-          model: Product,
-          as: "Product",
-        },
-      ],
+        Product: true,
+      },
     });
+
+    const reminders = reminderRows.filter(
+      (row) => row.Invoice && row.Invoice.BusinessId === business.id
+    );
 
     return res.status(200).json({
       message: "Reminders fetched successfully",
@@ -937,4 +849,4 @@ router.get("/today-reminders/:businessId", fetchUser, async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

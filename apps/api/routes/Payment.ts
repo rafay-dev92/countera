@@ -1,18 +1,18 @@
-const express = require("express");
+import express from "express";
 const router = express.Router();
-const { Payment } = require("../models");
-const fetchUser = require("../middlewares/fetchUser");
-require("dotenv").config();
+import { db, payments, invoices } from "../db";
+import { pickColumns } from "../db/helpers";
+import { eq, asc } from "drizzle-orm";
+import fetchUser from "../middlewares/fetchUser";
+import "dotenv/config";
 
 router.get("/:invoiceId", fetchUser, async (req, res) => {
   try {
-    const payments = await Payment.findAll({
-      where: {
-        InvoiceId: req.params.invoiceId,
-      },
-      order: [["createdAt", "ASC"]],
+    const paymentRows = await db.query.payments.findMany({
+      where: eq(payments.InvoiceId, req.params.invoiceId),
+      orderBy: [asc(payments.createdAt)],
     });
-    res.json(payments);
+    res.json(paymentRows);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -21,8 +21,13 @@ router.get("/:invoiceId", fetchUser, async (req, res) => {
 router.post("/create", async (req, res) => {
   try {
     const paymentData = req.body;
-    const newPayment = await Payment.create(paymentData);
-    const invoice = await newPayment.getInvoice();
+    const [newPayment] = await db
+      .insert(payments)
+      .values(pickColumns(payments, paymentData))
+      .returning();
+    const invoice = await db.query.invoices.findFirst({
+      where: eq(invoices.id, newPayment.InvoiceId),
+    });
     if (!invoice) {
       return res.status(404).json({ message: "Invoice not found" });
     }
@@ -37,23 +42,30 @@ router.post("/create", async (req, res) => {
         .json({ message: "Payment exceeds total invoice amount" });
     }
 
-    let updatedInvoice = null;
+    let updatedInvoice: typeof invoices.$inferSelect | null = null;
     if (newPayment.paidAmount + invoice.paidAmount < invoice.totalAmount) {
-      updatedInvoice = await invoice.update({
-        paidAmount: invoice.paidAmount + newPayment.paidAmount,
-        paymentStatus: "PARTIALLY_PAID",
-      });
+      [updatedInvoice] = await db
+        .update(invoices)
+        .set({
+          paidAmount: invoice.paidAmount + newPayment.paidAmount,
+          paymentStatus: "PARTIALLY_PAID",
+        })
+        .where(eq(invoices.id, invoice.id))
+        .returning();
     } else if (
       newPayment.paidAmount + invoice.paidAmount ===
       invoice.totalAmount
     ) {
-      updatedInvoice = await invoice.update({
-        paidAmount: invoice.totalAmount,
-        paymentStatus: "PAID",
-      });
+      [updatedInvoice] = await db
+        .update(invoices)
+        .set({
+          paidAmount: invoice.totalAmount,
+          paymentStatus: "PAID",
+        })
+        .where(eq(invoices.id, invoice.id))
+        .returning();
     }
 
-    await updatedInvoice.save();
     res.json(newPayment);
   } catch (error) {
     console.error(error);
@@ -63,13 +75,21 @@ router.post("/create", async (req, res) => {
 
 router.put("/update/:id", async (req, res) => {
   try {
-    const payment = await Payment.findByPk(req.params.id);
+    const payment = await db.query.payments.findFirst({
+      where: eq(payments.id, req.params.id),
+    });
 
     if (!payment) {
       return res.status(404).json({ message: "payment not found" });
     }
 
-    await payment.update(req.body);
+    const updates = pickColumns(payments, req.body);
+    if (Object.keys(updates).length) {
+      await db
+        .update(payments)
+        .set(updates)
+        .where(eq(payments.id, req.params.id));
+    }
 
     res.json({ message: "Payment updated successfully" });
   } catch (error) {
@@ -80,13 +100,15 @@ router.put("/update/:id", async (req, res) => {
 
 router.delete("/delete/:id", async (req, res) => {
   try {
-    const payment = await Payment.findByPk(req.params.id);
+    const payment = await db.query.payments.findFirst({
+      where: eq(payments.id, req.params.id),
+    });
 
     if (!payment) {
       return res.status(404).json({ message: "address not found" });
     }
 
-    await payment.destroy();
+    await db.delete(payments).where(eq(payments.id, req.params.id));
 
     res.json({ message: "Address deleted successfully" });
   } catch (error) {
@@ -95,4 +117,4 @@ router.delete("/delete/:id", async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

@@ -1,0 +1,61 @@
+import React, { createContext, useContext, useState, useCallback } from "react";
+
+type ConfirmFn = (msg?: string) => Promise<boolean>;
+
+const ConfirmContext = createContext<ConfirmFn | undefined>(undefined);
+
+export const useConfirm = (): ConfirmFn => {
+  const ctx = useContext(ConfirmContext);
+  if (!ctx) {
+    throw new Error("useConfirm must be used inside the ConfirmProvider.");
+  }
+  return ctx;
+};
+
+export const ConfirmProvider = ({ children }: { children: React.ReactNode }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [message, setMessage] = useState("");
+  const [resolver, setResolver] = useState<((value: boolean) => void) | null>(null);
+
+  const confirm = useCallback<ConfirmFn>((msg) => {
+    return new Promise<boolean>((resolve) => {
+      setMessage(msg ?? "");
+      setIsOpen(true);
+      setResolver(() => resolve);
+    });
+  }, []);
+
+  const handleConfirm = () => {
+    setIsOpen(false);
+    resolver?.(true);
+  };
+
+  const handleCancel = () => {
+    setIsOpen(false);
+    resolver?.(false);
+  };
+
+  return (
+    <ConfirmContext.Provider value={confirm}>
+      {children}
+      {isOpen && (
+        <div className="fixed inset-0 flex items-center justify-center z-[10000] bg-black/50">
+          <div
+            className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-300 ease-out animate-fadeIn"
+          />
+          <div
+            className="relative bg-white p-6 rounded-xl shadow-2xl max-w-sm w-full z-[10000]
+                 transition-transform duration-300 ease-out animate-scaleIn"
+          >
+            <h3 className="text-lg font-semibold mb-4">Confirmation</h3>
+            <p className="mb-6">{!message ? 'Are you sure?' : message}</p>
+            <div className="flex justify-end space-x-2">
+              <button onClick={handleCancel} className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">Cancel</button>
+              <button onClick={handleConfirm} className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">Yes</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </ConfirmContext.Provider>
+  );
+};

@@ -289,10 +289,10 @@ const ViewQuotation = ({ quotationData, setQuotationData, componentRef, appliedT
 
     return (
         <>
-            <div className="h-[70vh] lg:h-[90vh] overflow-hidden">
+            <div className="h-[70vh] lg:h-[78vh] overflow-hidden">
                 <div className="hidden lg:flex h-full">
                     <div className="flex-1 overflow-x-auto overflow-y-auto p-2">
-                        <div className="max-h-[88vh] mx-auto">
+                        <div className="max-h-[76vh] mx-auto">
                             {quotationData && Object.keys(quotationData).length > 0 ? <PrintView view={true} quotationData={quotationData} ref={componentRef} appliedTaxes={appliedTaxes} /> : null}
                         </div>
                     </div>

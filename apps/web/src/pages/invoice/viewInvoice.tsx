@@ -365,12 +365,12 @@ const ViewInvoice = ({ printInvoice, setPrintInvoice, componentRef, appliedTaxes
 
     return (
         <>
-            <div className="h-[70vh] lg:h-[90vh] overflow-hidden">
+            <div className="h-[70vh] lg:h-[78vh] overflow-hidden">
                 {/* Desktop Layout */}
                 <div className="hidden lg:flex h-full">
                     {/* Main Content */}
                     <div className="flex-1 overflow-x-auto overflow-y-auto p-2">
-                        <div className="max-h-[68vh] lg:max-h-[88vh] mx-auto">
+                        <div className="max-h-[68vh] lg:max-h-[76vh] mx-auto">
                             {printInvoice && Object.keys(printInvoice).length > 0 ? (
                                 <PrintView view={true} printInvoice={printInvoice} ref={componentRef} appliedTaxes={appliedTaxes} />
                             ) : null}

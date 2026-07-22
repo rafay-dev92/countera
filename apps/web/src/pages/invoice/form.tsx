@@ -1220,7 +1220,7 @@ const handleResetLumSum = () => {
                 {state?.invoice?.isViewOpen ? (
                   <ViewInvoice printInvoice={printInvoice} setPrintInvoice={setPrintInvoice} componentRef={componentRef} appliedTaxes={appliedTaxes} setEdit={setEdit} close={handleClose} />
                 ) : (
-                  <div className="overflow-y-auto h-[65vh] lg:h-[85vh] overflow-x-auto p-4 md:p-6 w-full">
+                  <div className="overflow-y-auto h-[65vh] lg:h-[75vh] overflow-x-auto p-4 md:p-6 w-full">
                     <div className="flex flex-col lg:flex-row gap-4">
                       <div className="w-full lg:w-[35%]">
                         <div className="relative mb-7" ref={customerInputRef}>
